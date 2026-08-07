@@ -83,6 +83,48 @@
       "zh": 40
     }
   },
+  "home": {
+    "label": "Home & Furniture",
+    "emoji": "🏠",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
+    }
+  },
+  "money": {
+    "label": "Money & Banking",
+    "emoji": "💰",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
+    }
+  },
+  "nature": {
+    "label": "Nature & Weather",
+    "emoji": "🌦️",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
+    }
+  },
   "shopping": {
     "label": "Shopping & Stores",
     "emoji": "🛍️",
@@ -137,6 +179,20 @@
       "pt": 47,
       "ko": 47,
       "zh": 47
+    }
+  },
+  "time": {
+    "label": "Time & Dates",
+    "emoji": "⏰",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
     }
   },
   "travel": {

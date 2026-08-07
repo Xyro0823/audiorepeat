@@ -28,6 +28,10 @@ const LABELS = {
   family: { label: 'Family & Relationships', emoji: '👨‍👩‍👧' },
   sports: { label: 'Sports & Fitness', emoji: '🏋️' },
   emotions: { label: 'Emotions & Feelings', emoji: '😊' },
+  nature: { label: 'Nature & Weather', emoji: '🌦️' },
+  home: { label: 'Home & Furniture', emoji: '🏠' },
+  time: { label: 'Time & Dates', emoji: '⏰' },
+  money: { label: 'Money & Banking', emoji: '💰' },
 };
 
 let failed = false;
