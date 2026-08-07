@@ -61,9 +61,14 @@ or the hybrid `CachedAudioEngine` (cached `<audio>` → speech fallback) when
 - **Wake Lock** keeps the screen on while drilling (Chrome Android; best-effort
   elsewhere).
 
+## Deploying
+
+Live at **https://audiorepeat.vercel.app** — Vercel + GitHub connected.
+Every push to  on github.com/Xyro0823/audiorepeat deploys automatically.
+Manual CLI deploy: https://audiorepeat-dky9rki8u-xyro7.vercel.app from this folder.
+
 ## Roadmap
 
 - Cloud TTS fallback (ElevenLabs / Google Cloud TTS) + "Download for offline"
   that pre-generates audio into the Cache API
-- Import/export vocab sets (JSON)
-- Per-set settings & per-set repeat profiles
+- Unit tests for the audio loop scheduler
