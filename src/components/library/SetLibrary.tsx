@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { useLists } from '@/hooks/useLists';
-import { findLanguage } from '@/lib/languages';
+import { findLanguage, LANGUAGES } from '@/lib/languages';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { VocabSet } from '@/types/app';
 import SetEditor from './SetEditor';
@@ -125,7 +125,7 @@ export default function SetLibrary() {
         <div className="mr-auto">
           <h1 className="text-3xl font-bold tracking-tight text-white">AudioRepeat</h1>
           <p className="text-sm text-slate-400">
-            Loop. Repeat. Retain. — hands-free vocabulary drilling in 233 languages
+            Loop. Repeat. Retain. — hands-free vocabulary drilling in {LANGUAGES.length} languages
           </p>
         </div>
         <div className="flex items-center gap-2">

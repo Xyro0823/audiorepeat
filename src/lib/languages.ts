@@ -17,6 +17,14 @@ export const LANGUAGES: LanguageOption[] = [
   { code: 'ar', label: 'Arabic' },
   { code: 'ar-AE', label: 'Arabic (UAE)' },
   { code: 'ar-EG', label: 'Arabic (Egypt)' },
+  { code: 'ar-BH', label: 'Arabic (Bahrain)' },
+  { code: 'ar-DZ', label: 'Arabic (Algeria)' },
+  { code: 'ar-KW', label: 'Arabic (Kuwait)' },
+  { code: 'ar-LY', label: 'Arabic (Libya)' },
+  { code: 'ar-OM', label: 'Arabic (Oman)' },
+  { code: 'ar-PS', label: 'Arabic (Palestine)' },
+  { code: 'ar-QA', label: 'Arabic (Qatar)' },
+  { code: 'ar-YE', label: 'Arabic (Yemen)' },
   { code: 'ar-IQ', label: 'Arabic (Iraq)' },
   { code: 'ar-JO', label: 'Arabic (Jordan)' },
   { code: 'ar-LB', label: 'Arabic (Lebanon)' },
@@ -55,6 +63,7 @@ export const LANGUAGES: LanguageOption[] = [
   { code: 'dv', label: 'Dhivehi' },
   { code: 'dz', label: 'Dzongkha' },
   { code: 'ee', label: 'Ewe' },
+  { code: 'en', label: 'English' },
   { code: 'en-AU', label: 'English (Australia)' },
   { code: 'en-CA', label: 'English (Canada)' },
   { code: 'en-GB', label: 'English (UK)' },
@@ -69,6 +78,10 @@ export const LANGUAGES: LanguageOption[] = [
   { code: 'es-BO', label: 'Spanish (Bolivia)' },
   { code: 'es-CL', label: 'Spanish (Chile)' },
   { code: 'es-CO', label: 'Spanish (Colombia)' },
+  { code: 'es-CR', label: 'Spanish (Costa Rica)' },
+  { code: 'es-NI', label: 'Spanish (Nicaragua)' },
+  { code: 'es-PA', label: 'Spanish (Panama)' },
+  { code: 'es-PR', label: 'Spanish (Puerto Rico)' },
   { code: 'es-CU', label: 'Spanish (Cuba)' },
   { code: 'es-DO', label: 'Spanish (Dominican Republic)' },
   { code: 'es-EC', label: 'Spanish (Ecuador)' },
@@ -119,6 +132,7 @@ export const LANGUAGES: LanguageOption[] = [
   { code: 'it-CH', label: 'Italian (Switzerland)' },
   { code: 'iu', label: 'Inuktitut' },
   { code: 'ja', label: 'Japanese' },
+  { code: 'ja-JP', label: 'Japanese (Japan)' },
   { code: 'jv', label: 'Javanese' },
   { code: 'ka', label: 'Georgian' },
   { code: 'kbp', label: 'Kabiye' },
@@ -131,6 +145,7 @@ export const LANGUAGES: LanguageOption[] = [
   { code: 'kmr', label: 'Kurdish (Kurmanji)' },
   { code: 'kn', label: 'Kannada' },
   { code: 'ko', label: 'Korean' },
+  { code: 'ko-KR', label: 'Korean (South Korea)' },
   { code: 'kok', label: 'Konkani' },
   { code: 'kri', label: 'Krio' },
   { code: 'ks', label: 'Kashmiri' },
@@ -184,6 +199,10 @@ export const LANGUAGES: LanguageOption[] = [
   { code: 'pt-AO', label: 'Portuguese (Angola)' },
   { code: 'pt-BR', label: 'Portuguese (Brazil)' },
   { code: 'pt-MZ', label: 'Portuguese (Mozambique)' },
+  { code: 'pt-CV', label: 'Portuguese (Cape Verde)' },
+  { code: 'pt-GW', label: 'Portuguese (Guinea-Bissau)' },
+  { code: 'pt-ST', label: 'Portuguese (São Tomé and Príncipe)' },
+  { code: 'pt-TL', label: 'Portuguese (Timor-Leste)' },
   { code: 'pt-PT', label: 'Portuguese (Portugal)' },
   { code: 'qu', label: 'Quechua' },
   { code: 'quc', label: "K'iche'" },
@@ -238,6 +257,7 @@ export const LANGUAGES: LanguageOption[] = [
   { code: 'yo', label: 'Yoruba' },
   { code: 'za', label: 'Zhuang' },
   { code: 'zgh', label: 'Tamazight (Standard Moroccan Berber)' },
+  { code: 'zh', label: 'Chinese' },
   { code: 'zh-CN', label: 'Chinese (Simplified)' },
   { code: 'zh-HK', label: 'Chinese (Hong Kong)' },
   { code: 'zh-SG', label: 'Chinese (Singapore)' },
@@ -249,5 +269,10 @@ const BY_CODE = new Map(LANGUAGES.map((l) => [l.code.toLowerCase(), l]));
 
 /** Friendly name for a BCP-47 code, or undefined if unknown. */
 export function findLanguage(code: string): LanguageOption | undefined {
-  return BY_CODE.get(code.trim().toLowerCase());
+  const c = code.trim().toLowerCase();
+  const exact = BY_CODE.get(c);
+  if (exact) return exact;
+  // Fall back to the base language tag, e.g. "ja-JP" -> "ja", "zh-Hans" -> "zh"
+  const base = c.split('-')[0];
+  return BY_CODE.get(base);
 }
