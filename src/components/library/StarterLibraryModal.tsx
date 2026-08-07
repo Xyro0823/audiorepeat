@@ -11,6 +11,7 @@ import {
 import { CEFR_LEVELS } from '@/types/app';
 import type { CefrLevel, VocabSet } from '@/types/app';
 import CefrBadge from './CefrBadge';
+import TopicLibraryTab from './TopicLibraryTab';
 import VirtualList from './VirtualList';
 
 interface Props {
@@ -64,6 +65,7 @@ function importedLevelKeys(sets: VocabSet[]): Set<string> {
 }
 
 export default function StarterLibraryModal({ sets, onClose, onImport }: Props) {
+  const [tab, setTab] = useState<'cefr' | 'topics'>('cefr');
   const [manifest, setManifest] = useState<WordBankManifest | null>(null);
   const [lang, setLang] = useState<string | null>(null);
   const [level, setLevel] = useState<CefrLevel | null>(null);
@@ -240,9 +242,11 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
           <div>
             <h2 className="text-xl font-bold text-white">Browse library</h2>
             <p className="text-xs text-slate-400">
-              {manifest
-                ? `Comprehensive CEFR word packs in ${Object.keys(manifest).length} languages — ${langTotal.toLocaleString()} words total. Import a level or practice a batch.`
-                : 'Comprehensive CEFR word packs — import a level or practice a batch.'}
+              {tab === 'topics'
+                ? 'Topic-based word packs for everyday situations — import one per language.'
+                : manifest
+                  ? `Comprehensive CEFR word packs in ${Object.keys(manifest).length} languages — ${langTotal.toLocaleString()} words total. Import a level or practice a batch.`
+                  : 'Comprehensive CEFR word packs — import a level or practice a batch.'}
             </p>
           </div>
           <button
@@ -254,7 +258,29 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
           </button>
         </div>
 
-        {error && !manifest ? (
+        {/* Tabs */}
+        <div className="flex gap-1.5 border-b border-white/10 px-6 py-2.5">
+          {[
+            { key: 'cefr', label: 'CEFR levels' },
+            { key: 'topics', label: 'Topics' },
+          ].map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key as 'cefr' | 'topics')}
+              className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition ${
+                tab === t.key
+                  ? 'border-neon-cyan/60 bg-neon-cyan/15 text-neon-cyan'
+                  : 'border-white/10 text-slate-400 hover:border-white/25 hover:text-white'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {tab === 'topics' ? (
+          <TopicLibraryTab sets={sets} onImport={onImport} />
+        ) : error && !manifest ? (
           <div className="p-10 text-center text-sm text-neon-amber">{error}</div>
         ) : !manifest ? (
           <div className="flex flex-col items-center gap-4 p-12">
@@ -439,7 +465,7 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
         )}
 
         {/* Footer progress */}
-        {manifest && lang && (
+        {tab === 'cefr' && manifest && lang && (
           <div className="border-t border-white/10 px-6 py-3">
             <div className="mb-1 flex items-center justify-between text-xs text-slate-400">
               <span>

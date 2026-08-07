@@ -96,3 +96,12 @@ export const PACK_LANG: Record<string, string> = {
 export function starterLangLabel(lang: string): string {
   return findLanguage(lang)?.label ?? lang;
 }
+
+/**
+ * Reverse PACK_LANG: 2-letter pack code → friendly label, e.g. "fr" →
+ * "French (France)". Needed for topic packs, whose languages are pack codes.
+ */
+export function packLangLabel(pack: string): string {
+  const bcp = STARTER_LANGS.find((code) => PACK_LANG[code] === pack);
+  return bcp ? starterLangLabel(bcp) : (findLanguage(pack)?.label ?? pack);
+}

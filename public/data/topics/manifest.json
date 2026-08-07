@@ -1,0 +1,42 @@
+{
+  "travel": {
+    "label": "Travel & Airport",
+    "emoji": "✈️",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40
+    }
+  },
+  "business": {
+    "label": "Business & Work",
+    "emoji": "💼",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40
+    }
+  },
+  "food": {
+    "label": "Food & Dining",
+    "emoji": "🍽️",
+    "langs": {
+      "es": 46,
+      "fr": 46,
+      "de": 46,
+      "ja": 46
+    }
+  },
+  "tech": {
+    "label": "Tech & IT",
+    "emoji": "💻",
+    "langs": {
+      "es": 47,
+      "fr": 47,
+      "de": 47,
+      "ja": 47
+    }
+  }
+}

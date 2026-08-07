@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import StreakBadge from '@/components/StreakBadge';
 import { useAudioLoop } from '@/hooks/useAudioLoop';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
+import { useQuizMode } from '@/hooks/useQuizMode';
 import { useLists } from '@/hooks/useLists';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
@@ -14,6 +15,7 @@ import type { TTSEngine } from '@/lib/tts/engine';
 import type { AppSettings, MasteryStatus } from '@/types/app';
 import PlayerControls from './PlayerControls';
 import ProgressBar from './ProgressBar';
+import QuizCard from './QuizCard';
 import SettingsPanel from './SettingsPanel';
 import WordCard from './WordCard';
 
@@ -144,6 +146,32 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     [recordMs],
   );
 
+  // ---------- interactive quiz mode ----------
+  // Independent of the audio loop — same TTS engine, own question/answer state.
+  const [quizOn, setQuizOn] = useState(false);
+  const quiz = useQuizMode({
+    words,
+    engine,
+    rate: effective.speed,
+    targetVoiceURI: effective.targetVoiceURI,
+  });
+
+  const toggleQuiz = useCallback(() => {
+    if (quizOn) {
+      setQuizOn(false);
+      quiz.stop();
+    } else {
+      setQuizOn(true);
+      stop(); // halt the loop so both engines never speak at once
+      quiz.start();
+    }
+  }, [quizOn, stop, quiz]);
+
+  // Count each quiz question as a word listened (keeps streak/stats honest).
+  useEffect(() => {
+    if (quizOn && quiz.question) recordWords(1);
+  }, [quizOn, quiz.question, recordWords]);
+
   // Persist a mastery status for the word currently being drilled.
   const markWord = useCallback(
     (status: MasteryStatus | undefined) => {
@@ -168,6 +196,47 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
       if (target?.closest('button')) return; // Space would also click the focused button
       if (e.repeat) return;
+      if (quizOn) {
+        switch (e.code) {
+          case 'Space':
+            e.preventDefault();
+            if (quiz.finished || (!quiz.active && !quiz.question)) quiz.start();
+            else if (quiz.active) quiz.pause();
+            else quiz.replay(); // paused mid-question → re-sound the word
+            break;
+          case 'ArrowLeft':
+            e.preventDefault();
+            quiz.replay();
+            break;
+          case 'ArrowRight':
+            e.preventDefault();
+            quiz.skip();
+            break;
+          case 'Digit1':
+          case 'Numpad1':
+            quiz.answer(0);
+            break;
+          case 'Digit2':
+          case 'Numpad2':
+            quiz.answer(1);
+            break;
+          case 'Digit3':
+          case 'Numpad3':
+            quiz.answer(2);
+            break;
+          case 'Digit4':
+          case 'Numpad4':
+            quiz.answer(3);
+            break;
+          case 'KeyS':
+            e.preventDefault();
+            quiz.stop();
+            break;
+          default:
+            break;
+        }
+        return;
+      }
       switch (e.code) {
         case 'Space':
           e.preventDefault();
@@ -192,7 +261,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isPlaying, play, pause, stop, skipNext, replayWord]);
+  }, [isPlaying, play, pause, stop, skipNext, replayWord, quizOn, quiz]);
 
   if (loading) {
     return (
@@ -267,6 +336,38 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             {filter === 'hard' ? 'only words marked for review' : 'only words not yet mastered'}
           </span>
         )}
+
+        <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
+
+        <button
+          onClick={toggleQuiz}
+          disabled={words.length === 0}
+          aria-pressed={quizOn}
+          title={
+            words.length === 0
+              ? 'No words to quiz on with this filter'
+              : 'Hear a word, then pick its translation from four choices'
+          }
+          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
+            quizOn
+              ? 'border-neon-magenta/60 bg-neon-magenta/15 text-neon-magenta'
+              : 'border-white/10 bg-white/5 text-slate-400 hover:border-neon-magenta/40 hover:text-white'
+          }`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="mr-1 inline h-3.5 w-3.5 -translate-y-px"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.5 8.5 15 12l-5.5 3.5v-7Z" />
+          </svg>
+          Quiz
+        </button>
       </div>
 
       <div className="flex flex-1 flex-col justify-center py-8">
@@ -285,6 +386,18 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               Play all {set.words.length} words
             </button>
           </div>
+        ) : quizOn ? (
+          <QuizCard
+            question={quiz.question}
+            selected={quiz.selected}
+            correctCount={quiz.correctCount}
+            total={quiz.total}
+            finished={quiz.finished}
+            wordCount={words.length}
+            onAnswer={quiz.answer}
+            onReplay={quiz.replay}
+            onRestart={quiz.start}
+          />
         ) : (
           <>
             <WordCard
@@ -319,11 +432,21 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       />
 
       <PlayerControls
-        isPlaying={isPlaying}
-        onPlayPause={isPlaying ? pause : play}
-        onStop={stop}
-        onSkipNext={skipNext}
-        onReplay={replayWord}
+        isPlaying={quizOn ? quiz.active : isPlaying}
+        onPlayPause={
+          quizOn
+            ? () => {
+                if (quiz.finished || (!quiz.active && !quiz.question)) quiz.start();
+                else if (quiz.active) quiz.pause();
+                else quiz.replay(); // paused mid-question → re-sound the word
+              }
+            : isPlaying
+              ? pause
+              : play
+        }
+        onStop={quizOn ? quiz.stop : stop}
+        onSkipNext={quizOn ? quiz.skip : skipNext}
+        onReplay={quizOn ? quiz.replay : replayWord}
         speed={effective.speed}
         onSpeedChange={(speed) => changeSettings({ speed })}
       />
