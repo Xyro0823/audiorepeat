@@ -10,6 +10,8 @@ export interface SpeakOptions {
   text: string;
   lang: string; // BCP-47
   rate: number;
+  /** 0..1; default 1. Engines apply it per utterance (sleep-timer fade). */
+  volume?: number;
   voiceURI?: string;
   onStart?: () => void;
   onEnd: () => void;

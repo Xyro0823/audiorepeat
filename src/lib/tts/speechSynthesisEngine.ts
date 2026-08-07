@@ -103,6 +103,7 @@ export class SpeechSynthesisEngine implements TTSEngine {
       const u = new SpeechSynthesisUtterance(chunks[index]);
       u.lang = opts.lang;
       u.rate = opts.rate;
+      u.volume = opts.volume ?? 1;
       if (opts.voiceURI) {
         const voice = synth.getVoices().find((v) => v.voiceURI === opts.voiceURI);
         if (voice) u.voice = voice;

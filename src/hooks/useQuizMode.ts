@@ -18,6 +18,8 @@ interface Options {
   words: LoopWord[];
   engine?: TTSEngine;
   rate: number;
+  /** 0..1 output level, applied per utterance (sleep-timer fade). Default 1. */
+  volume?: number;
   targetVoiceURI?: string;
 }
 
@@ -48,7 +50,7 @@ function shuffle<T>(arr: T[]): T[] {
  * options, get instant feedback, then advance. Independent of useAudioLoop —
  * it only shares the TTS engine. Score counts only answered questions.
  */
-export function useQuizMode({ words, engine, rate, targetVoiceURI }: Options) {
+export function useQuizMode({ words, engine, rate, volume = 1, targetVoiceURI }: Options) {
   const [active, setActive] = useState(false);
   const [question, setQuestion] = useState<QuizQuestion | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
@@ -59,6 +61,7 @@ export function useQuizMode({ words, engine, rate, targetVoiceURI }: Options) {
   const engineRef = useRef<TTSEngine | null>(null);
   const wordsRef = useRef<LoopWord[]>(words);
   const rateRef = useRef(rate);
+  const volumeRef = useRef(volume);
   const voiceRef = useRef(targetVoiceURI);
   const cursorRef = useRef(0);
   const tokenRef = useRef(0);
@@ -73,6 +76,9 @@ export function useQuizMode({ words, engine, rate, targetVoiceURI }: Options) {
   useEffect(() => {
     rateRef.current = rate;
   }, [rate]);
+  useEffect(() => {
+    volumeRef.current = volume;
+  }, [volume]);
   useEffect(() => {
     voiceRef.current = targetVoiceURI;
   }, [targetVoiceURI]);
@@ -136,6 +142,7 @@ export function useQuizMode({ words, engine, rate, targetVoiceURI }: Options) {
         text: word.target,
         lang: word.lang,
         rate: rateRef.current,
+        volume: volumeRef.current,
         voiceURI: voiceRef.current,
         onStart: () => {},
         onEnd: applyQuestion,
@@ -256,6 +263,7 @@ export function useQuizMode({ words, engine, rate, targetVoiceURI }: Options) {
       text: q.word.target,
       lang: q.word.lang,
       rate: rateRef.current,
+      volume: volumeRef.current,
       voiceURI: voiceRef.current,
       onStart: () => {},
       onEnd: () => {},

@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ActivityHeatmap from '@/components/ActivityHeatmap';
 import StreakBadge from '@/components/StreakBadge';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useLists } from '@/hooks/useLists';
 import { formatDuration } from '@/lib/format';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
+import { decodeSetFromUrl, shareUrlForSet } from '@/lib/sets/share';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { VocabSet } from '@/types/app';
 import CefrBadge from './CefrBadge';
@@ -40,10 +41,11 @@ interface SetCardProps {
   onPlay: () => void;
   onEdit: () => void;
   onExport: () => void;
+  onShare: () => void;
   onDelete: () => void;
 }
 
-function SetCard({ set, index, isConfirming, onPlay, onEdit, onExport, onDelete }: SetCardProps) {
+function SetCard({ set, index, isConfirming, onPlay, onEdit, onExport, onShare, onDelete }: SetCardProps) {
   const total = set.words.length;
   const mastered = set.words.filter((w) => w.mastery === 'mastered').length;
   const hard = set.words.filter((w) => w.mastery === 'hard').length;
@@ -101,6 +103,16 @@ function SetCard({ set, index, isConfirming, onPlay, onEdit, onExport, onDelete 
         >
           ⬇
         </button>
+        {!set.id.startsWith('seed-') && (
+          <button
+            onClick={onShare}
+            aria-label="Copy share link"
+            title="Copy a share link — anyone who opens it gets this set"
+            className="rounded-xl border border-white/10 px-3 py-2.5 text-sm text-slate-400 transition hover:border-neon-violet/40 hover:text-neon-violet active:scale-95"
+          >
+            🔗
+          </button>
+        )}
         <button
           onClick={onDelete}
           aria-label="Delete set"
@@ -128,11 +140,12 @@ export default function SetLibrary() {
   const [browse, setBrowse] = useState(false);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [importMsg, setImportMsg] = useState<ImportMsg>(null);
+  const [pendingImport, setPendingImport] = useState<VocabSet | null>(null);
 
-  const flash = (msg: ImportMsg) => {
+  const flash = useCallback((msg: ImportMsg) => {
     setImportMsg(msg);
     if (msg) window.setTimeout(() => setImportMsg((m) => (m === msg ? null : m)), 4000);
-  };
+  }, []);
 
   const handleImportFile = async (file: File) => {
     try {
@@ -148,6 +161,57 @@ export default function SetLibrary() {
       flash({ kind: 'err', text: 'Could not read that file.' });
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  // Handle a shared-deck link: /?set=<encoded>. Decoded once on mount, then
+  // imported as soon as the library has loaded (so duplicates can be spotted).
+  useEffect(() => {
+    try {
+      const encoded = new URLSearchParams(window.location.search).get('set');
+      if (!encoded) return;
+      const parsed = decodeSetFromUrl(encoded);
+      if (parsed) queueMicrotask(() => setPendingImport(parsed));
+      else
+        queueMicrotask(() =>
+          flash({ kind: 'err', text: 'That share link is invalid or corrupted.' }),
+        );
+      // Strip the param so a refresh doesn't re-import (and the URL stays clean).
+      window.history.replaceState(null, '', window.location.pathname);
+    } catch {
+      queueMicrotask(() => flash({ kind: 'err', text: 'Could not read that share link.' }));
+    }
+  }, [flash]);
+
+  useEffect(() => {
+    if (loading || !pendingImport) return;
+    const duplicate = sets.some(
+      (s) => s.name === pendingImport.name && s.words.length === pendingImport.words.length,
+    );
+    if (duplicate) {
+      queueMicrotask(() =>
+        flash({ kind: 'ok', text: `"${pendingImport.name}" is already in your library.` }),
+      );
+    } else {
+      void saveSet(pendingImport).then(() =>
+        flash({
+          kind: 'ok',
+          text: `Imported "${pendingImport.name}" (${pendingImport.words.length} words).`,
+        }),
+      );
+    }
+    queueMicrotask(() => setPendingImport(null));
+  }, [loading, pendingImport, sets, saveSet, flash]);
+
+  const handleShare = async (set: VocabSet) => {
+    const url = shareUrlForSet(set);
+    try {
+      await navigator.clipboard.writeText(url);
+      flash({ kind: 'ok', text: 'Share link copied — anyone who opens it imports this set.' });
+    } catch {
+      // Clipboard API unavailable (e.g. non-secure context) — fall back to a prompt.
+      const ok = window.prompt('Copy this share link:', url);
+      flash(ok !== null ? { kind: 'ok', text: 'Share link ready to send.' } : { kind: 'err', text: 'Share cancelled.' });
     }
   };
 
@@ -263,6 +327,7 @@ export default function SetLibrary() {
               onPlay={() => router.push(`/player?id=${set.id}`)}
               onEdit={() => setEditing(set)}
               onExport={() => downloadSet(set)}
+              onShare={() => void handleShare(set)}
               onDelete={() => {
                 if (confirmId === set.id) {
                   void removeSet(set.id);

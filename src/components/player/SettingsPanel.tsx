@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { formatCountdown } from '@/lib/format';
 import type { AppSettings } from '@/types/app';
 import type { TTSEngineVoice } from '@/lib/tts/engine';
 import VoicePicker from './VoicePicker';
@@ -12,6 +13,11 @@ interface Props {
   onChange: (patch: Partial<AppSettings>) => void;
   customMode: boolean; // editing per-set overrides vs the global settings
   onToggleCustom: (on: boolean) => void;
+  /** Selected sleep-timer duration in minutes, or null when off (transient, not persisted). */
+  sleepMinutes: number | null;
+  /** Milliseconds left on the active timer, or null when off. */
+  sleepRemaining: number | null;
+  onSleepChange: (minutes: number | null) => void;
   voices: TTSEngineVoice[];
   voicesLoading: boolean;
   targetLang: string;
@@ -50,17 +56,23 @@ function Toggle({
   );
 }
 
+const SLEEP_PRESETS = [15, 30, 45, 60];
+
 export default function SettingsPanel({
   settings,
   onChange,
   customMode,
   onToggleCustom,
+  sleepMinutes,
+  sleepRemaining,
+  onSleepChange,
   voices,
   voicesLoading,
   targetLang,
   nativeLang,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [customMin, setCustomMin] = useState('');
 
   return (
     <section className="animate-fade-up mb-6">
@@ -202,6 +214,63 @@ export default function SettingsPanel({
               onChange={(v) => onChange({ cachedAudio: v })}
               label="Prefer cached audio (offline playback)"
             />
+          </div>
+
+          <div className="sm:col-span-2">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
+              Sleep timer
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5">
+              <button
+                onClick={() => onSleepChange(null)}
+                className={`rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 ${
+                  sleepMinutes === null
+                    ? 'bg-night-800 text-slate-400'
+                    : 'bg-night-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                Off
+              </button>
+              {SLEEP_PRESETS.map((min) => (
+                <button
+                  key={min}
+                  onClick={() => {
+                    setCustomMin('');
+                    onSleepChange(min);
+                  }}
+                  className={`rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 ${
+                    sleepMinutes === min
+                      ? 'bg-neon-amber/20 text-neon-amber ring-1 ring-neon-amber/50'
+                      : 'bg-night-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {min}m
+                </button>
+              ))}
+              <span className="flex items-center gap-1 rounded-xl bg-night-800 px-2 py-1.5">
+                <input
+                  type="number"
+                  min={1}
+                  max={180}
+                  placeholder="Custom"
+                  value={customMin}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setCustomMin(v);
+                    const n = Number(v);
+                    if (v !== '' && n >= 1 && n <= 180) onSleepChange(n);
+                  }}
+                  className="w-16 bg-transparent text-sm text-slate-300 outline-none placeholder:text-slate-600"
+                  aria-label="Custom sleep timer minutes"
+                />
+                <span className="text-xs text-slate-500">m</span>
+              </span>
+            </div>
+            <p className="mt-2 text-[11px] text-slate-500">
+              {sleepRemaining !== null && sleepMinutes !== null
+                ? `🌙 Stops in ${formatCountdown(sleepRemaining)} — volume fades out during the last 15 seconds.`
+                : 'Volume fades out smoothly over the last 15 seconds, then playback stops.'}
+            </p>
           </div>
 
           <div className="flex flex-col gap-4 sm:col-span-2">

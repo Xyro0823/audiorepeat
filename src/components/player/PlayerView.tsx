@@ -11,6 +11,7 @@ import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import { findLanguage } from '@/lib/languages';
+import { formatCountdown } from '@/lib/format';
 import type { TTSEngine } from '@/lib/tts/engine';
 import type { AppSettings, MasteryStatus } from '@/types/app';
 import PlayerControls from './PlayerControls';
@@ -21,6 +22,8 @@ import WordCard from './WordCard';
 
 type WordFilter = 'all' | 'learning' | 'hard';
 
+const SLEEP_FADE_MS = 15_000;
+
 export default function PlayerView({ setId }: { setId: string | null }) {
   const { sets, loading, settings, saveSettings, saveSet } = useLists();
   const set = sets.find((s) => s.id === setId) ?? null;
@@ -28,6 +31,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // Playlist filter: 'all' = every word, 'learning' = not yet mastered
   // (covers unmarked + review-needed), 'hard' = only words flagged for review.
   const [filter, setFilter] = useState<WordFilter>('all');
+
+  // ---------- sleep timer (transient, not persisted) ----------
+  const [sleepMinutes, setSleepMinutes] = useState<number | null>(null);
+  const [sleepEndAt, setSleepEndAt] = useState<number | null>(null);
+  const [sleepRemaining, setSleepRemaining] = useState<number | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  // 1 = full volume; ramps to 0 over the last 15 seconds before the timer ends.
+  const fadeVolume =
+    sleepEndAt !== null && sleepRemaining !== null
+      ? Math.max(0, Math.min(1, sleepRemaining / SLEEP_FADE_MS))
+      : 1;
 
   const words = useMemo(() => {
     if (!set) return [];
@@ -95,6 +109,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       words,
       settings: effective,
       engine,
+      volume: fadeVolume,
       album: set?.name,
       artist: set ? (findLanguage(set.lang)?.label ?? set.lang) : undefined,
     });
@@ -153,8 +168,66 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     words,
     engine,
     rate: effective.speed,
+    volume: fadeVolume,
     targetVoiceURI: effective.targetVoiceURI,
   });
+
+  // Stale-free handles for the sleep-timer interval (quiz object identity
+  // changes every render, so the interval must read them through refs).
+  const quizRef = useRef(quiz);
+  const quizOnRef = useRef(quizOn);
+  useEffect(() => {
+    quizRef.current = quiz;
+  }, [quiz]);
+  useEffect(() => {
+    quizOnRef.current = quizOn;
+  }, [quizOn]);
+
+  const setSleepTimer = useCallback((minutes: number | null) => {
+    if (minutes === null) {
+      setSleepEndAt(null);
+      setSleepRemaining(null);
+      setSleepMinutes(null);
+    } else {
+      setSleepMinutes(minutes);
+      setSleepEndAt(Date.now() + minutes * 60_000);
+      setSleepRemaining(minutes * 60_000);
+    }
+  }, []);
+
+  // Countdown + fade + auto-stop. Stops both the loop and an active quiz.
+  useEffect(() => {
+    if (sleepEndAt === null) return;
+    const id = window.setInterval(() => {
+      const left = sleepEndAt - Date.now();
+      if (left <= 0) {
+        setSleepEndAt(null);
+        setSleepRemaining(null);
+        setSleepMinutes(null);
+        stop();
+        if (quizOnRef.current) quizRef.current?.stop();
+        setToast('🌙 Sleep timer ended — playback stopped.');
+        return;
+      }
+      setSleepRemaining(left);
+    }, 500);
+    return () => window.clearInterval(id);
+  }, [sleepEndAt, stop]);
+
+  // User-triggered stop: halts playback AND cancels the sleep timer (a manual
+  // stop means "done for now", so the timer must not fire a stale toast later).
+  const stopPlayback = useCallback(() => {
+    stop();
+    if (quizOnRef.current) quizRef.current?.stop();
+    setSleepTimer(null);
+  }, [stop, setSleepTimer]);
+
+  // Auto-dismiss the toast.
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 4000);
+    return () => window.clearTimeout(id);
+  }, [toast]);
 
   const toggleQuiz = useCallback(() => {
     if (quizOn) {
@@ -230,7 +303,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             break;
           case 'KeyS':
             e.preventDefault();
-            quiz.stop();
+            stopPlayback();
             break;
           default:
             break;
@@ -253,7 +326,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           break;
         case 'KeyS':
           e.preventDefault();
-          stop();
+          stopPlayback();
           break;
         default:
           break;
@@ -261,7 +334,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isPlaying, play, pause, stop, skipNext, replayWord, quizOn, quiz]);
+  }, [isPlaying, play, pause, stop, stopPlayback, skipNext, replayWord, quizOn, quiz]);
 
   if (loading) {
     return (
@@ -291,6 +364,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-5 pb-52 pt-6">
+      {toast && (
+        <div className="animate-fade-up mb-4 rounded-xl border border-neon-amber/40 bg-neon-amber/10 px-4 py-3 text-sm text-neon-amber">
+          {toast}
+        </div>
+      )}
       <header className="animate-fade-up flex items-center gap-2">
         <Link
           href="/"
@@ -368,6 +446,16 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           </svg>
           Quiz
         </button>
+
+        {sleepEndAt !== null && sleepRemaining !== null && (
+          <button
+            onClick={() => setSleepTimer(null)}
+            title="Sleep timer active — tap to cancel"
+            className="rounded-full border border-neon-amber/40 bg-neon-amber/10 px-3 py-1.5 text-xs font-medium text-neon-amber transition hover:border-neon-amber/70 hover:bg-neon-amber/20 active:scale-95"
+          >
+            🌙 {formatCountdown(sleepRemaining)}
+          </button>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col justify-center py-8">
@@ -425,6 +513,9 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         onChange={changeSettings}
         customMode={customMode}
         onToggleCustom={toggleCustom}
+        sleepMinutes={sleepMinutes}
+        sleepRemaining={sleepRemaining}
+        onSleepChange={setSleepTimer}
         voices={voices}
         voicesLoading={voicesLoading}
         targetLang={set.lang}
@@ -444,7 +535,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               ? pause
               : play
         }
-        onStop={quizOn ? quiz.stop : stop}
+        onStop={stopPlayback}
         onSkipNext={quizOn ? quiz.skip : skipNext}
         onReplay={quizOn ? quiz.replay : replayWord}
         speed={effective.speed}

@@ -55,6 +55,7 @@ export class CachedAudioEngine implements TTSEngine {
     this.objectUrl = URL.createObjectURL(blob);
     const audio = new Audio(this.objectUrl);
     audio.playbackRate = opts.rate;
+    audio.volume = opts.volume ?? 1;
     this.audio = audio;
 
     audio.onended = () => {

@@ -44,6 +44,8 @@ export interface UseAudioLoopOptions {
   settings?: Partial<LoopSettings>;
   /** Inject an engine for tests, or the cached/cloud engine for offline hands-free mode. */
   engine?: TTSEngine;
+  /** 0..1 output level, applied per utterance (sleep-timer fade). Default 1. */
+  volume?: number;
   onWordChange?: (word: LoopWord, index: number) => void;
   /** Lock-screen context: shown as the media-session album (usually the set name). */
   album?: string;
@@ -64,10 +66,11 @@ export interface UseAudioLoopOptions {
  *   `schedulerRef` (updated in an effect), so no stale closures can leak in.
  * - Media Session + Screen Wake Lock are wired here for hands-free control.
  */
-export function useAudioLoop({ words, settings = {}, engine, onWordChange, album, artist }: UseAudioLoopOptions) {
+export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordChange, album, artist }: UseAudioLoopOptions) {
   const engineRef = useRef<TTSEngine | null>(null);
   const wordsRef = useRef<LoopWord[]>(words);
   const settingsRef = useRef<LoopSettings>({ ...DEFAULT_SETTINGS, ...settings });
+  const volumeRef = useRef(volume);
   const cursorRef = useRef<Cursor>({ ...IDLE_CURSOR });
   const tokenRef = useRef(0);
   const gapTimerRef = useRef<number | null>(null);
@@ -103,6 +106,9 @@ export function useAudioLoop({ words, settings = {}, engine, onWordChange, album
   useEffect(() => {
     settingsRef.current = { ...DEFAULT_SETTINGS, ...settings };
   }, [settings]);
+  useEffect(() => {
+    volumeRef.current = volume;
+  }, [volume]);
   useEffect(() => {
     wordsRef.current = words;
   }, [words]);
@@ -216,6 +222,7 @@ export function useAudioLoop({ words, settings = {}, engine, onWordChange, album
         text,
         lang,
         rate: s.speed,
+        volume: volumeRef.current,
         voiceURI,
         onStart: () => {
           if (token !== tokenRef.current) return;
