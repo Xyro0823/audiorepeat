@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import ActivityHeatmap from '@/components/ActivityHeatmap';
@@ -162,6 +163,12 @@ export default function SetLibrary() {
         </div>
         <div className="flex items-center gap-2">
           <StreakBadge streak={streak} />
+          <Link
+            href="/stats"
+            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-cyan/40 hover:text-white active:scale-95"
+          >
+            📊 Stats
+          </Link>
           <input
             ref={fileInputRef}
             type="file"
