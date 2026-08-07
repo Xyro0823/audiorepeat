@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { AppSettings, VocabSet } from '@/types/app';
+import type { AppSettings, VocabSet, VocabWord } from '@/types/app';
 import { DEFAULT_SETTINGS } from '@/types/app';
 import { SEED_SETS } from '@/lib/seedSets';
+import { PACK_LANG } from '@/lib/starterSets';
+import { loadWordBank } from '@/lib/vocab/wordBanks';
 import {
   deleteSet as dbDeleteSet,
   getAllSets,
@@ -14,7 +16,7 @@ import {
 
 // Bump this whenever new starter sets are added, so existing installs receive
 // them exactly once (a user who deletes a seed set keeps it deleted).
-const SEED_VERSION = 5;
+const SEED_VERSION = 6;
 const SEED_VERSION_KEY = 'audiorepeat-seed-version';
 
 // Word ids of the original 5-word starter sets, used to detect copies the user
@@ -51,6 +53,46 @@ const ORIGINAL_SEED_WORD_IDS: Record<string, string[]> = {
   'seed-mongolian-basics': ['w-mn-sain', 'w-mn-bayarlalaa', 'w-mn-guiya', 'w-mn-tiim', 'w-mn-ugui'],
 };
 
+/**
+ * Pull the full A1 word pack for a seed set's language when one exists, so the
+ * home-screen card reflects the real dataset (200+ words) instead of the small
+ * curated demo array.
+ *
+ * `hydrated` is false when the language HAS a pack but it could not be loaded
+ * (offline / fetch error). In that case the curated words are used as a
+ * fallback AND the seed-version marker is left behind so the merge retries on
+ * a later launch — otherwise the card would stay at ~20 words forever.
+ */
+async function hydrateSeedWords(set: VocabSet): Promise<{ words: VocabWord[]; hydrated: boolean }> {
+  const pack = PACK_LANG[set.lang];
+  if (!pack) return { words: set.words, hydrated: true }; // nothing to hydrate
+  try {
+    const bank = await loadWordBank(pack, 'A1');
+    if (bank && bank.words.length > 0) {
+      return {
+        words: bank.words.map(([target, translation], i) => ({
+          id: `pk-${pack}-a1-${i}`,
+          target,
+          translation,
+        })),
+        hydrated: true,
+      };
+    }
+  } catch {
+    /* offline / pack unavailable: fall back below */
+  }
+  return { words: set.words, hydrated: false };
+}
+
+/** True when `existing` still carries exactly the shipped curated seed words. */
+function matchesCuratedSeed(existing: VocabSet, curated: VocabSet): boolean {
+  if (existing.words.length !== curated.words.length) return false;
+  return curated.words.every((w) => {
+    const cur = existing.words.find((x) => x.id === w.id);
+    return cur && cur.target === w.target && cur.translation === w.translation;
+  });
+}
+
 export function useLists() {
   const [sets, setSets] = useState<VocabSet[]>([]);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
@@ -74,38 +116,55 @@ export function useLists() {
       }
       if (seedVersion < SEED_VERSION) {
         const knownIds = new Set(list.map((s) => s.id));
+        // Only advance the version marker when every pack-language seed was
+        // actually hydrated; if any fetch failed (offline), keep the marker
+        // behind so the merge retries next launch instead of trapping cards
+        // at ~20 words forever.
+        let hydrationComplete = true;
         for (const set of SEED_SETS) {
           if (!knownIds.has(set.id)) {
-            await putSet({ ...set, createdAt: now, updatedAt: now });
+            // New install: pull the full A1 word pack when the language has one.
+            const h = await hydrateSeedWords(set);
+            if (!h.hydrated) hydrationComplete = false;
+            await putSet({
+              ...set,
+              words: h.words,
+              createdAt: now,
+              updatedAt: now,
+            });
           } else {
             // Upgrade in place:
-            // 1. If the set still carries exactly its original words (the user
-            //    never edited it), refresh it with the expanded vocabulary.
+            // 1. If the set still carries exactly its shipped words (the user
+            //    never edited it), refresh it with the full vocabulary pack.
             // 2. Attach a CEFR level to sets created before levels existed.
             // Any set the user has touched is left fully untouched.
             const existing = list.find((x) => x.id === set.id);
             if (existing) {
               const originalIds = ORIGINAL_SEED_WORD_IDS[set.id];
-              // Untouched = same count and every original word still matches
-              // id, target AND translation. A user who edited any word (even
-              // just a translation) keeps their version untouched.
+              // Untouched = same count as the original 5-word demo set with
+              // every original word still matching, OR still exactly the
+              // curated seed content (covers the v5 expanded installs). A user
+              // who edited any word (even just a translation) keeps theirs.
               const untouched =
-                originalIds &&
-                existing.words.length === originalIds.length &&
-                originalIds.every((id) => {
-                  const orig = set.words.find((w) => w.id === id);
-                  const cur = existing.words.find((w) => w.id === id);
-                  return (
-                    cur &&
-                    orig &&
-                    cur.target === orig.target &&
-                    cur.translation === orig.translation
-                  );
-                });
+                (originalIds &&
+                  existing.words.length === originalIds.length &&
+                  originalIds.every((id) => {
+                    const orig = set.words.find((w) => w.id === id);
+                    const cur = existing.words.find((w) => w.id === id);
+                    return (
+                      cur &&
+                      orig &&
+                      cur.target === orig.target &&
+                      cur.translation === orig.translation
+                    );
+                  })) ||
+                matchesCuratedSeed(existing, set);
               if (untouched) {
+                const h = await hydrateSeedWords(set);
+                if (!h.hydrated) hydrationComplete = false;
                 await putSet({
                   ...existing,
-                  words: set.words,
+                  words: h.words,
                   cefr: set.cefr ?? existing.cefr,
                 });
               } else if (!existing.cefr && set.cefr) {
@@ -115,10 +174,12 @@ export function useLists() {
           }
         }
         list = await getAllSets();
-        try {
-          window.localStorage.setItem(SEED_VERSION_KEY, String(SEED_VERSION));
-        } catch {
-          /* ignore */
+        if (hydrationComplete) {
+          try {
+            window.localStorage.setItem(SEED_VERSION_KEY, String(SEED_VERSION));
+          } catch {
+            /* ignore */
+          }
         }
       }
       const stored = await getSettings();

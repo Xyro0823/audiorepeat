@@ -37,18 +37,28 @@ function normalize(s: string): string {
 }
 
 /** Derive "packLang:level" keys already imported from library set ids.
- * Matches both word-pack imports (bank-fr-A1-…, bank-full-fr-A1-…) and the
- * legacy curated starter sets (starter-es-ES-A1). */
+ * Matches word-pack imports (bank-fr-A1, bank-fr-A1-b200, bank-full-fr-A1-…),
+ * the legacy curated starter sets (starter-es-ES-A1), and hydrated seed cards
+ * (seed-* with a cefr level for a pack language). */
 function importedLevelKeys(sets: VocabSet[]): Set<string> {
   const keys = new Set<string>();
   for (const set of sets) {
-    const bank = /^bank(?:-full)?-([a-z]{2,3})-([A-C][12])-/.exec(set.id);
+    const bank = /^bank(?:-full)?-([a-z]{2,3})-([A-C][12])(?:-|$)/.exec(set.id);
     if (bank) {
       keys.add(`${bank[1]}:${bank[2]}`);
       continue;
     }
     const starter = /^starter-([a-z]{2,3})-[A-Z]{2}-([A-C][12])$/.exec(set.id);
-    if (starter) keys.add(`${starter[1]}:${starter[2]}`);
+    if (starter) {
+      keys.add(`${starter[1]}:${starter[2]}`);
+      continue;
+    }
+    // Hydrated home-screen seed cards (seed-*) count as an imported level.
+    // Restricted to seed ids so arbitrary user-created sets don't light up ✓.
+    if (set.id.startsWith('seed-')) {
+      const pack = set.lang ? PACK_LANG[set.lang] : undefined;
+      if (pack && set.cefr) keys.add(`${pack}:${set.cefr}`);
+    }
   }
   return keys;
 }
@@ -156,8 +166,18 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
         picked.push(pool.splice(idx, 1)[0]);
       }
       const stamp = Date.now();
+      // Reuse an existing *batch* card for this level so re-practicing updates
+      // the same home card instead of stacking duplicates — matches both the
+      // current bank-{lang}-{level}-b{n} ids and the legacy timestamped ids
+      // (bank-{lang}-{level}-{stamp}). Never clobber the full-level or seed
+      // card (those use bank-full-… / seed-… ids).
+      const priorBatch = sets.find(
+        (s) =>
+          s.id === `bank-${lang}-${level}-b${n}` ||
+          (s.id.startsWith(`bank-${lang}-${level}-`) && !s.id.startsWith(`bank-${lang}-${level}-b`)),
+      );
       await onImport({
-        id: `bank-${lang}-${level}-${stamp}`,
+        id: priorBatch?.id ?? `bank-${lang}-${level}-b${n}`,
         name: `${starterLangLabel(lang)} ${level} · batch of ${n}`,
         lang,
         nativeLang: 'en-US',
@@ -171,16 +191,29 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
         updatedAt: Date.now(),
       });
     },
-    [lang, level, filtered, onImport],
+    [lang, level, filtered, sets, onImport],
   );
 
   const importFull = useCallback(async () => {
     if (!lang || !level || !bank || bank.length === 0) return;
     const stamp = Date.now();
+    // Replace the corresponding full-level or hydrated seed card (not batch
+    // cards — those are separate and practiceBatch manages them) so the home
+    // screen shows the full real array length instead of stacking duplicates.
+    const existing = sets.find((s) => {
+      if (s.id.startsWith(`bank-full-${lang}-${level}`)) return true;
+      if (!s.id.startsWith('seed-')) return false;
+      const pack = s.lang ? PACK_LANG[s.lang] : undefined;
+      return pack === lang && s.cefr === level;
+    });
+    // Keep the BCP-47 tag when replacing a seed card (e.g. "es-ES", not the
+    // pack code "es") so the player's TTS lookup and the library ✓ marker keep
+    // working for that level.
+    const seedLang = existing?.id.startsWith('seed-') ? existing.lang : undefined;
     await onImport({
-      id: 'bank-full-' + lang + '-' + level + '-' + stamp,
+      id: existing?.id ?? `bank-full-${lang}-${level}`,
       name: starterLangLabel(lang) + ' ' + level + ' · full level (' + bank.length.toLocaleString() + ' words)',
-      lang,
+      lang: seedLang ?? lang,
       nativeLang: 'en-US',
       words: bank.map(([target, translation], i) => ({
         id: 'bkf-' + stamp + '-' + i,
@@ -191,7 +224,7 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-  }, [lang, level, bank, onImport]);
+  }, [lang, level, bank, sets, onImport]);
 
   return (
     <div
