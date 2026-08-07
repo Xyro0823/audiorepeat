@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const TOPICS_DIR = 'public/data/topics';
-const LANGS = ['es', 'fr', 'de', 'ja', 'it', 'pt', 'ko', 'zh'];
+const LANGS = ['es', 'fr', 'de', 'ja', 'it', 'pt', 'ko', 'zh', 'ru', 'ar', 'hi', 'tr'];
 const LABELS = {
   travel: { label: 'Travel & Airport', emoji: '✈️' },
   business: { label: 'Business & Work', emoji: '💼' },
