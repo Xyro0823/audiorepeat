@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { findLanguage, LANGUAGES } from '@/lib/languages';
 import type { VocabSet, VocabWord } from '@/types/app';
 
 const REPEAT_OPTIONS = [1, 2, 3, 5];
-const LANG_PRESETS = ['es-ES', 'fr-FR', 'de-DE', 'it-IT', 'pt-PT', 'ja-JP', 'ko-KR', 'zh-CN', 'en-US'];
 
 interface Props {
   set: VocabSet | null;
@@ -57,6 +57,9 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
     });
   };
 
+  const langHint = findLanguage(lang)?.label;
+  const nativeLangHint = findLanguage(nativeLang)?.label;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -100,9 +103,12 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
               list="lang-presets"
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              placeholder="es-ES"
+              placeholder="e.g. es-ES or German (Germany)"
               className={inputClass}
             />
+            <span className="mt-1 block text-[11px] text-slate-500">
+              {langHint ? `Speaking: ${langHint}` : 'Start typing to search languages'}
+            </span>
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
@@ -112,14 +118,19 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
               list="lang-presets"
               value={nativeLang}
               onChange={(e) => setNativeLang(e.target.value)}
-              placeholder="en-US"
+              placeholder="e.g. en-US"
               className={inputClass}
             />
+            <span className="mt-1 block text-[11px] text-slate-500">
+              {nativeLangHint ? `Translations in: ${nativeLangHint}` : 'Start typing to search languages'}
+            </span>
           </label>
         </div>
         <datalist id="lang-presets">
-          {LANG_PRESETS.map((l) => (
-            <option key={l} value={l} />
+          {LANGUAGES.map((l) => (
+            <option key={l.code} value={l.code}>
+              {l.label}
+            </option>
           ))}
         </datalist>
 

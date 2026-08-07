@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { useLists } from '@/hooks/useLists';
+import { findLanguage } from '@/lib/languages';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { VocabSet } from '@/types/app';
 import SetEditor from './SetEditor';
@@ -19,6 +20,10 @@ function Logo() {
       </svg>
     </div>
   );
+}
+
+function languageLabel(code: string): string {
+  return findLanguage(code)?.label ?? code;
 }
 
 interface SetCardProps {
@@ -41,7 +46,7 @@ function SetCard({ set, index, isConfirming, onPlay, onEdit, onExport, onDelete 
       <div className="pointer-events-none absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-neon-magenta/10 blur-2xl transition-all duration-500 group-hover:bg-neon-magenta/20" />
       <h3 className="text-xl font-semibold text-white">{set.name}</h3>
       <p className="mt-1 text-sm text-slate-400">
-        {set.words.length} words · {set.lang} → {set.nativeLang}
+        {set.words.length} words · {languageLabel(set.lang)} → {languageLabel(set.nativeLang)}
         {set.settings ? ' · custom settings' : ''}
       </p>
       <div className="mt-5 flex gap-2">
@@ -120,7 +125,7 @@ export default function SetLibrary() {
         <div className="mr-auto">
           <h1 className="text-3xl font-bold tracking-tight text-white">AudioRepeat</h1>
           <p className="text-sm text-slate-400">
-            Loop. Repeat. Retain. — hands-free vocabulary drilling
+            Loop. Repeat. Retain. — hands-free vocabulary drilling in 100+ languages
           </p>
         </div>
         <div className="flex items-center gap-2">
