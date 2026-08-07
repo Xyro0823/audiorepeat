@@ -6,7 +6,9 @@ import { useLists } from '@/hooks/useLists';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { VocabSet } from '@/types/app';
+import CefrBadge from './CefrBadge';
 import SetEditor from './SetEditor';
+import StarterLibraryModal from './StarterLibraryModal';
 
 function Logo() {
   return (
@@ -44,7 +46,10 @@ function SetCard({ set, index, isConfirming, onPlay, onEdit, onExport, onDelete 
     >
       <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-neon-cyan/10 blur-2xl transition-all duration-500 group-hover:bg-neon-cyan/25" />
       <div className="pointer-events-none absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-neon-magenta/10 blur-2xl transition-all duration-500 group-hover:bg-neon-magenta/20" />
-      <h3 className="text-xl font-semibold text-white">{set.name}</h3>
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="text-xl font-semibold text-white">{set.name}</h3>
+        {set.cefr && <CefrBadge level={set.cefr} />}
+      </div>
       <p className="mt-1 text-sm text-slate-400">
         {set.words.length} words · {languageLabel(set.lang)} → {languageLabel(set.nativeLang)}
         {set.settings ? ' · custom settings' : ''}
@@ -93,6 +98,7 @@ export default function SetLibrary() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState<VocabSet | 'new' | null>(null);
+  const [browse, setBrowse] = useState(false);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [importMsg, setImportMsg] = useState<ImportMsg>(null);
 
@@ -139,6 +145,12 @@ export default function SetLibrary() {
               if (file) void handleImportFile(file);
             }}
           />
+          <button
+            onClick={() => setBrowse(true)}
+            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-cyan/40 hover:text-white active:scale-95"
+          >
+            📚 Browse library
+          </button>
           <button
             onClick={() => fileInputRef.current?.click()}
             className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-cyan/40 hover:text-white active:scale-95"
@@ -214,6 +226,21 @@ export default function SetLibrary() {
           onSave={async (set) => {
             const saved = await saveSet(set);
             router.push(`/player?id=${saved.id}`);
+          }}
+        />
+      )}
+
+      {browse && (
+        <StarterLibraryModal
+          sets={sets}
+          onClose={() => setBrowse(false)}
+          onImport={async (set) => {
+            try {
+              await saveSet(set);
+              flash({ kind: 'ok', text: `Imported "${set.name}" (${set.words.length} words).` });
+            } catch {
+              flash({ kind: 'err', text: 'Could not import that starter set.' });
+            }
           }}
         />
       )}

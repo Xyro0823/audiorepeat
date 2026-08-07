@@ -1,3 +1,4 @@
+import { CEFR_LEVELS } from '@/types/app';
 import type { AppSettings, VocabSet, VocabWord } from '@/types/app';
 
 const FORMAT = 'audiorepeat-set';
@@ -77,6 +78,10 @@ function sanitizeSet(raw: unknown): VocabSet | null {
     nativeLang: typeof s.nativeLang === 'string' && s.nativeLang ? s.nativeLang : 'en-US',
     words,
     settings: sanitizeSettings(s.settings),
+    cefr:
+      typeof s.cefr === 'string' && (CEFR_LEVELS as readonly string[]).includes(s.cefr)
+        ? (s.cefr as (typeof CEFR_LEVELS)[number])
+        : undefined,
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };

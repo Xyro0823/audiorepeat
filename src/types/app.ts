@@ -1,5 +1,8 @@
 import type { LoopSettings } from './loop';
 
+export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
+export type CefrLevel = (typeof CEFR_LEVELS)[number];
+
 export interface VocabWord {
   id: string;
   target: string;
@@ -15,6 +18,8 @@ export interface VocabSet {
   words: VocabWord[];
   /** Per-set overrides, merged over the global AppSettings. */
   settings?: Partial<AppSettings>;
+  /** Optional CEFR difficulty level (A1-C2), e.g. for starter-library sets. */
+  cefr?: CefrLevel;
   createdAt: number;
   updatedAt: number;
 }

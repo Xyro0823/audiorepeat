@@ -13,7 +13,7 @@ import {
 
 // Bump this whenever new starter sets are added, so existing installs receive
 // them exactly once (a user who deletes a seed set keeps it deleted).
-const SEED_VERSION = 2;
+const SEED_VERSION = 3;
 const SEED_VERSION_KEY = 'audiorepeat-seed-version';
 
 const SEED_SETS: VocabSet[] = [
@@ -22,6 +22,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Spanish Essentials',
     lang: 'es-ES',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-hola', target: 'hola', translation: 'hello' },
       { id: 'w-gracias', target: 'gracias', translation: 'thank you' },
@@ -37,6 +38,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'French Basics',
     lang: 'fr-FR',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-bonjour', target: 'bonjour', translation: 'hello / good morning' },
       { id: 'w-merci', target: 'merci', translation: 'thank you' },
@@ -52,6 +54,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'German Phrases',
     lang: 'de-DE',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-hallo', target: 'hallo', translation: 'hello' },
       { id: 'w-danke', target: 'danke', translation: 'thank you' },
@@ -67,6 +70,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Japanese Greetings',
     lang: 'ja-JP',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-konnichiwa', target: 'こんにちは', translation: 'hello' },
       { id: 'w-arigatou', target: 'ありがとう', translation: 'thank you' },
@@ -82,6 +86,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Portuguese Basics',
     lang: 'pt-BR',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-pt-ola', target: 'olá', translation: 'hello' },
       { id: 'w-pt-obrigado', target: 'obrigado', translation: 'thank you' },
@@ -97,6 +102,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Italian Essentials',
     lang: 'it',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-it-ciao', target: 'ciao', translation: 'hello / goodbye' },
       { id: 'w-it-grazie', target: 'grazie', translation: 'thank you' },
@@ -112,6 +118,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Russian Basics',
     lang: 'ru',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-ru-privet', target: 'привет', translation: 'hello' },
       { id: 'w-ru-spasibo', target: 'спасибо', translation: 'thank you' },
@@ -127,6 +134,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Chinese Basics',
     lang: 'zh-CN',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-zh-nihao', target: '你好', translation: 'hello' },
       { id: 'w-zh-xiexie', target: '谢谢', translation: 'thank you' },
@@ -142,6 +150,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Korean Essentials',
     lang: 'ko',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-ko-annyeong', target: '안녕하세요', translation: 'hello' },
       { id: 'w-ko-gamsahamnida', target: '감사합니다', translation: 'thank you', repeats: 3 },
@@ -157,6 +166,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Arabic Essentials',
     lang: 'ar-EG',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-ar-marhaba', target: 'مرحبا', translation: 'hello' },
       { id: 'w-ar-shukran', target: 'شكرا', translation: 'thank you' },
@@ -172,6 +182,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Hindi Basics',
     lang: 'hi',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-hi-namaste', target: 'नमस्ते', translation: 'hello' },
       { id: 'w-hi-dhanyavaad', target: 'धन्यवाद', translation: 'thank you' },
@@ -187,6 +198,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Turkish Basics',
     lang: 'tr',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-tr-merhaba', target: 'merhaba', translation: 'hello' },
       { id: 'w-tr-tesekkurler', target: 'teşekkürler', translation: 'thank you' },
@@ -202,6 +214,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Persian Basics',
     lang: 'fa',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-fa-salam', target: 'سلام', translation: 'hello' },
       { id: 'w-fa-mamnun', target: 'ممنون', translation: 'thank you' },
@@ -217,6 +230,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Dutch Basics',
     lang: 'nl',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-nl-hallo', target: 'hallo', translation: 'hello' },
       { id: 'w-nl-dank-je', target: 'dank je', translation: 'thank you' },
@@ -232,6 +246,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Swedish Basics',
     lang: 'sv',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-sv-hej', target: 'hej', translation: 'hello / goodbye' },
       { id: 'w-sv-tack', target: 'tack', translation: 'thank you' },
@@ -247,6 +262,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Polish Basics',
     lang: 'pl',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-pl-czesc', target: 'cześć', translation: 'hello' },
       { id: 'w-pl-dziekuje', target: 'dziękuję', translation: 'thank you' },
@@ -262,6 +278,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Greek Basics',
     lang: 'el',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-el-geia', target: 'γεια', translation: 'hello' },
       { id: 'w-el-efharisto', target: 'ευχαριστώ', translation: 'thank you' },
@@ -277,6 +294,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Hebrew Basics',
     lang: 'he',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-he-shalom', target: 'שלום', translation: 'hello' },
       { id: 'w-he-toda', target: 'תודה', translation: 'thank you' },
@@ -292,6 +310,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Vietnamese Basics',
     lang: 'vi',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-vi-xin-chao', target: 'xin chào', translation: 'hello' },
       { id: 'w-vi-cam-on', target: 'cảm ơn', translation: 'thank you' },
@@ -307,6 +326,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Thai Basics',
     lang: 'th',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-th-sawatdee', target: 'สวัสดี', translation: 'hello' },
       { id: 'w-th-khopkhun', target: 'ขอบคุณ', translation: 'thank you' },
@@ -322,6 +342,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Indonesian Basics',
     lang: 'id',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-id-halo', target: 'halo', translation: 'hello' },
       { id: 'w-id-terima-kasih', target: 'terima kasih', translation: 'thank you' },
@@ -337,6 +358,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Swahili Basics',
     lang: 'sw',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-sw-habari', target: 'habari', translation: 'hello / how are you' },
       { id: 'w-sw-asante', target: 'asante', translation: 'thank you' },
@@ -352,6 +374,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Ukrainian Basics',
     lang: 'uk',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-uk-pryvit', target: 'привіт', translation: 'hello' },
       { id: 'w-uk-dyakuyu', target: 'дякую', translation: 'thank you' },
@@ -367,6 +390,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Czech Basics',
     lang: 'cs',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-cs-ahoj', target: 'ahoj', translation: 'hello / goodbye' },
       { id: 'w-cs-dekuji', target: 'děkuji', translation: 'thank you' },
@@ -382,6 +406,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Finnish Basics',
     lang: 'fi',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-fi-hei', target: 'hei', translation: 'hello' },
       { id: 'w-fi-kiitos', target: 'kiitos', translation: 'thank you' },
@@ -397,6 +422,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Norwegian Basics',
     lang: 'nb-NO',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-nb-hei', target: 'hei', translation: 'hello' },
       { id: 'w-nb-takk', target: 'takk', translation: 'thank you' },
@@ -412,6 +438,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Danish Basics',
     lang: 'da',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-da-hej', target: 'hej', translation: 'hello' },
       { id: 'w-da-tak', target: 'tak', translation: 'thank you' },
@@ -427,6 +454,7 @@ const SEED_SETS: VocabSet[] = [
     name: 'Filipino Basics',
     lang: 'fil',
     nativeLang: 'en-US',
+    cefr: 'A1',
     words: [
       { id: 'w-fil-kumusta', target: 'kumusta', translation: 'hello' },
       { id: 'w-fil-salamat', target: 'salamat', translation: 'thank you' },
@@ -465,6 +493,13 @@ export function useLists() {
         for (const set of SEED_SETS) {
           if (!knownIds.has(set.id)) {
             await putSet({ ...set, createdAt: now, updatedAt: now });
+          } else {
+            // upgrade in place: attach a CEFR level to seed sets created before
+            // levels existed, preserving any words/settings the user changed
+            const existing = list.find((x) => x.id === set.id);
+            if (existing && !existing.cefr && set.cefr) {
+              await putSet({ ...existing, cefr: set.cefr });
+            }
           }
         }
         list = await getAllSets();

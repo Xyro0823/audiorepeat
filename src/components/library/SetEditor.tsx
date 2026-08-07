@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
-import type { VocabSet, VocabWord } from '@/types/app';
+import { CEFR_META } from '@/lib/starterSets';
+import { CEFR_LEVELS } from '@/types/app';
+import type { CefrLevel, VocabSet, VocabWord } from '@/types/app';
 
 const REPEAT_OPTIONS = [1, 2, 3, 5];
 
@@ -24,6 +26,7 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
   const [lang, setLang] = useState(set?.lang ?? 'es-ES');
   const [nativeLang, setNativeLang] = useState(set?.nativeLang ?? 'en-US');
   const [words, setWords] = useState<VocabWord[]>(set ? set.words.map((w) => ({ ...w })) : [newWord()]);
+  const [cefr, setCefr] = useState<CefrLevel | undefined>(set?.cefr);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -40,7 +43,7 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
   const updateWord = (i: number, patch: Partial<VocabWord>) =>
     setWords((prev) => prev.map((w, idx) => (idx === i ? { ...w, ...patch } : w)));
 
-  const submit = async () => {
+  const submit = useCallback(async () => {
     if (!valid || saving) return;
     setSaving(true);
     const clean = words
@@ -52,10 +55,11 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
       lang,
       nativeLang,
       words: clean,
+      cefr,
       createdAt: set?.createdAt ?? Date.now(),
       updatedAt: Date.now(),
     });
-  };
+  }, [valid, saving, name, lang, nativeLang, words, cefr, set, onSave]);
 
   const langHint = findLanguage(lang)?.label;
   const nativeLangHint = findLanguage(nativeLang)?.label;
@@ -133,6 +137,24 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
             </option>
           ))}
         </datalist>
+
+        <label className="mt-4 block">
+          <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
+            CEFR level (optional)
+          </span>
+          <select
+            value={cefr ?? ''}
+            onChange={(e) => setCefr((e.target.value || undefined) as CefrLevel | undefined)}
+            className={inputClass}
+          >
+            <option value="">No level</option>
+            {CEFR_LEVELS.map((lvl) => (
+              <option key={lvl} value={lvl}>
+                {lvl} — {CEFR_META[lvl].label}: {CEFR_META[lvl].description}
+              </option>
+            ))}
+          </select>
+        </label>
 
         <div className="mt-5">
           <div className="mb-2 flex items-center justify-between">
