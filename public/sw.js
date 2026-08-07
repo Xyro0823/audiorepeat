@@ -70,6 +70,20 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Vocabulary word banks (JSON) → network first, cached for offline
+  if (url.pathname.startsWith("/data/")) {
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, copy));
+          return res;
+        })
+        .catch(() => caches.match(request)),
+    );
+    return;
+  }
+
   // Navigations → network first, fall back to the cached shell when offline
   if (request.mode === "navigate") {
     event.respondWith(fetch(request).catch(() => caches.match("/")));
