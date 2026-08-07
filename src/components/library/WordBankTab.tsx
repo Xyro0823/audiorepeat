@@ -16,7 +16,7 @@ interface Props {
   onImport: (set: VocabSet) => void | Promise<void>;
 }
 
-const BATCH_SIZES = [10, 20, 50];
+const BATCH_SIZES = [10, 20, 50, 200, 500, 1000];
 const ROW_HEIGHT = 44;
 
 const selectClass =
