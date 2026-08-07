@@ -8,7 +8,7 @@ import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 const DEFAULT_SETTINGS: LoopSettings = {
   repeats: 2,
   speed: 1,
-  targetGapMs: 600,
+  targetGapMs: 1000,
   translationGapMs: 900,
   loop: true,
 };

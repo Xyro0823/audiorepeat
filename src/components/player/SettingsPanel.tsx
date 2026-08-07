@@ -148,24 +148,33 @@ export default function SettingsPanel({
           </div>
 
           <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-              Pause between repeats
+            <p className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-slate-500">
+              <span>Pause before translation</span>
+              <span className="rounded-md bg-night-800 px-2 py-0.5 font-mono text-neon-cyan">
+                {(settings.targetGapMs / 1000).toFixed(1)}s
+              </span>
             </p>
             <input
               type="range"
-              min={0}
-              max={2000}
+              min={1000}
+              max={5000}
               step={100}
               value={settings.targetGapMs}
               onChange={(e) => onChange({ targetGapMs: Number(e.target.value) })}
               className="w-full accent-neon-cyan"
             />
-            <p className="mt-1 text-[11px] text-slate-500">{settings.targetGapMs} ms</p>
+            <div className="flex justify-between text-[11px] text-slate-600">
+              <span>1s</span>
+              <span>5s</span>
+            </div>
           </div>
 
           <div>
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-              Pause after translation
+            <p className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-slate-500">
+              <span>Pause after translation</span>
+              <span className="rounded-md bg-night-800 px-2 py-0.5 font-mono text-neon-cyan">
+                {(settings.translationGapMs / 1000).toFixed(1)}s
+              </span>
             </p>
             <input
               type="range"
@@ -176,7 +185,10 @@ export default function SettingsPanel({
               onChange={(e) => onChange({ translationGapMs: Number(e.target.value) })}
               className="w-full accent-neon-cyan"
             />
-            <p className="mt-1 text-[11px] text-slate-500">{settings.translationGapMs} ms</p>
+            <div className="flex justify-between text-[11px] text-slate-600">
+              <span>0s</span>
+              <span>3s</span>
+            </div>
           </div>
 
           <div className="flex flex-col gap-4 sm:col-span-2">

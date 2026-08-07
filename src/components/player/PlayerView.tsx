@@ -26,10 +26,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     [set],
   );
 
-  // effective = global settings merged with any per-set overrides
+  // effective = global settings merged with any per-set overrides. The
+  // before-translation gap lives in the 1-5s range; clamp here (not just at
+  // load time) so legacy per-set overrides below 1s display and play back
+  // consistently with the slider instead of rendering out-of-range.
   const customMode = !!set?.settings;
   const effective = useMemo<AppSettings>(
-    () => ({ ...settings, ...set?.settings }),
+    () => ({
+      ...settings,
+      ...set?.settings,
+      targetGapMs: Math.min(5000, Math.max(1000, set?.settings?.targetGapMs ?? settings.targetGapMs)),
+    }),
     [settings, set],
   );
 
@@ -178,6 +185,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         onStop={stop}
         onSkipNext={skipNext}
         onReplay={replayWord}
+        speed={effective.speed}
+        onSpeedChange={(speed) => changeSettings({ speed })}
       />
     </main>
   );

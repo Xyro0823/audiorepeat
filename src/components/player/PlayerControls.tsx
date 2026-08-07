@@ -1,11 +1,15 @@
 'use client';
 
+const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5];
+
 interface Props {
   isPlaying: boolean;
   onPlayPause: () => void;
   onStop: () => void;
   onSkipNext: () => void;
   onReplay: () => void;
+  speed: number;
+  onSpeedChange: (speed: number) => void;
 }
 
 export default function PlayerControls({
@@ -14,10 +18,19 @@ export default function PlayerControls({
   onStop,
   onSkipNext,
   onReplay,
+  speed,
+  onSpeedChange,
 }: Props) {
+  const cycleSpeed = () => {
+    // Snaps non-preset values (e.g. 1.3 from the fine-grained settings slider)
+    // to the first preset on the next tap.
+    const i = SPEED_OPTIONS.findIndex((s) => Math.abs(s - speed) < 0.001);
+    onSpeedChange(SPEED_OPTIONS[(i + 1) % SPEED_OPTIONS.length]);
+  };
+
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-night-950/80 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-center gap-5 px-5 py-5">
+      <div className="mx-auto flex w-full max-w-3xl items-center justify-center gap-2.5 px-4 py-5 sm:gap-5">
         <button
           onClick={onReplay}
           aria-label="Replay current word"
@@ -91,6 +104,30 @@ export default function PlayerControls({
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
             <rect x="6" y="6" width="12" height="12" rx="2" />
           </svg>
+        </button>
+
+        <button
+          onClick={cycleSpeed}
+          aria-label={`Playback speed ${speed}×`}
+          title="Playback speed — tap to change"
+          className={`flex h-14 shrink-0 flex-col items-center justify-center gap-1 rounded-full border px-4 transition active:scale-90 ${
+            speed !== 1
+              ? 'border-neon-cyan/60 bg-neon-cyan/10 text-neon-cyan glow-cyan'
+              : 'border-white/10 bg-white/5 text-slate-300 hover:border-neon-cyan/50 hover:text-neon-cyan'
+          }`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-3.5 w-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M13 2 4.5 13.5H11L9.5 22 19 9.5h-6.5L13 2Z" />
+          </svg>
+          <span className="text-xs font-bold leading-none">{speed}×</span>
         </button>
       </div>
     </div>

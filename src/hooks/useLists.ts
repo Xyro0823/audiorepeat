@@ -184,7 +184,14 @@ export function useLists() {
       }
       const stored = await getSettings();
       if (alive) {
-        const merged = { ...DEFAULT_SETTINGS, ...stored };
+        // targetGapMs now lives in the 1-5s range; clamp any legacy stored
+        // value (old default was 600ms) so the slider never shows an
+        // out-of-range value.
+        const merged = {
+          ...DEFAULT_SETTINGS,
+          ...stored,
+          targetGapMs: Math.min(5000, Math.max(1000, stored?.targetGapMs ?? DEFAULT_SETTINGS.targetGapMs)),
+        };
         settingsRef.current = merged;
         setSets(list);
         setSettings(merged);

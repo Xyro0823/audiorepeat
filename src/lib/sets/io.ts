@@ -93,7 +93,9 @@ function sanitizeSettings(raw: unknown): Partial<AppSettings> | undefined {
   const out: Partial<AppSettings> = {};
   if (s.repeats === 1 || s.repeats === 2 || s.repeats === 3 || s.repeats === 5) out.repeats = s.repeats;
   if (typeof s.speed === 'number' && s.speed >= 0.5 && s.speed <= 2) out.speed = s.speed;
-  if (typeof s.targetGapMs === 'number' && s.targetGapMs >= 0 && s.targetGapMs <= 5000) out.targetGapMs = s.targetGapMs;
+  // targetGapMs is intentionally 1-5s only (matches the player slider); legacy
+  // sub-1s values are dropped on import rather than silently played back.
+  if (typeof s.targetGapMs === 'number' && s.targetGapMs >= 1000 && s.targetGapMs <= 5000) out.targetGapMs = s.targetGapMs;
   if (typeof s.translationGapMs === 'number' && s.translationGapMs >= 0 && s.translationGapMs <= 5000) out.translationGapMs = s.translationGapMs;
   if (typeof s.loop === 'boolean') out.loop = s.loop;
   if (typeof s.cachedAudio === 'boolean') out.cachedAudio = s.cachedAudio;

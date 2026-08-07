@@ -6,9 +6,13 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "AudioRepeat",
     description:
       "Offline-first, hands-free vocabulary looping for auditory language learners.",
+    id: "/",
+    scope: "/",
     start_url: "/",
     display: "standalone",
     orientation: "portrait",
+    lang: "en",
+    categories: ["education", "productivity"],
     background_color: "#05050c",
     theme_color: "#05050c",
     icons: [

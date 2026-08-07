@@ -31,7 +31,7 @@ export interface AppSettings extends LoopSettings {
 export const DEFAULT_SETTINGS: AppSettings = {
   repeats: 2,
   speed: 1,
-  targetGapMs: 600,
+  targetGapMs: 1000,
   translationGapMs: 900,
   loop: true,
   cachedAudio: false,
