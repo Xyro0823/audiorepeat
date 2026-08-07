@@ -1,0 +1,32 @@
+export interface TTSEngineVoice {
+  name: string;
+  lang: string; // BCP-47
+  localService: boolean; // true => works fully offline
+  uri: string;
+  isDefault: boolean;
+}
+
+export interface SpeakOptions {
+  text: string;
+  lang: string; // BCP-47
+  rate: number;
+  voiceURI?: string;
+  onStart?: () => void;
+  onEnd: () => void;
+  onError: (err: unknown) => void;
+}
+
+/**
+ * Any TTS backend (Web Speech API, cached audio, cloud TTS).
+ * The audio loop depends only on this interface, so engines are swappable
+ * without touching playback logic — and the hook is unit-testable.
+ */
+export interface TTSEngine {
+  readonly id: string;
+  /** Speak one logical unit. Must call onEnd/onError exactly once (unless stopped). */
+  speak(opts: SpeakOptions): void;
+  /** Cancel whatever is speaking. Callbacks of the cancelled utterance are NOT invoked. */
+  stop(): void;
+  getVoices(lang?: string): TTSEngineVoice[];
+  loadVoices(): Promise<TTSEngineVoice[]>;
+}

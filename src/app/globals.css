@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  --color-night-950: #05050c;
+  --color-night-900: #0a0a14;
+  --color-night-800: #121220;
+  --color-night-700: #1c1c30;
+  --color-night-600: #282845;
+
+  --color-neon-cyan: #22e4ff;
+  --color-neon-magenta: #ff3ec8;
+  --color-neon-violet: #a78bfa;
+  --color-neon-green: #4dff9e;
+  --color-neon-amber: #ffc94d;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  color: #e5e9f0;
+  background:
+    radial-gradient(1100px 700px at 85% -10%, rgba(34, 228, 255, 0.09), transparent 60%),
+    radial-gradient(900px 650px at 5% 110%, rgba(255, 62, 200, 0.08), transparent 60%),
+    radial-gradient(700px 500px at 50% 50%, rgba(167, 139, 250, 0.05), transparent 70%),
+    #05050c;
+  background-attachment: fixed;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+::selection {
+  background: rgba(34, 228, 255, 0.3);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #262642;
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@layer components {
+  .glass {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    backdrop-filter: blur(14px);
+  }
+  .glow-cyan {
+    box-shadow: 0 0 24px rgba(34, 228, 255, 0.35), 0 0 64px rgba(34, 228, 255, 0.12);
+  }
+  .glow-magenta {
+    box-shadow: 0 0 24px rgba(255, 62, 200, 0.35), 0 0 64px rgba(255, 62, 200, 0.12);
+  }
+  .text-glow-cyan {
+    text-shadow: 0 0 18px rgba(34, 228, 255, 0.65), 0 0 42px rgba(34, 228, 255, 0.25);
+  }
+  .text-glow-magenta {
+    text-shadow: 0 0 18px rgba(255, 62, 200, 0.65), 0 0 42px rgba(255, 62, 200, 0.25);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 18px rgba(34, 228, 255, 0.35), 0 0 50px rgba(34, 228, 255, 0.12);
+  }
+  50% {
+    box-shadow: 0 0 34px rgba(34, 228, 255, 0.6), 0 0 90px rgba(34, 228, 255, 0.22);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.2s ease-in-out infinite;
+}
+.animate-fade-up {
+  animation: fade-up 0.45s ease-out both;
+}
+.eq-bar {
+  transform-origin: bottom;
+  animation: eq 1s ease-in-out infinite;
+}
