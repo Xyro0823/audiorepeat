@@ -13,7 +13,7 @@ import {
 
 // Bump this whenever new starter sets are added, so existing installs receive
 // them exactly once (a user who deletes a seed set keeps it deleted).
-const SEED_VERSION = 3;
+const SEED_VERSION = 4;
 const SEED_VERSION_KEY = 'audiorepeat-seed-version';
 
 const SEED_SETS: VocabSet[] = [
@@ -461,6 +461,22 @@ const SEED_SETS: VocabSet[] = [
       { id: 'w-fil-pakiusap', target: 'pakiusap', translation: 'please' },
       { id: 'w-fil-oo', target: 'oo', translation: 'yes' },
       { id: 'w-fil-paalam', target: 'paalam', translation: 'goodbye', repeats: 3 },
+    ],
+    createdAt: 0,
+    updatedAt: 0,
+  },
+  {
+    id: 'seed-mongolian-basics',
+    name: 'Mongolian Basics',
+    lang: 'mn',
+    nativeLang: 'en-US',
+    cefr: 'A1',
+    words: [
+      { id: 'w-mn-sain', target: 'сайн байна уу', translation: 'hello' },
+      { id: 'w-mn-bayarlalaa', target: 'баярлалаа', translation: 'thank you', repeats: 3 },
+      { id: 'w-mn-guiya', target: 'гуйя', translation: 'please' },
+      { id: 'w-mn-tiim', target: 'тийм', translation: 'yes' },
+      { id: 'w-mn-ugui', target: 'үгүй', translation: 'no' },
     ],
     createdAt: 0,
     updatedAt: 0,

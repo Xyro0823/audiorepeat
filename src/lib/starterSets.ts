@@ -183,8 +183,17 @@ const TR: LevelWords = {
   C2: [['paradoks', 'paradox'], ['ikilem', 'dilemma'], ['kaçınılmaz', 'inevitable'], ['derin', 'profound'], ['titiz', 'meticulous'], ['sıkı', 'rigorous'], ['kapsamlı', 'comprehensive'], ['açık', 'explicit'], ['örtük', 'implicit'], ['yaygın', 'widespread']],
 };
 
+const MN: LevelWords = {
+  A1: [['сайн байна уу', 'hello'], ['баярлалаа', 'thank you'], ['гуйя', 'please'], ['баяртай', 'goodbye'], ['тийм', 'yes'], ['үгүй', 'no'], ['ус', 'water'], ['талх', 'bread'], ['гэр бүл', 'family'], ['найз', 'friend']],
+  A2: [['буудал', 'station'], ['тасалбар', 'ticket'], ['гудамж', 'street'], ['зүүн', 'left'], ['баруун', 'right'], ['хэд вэ?', 'how much?'], ['дэлгүүр', 'shop'], ['зочид буудал', 'hotel'], ['өглөө', 'morning'], ['орой', 'evening']],
+  B1: [['ажил', 'job'], ['компани', 'company'], ['хурал', 'meeting'], ['санал бодол', 'opinion'], ['зөвшөөрөх', 'agree'], ['байгаль орчин', 'environment'], ['эрүүл мэнд', 'health'], ['туршлага', 'experience'], ['шийдвэр', 'decision'], ['асуудал', 'problem']],
+  B2: [['нотолгоо', 'evidence'], ['ач холбогдолтой', 'significant'], ['ятгах', 'persuade'], ['үнэлэх', 'evaluate'], ['үр дагавар', 'consequences'], ['хэлэлцэх', 'negotiate'], ['боломж', 'opportunity'], ['маргаантай', 'controversial'], ['таамаглал', 'assumption'], ['хэрэгжүүлэх', 'implement']],
+  C1: [['гэсэн ч', 'nevertheless'], ['үүнээс гадна', 'moreover'], ['дашрамд хэлэхэд', 'by the way'], ['урт хугацаанд', 'in the long run'], ['үнэнийг хэлэхэд', 'to be honest'], ['миний бодлоор', 'in my opinion'], ['нөхцөл байдлаас хамаарна', 'it depends'], ['нөгөө талаас', 'on the other hand'], ['өөрөөр хэлбэл', 'in other words'], ['эргэлзээгүйгээр', 'without a doubt']],
+  C2: [['парадокс', 'paradox'], ['дилемма', 'dilemma'], ['зайлшгүй', 'inevitable'], ['гүн гүнзгий', 'profound'], ['нямбай', 'meticulous'], ['чанд', 'rigorous'], ['иж бүрэн', 'comprehensive'], ['тодорхой', 'explicit'], ['далд', 'implicit'], ['өргөн тархсан', 'widespread']],
+};
+
 /** Language BCP-47 codes that ship starter sets (in display order). */
-export const STARTER_LANGS = ['es-ES', 'fr-FR', 'de-DE', 'it', 'pt-BR', 'ja-JP', 'ko', 'zh-CN', 'ru', 'ar-EG', 'hi', 'tr'] as const;
+export const STARTER_LANGS = ['es-ES', 'fr-FR', 'de-DE', 'it', 'pt-BR', 'ja-JP', 'ko', 'zh-CN', 'ru', 'ar-EG', 'hi', 'tr', 'mn'] as const;
 
 const LEVEL_DATA: Record<string, LevelWords> = {
   'es-ES': ES,
@@ -199,6 +208,7 @@ const LEVEL_DATA: Record<string, LevelWords> = {
   'ar-EG': AR,
   hi: HI,
   tr: TR,
+  mn: MN,
 };
 
 function buildSets(): StarterSet[] {
