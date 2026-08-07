@@ -13,6 +13,48 @@
       "zh": 40
     }
   },
+  "education": {
+    "label": "Education & School",
+    "emoji": "🎓",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
+    }
+  },
+  "emotions": {
+    "label": "Emotions & Feelings",
+    "emoji": "😊",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
+    }
+  },
+  "family": {
+    "label": "Family & Relationships",
+    "emoji": "👨‍👩‍👧",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
+    }
+  },
   "food": {
     "label": "Food & Dining",
     "emoji": "🍽️",
@@ -58,6 +100,20 @@
   "smalltalk": {
     "label": "Small Talk",
     "emoji": "💬",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
+    }
+  },
+  "sports": {
+    "label": "Sports & Fitness",
+    "emoji": "🏋️",
     "langs": {
       "es": 40,
       "fr": 40,

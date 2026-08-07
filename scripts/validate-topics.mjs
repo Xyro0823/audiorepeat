@@ -24,6 +24,10 @@ const LABELS = {
   health: { label: 'Health & Body', emoji: '🩺' },
   shopping: { label: 'Shopping & Stores', emoji: '🛍️' },
   smalltalk: { label: 'Small Talk', emoji: '💬' },
+  education: { label: 'Education & School', emoji: '🎓' },
+  family: { label: 'Family & Relationships', emoji: '👨‍👩‍👧' },
+  sports: { label: 'Sports & Fitness', emoji: '🏋️' },
+  emotions: { label: 'Emotions & Feelings', emoji: '😊' },
 };
 
 let failed = false;
