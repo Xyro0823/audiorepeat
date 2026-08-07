@@ -50,6 +50,16 @@ export interface PracticeStats {
   streak: number;
 }
 
+/** One day in the rolling 7-day activity view. */
+export interface DayCell {
+  key: string; // YYYY-MM-DD
+  weekday: string; // two-letter label, e.g. 'Mo'
+  dayOfMonth: number;
+  words: number;
+  ms: number;
+  isToday: boolean;
+}
+
 /**
  * Daily practice stats: streak, words listened today, and study time today.
  * Stored per-day in localStorage; reads are SSR-safe and cheap.
@@ -125,5 +135,28 @@ export function usePracticeStats() {
     return { wordsToday: t.w, msToday: t.ms, streak: computeStreak(days) };
   }, [days]);
 
-  return { ...stats, recordWords, recordMs };
+  // Rolling 7-day view (oldest → today) for the weekly activity heatmap.
+  const week = useMemo<DayCell[]>(() => {
+    const labels = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+    const today = new Date();
+    const todayKey = dayKey(today);
+    const out: DayCell[] = [];
+    for (let i = 6; i >= 0; i -= 1) {
+      const d = new Date();
+      d.setDate(today.getDate() - i);
+      const k = dayKey(d);
+      const stat = days[k] ?? { w: 0, ms: 0 };
+      out.push({
+        key: k,
+        weekday: labels[d.getDay()],
+        dayOfMonth: d.getDate(),
+        words: stat.w,
+        ms: stat.ms,
+        isToday: k === todayKey,
+      });
+    }
+    return out;
+  }, [days]);
+
+  return { ...stats, week, recordWords, recordMs };
 }

@@ -2,9 +2,11 @@
 
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
+import ActivityHeatmap from '@/components/ActivityHeatmap';
 import StreakBadge from '@/components/StreakBadge';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useLists } from '@/hooks/useLists';
+import { formatDuration } from '@/lib/format';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { VocabSet } from '@/types/app';
@@ -28,16 +30,6 @@ function Logo() {
 
 function languageLabel(code: string): string {
   return findLanguage(code)?.label ?? code;
-}
-
-function formatDuration(ms: number): string {
-  const s = Math.round(ms / 1000);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}m`;
-  if (m > 0) return `${m}m ${String(sec).padStart(2, '0')}s`;
-  return `${sec}s`;
 }
 
 interface SetCardProps {
@@ -128,7 +120,7 @@ type ImportMsg = { kind: 'ok' | 'err'; text: string } | null;
 
 export default function SetLibrary() {
   const { sets, loading, saveSet, removeSet } = useLists();
-  const { wordsToday, msToday, streak } = usePracticeStats();
+  const { wordsToday, msToday, streak, week } = usePracticeStats();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState<VocabSet | 'new' | null>(null);
@@ -201,27 +193,30 @@ export default function SetLibrary() {
         </div>
       </header>
 
-      {(wordsToday > 0 || msToday > 0) && (
-        <div className="glass animate-fade-up mb-6 flex flex-wrap items-center gap-x-6 gap-y-1 rounded-2xl px-5 py-3.5">
-          <span className="flex items-center gap-2 text-sm font-medium text-slate-300">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4 text-neon-cyan"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="12" r="9" />
-              <path d="M12 7v5l3 2" />
-            </svg>
-            Today&apos;s practice
-          </span>
-          <span className="text-sm text-slate-400">
-            {wordsToday} word{wordsToday === 1 ? '' : 's'} listened
-          </span>
-          <span className="text-sm text-slate-400">· {formatDuration(msToday)} studied</span>
+      {week.some((d) => d.words > 0 || d.ms > 0) && (
+        <div className="glass animate-fade-up mb-6 rounded-2xl px-5 py-4">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-1">
+            <span className="flex items-center gap-2 text-sm font-medium text-slate-300">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4 text-neon-cyan"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 2" />
+              </svg>
+              Today&apos;s practice
+            </span>
+            <span className="text-sm text-slate-400">
+              {wordsToday} word{wordsToday === 1 ? '' : 's'} listened
+            </span>
+            <span className="text-sm text-slate-400">· {formatDuration(msToday)} studied</span>
+          </div>
+          <ActivityHeatmap week={week} />
         </div>
       )}
 
