@@ -137,4 +137,5 @@ function render(size, radius) {
 writeFileSync(join(outDir, "icon-192.png"), encodePng(192, 192, render(192, 42)));
 writeFileSync(join(outDir, "icon-512.png"), encodePng(512, 512, render(512, 112)));
 writeFileSync(join(outDir, "icon-maskable.png"), encodePng(512, 512, render(512, 0)));
+writeFileSync(join(dirname(outDir), "apple-touch-icon.png"), encodePng(180, 180, render(180, 40)));
 console.log("✓ icons written to public/icons/");

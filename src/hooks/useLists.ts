@@ -11,21 +11,68 @@ import {
   putSettings,
 } from '@/lib/db/indexedDb';
 
-const SEED_SET: VocabSet = {
-  id: 'seed-spanish-essentials',
-  name: 'Spanish Essentials',
-  lang: 'es-ES',
-  nativeLang: 'en-US',
-  words: [
-    { id: 'w-hola', target: 'hola', translation: 'hello' },
-    { id: 'w-gracias', target: 'gracias', translation: 'thank you' },
-    { id: 'w-por-favor', target: 'por favor', translation: 'please', repeats: 3 },
-    { id: 'w-lo-siento', target: 'lo siento', translation: 'I am sorry' },
-    { id: 'w-adios', target: 'adiós', translation: 'goodbye' },
-  ],
-  createdAt: Date.now(),
-  updatedAt: Date.now(),
-};
+const SEED_SETS: VocabSet[] = [
+  {
+    id: 'seed-spanish-essentials',
+    name: 'Spanish Essentials',
+    lang: 'es-ES',
+    nativeLang: 'en-US',
+    words: [
+      { id: 'w-hola', target: 'hola', translation: 'hello' },
+      { id: 'w-gracias', target: 'gracias', translation: 'thank you' },
+      { id: 'w-por-favor', target: 'por favor', translation: 'please', repeats: 3 },
+      { id: 'w-lo-siento', target: 'lo siento', translation: 'I am sorry' },
+      { id: 'w-adios', target: 'adiós', translation: 'goodbye' },
+    ],
+    createdAt: 0,
+    updatedAt: 0,
+  },
+  {
+    id: 'seed-french-basics',
+    name: 'French Basics',
+    lang: 'fr-FR',
+    nativeLang: 'en-US',
+    words: [
+      { id: 'w-bonjour', target: 'bonjour', translation: 'hello / good morning' },
+      { id: 'w-merci', target: 'merci', translation: 'thank you' },
+      { id: 'w-oui', target: 'oui', translation: 'yes' },
+      { id: 'w-non', target: 'non', translation: 'no' },
+      { id: 'w-ou-est', target: "où est la gare ?", translation: 'where is the station?' },
+    ],
+    createdAt: 0,
+    updatedAt: 0,
+  },
+  {
+    id: 'seed-german-phrases',
+    name: 'German Phrases',
+    lang: 'de-DE',
+    nativeLang: 'en-US',
+    words: [
+      { id: 'w-hallo', target: 'hallo', translation: 'hello' },
+      { id: 'w-danke', target: 'danke', translation: 'thank you' },
+      { id: 'w-bitte', target: 'bitte', translation: 'please / you are welcome' },
+      { id: 'w-entschuldigung', target: 'Entschuldigung', translation: 'excuse me / sorry' },
+      { id: 'w-wo-ist', target: 'Wo ist die Toilette?', translation: 'where is the toilet?', repeats: 3 },
+    ],
+    createdAt: 0,
+    updatedAt: 0,
+  },
+  {
+    id: 'seed-japanese-greetings',
+    name: 'Japanese Greetings',
+    lang: 'ja-JP',
+    nativeLang: 'en-US',
+    words: [
+      { id: 'w-konnichiwa', target: 'こんにちは', translation: 'hello' },
+      { id: 'w-arigatou', target: 'ありがとう', translation: 'thank you' },
+      { id: 'w-sumimasen', target: 'すみません', translation: 'excuse me / sorry' },
+      { id: 'w-hai', target: 'はい', translation: 'yes' },
+      { id: 'w-ie', target: 'いいえ', translation: 'no' },
+    ],
+    createdAt: 0,
+    updatedAt: 0,
+  },
+];
 
 export function useLists() {
   const [sets, setSets] = useState<VocabSet[]>([]);
@@ -39,7 +86,10 @@ export function useLists() {
     (async () => {
       let list = await getAllSets();
       if (list.length === 0) {
-        await putSet({ ...SEED_SET, createdAt: Date.now(), updatedAt: Date.now() });
+        const now = Date.now();
+        for (const set of SEED_SETS) {
+          await putSet({ ...set, createdAt: now, updatedAt: now });
+        }
         list = await getAllSets();
       }
       const stored = await getSettings();

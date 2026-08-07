@@ -13,6 +13,8 @@ export interface VocabSet {
   lang: string; // BCP-47 target language, e.g. "es-ES"
   nativeLang: string; // BCP-47 for translations, e.g. "en-US"
   words: VocabWord[];
+  /** Per-set overrides, merged over the global AppSettings. */
+  settings?: Partial<AppSettings>;
   createdAt: number;
   updatedAt: number;
 }

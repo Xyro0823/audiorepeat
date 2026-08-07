@@ -1,20 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useAudioLoop } from '@/hooks/useAudioLoop';
 import { useLists } from '@/hooks/useLists';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import type { TTSEngine } from '@/lib/tts/engine';
+import type { AppSettings } from '@/types/app';
 import PlayerControls from './PlayerControls';
 import ProgressBar from './ProgressBar';
 import SettingsPanel from './SettingsPanel';
 import WordCard from './WordCard';
 
 export default function PlayerView({ setId }: { setId: string | null }) {
-  const { sets, loading, settings, saveSettings } = useLists();
+  const { sets, loading, settings, saveSettings, saveSet } = useLists();
   const set = sets.find((s) => s.id === setId) ?? null;
 
   const words = useMemo(
@@ -25,16 +26,78 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     [set],
   );
 
+  // effective = global settings merged with any per-set overrides
+  const customMode = !!set?.settings;
+  const effective = useMemo<AppSettings>(
+    () => ({ ...settings, ...set?.settings }),
+    [settings, set],
+  );
+
+  const changeSettings = useCallback(
+    (patch: Partial<AppSettings>) => {
+      if (!set) return;
+      if (customMode) {
+        void saveSet({ ...set, settings: { ...(set.settings ?? {}), ...patch } });
+      } else {
+        saveSettings(patch);
+      }
+    },
+    [set, customMode, saveSet, saveSettings],
+  );
+
+  const toggleCustom = useCallback(
+    (on: boolean) => {
+      if (!set) return;
+      // turning on snapshots the current effective settings as the set's baseline
+      void saveSet({ ...set, settings: on ? { ...effective } : undefined });
+    },
+    [set, effective, saveSet],
+  );
+
   // Swappable engine: cached <audio> (offline) when enabled, else speechSynthesis.
   const engine = useMemo<TTSEngine | undefined>(() => {
-    if (!settings.cachedAudio) return undefined;
+    if (!effective.cachedAudio) return undefined;
     return new CachedAudioEngine(new SpeechSynthesisEngine());
-  }, [settings.cachedAudio]);
+  }, [effective.cachedAudio]);
 
   const { progress, currentWord, isPlaying, play, pause, stop, skipNext, replayWord } =
-    useAudioLoop({ words, settings, engine });
+    useAudioLoop({ words, settings: effective, engine });
 
   const { voices, loading: voicesLoading } = useSpeechVoices(engine);
+
+  // keyboard shortcuts: Space play/pause · ← replay word · → next · S stop
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+      if (target?.closest('button')) return; // Space would also click the focused button
+      if (e.repeat) return;
+      switch (e.code) {
+        case 'Space':
+          e.preventDefault();
+          if (isPlaying) pause();
+          else play();
+          break;
+        case 'ArrowLeft':
+          e.preventDefault();
+          replayWord();
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          skipNext();
+          break;
+        case 'KeyS':
+          e.preventDefault();
+          stop();
+          break;
+        default:
+          break;
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isPlaying, play, pause, stop, skipNext, replayWord]);
 
   if (loading) {
     return (
@@ -60,7 +123,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     );
   }
 
-  const currentRepeats = currentWord?.repeats ?? settings.repeats;
+  const currentRepeats = currentWord?.repeats ?? effective.repeats;
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-5 pb-52 pt-6">
@@ -99,8 +162,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       </div>
 
       <SettingsPanel
-        settings={settings}
-        onChange={saveSettings}
+        settings={effective}
+        onChange={changeSettings}
+        customMode={customMode}
+        onToggleCustom={toggleCustom}
         voices={voices}
         voicesLoading={voicesLoading}
         targetLang={set.lang}

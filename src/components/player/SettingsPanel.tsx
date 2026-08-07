@@ -10,6 +10,8 @@ const REPEAT_OPTIONS = [1, 2, 3, 5];
 interface Props {
   settings: AppSettings;
   onChange: (patch: Partial<AppSettings>) => void;
+  customMode: boolean; // editing per-set overrides vs the global settings
+  onToggleCustom: (on: boolean) => void;
   voices: TTSEngineVoice[];
   voicesLoading: boolean;
   targetLang: string;
@@ -20,10 +22,12 @@ function Toggle({
   checked,
   onChange,
   label,
+  hint,
 }: {
   checked: boolean;
   onChange: (v: boolean) => void;
   label: string;
+  hint?: string;
 }) {
   return (
     <button onClick={() => onChange(!checked)} className="flex items-center gap-3 text-left">
@@ -38,7 +42,10 @@ function Toggle({
           }`}
         />
       </span>
-      <span className="text-sm text-slate-300">{label}</span>
+      <span>
+        <span className="block text-sm text-slate-300">{label}</span>
+        {hint && <span className="block text-[11px] text-slate-500">{hint}</span>}
+      </span>
     </button>
   );
 }
@@ -46,6 +53,8 @@ function Toggle({
 export default function SettingsPanel({
   settings,
   onChange,
+  customMode,
+  onToggleCustom,
   voices,
   voicesLoading,
   targetLang,
@@ -70,10 +79,28 @@ export default function SettingsPanel({
           <path d="m6 9 6 6 6-6" />
         </svg>
         Loop settings
+        {customMode && (
+          <span className="rounded-full bg-neon-magenta/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-neon-magenta">
+            this set
+          </span>
+        )}
       </button>
 
       {open && (
         <div className="glass animate-fade-up mt-4 grid gap-6 rounded-2xl p-5 sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <Toggle
+              checked={customMode}
+              onChange={onToggleCustom}
+              label="Customize settings for this set"
+              hint={
+                customMode
+                  ? 'Changes below apply only to this set'
+                  : 'Changes below apply to all sets'
+              }
+            />
+          </div>
+
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
               Repeats per word
