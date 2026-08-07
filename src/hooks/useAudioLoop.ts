@@ -45,6 +45,10 @@ export interface UseAudioLoopOptions {
   /** Inject an engine for tests, or the cached/cloud engine for offline hands-free mode. */
   engine?: TTSEngine;
   onWordChange?: (word: LoopWord, index: number) => void;
+  /** Lock-screen context: shown as the media-session album (usually the set name). */
+  album?: string;
+  /** Lock-screen context: shown as the media-session artist (usually the language). */
+  artist?: string;
 }
 
 /**
@@ -60,7 +64,7 @@ export interface UseAudioLoopOptions {
  *   `schedulerRef` (updated in an effect), so no stale closures can leak in.
  * - Media Session + Screen Wake Lock are wired here for hands-free control.
  */
-export function useAudioLoop({ words, settings = {}, engine, onWordChange }: UseAudioLoopOptions) {
+export function useAudioLoop({ words, settings = {}, engine, onWordChange, album, artist }: UseAudioLoopOptions) {
   const engineRef = useRef<TTSEngine | null>(null);
   const wordsRef = useRef<LoopWord[]>(words);
   const settingsRef = useRef<LoopSettings>({ ...DEFAULT_SETTINGS, ...settings });
@@ -70,6 +74,7 @@ export function useAudioLoop({ words, settings = {}, engine, onWordChange }: Use
   const statusRef = useRef<PlaybackStatus>('idle');
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const onWordChangeRef = useRef(onWordChange);
+  const mediaMetaRef = useRef({ album: 'AudioRepeat', artist: '' });
   const schedulerRef = useRef<Scheduler>({ speakCurrent: () => {}, scheduleNext: () => {} });
 
   const [status, setStatus] = useState<PlaybackStatus>('idle');
@@ -78,6 +83,9 @@ export function useAudioLoop({ words, settings = {}, engine, onWordChange }: Use
   useEffect(() => {
     onWordChangeRef.current = onWordChange;
   }, [onWordChange]);
+  useEffect(() => {
+    mediaMetaRef.current = { album: album ?? 'AudioRepeat', artist: artist ?? '' };
+  }, [album, artist]);
   useEffect(() => {
     if (engine && engineRef.current !== engine) {
       // engine swap (e.g. cached-audio toggle) mid-playback: stop the old engine
@@ -148,15 +156,26 @@ export function useAudioLoop({ words, settings = {}, engine, onWordChange }: Use
     const list = wordsRef.current;
     const c = cursorRef.current;
     const word = list[c.wordIndex];
+    const { album: metaAlbum, artist: metaArtist } = mediaMetaRef.current;
     try {
       navigator.mediaSession.playbackState = state;
-      if (word) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: c.isTranslation ? word.translation : word.target,
-          artist: `${c.wordIndex + 1} / ${list.length}`,
-          album: 'AudioRepeat',
-        });
+      if (state === 'none' || !word) {
+        // Clear the now-playing notification entirely once playback ends, so
+        // the lock screen never lingers on a stale word.
+        navigator.mediaSession.metadata = null;
+        return;
       }
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: c.isTranslation ? word.translation : word.target,
+        artist: metaArtist
+          ? `${metaArtist} · ${c.wordIndex + 1} / ${list.length}`
+          : `${c.wordIndex + 1} / ${list.length}`,
+        album: metaAlbum,
+        artwork: [
+          { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+        ],
+      });
     } catch {
       // best-effort
     }
@@ -358,12 +377,18 @@ export function useAudioLoop({ words, settings = {}, engine, onWordChange }: Use
     set('stop', stop);
     set('nexttrack', skipNext);
     set('previoustrack', replayWord);
+    // Some hardware/Bluetooth skip buttons emit seek actions instead of track
+    // actions — map them onto skip/replay for broader lock-screen support.
+    set('seekforward', skipNext);
+    set('seekbackward', replayWord);
     return () => {
       set('play', null);
       set('pause', null);
       set('stop', null);
       set('nexttrack', null);
       set('previoustrack', null);
+      set('seekforward', null);
+      set('seekbackward', null);
     };
   }, [play, pause, stop, skipNext, replayWord]);
 

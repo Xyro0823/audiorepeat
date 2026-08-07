@@ -7,6 +7,7 @@ import { useLists } from '@/hooks/useLists';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
+import { findLanguage } from '@/lib/languages';
 import type { TTSEngine } from '@/lib/tts/engine';
 import type { AppSettings, MasteryStatus } from '@/types/app';
 import PlayerControls from './PlayerControls';
@@ -86,7 +87,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   }, [effective.cachedAudio]);
 
   const { progress, currentWord, isPlaying, play, pause, stop, skipNext, replayWord } =
-    useAudioLoop({ words, settings: effective, engine });
+    useAudioLoop({
+      words,
+      settings: effective,
+      engine,
+      album: set?.name,
+      artist: set ? (findLanguage(set.lang)?.label ?? set.lang) : undefined,
+    });
 
   // Persist a mastery status for the word currently being drilled.
   const markWord = useCallback(
