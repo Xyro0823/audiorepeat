@@ -1,14 +1,4 @@
 {
-  "travel": {
-    "label": "Travel & Airport",
-    "emoji": "✈️",
-    "langs": {
-      "es": 40,
-      "fr": 40,
-      "de": 40,
-      "ja": 40
-    }
-  },
   "business": {
     "label": "Business & Work",
     "emoji": "💼",
@@ -16,7 +6,11 @@
       "es": 40,
       "fr": 40,
       "de": 40,
-      "ja": 40
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
     }
   },
   "food": {
@@ -26,7 +20,53 @@
       "es": 46,
       "fr": 46,
       "de": 46,
-      "ja": 46
+      "ja": 46,
+      "it": 46,
+      "pt": 46,
+      "ko": 46,
+      "zh": 46
+    }
+  },
+  "health": {
+    "label": "Health & Body",
+    "emoji": "🩺",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
+    }
+  },
+  "shopping": {
+    "label": "Shopping & Stores",
+    "emoji": "🛍️",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
+    }
+  },
+  "smalltalk": {
+    "label": "Small Talk",
+    "emoji": "💬",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
     }
   },
   "tech": {
@@ -36,7 +76,25 @@
       "es": 47,
       "fr": 47,
       "de": 47,
-      "ja": 47
+      "ja": 47,
+      "it": 47,
+      "pt": 47,
+      "ko": 47,
+      "zh": 47
+    }
+  },
+  "travel": {
+    "label": "Travel & Airport",
+    "emoji": "✈️",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40
     }
   }
 }
