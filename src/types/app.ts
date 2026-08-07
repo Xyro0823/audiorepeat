@@ -3,11 +3,16 @@ import type { LoopSettings } from './loop';
 export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 export type CefrLevel = (typeof CEFR_LEVELS)[number];
 
+/** Spaced-repetition status for a single word; absent = still learning. */
+export type MasteryStatus = 'mastered' | 'hard';
+
 export interface VocabWord {
   id: string;
   target: string;
   translation: string;
   repeats?: number; // per-word override; falls back to settings.repeats
+  /** 'mastered' = known, 'hard' = review needed; undefined = learning. */
+  mastery?: MasteryStatus;
 }
 
 export interface VocabSet {

@@ -39,6 +39,11 @@ interface SetCardProps {
 }
 
 function SetCard({ set, index, isConfirming, onPlay, onEdit, onExport, onDelete }: SetCardProps) {
+  const total = set.words.length;
+  const mastered = set.words.filter((w) => w.mastery === 'mastered').length;
+  const hard = set.words.filter((w) => w.mastery === 'hard').length;
+  const pct = total > 0 ? Math.round((mastered / total) * 100) : 0;
+
   return (
     <article
       className="glass animate-fade-up group relative overflow-hidden rounded-2xl p-5 transition-all hover:-translate-y-1 hover:border-neon-cyan/40"
@@ -54,7 +59,23 @@ function SetCard({ set, index, isConfirming, onPlay, onEdit, onExport, onDelete 
         {set.words.length} words · {languageLabel(set.lang)} → {languageLabel(set.nativeLang)}
         {set.settings ? ' · custom settings' : ''}
       </p>
-      <div className="mt-5 flex gap-2">
+      <div className="mt-4">
+        <div className="flex items-center justify-between text-[11px]">
+          <span className="font-medium text-slate-400">{pct}% mastered</span>
+          {hard > 0 && (
+            <span className="text-neon-amber">
+              {hard} to review
+            </span>
+          )}
+        </div>
+        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-night-800">
+          <div
+            className="h-full rounded-full bg-gradient-to-r from-neon-green to-neon-cyan transition-all duration-500"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+      <div className="mt-4 flex gap-2">
         <button
           onClick={onPlay}
           className="flex-1 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"

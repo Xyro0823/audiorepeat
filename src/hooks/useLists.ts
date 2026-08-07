@@ -89,7 +89,14 @@ function matchesCuratedSeed(existing: VocabSet, curated: VocabSet): boolean {
   if (existing.words.length !== curated.words.length) return false;
   return curated.words.every((w) => {
     const cur = existing.words.find((x) => x.id === w.id);
-    return cur && cur.target === w.target && cur.translation === w.translation;
+    // Mastery marks count as user edits: a mastered seed set must NOT be
+    // re-hydrated with fresh words (that would silently erase the marks).
+    return (
+      cur &&
+      cur.target === w.target &&
+      cur.translation === w.translation &&
+      cur.mastery === w.mastery
+    );
   });
 }
 
@@ -155,7 +162,8 @@ export function useLists() {
                       cur &&
                       orig &&
                       cur.target === orig.target &&
-                      cur.translation === orig.translation
+                      cur.translation === orig.translation &&
+                      cur.mastery === orig.mastery
                     );
                   })) ||
                 matchesCuratedSeed(existing, set);

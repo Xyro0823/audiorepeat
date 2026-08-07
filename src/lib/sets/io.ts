@@ -62,10 +62,11 @@ function sanitizeSet(raw: unknown): VocabSet | null {
       while (seenIds.has(id)) id = crypto.randomUUID();
       seenIds.add(id);
       return {
-      id,
-      target: w.target.trim(),
-      translation: w.translation.trim(),
-      repeats: typeof w.repeats === 'number' && w.repeats >= 1 ? Math.round(w.repeats) : undefined,
+        id,
+        target: w.target.trim(),
+        translation: w.translation.trim(),
+        repeats: typeof w.repeats === 'number' && w.repeats >= 1 ? Math.round(w.repeats) : undefined,
+        mastery: w.mastery === 'mastered' || w.mastery === 'hard' ? w.mastery : undefined,
       };
     });
 

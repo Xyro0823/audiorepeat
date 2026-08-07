@@ -1,3 +1,5 @@
+import type { MasteryStatus } from './app';
+
 export interface LoopWord {
   id: string;
   target: string;
@@ -5,6 +7,7 @@ export interface LoopWord {
   lang: string;
   nativeLang?: string;
   repeats?: number;
+  mastery?: MasteryStatus;
 }
 
 export interface LoopSettings {

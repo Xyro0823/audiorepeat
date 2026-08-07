@@ -1,5 +1,6 @@
 'use client';
 
+import type { MasteryStatus } from '@/types/app';
 import type { LoopWord } from '@/types/loop';
 
 interface Props {
@@ -9,9 +10,18 @@ interface Props {
   isTranslation: boolean;
   repeats: number;
   total: number;
+  onMark: (status: MasteryStatus | undefined) => void;
 }
 
-export default function WordCard({ word, wordIndex, repeatIndex, isTranslation, repeats, total }: Props) {
+export default function WordCard({
+  word,
+  wordIndex,
+  repeatIndex,
+  isTranslation,
+  repeats,
+  total,
+  onMark,
+}: Props) {
   if (!word) {
     return (
       <div className="animate-fade-up flex flex-col items-center gap-4 py-10 text-center">
@@ -33,8 +43,20 @@ export default function WordCard({ word, wordIndex, repeatIndex, isTranslation, 
       key={`${word.id}-${isTranslation ? 't' : 'r'}`}
       className="animate-fade-up flex flex-col items-center text-center"
     >
-      <p className="mb-6 text-xs font-medium uppercase tracking-[0.3em] text-slate-500">
-        {isTranslation ? 'Translation' : 'Target'} · {wordIndex + 1} / {total}
+      <p className="mb-6 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.3em] text-slate-500">
+        <span>
+          {isTranslation ? 'Translation' : 'Target'} · {wordIndex + 1} / {total}
+        </span>
+        {word.mastery === 'mastered' && (
+          <span className="rounded-full border border-neon-green/40 bg-neon-green/10 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-neon-green">
+            ✓ mastered
+          </span>
+        )}
+        {word.mastery === 'hard' && (
+          <span className="rounded-full border border-neon-amber/40 bg-neon-amber/10 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-neon-amber">
+            ★ review
+          </span>
+        )}
       </p>
 
       <p
@@ -66,6 +88,47 @@ export default function WordCard({ word, wordIndex, repeatIndex, isTranslation, 
           </span>
         </div>
       )}
+
+      <div className="mt-8 flex items-center gap-3">
+        <button
+          onClick={() => onMark(word.mastery === 'mastered' ? undefined : 'mastered')}
+          aria-pressed={word.mastery === 'mastered'}
+          title={word.mastery === 'mastered' ? 'Unmark this word' : 'Mark as known'}
+          className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-95 ${
+            word.mastery === 'mastered'
+              ? 'border-neon-green/60 bg-neon-green/15 text-neon-green shadow-[0_0_14px_rgba(77,255,158,0.25)]'
+              : 'border-white/10 bg-white/5 text-slate-400 hover:border-neon-green/50 hover:text-neon-green'
+          }`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          Known
+        </button>
+        <button
+          onClick={() => onMark(word.mastery === 'hard' ? undefined : 'hard')}
+          aria-pressed={word.mastery === 'hard'}
+          title={word.mastery === 'hard' ? 'Unmark this word' : 'Mark for review'}
+          className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-95 ${
+            word.mastery === 'hard'
+              ? 'border-neon-amber/60 bg-neon-amber/15 text-neon-amber shadow-[0_0_14px_rgba(255,201,77,0.25)]'
+              : 'border-white/10 bg-white/5 text-slate-400 hover:border-neon-amber/50 hover:text-neon-amber'
+          }`}
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+            <path d="M12 2.5 14.9 8.4l6.4.9-4.6 4.5 1.1 6.3L12 17.3 6.2 20.1l1.1-6.3L2.7 9.3l6.4-.9L12 2.5Z" />
+          </svg>
+          Review
+        </button>
+      </div>
     </div>
   );
 }
