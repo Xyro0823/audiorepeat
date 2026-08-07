@@ -128,6 +128,25 @@ export default function WordBankTab({ onImport }: Props) {
     [lang, level, filtered, onImport],
   );
 
+  const importFull = useCallback(async () => {
+    if (!lang || !level || !bank || bank.length === 0) return;
+    const stamp = Date.now();
+    await onImport({
+      id: 'bank-full-' + lang + '-' + level + '-' + stamp,
+      name: langLabel(lang) + ' ' + level + ' · full level (' + bank.length + ' words)',
+      lang,
+      nativeLang: 'en-US',
+      words: bank.map(([target, translation], i) => ({
+        id: 'bkf-' + stamp + '-' + i,
+        target,
+        translation,
+      })),
+      cefr: level,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+  }, [lang, level, bank, onImport]);
+
   const availableLevels = manifest?.[lang];
   const wordCount =
     manifest && lang && level ? (manifest[lang][level] ?? 0) : 0;
@@ -231,24 +250,37 @@ export default function WordBankTab({ onImport }: Props) {
                     </span>
                   )}
                 </span>
-                <button
-                  onClick={() => {
-                    practiceBatch(batchSize).catch((err) =>
-                      console.error('[word bank practice]', err),
-                    );
-                  }}
-                  disabled={filtered.length === 0}
-                  className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  ▶ Practice batch of {Math.min(batchSize, filtered.length || batchSize)}
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      practiceBatch(batchSize).catch((err) =>
+                        console.error('[word bank practice]', err),
+                      );
+                    }}
+                    disabled={filtered.length === 0}
+                    className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    ▶ Practice batch of {Math.min(batchSize, filtered.length || batchSize)}
+                  </button>
+                  <button
+                    onClick={() => {
+                      importFull().catch((err) =>
+                        console.error('[word bank full import]', err),
+                      );
+                    }}
+                    disabled={!bank || bank.length === 0}
+                    title="Import the whole level as one set — play all words"
+                    className="rounded-xl border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:border-neon-cyan/60 hover:text-neon-cyan active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    ⬇ Play all {bank ? '(' + bank.length.toLocaleString() + ')' : ''}
+                  </button>
+                </div>
               </div>
 
               {/* Virtualized preview */}
               <div className="px-6 py-4">
                 <div className="mb-2 text-[11px] uppercase tracking-wider text-slate-500">
-                  Preview — first {Math.min(filtered.length, 60).toLocaleString()} of{' '}
-                  {filtered.length.toLocaleString()} (scroll to browse)
+                  Preview — all {filtered.length.toLocaleString()} words (scroll to browse)
                 </div>
                 {filtered.length === 0 ? (
                   <div className="rounded-2xl border border-white/10 p-8 text-center text-sm text-slate-400">
