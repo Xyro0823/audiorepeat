@@ -125,7 +125,7 @@ export default function SetLibrary() {
         <div className="mr-auto">
           <h1 className="text-3xl font-bold tracking-tight text-white">AudioRepeat</h1>
           <p className="text-sm text-slate-400">
-            Loop. Repeat. Retain. — hands-free vocabulary drilling in 100+ languages
+            Loop. Repeat. Retain. — hands-free vocabulary drilling in 233 languages
           </p>
         </div>
         <div className="flex items-center gap-2">
