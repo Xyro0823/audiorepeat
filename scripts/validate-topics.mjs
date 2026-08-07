@@ -32,6 +32,10 @@ const LABELS = {
   home: { label: 'Home & Furniture', emoji: '🏠' },
   time: { label: 'Time & Dates', emoji: '⏰' },
   money: { label: 'Money & Banking', emoji: '💰' },
+  animals: { label: 'Animals & Pets', emoji: '🐾' },
+  colors: { label: 'Colors & Shapes', emoji: '🎨' },
+  body: { label: 'Body & Appearance', emoji: '🪞' },
+  city: { label: 'City Life', emoji: '🏙️' },
 };
 
 let failed = false;

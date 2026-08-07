@@ -1,7 +1,79 @@
 {
+  "animals": {
+    "label": "Animals & Pets",
+    "emoji": "🐾",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40,
+      "ru": 40,
+      "ar": 40,
+      "hi": 40,
+      "tr": 40
+    }
+  },
+  "body": {
+    "label": "Body & Appearance",
+    "emoji": "🪞",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40,
+      "ru": 40,
+      "ar": 40,
+      "hi": 40,
+      "tr": 40
+    }
+  },
   "business": {
     "label": "Business & Work",
     "emoji": "💼",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40,
+      "ru": 40,
+      "ar": 40,
+      "hi": 40,
+      "tr": 40
+    }
+  },
+  "city": {
+    "label": "City Life",
+    "emoji": "🏙️",
+    "langs": {
+      "es": 40,
+      "fr": 40,
+      "de": 40,
+      "ja": 40,
+      "it": 40,
+      "pt": 40,
+      "ko": 40,
+      "zh": 40,
+      "ru": 40,
+      "ar": 40,
+      "hi": 40,
+      "tr": 40
+    }
+  },
+  "colors": {
+    "label": "Colors & Shapes",
+    "emoji": "🎨",
     "langs": {
       "es": 40,
       "fr": 40,
