@@ -1,8 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import StreakBadge from '@/components/StreakBadge';
 import { useAudioLoop } from '@/hooks/useAudioLoop';
+import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useLists } from '@/hooks/useLists';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
@@ -94,6 +96,53 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       album: set?.name,
       artist: set ? (findLanguage(set.lang)?.label ?? set.lang) : undefined,
     });
+
+  // ---------- daily practice stats (streak, words, study time) ----------
+  const { streak, recordWords, recordMs } = usePracticeStats();
+  const playingSinceRef = useRef<number | null>(null);
+  const lastCountedWordRef = useRef<number | null>(null);
+
+  // Study time: accumulate wall-clock time spent in the 'playing' state.
+  useEffect(() => {
+    if (isPlaying) {
+      playingSinceRef.current = Date.now();
+    } else if (playingSinceRef.current !== null) {
+      recordMs(Date.now() - playingSinceRef.current);
+      playingSinceRef.current = null;
+    }
+  }, [isPlaying, recordMs]);
+
+  // Keep partial time even when the tab is hidden (e.g. lock-screen playback).
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden' && playingSinceRef.current !== null) {
+        recordMs(Date.now() - playingSinceRef.current);
+        playingSinceRef.current = Date.now();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [recordMs]);
+
+  // Words listened: count each new word that starts playing (not repeats).
+  useEffect(() => {
+    if (!isPlaying) return;
+    // play() always starts fresh at word 0 — reset so the first word of a new
+    // session is counted even if it was the last word of the previous one.
+    if (progress.wordIndex === 0) lastCountedWordRef.current = null;
+    if (lastCountedWordRef.current !== progress.wordIndex) {
+      lastCountedWordRef.current = progress.wordIndex;
+      recordWords(1);
+    }
+  }, [isPlaying, progress.wordIndex, recordWords]);
+
+  // Flush remaining study time when leaving the player.
+  useEffect(
+    () => () => {
+      if (playingSinceRef.current !== null) recordMs(Date.now() - playingSinceRef.current);
+    },
+    [recordMs],
+  );
 
   // Persist a mastery status for the word currently being drilled.
   const markWord = useCallback(
@@ -189,6 +238,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             ? `${set.words.length} words`
             : `${words.length} / ${set.words.length} words`}
         </span>
+        <StreakBadge streak={streak} />
       </header>
 
       <div className="animate-fade-up mt-4 flex flex-wrap items-center gap-1.5">
