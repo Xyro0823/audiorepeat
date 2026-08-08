@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useLists } from '@/hooks/useLists';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
@@ -292,14 +293,18 @@ export default function SettingsModal({ onClose }: Props) {
   const notificationSupported =
     typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
 
-  return (
+  // Rendered through a portal to document.body: several ancestors carry a
+  // retained transform (e.g. the header's fade-up animation ends at
+  // translateY(0)), which would otherwise become the containing block for
+  // this fixed overlay and trap it inside the header's box.
+  const modal = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label="Settings"
     >
-      <div className="glass animate-fade-up max-h-[88vh] w-full max-w-xl overflow-y-auto rounded-3xl p-6">
+      <div className="glass animate-fade-up max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-3xl p-6">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">⚙️ Settings</h2>
           <button
@@ -647,7 +652,7 @@ export default function SettingsModal({ onClose }: Props) {
       {/* Restore-confirmation overlay (kept above the modal content) */}
       {pendingImport && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
           role="dialog"
           aria-modal="true"
         >
@@ -676,4 +681,6 @@ export default function SettingsModal({ onClose }: Props) {
       )}
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modal, document.body) : null;
 }
