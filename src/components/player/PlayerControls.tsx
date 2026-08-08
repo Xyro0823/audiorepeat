@@ -10,6 +10,9 @@ interface Props {
   onReplay: () => void;
   speed: number;
   onSpeedChange: (speed: number) => void;
+  /** Randomize playback order. */
+  shuffle: boolean;
+  onShuffleToggle: () => void;
 }
 
 export default function PlayerControls({
@@ -20,6 +23,8 @@ export default function PlayerControls({
   onReplay,
   speed,
   onSpeedChange,
+  shuffle,
+  onShuffleToggle,
 }: Props) {
   const cycleSpeed = () => {
     // Snaps non-preset values (e.g. 1.3 from the fine-grained settings slider)
@@ -128,6 +133,34 @@ export default function PlayerControls({
             <path d="M13 2 4.5 13.5H11L9.5 22 19 9.5h-6.5L13 2Z" />
           </svg>
           <span className="text-xs font-bold leading-none">{speed}×</span>
+        </button>
+
+        <button
+          onClick={onShuffleToggle}
+          aria-pressed={shuffle}
+          aria-label={shuffle ? 'Shuffle on — tap to turn off' : 'Shuffle off — tap to randomize the word order'}
+          title={shuffle ? 'Shuffle on — tap to turn off' : 'Shuffle off — tap to randomize the word order'}
+          className={`flex h-14 w-14 items-center justify-center rounded-full border transition active:scale-90 ${
+            shuffle
+              ? 'border-neon-violet/60 bg-neon-violet/10 text-neon-violet glow-cyan'
+              : 'border-white/10 bg-white/5 text-slate-300 hover:border-neon-violet/50 hover:text-neon-violet'
+          }`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M16 3h5v5" />
+            <path d="M4 20 21 3" />
+            <path d="M21 16v5h-5" />
+            <path d="m15 15 6 6" />
+            <path d="M4 4l5 5" />
+          </svg>
         </button>
       </div>
     </div>

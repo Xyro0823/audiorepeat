@@ -48,13 +48,43 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       ? Math.max(0, Math.min(1, sleepRemaining / SLEEP_FADE_MS))
       : 1;
 
-  const words = useMemo(() => {
+  // Shuffle toggle: randomizes the playback order of the filtered words.
+  // `shuffleSeed` changes on every toggle so each new shuffle gives a fresh
+  // order; turning shuffle off restores the natural (filtered) order.
+  const [shuffle, setShuffle] = useState(false);
+  const [shuffleSeed, setShuffleSeed] = useState(0);
+
+  // Filtered order (natural). The 'hard' filter plays only words marked for
+  // review — the "Review Hard Words Only" mode.
+  const orderedWords = useMemo(() => {
     if (!set) return [];
     const all = set.words.map((w) => ({ ...w, lang: set.lang, nativeLang: set.nativeLang }));
     if (filter === 'learning') return all.filter((w) => w.mastery !== 'mastered');
     if (filter === 'hard') return all.filter((w) => w.mastery === 'hard');
     return all;
   }, [set, filter]);
+
+  const words = useMemo(() => {
+    if (!shuffle) return orderedWords;
+    const arr = [...orderedWords];
+    // Deterministic PRNG seeded per toggle (Fisher–Yates): the permutation is
+    // stable for the duration of a shuffle, so playback can't reorder mid-run.
+    let s = shuffleSeed >>> 0;
+    const rand = () => {
+      s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+      return s / 0x100000000;
+    };
+    for (let i = arr.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rand() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [orderedWords, shuffle, shuffleSeed]);
+
+  const toggleShuffle = useCallback(() => {
+    setShuffle((on) => !on);
+    setShuffleSeed((s) => s + 1); // fresh order on every toggle
+  }, []);
 
   // Single pass over the set to power the filter pill counts.
   const { learningCount, hardCount } = useMemo(() => {
@@ -739,6 +769,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         onReplay={dictationOn ? dictation.replay : quizOn ? quiz.replay : replayWord}
         speed={effective.speed}
         onSpeedChange={(speed) => changeSettings({ speed })}
+        shuffle={shuffle}
+        onShuffleToggle={toggleShuffle}
       />
     </main>
   );

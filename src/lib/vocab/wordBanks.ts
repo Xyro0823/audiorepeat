@@ -50,11 +50,28 @@ let topicManifestPromise: Promise<TopicManifest> | null = null;
 const bankCache = new Map<string, Promise<WordBank | null>>();
 const topicCache = new Map<string, Promise<Record<string, WordBankWord[]> | null>>();
 
+/**
+ * Ask the service worker to pre-cache a fetched URL so it plays back offline
+ * on later visits. No-op in dev (no SW) or when the worker isn't active.
+ */
+async function precacheForOffline(url: string): Promise<void> {
+  if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    const sw = reg?.active;
+    if (!sw) return;
+    sw.postMessage({ type: 'PRECACHE', urls: [url] });
+  } catch {
+    /* worker unavailable — the network-first fetch handler covers it */
+  }
+}
+
 export function getWordBankManifest(): Promise<WordBankManifest> {
   if (!manifestPromise) {
     manifestPromise = fetch(MANIFEST_URL)
       .then((res) => {
         if (!res.ok) throw new Error(`manifest ${res.status}`);
+        void precacheForOffline(MANIFEST_URL);
         return res.json() as Promise<WordBankManifest>;
       })
       .catch((err) => {
@@ -74,10 +91,12 @@ export function loadWordBank(lang: string, level: CefrLevel): Promise<WordBank |
   const key = `${lang}:${level}`;
   let p = bankCache.get(key);
   if (!p) {
-    p = fetch(bankUrl(lang, level))
+    const url = bankUrl(lang, level);
+    p = fetch(url)
       .then((res) => {
         if (res.status === 404) return null;
         if (!res.ok) throw new Error(`bank ${res.status}`);
+        void precacheForOffline(url);
         return res.json() as Promise<WordBank>;
       })
       .catch((err) => {
@@ -94,6 +113,7 @@ export function getTopicManifest(): Promise<TopicManifest> {
     topicManifestPromise = fetch(TOPIC_MANIFEST_URL)
       .then((res) => {
         if (!res.ok) throw new Error(`topic manifest ${res.status}`);
+        void precacheForOffline(TOPIC_MANIFEST_URL);
         return res.json() as Promise<TopicManifest>;
       })
       .catch((err) => {
@@ -108,10 +128,12 @@ export function getTopicManifest(): Promise<TopicManifest> {
 export function loadTopic(topic: string): Promise<Record<string, WordBankWord[]> | null> {
   let p = topicCache.get(topic);
   if (!p) {
-    p = fetch(`/data/topics/${topic}.json`)
+    const url = `/data/topics/${topic}.json`;
+    p = fetch(url)
       .then((res) => {
         if (res.status === 404) return null;
         if (!res.ok) throw new Error(`topic ${res.status}`);
+        void precacheForOffline(url);
         return res.json() as Promise<Record<string, WordBankWord[]>>;
       })
       .catch((err) => {

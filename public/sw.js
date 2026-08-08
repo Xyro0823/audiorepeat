@@ -1,7 +1,7 @@
 /* AudioRepeat service worker — offline app shell + audio caching.
  * Registered only in production builds (see src/components/pwa/SwRegister.tsx).
  */
-const CACHE = "audiorepeat-v1";
+const CACHE = "audiorepeat-v2";
 const SHELL = [
   "/",
   "/player",
@@ -11,6 +11,10 @@ const SHELL = [
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/icon-maskable.png",
+  // Small manifests — precached so the library can list languages/levels
+  // offline and imported packs are known to exist.
+  "/data/vocab/manifest.json",
+  "/data/topics/manifest.json",
 ];
 
 self.addEventListener("install", (event) => {
@@ -27,9 +31,41 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))),
+        Promise.all(
+          keys
+            .filter((k) => k !== CACHE && k !== "tts-audio") // keep pre-generated TTS blobs
+            .map((k) => caches.delete(k)),
+        ),
       )
       .then(() => self.clients.claim()),
+  );
+});
+
+// The app asks us to pre-cache specific URLs (e.g. a vocabulary bank or topic
+// pack it just downloaded) so they play back offline immediately.
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || data.type !== "PRECACHE" || !Array.isArray(data.urls)) return;
+  const urls = data.urls.filter((u) => {
+    try {
+      const url = new URL(u, self.location.origin);
+      return url.origin === self.location.origin && url.protocol === "http:";
+    } catch {
+      return false;
+    }
+  });
+  if (urls.length === 0) return;
+  // Cache each URL independently so a single 404 can't drop the whole batch.
+  event.waitUntil(
+    caches.open(CACHE).then((cache) =>
+      Promise.allSettled(
+        urls.map((u) =>
+          fetch(u).then((res) => {
+            if (res.ok) cache.put(u, res);
+          }),
+        ),
+      ),
+    ),
   );
 });
 

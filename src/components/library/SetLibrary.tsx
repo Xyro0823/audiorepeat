@@ -14,6 +14,7 @@ import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { VocabSet } from '@/types/app';
 import CefrBadge from './CefrBadge';
 import SetEditor from './SetEditor';
+import SpeedChallenge from '../speed/SpeedChallenge';
 import StarterLibraryModal from './StarterLibraryModal';
 
 function Logo() {
@@ -39,13 +40,14 @@ interface SetCardProps {
   index: number;
   isConfirming: boolean;
   onPlay: () => void;
+  onChallenge: () => void;
   onEdit: () => void;
   onExport: () => void;
   onShare: () => void;
   onDelete: () => void;
 }
 
-function SetCard({ set, index, isConfirming, onPlay, onEdit, onExport, onShare, onDelete }: SetCardProps) {
+function SetCard({ set, index, isConfirming, onPlay, onChallenge, onEdit, onExport, onShare, onDelete }: SetCardProps) {
   const total = set.words.length;
   const mastered = set.words.filter((w) => w.mastery === 'mastered').length;
   const hard = set.words.filter((w) => w.mastery === 'hard').length;
@@ -88,6 +90,13 @@ function SetCard({ set, index, isConfirming, onPlay, onEdit, onExport, onShare, 
           className="flex-1 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
         >
           ▶ Play
+        </button>
+        <button
+          onClick={onChallenge}
+          title="1-minute speed challenge — how many words can you get?"
+          className="rounded-xl border border-neon-amber/30 bg-neon-amber/10 px-3 py-2.5 text-sm font-semibold text-neon-amber transition hover:border-neon-amber/60 hover:bg-neon-amber/20 active:scale-95"
+        >
+          ⚡ 1-Min
         </button>
         <button
           onClick={onEdit}
@@ -133,11 +142,12 @@ type ImportMsg = { kind: 'ok' | 'err'; text: string } | null;
 
 export default function SetLibrary() {
   const { sets, loading, saveSet, removeSet } = useLists();
-  const { wordsToday, msToday, streak, week } = usePracticeStats();
+  const { wordsToday, msToday, streak, week, recordWords } = usePracticeStats();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState<VocabSet | 'new' | null>(null);
   const [browse, setBrowse] = useState(false);
+  const [challengeSet, setChallengeSet] = useState<VocabSet | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [importMsg, setImportMsg] = useState<ImportMsg>(null);
   const [pendingImport, setPendingImport] = useState<VocabSet | null>(null);
@@ -325,6 +335,7 @@ export default function SetLibrary() {
               index={i}
               isConfirming={confirmId === set.id}
               onPlay={() => router.push(`/player?id=${set.id}`)}
+              onChallenge={() => setChallengeSet(set)}
               onEdit={() => setEditing(set)}
               onExport={() => downloadSet(set)}
               onShare={() => void handleShare(set)}
@@ -353,6 +364,14 @@ export default function SetLibrary() {
             const saved = await saveSet(set);
             router.push(`/player?id=${saved.id}`);
           }}
+        />
+      )}
+
+      {challengeSet && (
+        <SpeedChallenge
+          set={challengeSet}
+          onClose={() => setChallengeSet(null)}
+          onRecordWord={recordWords}
         />
       )}
 
