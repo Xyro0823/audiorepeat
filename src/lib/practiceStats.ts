@@ -1,9 +1,27 @@
 export interface DayStat {
   w: number; // words listened
   ms: number; // study time (ms)
+  /** Per-language breakdown for the day (keyed by set language, BCP-47). */
+  langs?: Record<string, { w: number; ms: number }>;
 }
 
 export type DayMap = Record<string, DayStat>;
+
+/** Ranked per-language activity for one day (by ms, then words). */
+export interface DayLangRow {
+  lang: string;
+  w: number;
+  ms: number;
+}
+
+/** All entries from `days[key].langs` with non-zero activity, sorted by time then words. */
+export function dayByLang(days: DayMap, key: string): DayLangRow[] {
+  const langs = days[key]?.langs ?? {};
+  return Object.entries(langs)
+    .map(([lang, s]) => ({ lang, w: s.w, ms: s.ms }))
+    .filter((r) => r.ms > 0 || r.w > 0)
+    .sort((a, b) => b.ms - a.ms || b.w - a.w);
+}
 
 /** One day in a rolling activity view. */
 export interface DayCell {

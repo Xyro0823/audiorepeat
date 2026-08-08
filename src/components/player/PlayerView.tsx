@@ -162,22 +162,22 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     if (isPlaying) {
       playingSinceRef.current = Date.now();
     } else if (playingSinceRef.current !== null) {
-      recordMs(Date.now() - playingSinceRef.current);
+      recordMs(Date.now() - playingSinceRef.current, set?.lang);
       playingSinceRef.current = null;
     }
-  }, [isPlaying, recordMs]);
+  }, [isPlaying, recordMs, set]);
 
   // Keep partial time even when the tab is hidden (e.g. lock-screen playback).
   useEffect(() => {
     const onVisibility = () => {
       if (document.visibilityState === 'hidden' && playingSinceRef.current !== null) {
-        recordMs(Date.now() - playingSinceRef.current);
+        recordMs(Date.now() - playingSinceRef.current, set?.lang);
         playingSinceRef.current = Date.now();
       }
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, [recordMs]);
+  }, [recordMs, set]);
 
   // Words listened: count each new word that starts playing (not repeats).
   useEffect(() => {
@@ -187,16 +187,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     if (progress.wordIndex === 0) lastCountedWordRef.current = null;
     if (lastCountedWordRef.current !== progress.wordIndex) {
       lastCountedWordRef.current = progress.wordIndex;
-      recordWords(1);
+      recordWords(1, set?.lang);
     }
-  }, [isPlaying, progress.wordIndex, recordWords]);
+  }, [isPlaying, progress.wordIndex, recordWords, set]);
 
   // Flush remaining study time when leaving the player.
   useEffect(
     () => () => {
-      if (playingSinceRef.current !== null) recordMs(Date.now() - playingSinceRef.current);
+      if (playingSinceRef.current !== null)
+        recordMs(Date.now() - playingSinceRef.current, set?.lang);
     },
-    [recordMs],
+    [recordMs, set],
   );
 
   // ---------- interactive quiz mode ----------
@@ -378,11 +379,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
 
   // Count each quiz/dictation question as a word listened (keeps streak/stats honest).
   useEffect(() => {
-    if (quizOn && quiz.question) recordWords(1);
-  }, [quizOn, quiz.question, recordWords]);
+    if (quizOn && quiz.question) recordWords(1, set?.lang);
+  }, [quizOn, quiz.question, recordWords, set]);
   useEffect(() => {
-    if (dictationOn && dictation.item) recordWords(1);
-  }, [dictationOn, dictation.item, recordWords]);
+    if (dictationOn && dictation.item) recordWords(1, set?.lang);
+  }, [dictationOn, dictation.item, recordWords, set]);
 
   // Persist a mastery status for the word currently being drilled.
   const markWord = useCallback(

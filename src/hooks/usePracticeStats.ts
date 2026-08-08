@@ -79,21 +79,31 @@ export function usePracticeStats() {
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
-  const recordWords = useCallback((n: number) => {
+  const recordWords = useCallback((n: number, lang?: string) => {
     if (!(n > 0)) return;
     setDays((prev) => {
       const k = dayKey(new Date());
       const cur = prev[k] ?? { w: 0, ms: 0 };
-      return { ...prev, [k]: { w: cur.w + n, ms: cur.ms } };
+      let langs = cur.langs ? { ...cur.langs } : undefined;
+      if (lang) {
+        const l = (langs?.[lang] ?? { w: 0, ms: 0 });
+        langs = { ...(langs ?? {}), [lang]: { w: l.w + n, ms: l.ms } };
+      }
+      return { ...prev, [k]: { w: cur.w + n, ms: cur.ms, ...(langs ? { langs } : {}) } };
     });
   }, []);
 
-  const recordMs = useCallback((ms: number) => {
+  const recordMs = useCallback((ms: number, lang?: string) => {
     if (!(ms > 0)) return;
     setDays((prev) => {
       const k = dayKey(new Date());
       const cur = prev[k] ?? { w: 0, ms: 0 };
-      return { ...prev, [k]: { w: cur.w, ms: cur.ms + ms } };
+      let langs = cur.langs ? { ...cur.langs } : undefined;
+      if (lang) {
+        const l = (langs?.[lang] ?? { w: 0, ms: 0 });
+        langs = { ...(langs ?? {}), [lang]: { w: l.w, ms: l.ms + ms } };
+      }
+      return { ...prev, [k]: { w: cur.w, ms: cur.ms + ms, ...(langs ? { langs } : {}) } };
     });
   }, []);
 

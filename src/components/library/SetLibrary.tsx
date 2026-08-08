@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ActivityHeatmap from '@/components/ActivityHeatmap';
 import StreakBadge from '@/components/StreakBadge';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
@@ -13,9 +13,11 @@ import { decodeSetFromUrl, shareUrlForSet } from '@/lib/sets/share';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { VocabSet } from '@/types/app';
 import CefrBadge from './CefrBadge';
+import LeaderboardModal from './LeaderboardModal';
 import SetEditor from './SetEditor';
 import SpeedChallenge from '../speed/SpeedChallenge';
 import StarterLibraryModal from './StarterLibraryModal';
+import SubtitleImportModal from './SubtitleImportModal';
 
 function Logo() {
   return (
@@ -145,8 +147,13 @@ export default function SetLibrary() {
   const { wordsToday, msToday, streak, week, recordWords } = usePracticeStats();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const subtitleInputRef = useRef<HTMLInputElement>(null);
   const [editing, setEditing] = useState<VocabSet | 'new' | null>(null);
   const [browse, setBrowse] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [subtitleImport, setSubtitleImport] = useState<{ fileName: string; text: string } | null>(
+    null,
+  );
   const [challengeSet, setChallengeSet] = useState<VocabSet | null>(null);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [importMsg, setImportMsg] = useState<ImportMsg>(null);
@@ -173,6 +180,32 @@ export default function SetLibrary() {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  const handleSubtitleFile = async (file: File) => {
+    try {
+      const text = await file.text();
+      setSubtitleImport({ fileName: file.name, text });
+    } catch {
+      flash({ kind: 'err', text: 'Could not read that subtitle file.' });
+    } finally {
+      if (subtitleInputRef.current) subtitleInputRef.current.value = '';
+    }
+  };
+
+  // Default subtitle language: the language the user studies most, else Spanish.
+  const defaultSubtitleLang = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const s of sets) counts.set(s.lang, (counts.get(s.lang) ?? 0) + 1);
+    let best = 'es-ES';
+    let bestCount = 0;
+    for (const [lang, count] of counts) {
+      if (count > bestCount) {
+        best = lang;
+        bestCount = count;
+      }
+    }
+    return best;
+  }, [sets]);
 
   // Handle a shared-deck link: /?set=<encoded>. Decoded once on mount, then
   // imported as soon as the library has loaded (so duplicates can be spotted).
@@ -237,6 +270,13 @@ export default function SetLibrary() {
         </div>
         <div className="flex items-center gap-2">
           <StreakBadge streak={streak} />
+          <button
+            onClick={() => setLeaderboardOpen(true)}
+            title="Daily leaderboard — rank your practice by language"
+            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-amber/40 hover:text-white active:scale-95"
+          >
+            🏆 Leaderboard
+          </button>
           <Link
             href="/stats"
             className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-cyan/40 hover:text-white active:scale-95"
@@ -253,6 +293,23 @@ export default function SetLibrary() {
               if (file) void handleImportFile(file);
             }}
           />
+          <input
+            ref={subtitleInputRef}
+            type="file"
+            accept=".srt,.vtt,.txt,.ass,.ssa,text/plain,application/x-subrip,application/octet-stream"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleSubtitleFile(file);
+            }}
+          />
+          <button
+            onClick={() => subtitleInputRef.current?.click()}
+            title="Turn a subtitle file or transcript into a vocabulary set"
+            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-magenta/40 hover:text-white active:scale-95"
+          >
+            🎬 Subtitles
+          </button>
           <button
             onClick={() => setBrowse(true)}
             className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-cyan/40 hover:text-white active:scale-95"
@@ -371,7 +428,23 @@ export default function SetLibrary() {
         <SpeedChallenge
           set={challengeSet}
           onClose={() => setChallengeSet(null)}
-          onRecordWord={recordWords}
+          onRecordWord={(n) => recordWords(n, challengeSet.lang)}
+        />
+      )}
+
+      {leaderboardOpen && <LeaderboardModal onClose={() => setLeaderboardOpen(false)} />}
+
+      {subtitleImport && (
+        <SubtitleImportModal
+          fileName={subtitleImport.fileName}
+          text={subtitleImport.text}
+          defaultLang={defaultSubtitleLang}
+          onClose={() => setSubtitleImport(null)}
+          onCreate={(set) => {
+            // Open the editor to review translations before saving (Save & play).
+            setSubtitleImport(null);
+            setEditing(set);
+          }}
         />
       )}
 

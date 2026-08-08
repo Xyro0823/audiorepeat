@@ -47,7 +47,8 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
     if (!valid || saving) return;
     setSaving(true);
     const clean = words
-      .filter((w) => w.target.trim() && w.translation.trim())
+      // Drop subtitle-import placeholders ('—') so they never reach the player.
+      .filter((w) => w.target.trim() && w.translation.trim() && w.translation.trim() !== '—')
       .map((w) => ({ ...w, target: w.target.trim(), translation: w.translation.trim() }));
     await onSave({
       id: set?.id ?? crypto.randomUUID(),
