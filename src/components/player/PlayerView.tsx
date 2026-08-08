@@ -6,6 +6,7 @@ import StreakBadge from '@/components/StreakBadge';
 import { useAudioLoop } from '@/hooks/useAudioLoop';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useQuizMode } from '@/hooks/useQuizMode';
+import { useDictationMode } from '@/hooks/useDictationMode';
 import { useLists } from '@/hooks/useLists';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
@@ -14,6 +15,7 @@ import { findLanguage } from '@/lib/languages';
 import { formatCountdown } from '@/lib/format';
 import type { TTSEngine } from '@/lib/tts/engine';
 import type { AppSettings, MasteryStatus } from '@/types/app';
+import DictationCard from './DictationCard';
 import PlayerControls from './PlayerControls';
 import ProgressBar from './ProgressBar';
 import QuizCard from './QuizCard';
@@ -189,6 +191,26 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     quizOnRef.current = quizOn;
   }, [quizOn]);
 
+  // ---------- dictation & spelling practice ----------
+  // Same relationship to the audio loop as quiz mode: exclusive with it and
+  // with quiz mode, driven by the shared TTS engine.
+  const [dictationOn, setDictationOn] = useState(false);
+  const dictation = useDictationMode({
+    words,
+    engine,
+    rate: effective.speed,
+    volume: fadeVolume,
+    targetVoiceURI: effective.targetVoiceURI,
+  });
+  const dictationRef = useRef(dictation);
+  const dictationOnRef = useRef(dictationOn);
+  useEffect(() => {
+    dictationRef.current = dictation;
+  }, [dictation]);
+  useEffect(() => {
+    dictationOnRef.current = dictationOn;
+  }, [dictationOn]);
+
   const setSleepTimer = useCallback((minutes: number | null) => {
     // setting a new timer (or turning it off) always dismisses a pending snooze
     setSnoozeUntil(null);
@@ -218,6 +240,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         setSnoozeRemaining(SNOOZE_MS);
         stop();
         if (quizOnRef.current) quizRef.current?.stop();
+        if (dictationOnRef.current) dictationRef.current?.stop();
         setToast('🌙 Sleep timer ended — tap Play within 30s to snooze.');
         return;
       }
@@ -271,11 +294,18 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     snoozeRestart();
   }, [quiz, snoozeRestart]);
 
+  // Dictation start that honors the snooze window too.
+  const startDictation = useCallback(() => {
+    dictation.start();
+    snoozeRestart();
+  }, [dictation, snoozeRestart]);
+
   // User-triggered stop: halts playback AND cancels the sleep timer (a manual
   // stop means "done for now", so the timer must not fire a stale toast later).
   const stopPlayback = useCallback(() => {
     stop();
     if (quizOnRef.current) quizRef.current?.stop();
+    if (dictationOnRef.current) dictationRef.current?.stop();
     setSleepTimer(null);
   }, [stop, setSleepTimer]);
 
@@ -292,15 +322,37 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       quiz.stop();
     } else {
       setQuizOn(true);
+      if (dictationOn) {
+        setDictationOn(false);
+        dictation.stop();
+      }
       stop(); // halt the loop so both engines never speak at once
       startQuiz();
     }
-  }, [quizOn, stop, quiz, startQuiz]);
+  }, [quizOn, dictationOn, stop, quiz, dictation, startQuiz]);
 
-  // Count each quiz question as a word listened (keeps streak/stats honest).
+  const toggleDictation = useCallback(() => {
+    if (dictationOn) {
+      setDictationOn(false);
+      dictation.stop();
+    } else {
+      setDictationOn(true);
+      if (quizOn) {
+        setQuizOn(false);
+        quiz.stop();
+      }
+      stop(); // halt the loop so only dictation speaks
+      startDictation();
+    }
+  }, [dictationOn, quizOn, stop, dictation, quiz, startDictation]);
+
+  // Count each quiz/dictation question as a word listened (keeps streak/stats honest).
   useEffect(() => {
     if (quizOn && quiz.question) recordWords(1);
   }, [quizOn, quiz.question, recordWords]);
+  useEffect(() => {
+    if (dictationOn && dictation.item) recordWords(1);
+  }, [dictationOn, dictation.item, recordWords]);
 
   // Persist a mastery status for the word currently being drilled.
   const markWord = useCallback(
@@ -367,6 +419,28 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         }
         return;
       }
+      if (dictationOn) {
+        // Typing happens in the input (tag check above skips INPUT), so Space
+        // here means "re-sound the word" — the same as ArrowLeft.
+        switch (e.code) {
+          case 'Space':
+          case 'ArrowLeft':
+            e.preventDefault();
+            dictation.replay();
+            break;
+          case 'ArrowRight':
+            e.preventDefault();
+            dictation.skip();
+            break;
+          case 'KeyS':
+            e.preventDefault();
+            stopPlayback();
+            break;
+          default:
+            break;
+        }
+        return;
+      }
       switch (e.code) {
         case 'Space':
           e.preventDefault();
@@ -391,7 +465,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isPlaying, startPlayback, pause, startQuiz, stopPlayback, skipNext, replayWord, quizOn, quiz]);
+  }, [isPlaying, startPlayback, pause, startQuiz, stopPlayback, skipNext, replayWord, quizOn, quiz, dictationOn, dictation]);
 
   if (loading) {
     return (
@@ -504,6 +578,36 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           Quiz
         </button>
 
+        <button
+          onClick={toggleDictation}
+          disabled={words.length === 0}
+          aria-pressed={dictationOn}
+          title={
+            words.length === 0
+              ? 'No words to dictate with this filter'
+              : 'Hear a word with its spelling hidden, then type what you hear'
+          }
+          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
+            dictationOn
+              ? 'border-neon-violet/60 bg-neon-violet/15 text-neon-violet'
+              : 'border-white/10 bg-white/5 text-slate-400 hover:border-neon-violet/40 hover:text-white'
+          }`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="mr-1 inline h-3.5 w-3.5 -translate-y-px"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M4 7V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4l-4 3v-3H6a2 2 0 0 1-2-2v-1" />
+            <path d="M12 4v8" />
+          </svg>
+          Dictation
+        </button>
+
         {sleepEndAt !== null && sleepRemaining !== null && (
           <button
             onClick={() => setSleepTimer(null)}
@@ -555,6 +659,25 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             onReplay={quiz.replay}
             onRestart={startQuiz}
           />
+        ) : dictationOn ? (
+          <DictationCard
+            item={dictation.item}
+            listening={dictation.listening}
+            input={dictation.input}
+            feedback={dictation.feedback}
+            revealedWord={dictation.revealedWord}
+            correctCount={dictation.correctCount}
+            total={dictation.total}
+            finished={dictation.finished}
+            wordCount={words.length}
+            showHints={effective.showHints}
+            onInputChange={dictation.setInput}
+            onCheck={dictation.check}
+            onReveal={dictation.reveal}
+            onReplay={dictation.replay}
+            onSkip={dictation.skip}
+            onRestart={startDictation}
+          />
         ) : (
           <>
             <WordCard
@@ -564,6 +687,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               isTranslation={progress.isTranslation}
               repeats={currentRepeats}
               total={words.length}
+              showHints={effective.showHints}
               onMark={markWord}
             />
             <ProgressBar
@@ -592,21 +716,27 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       />
 
       <PlayerControls
-        isPlaying={quizOn ? quiz.active : isPlaying}
+        isPlaying={dictationOn ? dictation.active : quizOn ? quiz.active : isPlaying}
         onPlayPause={
-          quizOn
+          dictationOn
             ? () => {
-                if (quiz.finished || (!quiz.active && !quiz.question)) startQuiz();
-                else if (quiz.active) quiz.pause();
-                else quiz.replay(); // paused mid-question → re-sound the word
+                if (dictation.finished || (!dictation.active && !dictation.item)) startDictation();
+                else if (dictation.active) dictation.pause();
+                else dictation.replay(); // paused mid-word → re-sound it
               }
-            : isPlaying
-              ? pause
-              : startPlayback
+            : quizOn
+              ? () => {
+                  if (quiz.finished || (!quiz.active && !quiz.question)) startQuiz();
+                  else if (quiz.active) quiz.pause();
+                  else quiz.replay(); // paused mid-question → re-sound the word
+                }
+              : isPlaying
+                ? pause
+                : startPlayback
         }
         onStop={stopPlayback}
-        onSkipNext={quizOn ? quiz.skip : skipNext}
-        onReplay={quizOn ? quiz.replay : replayWord}
+        onSkipNext={dictationOn ? dictation.skip : quizOn ? quiz.skip : skipNext}
+        onReplay={dictationOn ? dictation.replay : quizOn ? quiz.replay : replayWord}
         speed={effective.speed}
         onSpeedChange={(speed) => changeSettings({ speed })}
       />

@@ -32,3 +32,16 @@ export interface TTSEngine {
   getVoices(lang?: string): TTSEngineVoice[];
   loadVoices(): Promise<TTSEngineVoice[]>;
 }
+
+/** SSR-safe no-op engine — speech never starts on the server. */
+export class NoopEngine implements TTSEngine {
+  readonly id = 'noop';
+  speak(): void {}
+  stop(): void {}
+  getVoices(): TTSEngineVoice[] {
+    return [];
+  }
+  loadVoices(): Promise<TTSEngineVoice[]> {
+    return Promise.resolve([]);
+  }
+}

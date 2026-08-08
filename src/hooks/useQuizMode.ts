@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { TTSEngine, TTSEngineVoice } from '@/lib/tts/engine';
+import { NoopEngine } from '@/lib/tts/engine';
+import type { TTSEngine } from '@/lib/tts/engine';
 import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import type { LoopWord } from '@/types/loop';
 
@@ -21,19 +22,6 @@ interface Options {
   /** 0..1 output level, applied per utterance (sleep-timer fade). Default 1. */
   volume?: number;
   targetVoiceURI?: string;
-}
-
-/** SSR-safe no-op engine — speech never starts on the server. */
-class NoopEngine implements TTSEngine {
-  readonly id = 'noop';
-  speak(): void {}
-  stop(): void {}
-  getVoices(): TTSEngineVoice[] {
-    return [];
-  }
-  loadVoices(): Promise<TTSEngineVoice[]> {
-    return Promise.resolve([]);
-  }
 }
 
 function shuffle<T>(arr: T[]): T[] {

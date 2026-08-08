@@ -31,6 +31,8 @@ export interface VocabSet {
 
 export interface AppSettings extends LoopSettings {
   cachedAudio: boolean; // prefer pre-generated cached audio (offline) when available
+  /** Show contextual emoji hints on word cards. */
+  showHints: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -40,4 +42,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   translationGapMs: 900,
   loop: true,
   cachedAudio: false,
+  showHints: true,
 };

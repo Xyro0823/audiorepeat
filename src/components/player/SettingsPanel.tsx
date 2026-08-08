@@ -214,6 +214,12 @@ export default function SettingsPanel({
               onChange={(v) => onChange({ cachedAudio: v })}
               label="Prefer cached audio (offline playback)"
             />
+            <Toggle
+              checked={settings.showHints}
+              onChange={(v) => onChange({ showHints: v })}
+              label="Show emoji hints on word cards"
+              hint="A contextual emoji for each word — works offline"
+            />
           </div>
 
           <div className="sm:col-span-2">

@@ -1,5 +1,6 @@
 'use client';
 
+import { emojiForText } from '@/lib/emoji';
 import type { MasteryStatus } from '@/types/app';
 import type { LoopWord } from '@/types/loop';
 
@@ -10,6 +11,7 @@ interface Props {
   isTranslation: boolean;
   repeats: number;
   total: number;
+  showHints: boolean;
   onMark: (status: MasteryStatus | undefined) => void;
 }
 
@@ -20,8 +22,11 @@ export default function WordCard({
   isTranslation,
   repeats,
   total,
+  showHints,
   onMark,
 }: Props) {
+  const emoji = word && showHints && !isTranslation ? emojiForText(word.translation) : null;
+
   if (!word) {
     return (
       <div className="animate-fade-up flex flex-col items-center gap-4 py-10 text-center">
@@ -58,6 +63,16 @@ export default function WordCard({
           </span>
         )}
       </p>
+
+      {emoji && (
+        <span
+          role="img"
+          aria-label="Emoji hint"
+          className="mb-4 text-5xl leading-none drop-shadow-[0_0_18px_rgba(34,228,255,0.3)]"
+        >
+          {emoji}
+        </span>
+      )}
 
       <p
         className={`text-5xl font-bold tracking-tight sm:text-6xl ${
