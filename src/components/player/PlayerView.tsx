@@ -23,6 +23,7 @@ import WordCard from './WordCard';
 type WordFilter = 'all' | 'learning' | 'hard';
 
 const SLEEP_FADE_MS = 15_000;
+const SNOOZE_MS = 30_000; // after the timer ends, Play within this window restarts it
 
 export default function PlayerView({ setId }: { setId: string | null }) {
   const { sets, loading, settings, saveSettings, saveSet } = useLists();
@@ -36,6 +37,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const [sleepMinutes, setSleepMinutes] = useState<number | null>(null);
   const [sleepEndAt, setSleepEndAt] = useState<number | null>(null);
   const [sleepRemaining, setSleepRemaining] = useState<number | null>(null);
+  const [snoozeUntil, setSnoozeUntil] = useState<number | null>(null);
+  const [snoozeRemaining, setSnoozeRemaining] = useState<number | null>(null);
   const [toast, setToast] = useState<string | null>(null);
   // 1 = full volume; ramps to 0 over the last 15 seconds before the timer ends.
   const fadeVolume =
@@ -112,6 +115,9 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       volume: fadeVolume,
       album: set?.name,
       artist: set ? (findLanguage(set.lang)?.label ?? set.lang) : undefined,
+      // Lock-screen / hardware Play must honor the snooze window too — forward
+      // to the snooze-aware start (defined below) through a stable ref.
+      onPlayRequest: () => startPlaybackRef.current(),
     });
 
   // ---------- daily practice stats (streak, words, study time) ----------
@@ -184,6 +190,9 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   }, [quizOn]);
 
   const setSleepTimer = useCallback((minutes: number | null) => {
+    // setting a new timer (or turning it off) always dismisses a pending snooze
+    setSnoozeUntil(null);
+    setSnoozeRemaining(null);
     if (minutes === null) {
       setSleepEndAt(null);
       setSleepRemaining(null);
@@ -203,16 +212,64 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       if (left <= 0) {
         setSleepEndAt(null);
         setSleepRemaining(null);
-        setSleepMinutes(null);
+        // Keep sleepMinutes: Play inside the snooze window restarts the timer
+        // at the same duration.
+        setSnoozeUntil(Date.now() + SNOOZE_MS);
+        setSnoozeRemaining(SNOOZE_MS);
         stop();
         if (quizOnRef.current) quizRef.current?.stop();
-        setToast('🌙 Sleep timer ended — playback stopped.');
+        setToast('🌙 Sleep timer ended — tap Play within 30s to snooze.');
         return;
       }
       setSleepRemaining(left);
     }, 500);
     return () => window.clearInterval(id);
   }, [sleepEndAt, stop]);
+
+  // Snooze window: expires on its own if the user never taps Play.
+  useEffect(() => {
+    if (snoozeUntil === null) return;
+    const id = window.setInterval(() => {
+      const left = snoozeUntil - Date.now();
+      if (left <= 0) {
+        setSnoozeUntil(null);
+        setSnoozeRemaining(null);
+      } else {
+        setSnoozeRemaining(left);
+      }
+    }, 500);
+    return () => window.clearInterval(id);
+  }, [snoozeUntil]);
+
+  // Restart the sleep timer at its last duration when playback resumes inside
+  // the 30s snooze window (classic snooze behavior).
+  const snoozeRestart = useCallback(() => {
+    if (snoozeUntil === null || sleepMinutes === null) return;
+    if (Date.now() >= snoozeUntil) return;
+    setSnoozeUntil(null);
+    setSnoozeRemaining(null);
+    setSleepEndAt(Date.now() + sleepMinutes * 60_000);
+    setSleepRemaining(sleepMinutes * 60_000);
+  }, [snoozeUntil, sleepMinutes]);
+
+  // Loop playback that honors the snooze window.
+  const startPlayback = useCallback(() => {
+    play();
+    snoozeRestart();
+  }, [play, snoozeRestart]);
+
+  // Stable handle for the lock-screen play request (forwarded into the audio
+  // loop's media-session handler, which lives before this callback is defined).
+  const startPlaybackRef = useRef(startPlayback);
+  useEffect(() => {
+    startPlaybackRef.current = startPlayback;
+  }, [startPlayback]);
+
+  // Quiz start that honors the snooze window too.
+  const startQuiz = useCallback(() => {
+    quiz.start();
+    snoozeRestart();
+  }, [quiz, snoozeRestart]);
 
   // User-triggered stop: halts playback AND cancels the sleep timer (a manual
   // stop means "done for now", so the timer must not fire a stale toast later).
@@ -236,9 +293,9 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     } else {
       setQuizOn(true);
       stop(); // halt the loop so both engines never speak at once
-      quiz.start();
+      startQuiz();
     }
-  }, [quizOn, stop, quiz]);
+  }, [quizOn, stop, quiz, startQuiz]);
 
   // Count each quiz question as a word listened (keeps streak/stats honest).
   useEffect(() => {
@@ -273,7 +330,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         switch (e.code) {
           case 'Space':
             e.preventDefault();
-            if (quiz.finished || (!quiz.active && !quiz.question)) quiz.start();
+            if (quiz.finished || (!quiz.active && !quiz.question)) startQuiz();
             else if (quiz.active) quiz.pause();
             else quiz.replay(); // paused mid-question → re-sound the word
             break;
@@ -314,7 +371,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         case 'Space':
           e.preventDefault();
           if (isPlaying) pause();
-          else play();
+          else startPlayback();
           break;
         case 'ArrowLeft':
           e.preventDefault();
@@ -334,7 +391,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isPlaying, play, pause, stop, stopPlayback, skipNext, replayWord, quizOn, quiz]);
+  }, [isPlaying, startPlayback, pause, startQuiz, stopPlayback, skipNext, replayWord, quizOn, quiz]);
 
   if (loading) {
     return (
@@ -456,6 +513,18 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             🌙 {formatCountdown(sleepRemaining)}
           </button>
         )}
+        {snoozeUntil !== null && snoozeRemaining !== null && (
+          <button
+            onClick={() => {
+              setSnoozeUntil(null);
+              setSnoozeRemaining(null);
+            }}
+            title="Tap Play within 30s to restart the timer, or tap here to dismiss"
+            className="rounded-full border border-neon-amber/40 bg-neon-amber/10 px-3 py-1.5 text-xs font-medium text-neon-amber transition hover:border-neon-amber/70 hover:bg-neon-amber/20 active:scale-95"
+          >
+            ⏰ Snooze {formatCountdown(snoozeRemaining)}
+          </button>
+        )}
       </div>
 
       <div className="flex flex-1 flex-col justify-center py-8">
@@ -484,7 +553,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             wordCount={words.length}
             onAnswer={quiz.answer}
             onReplay={quiz.replay}
-            onRestart={quiz.start}
+            onRestart={startQuiz}
           />
         ) : (
           <>
@@ -527,13 +596,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         onPlayPause={
           quizOn
             ? () => {
-                if (quiz.finished || (!quiz.active && !quiz.question)) quiz.start();
+                if (quiz.finished || (!quiz.active && !quiz.question)) startQuiz();
                 else if (quiz.active) quiz.pause();
                 else quiz.replay(); // paused mid-question → re-sound the word
               }
             : isPlaying
               ? pause
-              : play
+              : startPlayback
         }
         onStop={stopPlayback}
         onSkipNext={quizOn ? quiz.skip : skipNext}

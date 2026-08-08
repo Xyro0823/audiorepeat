@@ -51,6 +51,12 @@ export interface UseAudioLoopOptions {
   album?: string;
   /** Lock-screen context: shown as the media-session artist (usually the language). */
   artist?: string;
+  /**
+   * Called when the lock screen / hardware Play is pressed. Defaults to plain
+   * `play()`. A host (e.g. the sleep-timer snooze) can route this through its
+   * own start logic so media-session Play honors app-level state.
+   */
+  onPlayRequest?: () => void;
 }
 
 /**
@@ -66,7 +72,7 @@ export interface UseAudioLoopOptions {
  *   `schedulerRef` (updated in an effect), so no stale closures can leak in.
  * - Media Session + Screen Wake Lock are wired here for hands-free control.
  */
-export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordChange, album, artist }: UseAudioLoopOptions) {
+export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordChange, album, artist, onPlayRequest }: UseAudioLoopOptions) {
   const engineRef = useRef<TTSEngine | null>(null);
   const wordsRef = useRef<LoopWord[]>(words);
   const settingsRef = useRef<LoopSettings>({ ...DEFAULT_SETTINGS, ...settings });
@@ -78,6 +84,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const onWordChangeRef = useRef(onWordChange);
   const mediaMetaRef = useRef({ album: 'AudioRepeat', artist: '' });
+  const onPlayRequestRef = useRef<() => void>(() => {});
   const schedulerRef = useRef<Scheduler>({ speakCurrent: () => {}, scheduleNext: () => {} });
 
   const [status, setStatus] = useState<PlaybackStatus>('idle');
@@ -371,6 +378,10 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
 
   // media session action handlers — registered once, feature-detected
   useEffect(() => {
+    onPlayRequestRef.current = onPlayRequest ?? play;
+  }, [onPlayRequest, play]);
+
+  useEffect(() => {
     if (typeof navigator === 'undefined' || !('mediaSession' in navigator)) return;
     const set = (action: MediaSessionAction, handler: MediaSessionActionHandler | null) => {
       try {
@@ -379,7 +390,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
         // unsupported action — ignore
       }
     };
-    set('play', play);
+    set('play', () => onPlayRequestRef.current());
     set('pause', pause);
     set('stop', stop);
     set('nexttrack', skipNext);
