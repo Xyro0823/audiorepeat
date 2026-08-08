@@ -364,6 +364,17 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
               <span className="text-sm font-semibold text-slate-300">
                 Score <span className="text-neon-amber">{score}</span>
               </span>
+              <button
+                onClick={close}
+                aria-label="Exit challenge"
+                title="Exit — the current run is not saved"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-slate-400 transition hover:border-neon-magenta/50 hover:text-neon-magenta active:scale-90"
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 6 6 18" />
+                  <path d="m6 6 12 12" />
+                </svg>
+              </button>
             </div>
 
             <div className="mt-6 flex items-center justify-center gap-3">
