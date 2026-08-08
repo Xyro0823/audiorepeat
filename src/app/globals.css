@@ -1,20 +1,25 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist-sans), "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
 
-  --color-night-950: #05050c;
-  --color-night-900: #0a0a14;
-  --color-night-800: #121220;
-  --color-night-700: #1c1c30;
-  --color-night-600: #282845;
+  /* Landing-page section fonts (CtaFooter): Instrument Serif + Barlow. */
+  --font-heading: var(--font-instrument), "Instrument Serif", serif;
+  --font-body: var(--font-barlow), "Barlow", sans-serif;
 
-  --color-neon-cyan: #22e4ff;
-  --color-neon-magenta: #ff3ec8;
-  --color-neon-violet: #a78bfa;
-  --color-neon-green: #4dff9e;
-  --color-neon-amber: #ffc94d;
+  /* Deep dark glass base — Apple/Linear style. */
+  --color-night-950: #0b0c10;
+  --color-night-900: #12131a;
+  --color-night-800: #1a1c24;
+  --color-night-700: #22242e;
+  --color-night-600: #2c2f3a;
+
+  --color-neon-cyan: #38bdf8;
+  --color-neon-magenta: #f472b6;
+  --color-neon-violet: #8b5cf6;
+  --color-neon-green: #34d399;
+  --color-neon-amber: #fbbf24;
 }
 
 :root {
@@ -27,23 +32,19 @@ body {
 }
 
 body {
-  color: #e5e9f0;
+  color: #e6e7ec;
+  /* Deep dark mesh gradient with fine noise texture. */
   background:
-    radial-gradient(1100px 700px at 85% -10%, rgba(34, 228, 255, 0.09), transparent 60%),
-    radial-gradient(900px 650px at 5% 110%, rgba(255, 62, 200, 0.08), transparent 60%),
-    radial-gradient(700px 500px at 50% 50%, rgba(167, 139, 250, 0.05), transparent 70%),
-    #05050c;
+    url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.028 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(900px 600px at 85% -10%, rgba(139, 92, 246, 0.1), transparent 60%),
+    radial-gradient(800px 600px at 0% 110%, rgba(56, 189, 248, 0.07), transparent 60%),
+    #0b0c10;
   background-attachment: fixed;
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
 /* ------------------------------------------------------------------ */
-/* Themes — Tailwind v4 utilities read var(--color-*) at runtime, so   */
-/* redefining the tokens under [data-theme] re-themes the whole app.   */
-/*   neon  = default (above): neon glows on deep night.                 */
-/*   dark  = muted: the same night palette with calmer, standard       */
-/*           accent colors and a near-flat background.                 */
-/*   light = minimal: inverted surfaces with dark slate text.          */
+/* Themes                                                              */
 /* ------------------------------------------------------------------ */
 [data-theme='dark'] {
   --color-neon-cyan: #38bdf8;
@@ -51,9 +52,14 @@ body {
   --color-neon-violet: #8b5cf6;
   --color-neon-green: #34d399;
   --color-neon-amber: #fbbf24;
+  --color-night-950: #0b0c10;
+  --color-night-900: #12131a;
+  --color-night-800: #1a1c24;
+  --color-night-700: #22242e;
+  --color-night-600: #2c2f3a;
 }
 [data-theme='dark'] body {
-  background: #0a0a14;
+  background: #0b0c10;
 }
 
 [data-theme='light'] {
@@ -72,11 +78,8 @@ body {
   --color-slate-600: #8fa0b5;
   --color-slate-700: #c2cad8;
 
-  /* text-white headings become near-black; white-opacity tints become   */
-  /* subtle dark tints (hovers, borders) instead of invisible whites.    */
   --color-white: #0f172a;
 
-  /* Slightly deeper accents for contrast on light surfaces. */
   --color-neon-cyan: #0891b2;
   --color-neon-magenta: #db2777;
   --color-neon-violet: #7c3aed;
@@ -91,28 +94,38 @@ body {
     #f6f7fb;
   background-attachment: fixed;
 }
-/* .glass hardcodes white-glass over dark; restyle it for light surfaces. */
 [data-theme='light'] .glass {
   background: rgba(15, 23, 42, 0.035);
   border: 1px solid rgba(15, 23, 42, 0.1);
   backdrop-filter: none;
 }
-/* Safety net: some white-opacity borders may compile to inlined literals,
-   which would be invisible on light. Force dark tinted borders for any
-   element carrying a border-white/* utility. */
 [data-theme='light'] [class*='border-white/'] {
   border-color: rgba(15, 23, 42, 0.12);
 }
 
+/* ------------------------------------------------------------------ */
+/* Hero landing section (scoped to #hero so the rest of the app keeps  */
+/* its own font stack / theme).                                        */
+/* ------------------------------------------------------------------ */
+#hero {
+  font-family: var(--font-barlow), "Barlow", sans-serif;
+  color: #fff;
+}
+#hero h1,
+#hero h2,
+#hero h3 {
+  font-family: var(--font-instrument), "Instrument Serif", serif;
+}
+
 ::selection {
-  background: rgba(34, 228, 255, 0.3);
+  background: rgba(139, 92, 246, 0.3);
 }
 
 ::-webkit-scrollbar {
   width: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #262642;
+  background: #262831;
   border-radius: 8px;
 }
 ::-webkit-scrollbar-track {
@@ -120,32 +133,104 @@ body {
 }
 
 @layer components {
+  /* Glass surface: subtle white-glass over dark, 1px faint border. */
   .glass {
     background: rgba(255, 255, 255, 0.04);
     border: 1px solid rgba(255, 255, 255, 0.09);
     backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
   }
-  .glow-cyan {
-    box-shadow: 0 0 24px rgba(34, 228, 255, 0.35), 0 0 64px rgba(34, 228, 255, 0.12);
-  }
-  .glow-magenta {
-    box-shadow: 0 0 24px rgba(255, 62, 200, 0.35), 0 0 64px rgba(255, 62, 200, 0.12);
-  }
-  .text-glow-cyan {
-    text-shadow: 0 0 18px rgba(34, 228, 255, 0.65), 0 0 42px rgba(34, 228, 255, 0.25);
-  }
-  .text-glow-magenta {
-    text-shadow: 0 0 18px rgba(255, 62, 200, 0.65), 0 0 42px rgba(255, 62, 200, 0.25);
-  }
-}
 
-@keyframes pulse-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 18px rgba(34, 228, 255, 0.35), 0 0 50px rgba(34, 228, 255, 0.12);
+  /* Card — semi-transparent glassmorphic pane with micro-shadows. */
+  .glass-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.06),
+      0 1px 2px rgba(0, 0, 0, 0.25),
+      0 8px 24px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   }
-  50% {
-    box-shadow: 0 0 34px rgba(34, 228, 255, 0.6), 0 0 90px rgba(34, 228, 255, 0.22);
+  .glass-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 255, 255, 0.18);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 2px 4px rgba(0, 0, 0, 0.25),
+      0 16px 40px rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(139, 92, 246, 0.08);
+  }
+
+  /* Clean minimal button — Apple/Linear style. */
+  .btn-clean {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease, transform 0.1s ease;
+  }
+  .btn-clean:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+  .btn-clean:active {
+    transform: scale(0.97);
+  }
+
+  /* Liquid glass — strong blur + glowing gradient border via mask trick. */
+  .liquid-glass-strong {
+    background: rgba(255, 255, 255, 0.01);
+    background-blend-mode: luminosity;
+    backdrop-filter: blur(50px);
+    -webkit-backdrop-filter: blur(50px);
+    border: none;
+    box-shadow:
+      4px 4px 4px rgba(0, 0, 0, 0.05),
+      inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .liquid-glass-strong::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.4px;
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      rgba(255, 255, 255, 0.2) 20%,
+      rgba(255, 255, 255, 0) 40%,
+      rgba(255, 255, 255, 0) 60%,
+      rgba(255, 255, 255, 0.2) 80%,
+      rgba(255, 255, 255, 0.5) 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Primary action — violet with a subtle glow. */
+  .btn-primary {
+    background: linear-gradient(180deg, #8b5cf6, #7c3aed);
+    border: 1px solid rgba(167, 139, 250, 0.4);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 4px 14px rgba(124, 58, 237, 0.35);
+    transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  }
+  .btn-primary:hover {
+    filter: brightness(1.08);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 1px 2px rgba(0, 0, 0, 0.3),
+      0 6px 20px rgba(124, 58, 237, 0.45);
+  }
+  .btn-primary:active {
+    transform: scale(0.97);
   }
 }
 
@@ -157,6 +242,16 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 18px rgba(139, 92, 246, 0.25), 0 0 50px rgba(139, 92, 246, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(139, 92, 246, 0.45), 0 0 70px rgba(139, 92, 246, 0.15);
   }
 }
 

@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLists } from '@/hooks/useLists';
+import { useAuth } from '@/hooks/useAuth';
+import { bestScoreStorageKey } from '@/lib/auth/scopes';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import type { TTSEngine } from '@/lib/tts/engine';
@@ -9,7 +11,6 @@ import type { VocabSet } from '@/types/app';
 
 const CHALLENGE_SECONDS = 60;
 const ADVANCE_MS = 420; // fast feedback — this is a speed game, not a lecture
-const BEST_KEY = 'audiorepeat-challenge-best-v1';
 
 interface BestRecord {
   best: number;
@@ -23,10 +24,10 @@ interface Round {
   correctIndex: number;
 }
 
-function loadBest(setId: string): BestRecord {
+function loadBest(key: string): BestRecord {
   if (typeof window === 'undefined') return { best: 0, plays: 0 };
   try {
-    const raw = window.localStorage.getItem(`${BEST_KEY}:${setId}`);
+    const raw = window.localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw) as BestRecord;
       if (parsed && typeof parsed.best === 'number') return parsed;
@@ -37,9 +38,9 @@ function loadBest(setId: string): BestRecord {
   return { best: 0, plays: 0 };
 }
 
-function saveBest(setId: string, rec: BestRecord): void {
+function saveBest(key: string, rec: BestRecord): void {
   try {
-    window.localStorage.setItem(`${BEST_KEY}:${setId}`, JSON.stringify(rec));
+    window.localStorage.setItem(key, JSON.stringify(rec));
   } catch {
     /* storage unavailable */
   }
@@ -63,6 +64,9 @@ interface Props {
 
 export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
   const { settings } = useLists();
+  // Personal-best records are scoped per account (guests keep the legacy key).
+  const { user } = useAuth();
+  const bestKey = set ? bestScoreStorageKey(user?.id, set.id) : '';
 
   const engine = useMemo<TTSEngine>(
     () => {
@@ -82,7 +86,7 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
   const [round, setRound] = useState<Round | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
-  const [best, setBest] = useState<BestRecord>(() => (set ? loadBest(set.id) : { best: 0, plays: 0 }));
+  const [best, setBest] = useState<BestRecord>(() => (set ? loadBest(bestKey) : { best: 0, plays: 0 }));
   const [isNewBest, setIsNewBest] = useState(false);
   const [lastWasCorrect, setLastWasCorrect] = useState<boolean | null>(null);
   const scoreRef = useRef(0);
@@ -194,10 +198,10 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
     const prev = bestRef.current;
     const next = { best: Math.max(prev.best, finalScore), plays: prev.plays + 1 };
     bestRef.current = next;
-    if (set) saveBest(set.id, next);
+    if (set) saveBest(bestKey, next);
     setBest(next);
     setIsNewBest(finalScore > prev.best && finalScore > 0);
-  }, [clearTimers, set]);
+  }, [clearTimers, set, bestKey]);
 
   const showRound = useCallback(
     (index: number) => {

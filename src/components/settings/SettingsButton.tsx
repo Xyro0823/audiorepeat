@@ -13,7 +13,7 @@ export default function SettingsButton() {
         onClick={() => setOpen(true)}
         aria-label="Settings"
         title="Settings"
-        className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-slate-300 transition hover:border-neon-cyan/40 hover:text-white active:scale-95"
+        className="btn-clean flex h-9 w-9 items-center justify-center rounded-lg text-slate-300"
       >
         <svg
           viewBox="0 0 24 24"

@@ -9,6 +9,7 @@ import ActivityHeatmap, {
 } from '@/components/ActivityHeatmap';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { formatDuration } from '@/lib/format';
+import ProfileDropdown from '@/components/auth/ProfileDropdown';
 import SettingsButton from '@/components/settings/SettingsButton';
 import { lastNDays, totals, weeklyBuckets } from '@/lib/practiceStats';
 
@@ -46,8 +47,9 @@ export default function StatsView() {
         </Link>
         <span className="text-slate-700">/</span>
         <h1 className="text-2xl font-bold tracking-tight text-white">Stats</h1>
-        <span className="ml-auto">
+        <span className="ml-auto flex items-center gap-2">
           <SettingsButton />
+          <ProfileDropdown onLeaderboard={() => {}} onSubtitles={() => {}} onBrowse={() => {}} />
         </span>
       </header>
 

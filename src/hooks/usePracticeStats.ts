@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { computeStreak, dayKey, lastNDays, type DayMap } from '@/lib/practiceStats';
+import { useAuth } from '@/hooks/useAuth';
+import { statsStorageKey } from '@/lib/auth/scopes';
 
-const STORAGE_KEY = 'audiorepeat-stats-v1';
-
-function loadDays(): DayMap {
+function loadDays(key: string): DayMap {
   if (typeof window === 'undefined') return {};
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw) as DayMap;
       if (parsed && typeof parsed === 'object') return parsed;
@@ -32,6 +32,12 @@ export interface PracticeStats {
  * home summary card and the dedicated Stats page.
  */
 export function usePracticeStats() {
+  // Stats are scoped per account: guests keep the original key (existing data
+  // preserved), signed-in users get their own key. The layout gate only mounts
+  // this hook after auth resolves, so the active user is known on first render.
+  const { user } = useAuth();
+  const storageKey = statsStorageKey(user?.id);
+
   // Start empty: the home page is server-rendered, so reading localStorage in
   // the initializer would mismatch the prerendered HTML during hydration.
   const [days, setDays] = useState<DayMap>({});
@@ -48,20 +54,20 @@ export function usePracticeStats() {
   useEffect(() => {
     const id = window.requestAnimationFrame(() => {
       setLoaded(true);
-      setDays(loadDays());
+      setDays(loadDays(storageKey));
     });
     return () => window.cancelAnimationFrame(id);
-  }, []);
+  }, [storageKey]);
 
   // Persist on every change — the payloads are tiny, no debounce needed.
   useEffect(() => {
     if (!loaded) return; // never overwrite stored stats with the empty state
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(days));
+      window.localStorage.setItem(storageKey, JSON.stringify(days));
     } catch {
       /* storage unavailable */
     }
-  }, [days, loaded]);
+  }, [days, loaded, storageKey]);
 
   // Flush immediately when the tab is hidden (e.g. the screen locks mid-playback),
   // so background practice time is never lost.
@@ -69,7 +75,7 @@ export function usePracticeStats() {
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
         try {
-          window.localStorage.setItem(STORAGE_KEY, JSON.stringify(daysRef.current));
+          window.localStorage.setItem(storageKey, JSON.stringify(daysRef.current));
         } catch {
           /* ignore */
         }
@@ -77,7 +83,7 @@ export function usePracticeStats() {
     };
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, []);
+  }, [storageKey]);
 
   const recordWords = useCallback((n: number, lang?: string) => {
     if (!(n > 0)) return;

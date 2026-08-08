@@ -10,7 +10,7 @@ let dbPromise: Promise<IDBPDatabase<AudioRepeatDB>> | null = null;
 
 export function getDb(): Promise<IDBPDatabase<AudioRepeatDB>> {
   if (!dbPromise) {
-    dbPromise = openDB<AudioRepeatDB>('audiorepeat', 1, {
+    dbPromise = openDB<AudioRepeatDB>('audiorepeat', 2, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('sets')) {
           db.createObjectStore('sets', { keyPath: 'id' });

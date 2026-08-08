@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ActivityHeatmap from '@/components/ActivityHeatmap';
@@ -13,21 +12,21 @@ import { decodeSetFromUrl, shareUrlForSet } from '@/lib/sets/share';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { VocabSet } from '@/types/app';
 import CefrBadge from './CefrBadge';
+import LanguageBadge from '@/components/LanguageBadge';
 import LeaderboardModal from './LeaderboardModal';
+import NewSetButton from './NewSetButton';
+import ProfileDropdown from '@/components/auth/ProfileDropdown';
 import SetEditor from './SetEditor';
 import SettingsButton from '@/components/settings/SettingsButton';
 import SpeedChallenge from '../speed/SpeedChallenge';
 import StarterLibraryModal from './StarterLibraryModal';
 import SubtitleImportModal from './SubtitleImportModal';
+import InstallAppButton from '@/components/pwa/InstallAppButton';
 
 function Logo() {
   return (
-    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#141433] to-night-950 shadow-[0_0_30px_rgba(34,228,255,0.25)]">
-      <svg
-        viewBox="0 0 24 24"
-        className="h-7 w-7 text-neon-cyan drop-shadow-[0_0_6px_rgba(34,228,255,0.9)]"
-        fill="currentColor"
-      >
+    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
+      <svg viewBox="0 0 24 24" className="h-4 w-4 text-neon-violet" fill="currentColor">
         <path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z" />
       </svg>
     </div>
@@ -41,7 +40,6 @@ function languageLabel(code: string): string {
 interface SetCardProps {
   set: VocabSet;
   index: number;
-  isConfirming: boolean;
   onPlay: () => void;
   onChallenge: () => void;
   onEdit: () => void;
@@ -50,91 +48,199 @@ interface SetCardProps {
   onDelete: () => void;
 }
 
-function SetCard({ set, index, isConfirming, onPlay, onChallenge, onEdit, onExport, onShare, onDelete }: SetCardProps) {
+function SetCard({ set, index, onPlay, onChallenge, onEdit, onExport, onShare, onDelete }: SetCardProps) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const rootRef = useRef<HTMLElement | null>(null);
+
   const total = set.words.length;
   const mastered = set.words.filter((w) => w.mastery === 'mastered').length;
   const hard = set.words.filter((w) => w.mastery === 'hard').length;
   const pct = total > 0 ? Math.round((mastered / total) * 100) : 0;
 
+  // Close the menu on outside click.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [menuOpen]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const run = (fn: () => void) => () => {
+    setMenuOpen(false);
+    setConfirmDelete(false);
+    fn();
+  };
+
+  const menuItem = 'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition';
+
   return (
     <article
-      className="glass animate-fade-up group relative overflow-hidden rounded-2xl p-5 transition-all hover:-translate-y-1 hover:border-neon-cyan/40"
-      style={{ animationDelay: `${index * 60}ms` }}
+      ref={rootRef}
+      className={`glass-card animate-fade-up relative rounded-2xl p-5 ${
+        menuOpen ? 'z-40 border-white/25' : ''
+      }`}
+      style={{ animationDelay: `${Math.min(index * 60, 600)}ms` }}
     >
-      <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-neon-cyan/10 blur-2xl transition-all duration-500 group-hover:bg-neon-cyan/25" />
-      <div className="pointer-events-none absolute -bottom-10 -left-10 h-24 w-24 rounded-full bg-neon-magenta/10 blur-2xl transition-all duration-500 group-hover:bg-neon-magenta/20" />
       <div className="flex items-start justify-between gap-2">
-        <h3 className="text-xl font-semibold text-white">{set.name}</h3>
-        {set.cefr && <CefrBadge level={set.cefr} />}
-      </div>
-      <p className="mt-1 text-sm text-slate-400">
-        {set.words.length} words · {languageLabel(set.lang)} → {languageLabel(set.nativeLang)}
-        {set.settings ? ' · custom settings' : ''}
-      </p>
-      <div className="mt-4">
-        <div className="flex items-center justify-between text-[11px]">
-          <span className="font-medium text-slate-400">{pct}% mastered</span>
-          {hard > 0 && (
-            <span className="text-neon-amber">
-              {hard} to review
-            </span>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <h3 className="truncate text-[15px] font-semibold tracking-tight text-white">
+              {set.name}
+            </h3>
+            <LanguageBadge lang={set.lang} label={languageLabel(set.lang)} />
+          </div>
+          {/* Pill badge: level + descriptive label */}
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            {set.cefr && <CefrBadge level={set.cefr} />}
+          </div>
+        </div>
+
+        {/* Three-dots actions menu */}
+        <div className="relative shrink-0">
+          <button
+            onClick={() => {
+              setMenuOpen((o) => !o);
+              setConfirmDelete(false);
+            }}
+            aria-label={`Actions for ${set.name}`}
+            aria-haspopup="menu"
+            aria-expanded={menuOpen}
+            className="btn-clean flex h-8 w-8 items-center justify-center rounded-lg text-slate-400"
+          >
+            <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="currentColor" aria-hidden="true">
+              <circle cx="5" cy="12" r="1.6" />
+              <circle cx="12" cy="12" r="1.6" />
+              <circle cx="19" cy="12" r="1.6" />
+            </svg>
+          </button>
+
+          {menuOpen && (
+            <div
+              role="menu"
+              aria-label={`Actions for ${set.name}`}
+              className="glass animate-fade-up absolute right-0 top-9 z-30 w-48 rounded-xl p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+            >
+              <button
+                role="menuitem"
+                className={`${menuItem} text-neon-amber hover:bg-neon-amber/10`}
+                onClick={run(onChallenge)}
+              >
+                <span aria-hidden>⚡</span> 1-Min challenge
+              </button>
+              <button
+                role="menuitem"
+                className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
+                onClick={run(onEdit)}
+              >
+                <span aria-hidden>✏️</span> Edit
+              </button>
+              <button
+                role="menuitem"
+                className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
+                onClick={run(onExport)}
+              >
+                <span aria-hidden>⬇</span> Download JSON
+              </button>
+              {!set.id.startsWith('seed-') && (
+                <button
+                  role="menuitem"
+                  className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
+                  onClick={run(onShare)}
+                >
+                  <span aria-hidden>🔗</span> Copy share link
+                </button>
+              )}
+              <div className="my-1 h-px bg-white/10" />
+              {confirmDelete ? (
+                <div className="rounded-lg bg-neon-magenta/10 p-1">
+                  <button
+                    role="menuitem"
+                    className={`${menuItem} text-neon-magenta hover:bg-neon-magenta/10`}
+                    onClick={run(onDelete)}
+                  >
+                    <span aria-hidden>🗑</span> Confirm delete
+                  </button>
+                  <button
+                    role="menuitem"
+                    className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
+                    onClick={() => setConfirmDelete(false)}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  role="menuitem"
+                  className={`${menuItem} text-neon-magenta hover:bg-neon-magenta/10`}
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <span aria-hidden>🗑</span> Delete
+                </button>
+              )}
+            </div>
           )}
         </div>
-        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-night-800">
+      </div>
+
+      {/* Clean meta + minimal progress */}
+      <div className="mt-4">
+        <p className="truncate text-xs text-slate-500">
+          {set.words.length} words · {languageLabel(set.lang)} → {languageLabel(set.nativeLang)}
+          {set.settings ? ' · custom settings' : ''}
+        </p>
+        <div className="mt-2.5 flex items-center justify-between text-[11px]">
+          <span className="font-medium text-slate-500">{pct}% mastered</span>
+          {hard > 0 && <span className="text-neon-amber">{hard} to review</span>}
+        </div>
+        <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/[0.06]">
           <div
-            className="h-full rounded-full bg-gradient-to-r from-neon-green to-neon-cyan transition-all duration-500"
+            className="h-full rounded-full bg-neon-violet transition-all duration-500"
             style={{ width: `${pct}%` }}
           />
         </div>
       </div>
-      <div className="mt-4 flex gap-2">
+
+      {/* Elegant actions: Play (primary glow) + 1-Min (quiet) */}
+      <div className="mt-4 grid grid-cols-2 gap-2">
         <button
           onClick={onPlay}
-          className="flex-1 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
+          className="btn-primary flex h-9 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold text-white"
         >
-          ▶ Play
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
+            <path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z" />
+          </svg>
+          Play
         </button>
         <button
           onClick={onChallenge}
-          title="1-minute speed challenge — how many words can you get?"
-          className="rounded-xl border border-neon-amber/30 bg-neon-amber/10 px-3 py-2.5 text-sm font-semibold text-neon-amber transition hover:border-neon-amber/60 hover:bg-neon-amber/20 active:scale-95"
+          title="1-Minute speed challenge"
+          className="btn-clean flex h-9 items-center justify-center gap-1.5 rounded-lg text-[13px] font-medium text-slate-300"
         >
-          ⚡ 1-Min
-        </button>
-        <button
-          onClick={onEdit}
-          className="rounded-xl border border-white/10 px-3 py-2.5 text-sm text-slate-300 transition hover:border-white/25 hover:text-white active:scale-95"
-        >
-          Edit
-        </button>
-        <button
-          onClick={onExport}
-          aria-label="Export set as JSON"
-          title="Export as JSON"
-          className="rounded-xl border border-white/10 px-3 py-2.5 text-sm text-slate-400 transition hover:border-neon-cyan/40 hover:text-neon-cyan active:scale-95"
-        >
-          ⬇
-        </button>
-        {!set.id.startsWith('seed-') && (
-          <button
-            onClick={onShare}
-            aria-label="Copy share link"
-            title="Copy a share link — anyone who opens it gets this set"
-            className="rounded-xl border border-white/10 px-3 py-2.5 text-sm text-slate-400 transition hover:border-neon-violet/40 hover:text-neon-violet active:scale-95"
+          <svg
+            viewBox="0 0 24 24"
+            className="h-3.5 w-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
           >
-            🔗
-          </button>
-        )}
-        <button
-          onClick={onDelete}
-          aria-label="Delete set"
-          className={`rounded-xl border px-3 py-2.5 text-sm transition active:scale-95 ${
-            isConfirming
-              ? 'border-neon-magenta bg-neon-magenta/15 text-neon-magenta'
-              : 'border-white/10 text-slate-400 hover:border-neon-magenta/40 hover:text-neon-magenta'
-          }`}
-        >
-          {isConfirming ? 'Sure?' : '✕'}
+            <circle cx="12" cy="13" r="8" />
+            <path d="M12 9v4l2.5 2.5M9 2h6" />
+          </svg>
+          1-Min
         </button>
       </div>
     </article>
@@ -156,7 +262,6 @@ export default function SetLibrary() {
     null,
   );
   const [challengeSet, setChallengeSet] = useState<VocabSet | null>(null);
-  const [confirmId, setConfirmId] = useState<string | null>(null);
   const [importMsg, setImportMsg] = useState<ImportMsg>(null);
   const [pendingImport, setPendingImport] = useState<VocabSet | null>(null);
 
@@ -207,6 +312,14 @@ export default function SetLibrary() {
     }
     return best;
   }, [sets]);
+
+  // The hero's "Browse Library" button dispatches this event to open the
+  // starter library modal (the hero lives above this component).
+  useEffect(() => {
+    const onOpenBrowse = () => setBrowse(true);
+    window.addEventListener('audiorepeat:open-browse', onOpenBrowse);
+    return () => window.removeEventListener('audiorepeat:open-browse', onOpenBrowse);
+  }, []);
 
   // Handle a shared-deck link: /?set=<encoded>. Decoded once on mount, then
   // imported as soon as the library has loaded (so duplicates can be spotted).
@@ -260,78 +373,52 @@ export default function SetLibrary() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-5xl flex-1 px-5 pb-20 pt-10">
-      <header className="animate-fade-up mb-6 flex flex-wrap items-center gap-4">
+    <main className="mx-auto w-full max-w-5xl flex-1 px-5 pb-20 pt-8">
+      {/* Sleek floating glass navbar */}
+      <header className="animate-fade-up glass mb-10 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl px-4 py-3">
         <Logo />
         <div className="mr-auto">
-          <h1 className="text-3xl font-bold tracking-tight text-white">AudioRepeat</h1>
-          <p className="text-sm text-slate-400">
-            Loop. Repeat. Retain. — hands-free vocabulary drilling in {LANGUAGES.length} languages
+          <h1 className="text-[15px] font-semibold tracking-tight text-white">AudioRepeat</h1>
+          <p className="hidden text-[11px] text-slate-500 sm:block">
+            {LANGUAGES.length} languages · hands-free drilling
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <StreakBadge streak={streak} />
+        <div className="flex flex-wrap items-center gap-1.5">
           <SettingsButton />
-          <button
-            onClick={() => setLeaderboardOpen(true)}
-            title="Daily leaderboard — rank your practice by language"
-            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-amber/40 hover:text-white active:scale-95"
-          >
-            🏆 Leaderboard
-          </button>
-          <Link
-            href="/stats"
-            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-cyan/40 hover:text-white active:scale-95"
-          >
-            📊 Stats
-          </Link>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="application/json,.json"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void handleImportFile(file);
-            }}
+          <StreakBadge streak={streak} />
+          <InstallAppButton />
+          <ProfileDropdown
+            onLeaderboard={() => setLeaderboardOpen(true)}
+            onSubtitles={() => subtitleInputRef.current?.click()}
+            onBrowse={() => setBrowse(true)}
           />
-          <input
-            ref={subtitleInputRef}
-            type="file"
-            accept=".srt,.vtt,.txt,.ass,.ssa,text/plain,application/x-subrip,application/octet-stream"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) void handleSubtitleFile(file);
-            }}
+          <NewSetButton
+            onNew={() => setEditing('new')}
+            onImport={() => fileInputRef.current?.click()}
           />
-          <button
-            onClick={() => subtitleInputRef.current?.click()}
-            title="Turn a subtitle file or transcript into a vocabulary set"
-            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-magenta/40 hover:text-white active:scale-95"
-          >
-            🎬 Subtitles
-          </button>
-          <button
-            onClick={() => setBrowse(true)}
-            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-cyan/40 hover:text-white active:scale-95"
-          >
-            📚 Browse library
-          </button>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-slate-300 transition hover:border-neon-cyan/40 hover:text-white active:scale-95"
-          >
-            ⬆ Import
-          </button>
-          <button
-            onClick={() => setEditing('new')}
-            className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 active:scale-95"
-          >
-            + New set
-          </button>
         </div>
       </header>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleImportFile(file);
+        }}
+      />
+      <input
+        ref={subtitleInputRef}
+        type="file"
+        accept=".srt,.vtt,.txt,.ass,.ssa,text/plain,application/x-subrip,application/octet-stream"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleSubtitleFile(file);
+        }}
+      />
 
       {week.some((d) => d.words > 0 || d.ms > 0) && (
         <div className="glass animate-fade-up mb-6 rounded-2xl px-5 py-4">
@@ -373,43 +460,31 @@ export default function SetLibrary() {
       )}
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="glass h-44 animate-pulse rounded-2xl" />
+            <div key={i} className="glass-card h-44 animate-pulse rounded-2xl" />
           ))}
         </div>
       ) : sets.length === 0 ? (
-        <div className="glass mx-auto max-w-md rounded-2xl p-10 text-center">
+        <div className="glass-card mx-auto max-w-md rounded-2xl p-10 text-center">
           <p className="text-lg font-semibold text-white">No vocabulary sets yet</p>
           <p className="mt-2 text-sm text-slate-400">
-            Create your first set, or import one with the ⬆ button.
+            Create your first set with the + New button, or import a JSON set.
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div id="vocab-grid" className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {sets.map((set, i) => (
             <SetCard
               key={set.id}
               set={set}
               index={i}
-              isConfirming={confirmId === set.id}
               onPlay={() => router.push(`/player?id=${set.id}`)}
               onChallenge={() => setChallengeSet(set)}
               onEdit={() => setEditing(set)}
               onExport={() => downloadSet(set)}
               onShare={() => void handleShare(set)}
-              onDelete={() => {
-                if (confirmId === set.id) {
-                  void removeSet(set.id);
-                  setConfirmId(null);
-                } else {
-                  setConfirmId(set.id);
-                  window.setTimeout(() =>
-                    setConfirmId((c) => (c === set.id ? null : c)),
-                    2500,
-                  );
-                }
-              }}
+              onDelete={() => void removeSet(set.id)}
             />
           ))}
         </div>

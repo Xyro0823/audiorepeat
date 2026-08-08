@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import ProfileDropdown from '@/components/auth/ProfileDropdown';
 import StreakBadge from '@/components/StreakBadge';
 import { useAudioLoop } from '@/hooks/useAudioLoop';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
@@ -29,6 +31,7 @@ const SLEEP_FADE_MS = 15_000;
 const SNOOZE_MS = 30_000; // after the timer ends, Play within this window restarts it
 
 export default function PlayerView({ setId }: { setId: string | null }) {
+  const router = useRouter();
   const { sets, loading, settings, saveSettings, saveSet } = useLists();
   const set = sets.find((s) => s.id === setId) ?? null;
 
@@ -554,6 +557,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         </span>
         <StreakBadge streak={streak} />
         <SettingsButton />
+        <ProfileDropdown
+          onLeaderboard={() => router.push('/')}
+          onSubtitles={() => router.push('/')}
+          onBrowse={() => router.push('/')}
+        />
       </header>
 
       <div className="animate-fade-up mt-4 flex flex-wrap items-center gap-1.5">

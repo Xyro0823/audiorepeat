@@ -3,9 +3,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLists } from '@/hooks/useLists';
+import { useAuth } from '@/hooks/useAuth';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { buildBackup, downloadBackup, parseBackup, type BackupData } from '@/lib/sets/backup';
+import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
 import type { ThemeName } from '@/types/app';
 import { DEFAULT_SETTINGS } from '@/types/app';
 import VoicePicker from '@/components/player/VoicePicker';
@@ -13,21 +15,18 @@ import VoicePicker from '@/components/player/VoicePicker';
 const REPEAT_OPTIONS = [1, 2, 3, 5];
 const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5, 2];
 
-const STATS_KEY = 'audiorepeat-stats-v1';
-const USERNAME_KEY = 'audiorepeat-username';
-
 const THEMES: { id: ThemeName; label: string; desc: string; swatches: string[] }[] = [
   {
     id: 'neon',
-    label: 'Neon Night',
-    desc: 'Deep night with cyan & magenta glows',
-    swatches: ['#05050c', '#22e4ff', '#ff3ec8'],
+    label: 'Dark Glass',
+    desc: 'Deep charcoal mesh with violet accents',
+    swatches: ['#0b0c10', '#8b5cf6', '#38bdf8'],
   },
   {
     id: 'dark',
     label: 'Dark Mode',
-    desc: 'Muted night, calmer standard accents',
-    swatches: ['#0a0a14', '#38bdf8', '#f472b6'],
+    desc: 'Muted charcoal, calmer standard accents',
+    swatches: ['#0b0c10', '#38bdf8', '#f472b6'],
   },
   {
     id: 'light',
@@ -81,6 +80,8 @@ interface Props {
 export default function SettingsModal({ onClose }: Props) {
   const { sets, settings, loading, saveSettings, replaceSettings, clearSets, saveSet } = useLists();
   const { days } = usePracticeStats();
+  // Stats/username live per account (guests use the shared legacy keys).
+  const { user, mode } = useAuth();
   const [tab, setTab] = useState<Tab>('playback');
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
@@ -199,14 +200,16 @@ export default function SettingsModal({ onClose }: Props) {
 
   // ---------- data backup ----------
   const handleExport = useCallback(() => {
+    // Signed-in accounts are identified by their account name; the nickname
+    // only exists for guests.
     const username =
-      typeof window !== 'undefined'
-        ? (window.localStorage.getItem(USERNAME_KEY) ?? undefined)
+      !user && typeof window !== 'undefined'
+        ? (window.localStorage.getItem(usernameStorageKey(null)) ?? undefined)
         : undefined;
     const json = buildBackup({ settings, sets, days, username });
     downloadBackup(json, `audiorepeat-backup-${new Date().toISOString().slice(0, 10)}.json`);
     flash('ok', 'Backup downloaded — keep it somewhere safe.');
-  }, [settings, sets, days, flash]);
+  }, [settings, sets, days, user, flash]);
 
   const handleImportFile = useCallback(
     async (file: File) => {
@@ -238,10 +241,10 @@ export default function SettingsModal({ onClose }: Props) {
       // even if the reload below is blocked.
       for (const s of pendingImport.sets ?? []) await saveSet(s);
       if (pendingImport.days) {
-        window.localStorage.setItem(STATS_KEY, JSON.stringify(pendingImport.days));
+        window.localStorage.setItem(statsStorageKey(user?.id), JSON.stringify(pendingImport.days));
       }
-      if (pendingImport.username) {
-        window.localStorage.setItem(USERNAME_KEY, pendingImport.username);
+      if (pendingImport.username && !user) {
+        window.localStorage.setItem(usernameStorageKey(null), pendingImport.username);
       }
       setPendingImport(null);
       flash('ok', 'Backup restored — reloading…');
@@ -250,7 +253,7 @@ export default function SettingsModal({ onClose }: Props) {
     } catch {
       flash('err', 'Restore failed — reload the app and check your data.');
     }
-  }, [pendingImport, replaceSettings, clearSets, saveSet, flash]);
+  }, [pendingImport, replaceSettings, clearSets, saveSet, user, flash]);
 
   const clearCachedAudio = useCallback(async () => {
     let cleared = 0;
@@ -273,7 +276,7 @@ export default function SettingsModal({ onClose }: Props) {
 
   const resetProgress = useCallback(async () => {
     try {
-      window.localStorage.removeItem(STATS_KEY);
+      window.localStorage.removeItem(statsStorageKey(user?.id));
       // Strip mastery marks so review/mastery state restarts cleanly.
       for (const s of sets) {
         if (s.words.some((w) => w.mastery)) {
@@ -288,7 +291,7 @@ export default function SettingsModal({ onClose }: Props) {
     } catch {
       flash('err', 'Reset failed.');
     }
-  }, [sets, saveSet, flash]);
+  }, [sets, saveSet, user, flash]);
 
   const notificationSupported =
     typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
@@ -514,6 +517,17 @@ export default function SettingsModal({ onClose }: Props) {
         {/* ---------------- Data ---------------- */}
         {tab === 'data' && (
           <div className="space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
+              <p className="text-sm font-semibold text-white">Account</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                {user
+                  ? `Signed in with Firebase as ${user.email ?? `@${user.username}`}. Your identity syncs online; stats, streak and sets stay on this device.`
+                  : mode === 'firebase'
+                    ? 'You are using the app as a guest. Sign in with Google or an email account from the header.'
+                    : "Firebase isn't configured yet — add your config to .env.local (see .env.example) to enable sign-in. Until then, the app runs in guest mode."}
+              </p>
+            </div>
+
             <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
               <p className="text-sm font-semibold text-white">Backup & restore</p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">

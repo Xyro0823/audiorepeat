@@ -1,26 +1,27 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { dayByLang, dayKey } from '@/lib/practiceStats';
 import { formatDuration } from '@/lib/format';
 import { findLanguage } from '@/lib/languages';
+import { usernameStorageKey } from '@/lib/auth/scopes';
 
-const USERNAME_KEY = 'audiorepeat-username';
 const MAX_USERNAME = 24;
 
-function loadUsername(): string {
+function loadUsername(key: string): string {
   if (typeof window === 'undefined') return 'You';
   try {
-    return window.localStorage.getItem(USERNAME_KEY) ?? 'You';
+    return window.localStorage.getItem(key) ?? 'You';
   } catch {
     return 'You';
   }
 }
 
-function saveUsername(name: string): void {
+function saveUsername(key: string, name: string): void {
   try {
-    window.localStorage.setItem(USERNAME_KEY, name);
+    window.localStorage.setItem(key, name);
   } catch {
     /* storage unavailable */
   }
@@ -34,7 +35,13 @@ interface Props {
 
 export default function LeaderboardModal({ onClose }: Props) {
   const { days, streak, wordsToday, msToday } = usePracticeStats();
-  const [username, setUsername] = useState(loadUsername);
+  // Signed-in users are identified by their account name (read-only here);
+  // guests keep an editable nickname.
+  const { user } = useAuth();
+  const isAccount = user !== null;
+  const [username, setUsername] = useState(() =>
+    user ? user.username : loadUsername(usernameStorageKey(null)),
+  );
   const [draft, setDraft] = useState(username);
   const [saved, setSaved] = useState(false);
 
@@ -51,7 +58,7 @@ export default function LeaderboardModal({ onClose }: Props) {
   const commitUsername = () => {
     const clean = draft.trim().slice(0, MAX_USERNAME) || 'You';
     setUsername(clean);
-    saveUsername(clean);
+    saveUsername(usernameStorageKey(user?.id), clean);
     setSaved(true);
     window.setTimeout(() => setSaved(false), 1500);
   };
@@ -70,7 +77,7 @@ export default function LeaderboardModal({ onClose }: Props) {
           </button>
         </div>
 
-        {/* Profile card — the only "user" in this offline app. */}
+        {/* Profile card — the "user" in this offline app. */}
         <div className="mt-4 rounded-2xl border border-neon-amber/30 bg-gradient-to-br from-neon-amber/10 to-night-900 p-4">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0 text-left">
@@ -83,22 +90,29 @@ export default function LeaderboardModal({ onClose }: Props) {
               Rank #1
             </span>
           </div>
-          <div className="mt-3 flex gap-2">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              maxLength={MAX_USERNAME}
-              placeholder="Display name"
-              aria-label="Display name"
-              className="min-w-0 flex-1 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-neon-amber/60"
-            />
-            <button
-              onClick={commitUsername}
-              className="shrink-0 rounded-xl bg-gradient-to-r from-neon-amber to-neon-magenta px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
-            >
-              {saved ? 'Saved ✓' : 'Save'}
-            </button>
-          </div>
+          {isAccount ? (
+            <p className="mt-3 rounded-xl border border-white/10 bg-night-800/60 px-3 py-2 text-left text-[11px] text-slate-400">
+              Your account name <span className="font-semibold text-white">@{username}</span> is
+              your leaderboard name.
+            </p>
+          ) : (
+            <div className="mt-3 flex gap-2">
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                maxLength={MAX_USERNAME}
+                placeholder="Display name"
+                aria-label="Display name"
+                className="min-w-0 flex-1 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-neon-amber/60"
+              />
+              <button
+                onClick={commitUsername}
+                className="shrink-0 rounded-xl bg-gradient-to-r from-neon-amber to-neon-magenta px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
+              >
+                {saved ? 'Saved ✓' : 'Save'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Ranked languages practiced today. */}
