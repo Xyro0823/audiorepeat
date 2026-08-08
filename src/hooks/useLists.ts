@@ -1,18 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import type { AppSettings, VocabSet, VocabWord } from '@/types/app';
-import { DEFAULT_SETTINGS } from '@/types/app';
 import { SEED_SETS } from '@/lib/seedSets';
 import { PACK_LANG } from '@/lib/starterSets';
 import { loadWordBank } from '@/lib/vocab/wordBanks';
+import { clearAllSets as dbClearAllSets, deleteSet as dbDeleteSet, getAllSets, putSet } from '@/lib/db/indexedDb';
 import {
-  deleteSet as dbDeleteSet,
-  getAllSets,
-  getSettings,
-  putSet,
-  putSettings,
-} from '@/lib/db/indexedDb';
+  getSettingsSnapshot,
+  hydrateSettings,
+  replaceSettingsFull,
+  subscribeSettings,
+  updateSettings,
+} from '@/lib/settingsStore';
 
 // Bump this whenever new starter sets are added, so existing installs receive
 // them exactly once (a user who deletes a seed set keeps it deleted).
@@ -102,10 +102,10 @@ function matchesCuratedSeed(existing: VocabSet, curated: VocabSet): boolean {
 
 export function useLists() {
   const [sets, setSets] = useState<VocabSet[]>([]);
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
-  const settingsRef = useRef<AppSettings>(DEFAULT_SETTINGS);
-  const persistTimerRef = useRef<number | null>(null);
+  // Settings are global (shared store): every mounted consumer sees changes
+  // immediately — e.g. the Settings modal and the layout-level ThemeManager.
+  const settings = useSyncExternalStore(subscribeSettings, getSettingsSnapshot, getSettingsSnapshot);
 
   useEffect(() => {
     let alive = true;
@@ -190,19 +190,9 @@ export function useLists() {
           }
         }
       }
-      const stored = await getSettings();
+      await hydrateSettings(); // shared store — idempotent across instances
       if (alive) {
-        // targetGapMs now lives in the 1-5s range; clamp any legacy stored
-        // value (old default was 600ms) so the slider never shows an
-        // out-of-range value.
-        const merged = {
-          ...DEFAULT_SETTINGS,
-          ...stored,
-          targetGapMs: Math.min(5000, Math.max(1000, stored?.targetGapMs ?? DEFAULT_SETTINGS.targetGapMs)),
-        };
-        settingsRef.current = merged;
         setSets(list);
-        setSettings(merged);
         setLoading(false);
       }
     })().catch((err) => {
@@ -214,13 +204,7 @@ export function useLists() {
     };
   }, []);
 
-  // flush any pending settings write on unmount
-  useEffect(
-    () => () => {
-      if (persistTimerRef.current !== null) clearTimeout(persistTimerRef.current);
-    },
-    [],
-  );
+
 
   const saveSet = useCallback(async (set: VocabSet): Promise<VocabSet> => {
     const next = { ...set, updatedAt: Date.now() };
@@ -240,19 +224,22 @@ export function useLists() {
     setSets((prev) => prev.filter((s) => s.id !== id));
   }, []);
 
+  /** Full settings replace (backup restore) — not a merge like saveSettings. */
+  const replaceSettings = useCallback((next: AppSettings) => {
+    replaceSettingsFull(next);
+  }, []);
+
+  /** Delete every set (backup restore / full reset). */
+  const clearSets = useCallback(async () => {
+    await dbClearAllSets();
+    setSets([]);
+  }, []);
+
   // Debounced persistence: state updates are instant; IndexedDB writes coalesce
   // (e.g. during slider drags). No side effects inside the state updater.
   const saveSettings = useCallback((patch: Partial<AppSettings>) => {
-    const next = { ...settingsRef.current, ...patch };
-    settingsRef.current = next;
-    setSettings(next);
-    if (persistTimerRef.current !== null) clearTimeout(persistTimerRef.current);
-    persistTimerRef.current = window.setTimeout(() => {
-      void putSettings(settingsRef.current).catch((err) =>
-        console.error('[useLists] save settings', err),
-      );
-    }, 250);
+    updateSettings(patch);
   }, []);
 
-  return { sets, settings, loading, saveSet, removeSet, saveSettings };
+  return { sets, settings, loading, saveSet, removeSet, saveSettings, replaceSettings, clearSets };
 }

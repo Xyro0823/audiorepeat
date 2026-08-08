@@ -9,6 +9,7 @@ import ActivityHeatmap, {
 } from '@/components/ActivityHeatmap';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { formatDuration } from '@/lib/format';
+import SettingsButton from '@/components/settings/SettingsButton';
 import { lastNDays, totals, weeklyBuckets } from '@/lib/practiceStats';
 
 const CHART_HEIGHT = 120;
@@ -45,6 +46,9 @@ export default function StatsView() {
         </Link>
         <span className="text-slate-700">/</span>
         <h1 className="text-2xl font-bold tracking-tight text-white">Stats</h1>
+        <span className="ml-auto">
+          <SettingsButton />
+        </span>
       </header>
 
       <section className="glass animate-fade-up rounded-3xl p-8 text-center">

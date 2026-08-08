@@ -8,6 +8,8 @@ export interface LoopWord {
   nativeLang?: string;
   repeats?: number;
   mastery?: MasteryStatus;
+  /** Optional example sentence (shown on the word card when enabled). */
+  example?: string;
 }
 
 export interface LoopSettings {

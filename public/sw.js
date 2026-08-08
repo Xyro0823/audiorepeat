@@ -45,27 +45,109 @@ self.addEventListener("activate", (event) => {
 // pack it just downloaded) so they play back offline immediately.
 self.addEventListener("message", (event) => {
   const data = event.data;
-  if (!data || data.type !== "PRECACHE" || !Array.isArray(data.urls)) return;
-  const urls = data.urls.filter((u) => {
-    try {
-      const url = new URL(u, self.location.origin);
-      return url.origin === self.location.origin && url.protocol === "http:";
-    } catch {
-      return false;
-    }
-  });
-  if (urls.length === 0) return;
-  // Cache each URL independently so a single 404 can't drop the whole batch.
-  event.waitUntil(
-    caches.open(CACHE).then((cache) =>
-      Promise.allSettled(
-        urls.map((u) =>
-          fetch(u).then((res) => {
-            if (res.ok) cache.put(u, res);
-          }),
+  if (!data || typeof data !== "object") return;
+  if (data.type === "PRECACHE" && Array.isArray(data.urls)) {
+    const urls = data.urls.filter((u) => {
+      try {
+        const url = new URL(u, self.location.origin);
+        return url.origin === self.location.origin && url.protocol === "http:";
+      } catch {
+        return false;
+      }
+    });
+    if (urls.length === 0) return;
+    // Cache each URL independently so a single 404 can't drop the whole batch.
+    event.waitUntil(
+      caches.open(CACHE).then((cache) =>
+        Promise.allSettled(
+          urls.map((u) =>
+            fetch(u).then((res) => {
+              if (res.ok) cache.put(u, res);
+            }),
+          ),
         ),
       ),
-    ),
+    );
+    return;
+  }
+  if (data.type === "SET_REMINDER") {
+    event.waitUntil(scheduleReminder(data));
+  } else if (data.type === "CLEAR_REMINDER") {
+    event.waitUntil(clearReminder());
+  }
+});
+
+/* ------------------------------------------------------------------ */
+/* Daily practice reminder (Notification Triggers when available).     */
+/* ------------------------------------------------------------------ */
+let reminderTimeout = null;
+
+async function scheduleReminder(data) {
+  const timestamp = Number(data.timestamp);
+  if (!Number.isFinite(timestamp)) return;
+  const title = typeof data.title === "string" ? data.title : "Time to practice!";
+  const body = typeof data.body === "string" ? data.body : "A quick AudioRepeat session is waiting.";
+  const tag = typeof data.tag === "string" ? data.tag : "daily-reminder";
+
+  // Clear any previously scheduled fallback timer.
+  if (reminderTimeout !== null) {
+    clearTimeout(reminderTimeout);
+    reminderTimeout = null;
+  }
+
+  const options = {
+    body,
+    tag,
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+  };
+
+  try {
+    if ("showTrigger" in Notification.prototype) {
+      // Notification Triggers: the OS owns the timing, survives SW restarts.
+      options.showTrigger = new TimestampTrigger(timestamp);
+      await self.registration.showNotification(title, options);
+      return;
+    }
+  } catch (err) {
+    // TimestampTrigger rejected (e.g. too far in the future) — fall back below.
+    console.error("[SW] trigger failed", err);
+  }
+
+  // Fallback (Safari / non-Trigger browsers): best-effort setTimeout while the
+  // SW process stays alive. The app re-arms the reminder on every launch.
+  const delay = Math.max(0, timestamp - Date.now());
+  reminderTimeout = setTimeout(() => {
+    self.registration.showNotification(title, options).catch(() => {});
+    reminderTimeout = null;
+  }, delay);
+}
+
+async function clearReminder() {
+  if (reminderTimeout !== null) {
+    clearTimeout(reminderTimeout);
+    reminderTimeout = null;
+  }
+  try {
+    const notifs = await self.registration.getNotifications({ tag: "daily-reminder" });
+    notifs.forEach((n) => n.close());
+  } catch {
+    /* ignore */
+  }
+}
+
+// Tapping the reminder opens (or focuses) the app.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((list) => {
+        for (const client of list) {
+          if ("focus" in client) return client.focus();
+        }
+        return clients.openWindow("/");
+      }),
   );
 });
 

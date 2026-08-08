@@ -40,6 +40,11 @@ export async function deleteSet(id: string): Promise<void> {
   await db.delete('sets', id);
 }
 
+export async function clearAllSets(): Promise<void> {
+  const db = await getDb();
+  await db.clear('sets');
+}
+
 export async function getSettings(): Promise<AppSettings | undefined> {
   const db = await getDb();
   return (await db.get('settings', 'global'))?.value;

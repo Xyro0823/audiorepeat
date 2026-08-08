@@ -12,6 +12,7 @@ interface Props {
   repeats: number;
   total: number;
   showHints: boolean;
+  showExamples: boolean;
   onMark: (status: MasteryStatus | undefined) => void;
 }
 
@@ -23,6 +24,7 @@ export default function WordCard({
   repeats,
   total,
   showHints,
+  showExamples,
   onMark,
 }: Props) {
   const emoji = word && showHints && !isTranslation ? emojiForText(word.translation) : null;
@@ -85,6 +87,12 @@ export default function WordCard({
       <p className="mt-5 text-2xl text-slate-400">
         {isTranslation ? word.target : word.translation}
       </p>
+
+      {!isTranslation && showExamples && word.example && (
+        <p className="mt-6 max-w-md text-base italic leading-relaxed text-slate-400">
+          “{word.example}”
+        </p>
+      )}
 
       {!isTranslation && (
         <div className="mt-8 flex items-center gap-2">

@@ -19,6 +19,7 @@ import DictationCard from './DictationCard';
 import PlayerControls from './PlayerControls';
 import ProgressBar from './ProgressBar';
 import QuizCard from './QuizCard';
+import SettingsButton from '@/components/settings/SettingsButton';
 import SettingsPanel from './SettingsPanel';
 import WordCard from './WordCard';
 
@@ -58,7 +59,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // review — the "Review Hard Words Only" mode.
   const orderedWords = useMemo(() => {
     if (!set) return [];
-    const all = set.words.map((w) => ({ ...w, lang: set.lang, nativeLang: set.nativeLang }));
+    const all = set.words.map((w) => ({
+      ...w,
+      lang: set.lang,
+      nativeLang: set.nativeLang,
+    }));
     if (filter === 'learning') return all.filter((w) => w.mastery !== 'mastered');
     if (filter === 'hard') return all.filter((w) => w.mastery === 'hard');
     return all;
@@ -548,6 +553,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             : `${words.length} / ${set.words.length} words`}
         </span>
         <StreakBadge streak={streak} />
+        <SettingsButton />
       </header>
 
       <div className="animate-fade-up mt-4 flex flex-wrap items-center gap-1.5">
@@ -719,6 +725,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               repeats={currentRepeats}
               total={words.length}
               showHints={effective.showHints}
+              showExamples={effective.showExamples}
               onMark={markWord}
             />
             <ProgressBar

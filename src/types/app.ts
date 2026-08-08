@@ -6,6 +6,9 @@ export type CefrLevel = (typeof CEFR_LEVELS)[number];
 /** Spaced-repetition status for a single word; absent = still learning. */
 export type MasteryStatus = 'mastered' | 'hard';
 
+/** App-wide color scheme. */
+export type ThemeName = 'neon' | 'dark' | 'light';
+
 export interface VocabWord {
   id: string;
   target: string;
@@ -13,6 +16,8 @@ export interface VocabWord {
   repeats?: number; // per-word override; falls back to settings.repeats
   /** 'mastered' = known, 'hard' = review needed; undefined = learning. */
   mastery?: MasteryStatus;
+  /** Optional example sentence shown on the word card when enabled in settings. */
+  example?: string;
 }
 
 export interface VocabSet {
@@ -33,6 +38,14 @@ export interface AppSettings extends LoopSettings {
   cachedAudio: boolean; // prefer pre-generated cached audio (offline) when available
   /** Show contextual emoji hints on word cards. */
   showHints: boolean;
+  /** App-wide color scheme: 'neon' (default), 'dark' (muted), 'light' (minimal). */
+  theme: ThemeName;
+  /** Show per-word example sentences on the word card when a word has one. */
+  showExamples: boolean;
+  /** Daily practice reminder via the service worker (Notification Triggers). */
+  reminderEnabled: boolean;
+  /** Reminder time as "HH:MM" in the device's local timezone. */
+  reminderTime: string;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -43,4 +56,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   loop: true,
   cachedAudio: false,
   showHints: true,
+  theme: 'neon',
+  showExamples: true,
+  reminderEnabled: false,
+  reminderTime: '09:00',
 };

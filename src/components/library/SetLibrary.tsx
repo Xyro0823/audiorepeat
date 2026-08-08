@@ -15,6 +15,7 @@ import type { VocabSet } from '@/types/app';
 import CefrBadge from './CefrBadge';
 import LeaderboardModal from './LeaderboardModal';
 import SetEditor from './SetEditor';
+import SettingsButton from '@/components/settings/SettingsButton';
 import SpeedChallenge from '../speed/SpeedChallenge';
 import StarterLibraryModal from './StarterLibraryModal';
 import SubtitleImportModal from './SubtitleImportModal';
@@ -270,6 +271,7 @@ export default function SetLibrary() {
         </div>
         <div className="flex items-center gap-2">
           <StreakBadge streak={streak} />
+          <SettingsButton />
           <button
             onClick={() => setLeaderboardOpen(true)}
             title="Daily leaderboard — rank your practice by language"

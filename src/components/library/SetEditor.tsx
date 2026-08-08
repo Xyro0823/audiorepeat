@@ -49,7 +49,12 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
     const clean = words
       // Drop subtitle-import placeholders ('—') so they never reach the player.
       .filter((w) => w.target.trim() && w.translation.trim() && w.translation.trim() !== '—')
-      .map((w) => ({ ...w, target: w.target.trim(), translation: w.translation.trim() }));
+      .map((w) => ({
+        ...w,
+        target: w.target.trim(),
+        translation: w.translation.trim(),
+        example: w.example?.trim() || undefined,
+      }));
     await onSave({
       id: set?.id ?? crypto.randomUUID(),
       name: name.trim(),
@@ -168,42 +173,50 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
           </div>
           <div className="space-y-2">
             {words.map((w, i) => (
-              <div key={w.id} className="flex items-center gap-2">
-                <input
-                  value={w.target}
-                  onChange={(e) => updateWord(i, { target: e.target.value })}
-                  placeholder="Target (gracias)"
-                  className="w-1/3 min-w-0 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60"
-                />
-                <input
-                  value={w.translation}
-                  onChange={(e) => updateWord(i, { translation: e.target.value })}
-                  placeholder="Translation (thank you)"
-                  className="w-1/3 min-w-0 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60"
-                />
-                <div className="flex items-center gap-1">
-                  {REPEAT_OPTIONS.map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => updateWord(i, { repeats: w.repeats === r ? undefined : r })}
-                      title={w.repeats === r ? 'Use the global default instead' : `${r} repeats`}
-                      className={`h-7 w-7 rounded-lg text-xs font-semibold transition ${
-                        w.repeats === r
-                          ? 'bg-neon-cyan text-night-950'
-                          : 'bg-night-800 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      {r}×
-                    </button>
-                  ))}
+              <div key={w.id} className="rounded-xl border border-white/5 bg-night-900/40 p-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    value={w.target}
+                    onChange={(e) => updateWord(i, { target: e.target.value })}
+                    placeholder="Target (gracias)"
+                    className="w-1/3 min-w-0 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60"
+                  />
+                  <input
+                    value={w.translation}
+                    onChange={(e) => updateWord(i, { translation: e.target.value })}
+                    placeholder="Translation (thank you)"
+                    className="w-1/3 min-w-0 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60"
+                  />
+                  <div className="flex items-center gap-1">
+                    {REPEAT_OPTIONS.map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => updateWord(i, { repeats: w.repeats === r ? undefined : r })}
+                        title={w.repeats === r ? 'Use the global default instead' : `${r} repeats`}
+                        className={`h-7 w-7 rounded-lg text-xs font-semibold transition ${
+                          w.repeats === r
+                            ? 'bg-neon-cyan text-night-950'
+                            : 'bg-night-800 text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        {r}×
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setWords((prev) => prev.filter((_, idx) => idx !== i))}
+                    aria-label="Remove word"
+                    className="rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/5 hover:text-neon-magenta"
+                  >
+                    ✕
+                  </button>
                 </div>
-                <button
-                  onClick={() => setWords((prev) => prev.filter((_, idx) => idx !== i))}
-                  aria-label="Remove word"
-                  className="rounded-lg px-2 py-1.5 text-slate-500 transition hover:bg-white/5 hover:text-neon-magenta"
-                >
-                  ✕
-                </button>
+                <input
+                  value={w.example ?? ''}
+                  onChange={(e) => updateWord(i, { example: e.target.value })}
+                  placeholder={`Example sentence (optional) — e.g. "${w.target || '¡Gracias!'}" in context`}
+                  className="mt-1.5 w-full rounded-xl border border-white/5 bg-night-800/40 px-3 py-1.5 text-xs text-slate-300 placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/50"
+                />
               </div>
             ))}
           </div>
