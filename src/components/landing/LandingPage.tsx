@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import {
   ArrowUpRight,
   AtSign,
@@ -154,12 +154,125 @@ function SatelliteCard({ s, className = "" }: { s: Satellite; className?: string
 }
 
 /* ------------------------------------------------------------------ */
+/* Neural connection lines — dynamically anchored to the real cards    */
+/* ------------------------------------------------------------------ */
+
+type NeuralLine = { x1: number; y1: number; x2: number; y2: number };
+
+/**
+ * Draws the bezier branches that connect the satellite cards to the central
+ * hero node. Coordinates are measured live via getBoundingClientRect() on
+ * mount and on resize, so the lines stay glued to the cards at any
+ * resolution. The overlay is pointer-events-none so it never blocks clicks.
+ */
+function NeuralConnections({
+  containerRef,
+  nodeRef,
+  cardRefs,
+}: {
+  containerRef: RefObject<HTMLDivElement | null>;
+  nodeRef: RefObject<HTMLDivElement | null>;
+  cardRefs: RefObject<(HTMLDivElement | null)[]>;
+}) {
+  const [geo, setGeo] = useState<{ w: number; h: number; lines: NeuralLine[] }>({
+    w: 0,
+    h: 0,
+    lines: [],
+  });
+
+  useEffect(() => {
+    const measure = () => {
+      const cont = containerRef.current;
+      const node = nodeRef.current;
+      if (!cont || !node) return;
+      const cr = cont.getBoundingClientRect();
+      const nr = node.getBoundingClientRect();
+      if (cr.width === 0 || cr.height === 0) return;
+
+      const lines: NeuralLine[] = [];
+      (cardRefs.current ?? []).forEach((card, i) => {
+        if (!card || i >= 4) return;
+        const r = card.getBoundingClientRect();
+        // i 0/1 = left column (Japanese, French) → inner right edge;
+        // i 2/3 = right column (Arabic, Spanish) → inner left edge.
+        const isLeft = i < 2;
+        const x1 = (isLeft ? r.right : r.left) - cr.left;
+        const y1 = (r.top + r.bottom) / 2 - cr.top;
+        const x2 = (isLeft ? nr.left : nr.right) - cr.left;
+        const y2 = Math.min(Math.max(y1, nr.top + 10 - cr.top), nr.bottom - 10 - cr.top);
+        lines.push({ x1, y1, x2, y2 });
+      });
+
+      setGeo({ w: cr.width, h: cr.height, lines });
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (containerRef.current) ro.observe(containerRef.current);
+    window.addEventListener("resize", measure);
+    // Re-measure once fonts/layout settle.
+    const t = window.setTimeout(measure, 400);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+      window.clearTimeout(t);
+    };
+  }, [containerRef, nodeRef, cardRefs]);
+
+  return (
+    <div
+      className="pointer-events-none absolute inset-0 z-0 hidden lg:block"
+      aria-hidden
+    >
+      {geo.w > 0 && geo.h > 0 && (
+        <svg
+          className="h-full w-full"
+          viewBox={`0 0 ${geo.w} ${geo.h}`}
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="neural-line" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="10%" stopColor="#06b6d4" />
+              <stop offset="90%" stopColor="#22d3ee" />
+            </linearGradient>
+          </defs>
+          {geo.lines.map((l, i) => {
+            const dx = l.x2 - l.x1;
+            const c1x = l.x1 + dx * 0.4;
+            const c2x = l.x2 - dx * 0.4;
+            return (
+              <g key={i}>
+                <path
+                  className="node-line"
+                  vectorEffect="non-scaling-stroke"
+                  d={`M ${l.x1} ${l.y1} C ${c1x} ${l.y1}, ${c2x} ${l.y2}, ${l.x2} ${l.y2}`}
+                />
+                <path
+                  className="node-line-dashed"
+                  vectorEffect="non-scaling-stroke"
+                  d={`M ${l.x1} ${l.y1 - 8} C ${c1x} ${l.y1 - 8}, ${c2x} ${l.y2 - 8}, ${l.x2} ${l.y2 - 8}`}
+                />
+                <circle cx={l.x1} cy={l.y1} r="3" fill="#22d3ee" className="animate-pulse" />
+                <circle cx={l.x2} cy={l.y2} r="3.5" fill="#22d3ee" className="animate-pulse" />
+              </g>
+            );
+          })}
+        </svg>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* Landing page                                                        */
 /* ------------------------------------------------------------------ */
 
 export default function LandingPage() {
   const [annual, setAnnual] = useState(true);
   const [subscribed, setSubscribed] = useState(false);
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const nodeRef = useRef<HTMLDivElement | null>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   const plans = [
     {
@@ -271,84 +384,25 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       {/* Hero — central neural node + satellites + SVG connections    */}
       {/* ------------------------------------------------------------ */}
-      <header className="relative mx-auto w-full max-w-7xl px-5 pt-24 lg:px-12 lg:pt-28">
-        {/* Neural connection lines (desktop) */}
-        <svg
-          className="pointer-events-none absolute inset-x-0 top-16 hidden h-[560px] w-full lg:block"
-          viewBox="0 0 1200 640"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <defs>
-            <linearGradient id="neural-line" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="10%" stopColor="#06b6d4" />
-              <stop offset="90%" stopColor="#22d3ee" />
-            </linearGradient>
-          </defs>
-          {/* solid pulsing branches — left/right cards into center node edges */}
-          <path
-            className="node-line"
-            vectorEffect="non-scaling-stroke"
-            d="M 282 212 C 292 220, 302 226, 312 230"
-          />
-          <path
-            className="node-line"
-            vectorEffect="non-scaling-stroke"
-            d="M 918 217 C 908 225, 898 231, 888 235"
-          />
-          <path
-            className="node-line"
-            vectorEffect="non-scaling-stroke"
-            d="M 282 428 C 292 420, 302 414, 312 410"
-          />
-          <path
-            className="node-line"
-            vectorEffect="non-scaling-stroke"
-            d="M 918 423 C 908 415, 898 409, 888 405"
-          />
-          {/* dashed flow overlays */}
-          <path
-            className="node-line-dashed"
-            vectorEffect="non-scaling-stroke"
-            d="M 282 202 C 292 210, 302 216, 312 220"
-          />
-          <path
-            className="node-line-dashed"
-            vectorEffect="non-scaling-stroke"
-            d="M 918 207 C 908 215, 898 221, 888 225"
-          />
-          <path
-            className="node-line-dashed"
-            vectorEffect="non-scaling-stroke"
-            d="M 282 438 C 292 430, 302 424, 312 420"
-          />
-          <path
-            className="node-line-dashed"
-            vectorEffect="non-scaling-stroke"
-            d="M 918 433 C 908 425, 898 419, 888 415"
-          />
-          {/* node endpoints */}
-          {[
-            [312, 230],
-            [888, 235],
-            [312, 410],
-            [888, 405],
-          ].map(([cx, cy]) => (
-            <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="3.5" fill="#22d3ee" className="animate-pulse" />
-          ))}
-        </svg>
+      <header ref={heroRef} className="relative mx-auto w-full max-w-7xl px-5 pt-24 lg:px-12 lg:pt-28">
+        {/* Neural connection lines — dynamically anchored to the cards */}
+        <NeuralConnections containerRef={heroRef} nodeRef={nodeRef} cardRefs={cardRefs} />
 
         {/* 12-col grid — left cards (3) | center node (6) | right cards (3), no overlap */}
         <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 lg:grid-cols-12">
           {/* left satellites — Japanese, French */}
           <div className="hidden flex-col gap-8 lg:col-span-3 lg:flex">
-            <SatelliteCard s={SATELLITES[0]} />
-            <SatelliteCard s={SATELLITES[2]} />
+            <div ref={(el) => { cardRefs.current[0] = el; }}>
+              <SatelliteCard s={SATELLITES[0]} />
+            </div>
+            <div ref={(el) => { cardRefs.current[1] = el; }}>
+              <SatelliteCard s={SATELLITES[2]} />
+            </div>
           </div>
 
           {/* Central node */}
           <div className="mx-auto w-full max-w-4xl lg:col-span-6">
-            <div className="glass-neural neural-glow relative overflow-hidden rounded-[2rem] px-6 py-8 text-center">
+            <div ref={nodeRef} className="glass-neural neural-glow relative overflow-hidden rounded-[2rem] px-6 py-8 text-center">
               {/* cyan sheen */}
               <div
                 className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-500/15 blur-3xl"
@@ -401,8 +455,12 @@ export default function LandingPage() {
 
           {/* right satellites — Arabic, Spanish */}
           <div className="hidden flex-col gap-8 lg:col-span-3 lg:flex">
-            <SatelliteCard s={SATELLITES[1]} />
-            <SatelliteCard s={SATELLITES[3]} />
+            <div ref={(el) => { cardRefs.current[2] = el; }}>
+              <SatelliteCard s={SATELLITES[1]} />
+            </div>
+            <div ref={(el) => { cardRefs.current[3] = el; }}>
+              <SatelliteCard s={SATELLITES[3]} />
+            </div>
           </div>
         </div>
 
