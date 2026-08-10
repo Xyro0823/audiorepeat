@@ -271,10 +271,10 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       {/* Hero — central neural node + satellites + SVG connections    */}
       {/* ------------------------------------------------------------ */}
-      <header className="relative mx-auto w-full max-w-6xl px-5 pt-32 lg:px-12 lg:pt-40">
+      <header className="relative mx-auto w-full max-w-7xl px-5 pt-28 lg:px-12 lg:pt-36">
         {/* Neural connection lines (desktop) */}
         <svg
-          className="pointer-events-none absolute inset-x-0 top-24 hidden h-[640px] w-full lg:block"
+          className="pointer-events-none absolute inset-x-0 top-20 hidden h-[600px] w-full lg:block"
           viewBox="0 0 1200 640"
           preserveAspectRatio="none"
           aria-hidden="true"
@@ -289,121 +289,120 @@ export default function LandingPage() {
           <path
             className="node-line"
             vectorEffect="non-scaling-stroke"
-            d="M 170 150 C 240 180, 260 200, 285 225"
+            d="M 60 140 C 170 175, 230 200, 300 235"
           />
           <path
             className="node-line"
             vectorEffect="non-scaling-stroke"
-            d="M 1030 165 C 950 195, 930 210, 915 230"
+            d="M 1140 150 C 1030 185, 970 205, 900 240"
           />
           <path
             className="node-line"
             vectorEffect="non-scaling-stroke"
-            d="M 170 560 C 240 530, 260 510, 285 485"
+            d="M 60 500 C 170 465, 230 440, 300 405"
           />
           <path
             className="node-line"
             vectorEffect="non-scaling-stroke"
-            d="M 1030 545 C 950 520, 930 505, 915 485"
+            d="M 1140 490 C 1030 455, 970 435, 900 400"
           />
           {/* dashed flow overlays */}
           <path
             className="node-line-dashed"
             vectorEffect="non-scaling-stroke"
-            d="M 178 160 C 248 188, 268 208, 292 230"
+            d="M 68 148 C 178 183, 238 208, 308 241"
           />
           <path
             className="node-line-dashed"
             vectorEffect="non-scaling-stroke"
-            d="M 1022 155 C 942 186, 922 202, 908 224"
+            d="M 1132 158 C 1022 193, 962 212, 892 246"
           />
           <path
             className="node-line-dashed"
             vectorEffect="non-scaling-stroke"
-            d="M 178 570 C 248 540, 268 520, 292 496"
+            d="M 68 508 C 178 473, 238 448, 308 411"
           />
           <path
             className="node-line-dashed"
             vectorEffect="non-scaling-stroke"
-            d="M 1022 555 C 942 528, 922 512, 908 492"
+            d="M 1132 498 C 1022 463, 962 442, 892 406"
           />
           {/* node endpoints */}
           {[
-            [170, 150],
-            [1030, 165],
-            [170, 560],
-            [1030, 545],
+            [300, 235],
+            [900, 240],
+            [300, 405],
+            [900, 400],
           ].map(([cx, cy]) => (
             <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="3.5" fill="#22d3ee" className="animate-pulse" />
           ))}
         </svg>
 
-        {/* desktop satellites */}
-        <div className="pointer-events-none absolute inset-x-0 top-24 hidden h-[640px] lg:block" aria-hidden>
-          <div className="pointer-events-auto absolute left-0 top-8">
+        {/* Satellites | central node | Satellites — clean grid, text never covered */}
+        <div className="relative z-10 grid items-center gap-6 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)_minmax(0,240px)] lg:gap-8">
+          {/* left satellites */}
+          <div className="hidden flex-col gap-8 lg:flex">
             <SatelliteCard s={SATELLITES[0]} />
+            <SatelliteCard s={SATELLITES[2]} className="lg:ml-auto" />
           </div>
-          <div className="pointer-events-auto absolute right-0 top-14">
-            <SatelliteCard s={SATELLITES[1]} />
-          </div>
-          <div className="pointer-events-auto absolute bottom-10 left-4">
-            <SatelliteCard s={SATELLITES[2]} />
-          </div>
-          <div className="pointer-events-auto absolute bottom-16 right-4">
-            <SatelliteCard s={SATELLITES[3]} />
-          </div>
-        </div>
 
-        {/* Central 16:9 node */}
-        <div className="relative z-10 mx-auto w-full max-w-4xl">
-          <div className="glass-neural neural-glow aspect-video max-lg:aspect-auto relative overflow-hidden rounded-[2rem] px-6 py-12 text-center md:px-12 lg:py-16">
-            {/* cyan sheen */}
-            <div
-              className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-500/15 blur-3xl"
-              aria-hidden
-            />
+          {/* Central node */}
+          <div className="mx-auto w-full max-w-4xl">
+            <div className="glass-neural neural-glow relative overflow-hidden rounded-[2rem] p-10 text-center md:p-12">
+              {/* cyan sheen */}
+              <div
+                className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-500/15 blur-3xl"
+                aria-hidden
+              />
 
-            <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-300">
-              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.9)]" />
-              AI-powered audio drilling
-            </p>
+              <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-300">
+                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.9)]" />
+                AI-powered audio drilling
+              </p>
 
-            <h1 className="mx-auto mt-6 max-w-3xl font-extrabold leading-[1.06] tracking-tight text-white [font-size:clamp(2.5rem,8vw,5.5rem)]">
-              Master Any Language with{" "}
-              <span className="bg-gradient-to-r from-[#22d3ee] via-[#06b6d4] to-[#3b82f6] bg-clip-text text-transparent">
-                Hands-Free Audio Repeat
-              </span>
-            </h1>
+              <h1 className="mx-auto mt-6 max-w-3xl font-extrabold leading-[1.06] tracking-tight text-white [font-size:clamp(2.5rem,8vw,5.5rem)]">
+                Master Any Language with{" "}
+                <span className="bg-gradient-to-r from-[#22d3ee] via-[#06b6d4] to-[#3b82f6] bg-clip-text text-transparent">
+                  Hands-Free Audio Repeat
+                </span>
+              </h1>
 
-            <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-slate-400">
-              Loop, repeat and retain vocabulary while you commute, cook or wind down.
-              Neural audio, spaced repetition and 253 languages — no screen required.
-            </p>
+              <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-slate-400">
+                Loop, repeat and retain vocabulary while you commute, cook or wind down.
+                Neural audio, spaced repetition and 253 languages — no screen required.
+              </p>
 
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                href="/dashboard"
-                className="btn-neural inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-[15px] font-semibold"
-              >
-                Start Learning Now
-                <ArrowUpRight className="h-4 w-4" aria-hidden />
-              </Link>
-              <Link
-                href="/dashboard"
-                className="glass-neural inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium text-white hover:bg-white/[0.07]"
-              >
-                Explore Sets
-              </Link>
+              <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 active:scale-95"
+                >
+                  Start Learning Now
+                  <ArrowUpRight className="h-4 w-4" aria-hidden />
+                </Link>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10 active:scale-95"
+                >
+                  Explore Library
+                </Link>
+              </div>
+
+              <p className="mt-6 text-[11px] uppercase tracking-[0.2em] text-slate-500">
+                No pressure · No commitment · Just listening
+              </p>
             </div>
 
-            <p className="mt-6 text-[11px] uppercase tracking-[0.2em] text-slate-500">
-              No pressure · No commitment · Just listening
-            </p>
+            {/* Live pill under the node */}
+            <div className="mt-6 flex justify-center">
+              <LivePill />
+            </div>
           </div>
 
-          {/* Live pill under the node */}
-          <div className="mt-6 flex justify-center">
-            <LivePill />
+          {/* right satellites */}
+          <div className="hidden flex-col gap-8 lg:flex">
+            <SatelliteCard s={SATELLITES[1]} className="lg:ml-auto" />
+            <SatelliteCard s={SATELLITES[3]} />
           </div>
         </div>
 
