@@ -41,16 +41,16 @@ export default function MetricCards({ accuracyPct, masteredCount, streak }: Prop
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-3 gap-2 sm:gap-3">
       {cards.map((c) => (
         <div
           key={c.label}
-          className="rounded-2xl border border-white/10 bg-zinc-900/60 p-4 backdrop-blur-md"
+          className="rounded-2xl border border-white/10 bg-zinc-900/60 p-3 backdrop-blur-md sm:p-4"
         >
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
             {c.label}
           </p>
-          <p className="mt-1.5 text-2xl font-bold tabular-nums tracking-tight text-white">
+          <p className="mt-1.5 text-lg font-bold tabular-nums tracking-tight text-white sm:text-2xl">
             {c.value}
           </p>
           <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-white/10">
@@ -59,7 +59,7 @@ export default function MetricCards({ accuracyPct, masteredCount, streak }: Prop
               style={{ width: `${Math.min(100, Math.max(0, c.pct))}%` }}
             />
           </div>
-          <p className="mt-1.5 text-[11px] text-slate-500">{c.hint}</p>
+          <p className="mt-1.5 text-[10px] leading-snug text-slate-500 sm:text-[11px]">{c.hint}</p>
         </div>
       ))}
     </div>

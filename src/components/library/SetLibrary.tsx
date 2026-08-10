@@ -633,7 +633,7 @@ export default function SetLibrary() {
       {/* Sleek floating glass navbar — z-50 lifts its stacking context (the
           .glass backdrop-blur + fade-up transform both create one) above the
           hero banner so dropdown popovers always render on top. */}
-      <header className="animate-fade-up glass relative z-50 mb-8 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl px-4 py-3">
+      <header className="animate-fade-up glass relative z-50 mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl px-3 py-2.5 sm:mb-8 sm:gap-x-4 sm:gap-y-3 sm:px-4 sm:py-3">
         <Logo />
         <div className="mr-auto">
           <h1 className="text-[15px] font-semibold tracking-tight text-white">AudioRepeat</h1>
@@ -641,7 +641,7 @@ export default function SetLibrary() {
             {LANGUAGES.length} languages · hands-free drilling
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
           <SettingsButton />
           <StreakBadge streak={streak} />
           <InstallAppButton />
