@@ -11,8 +11,11 @@ function fnv1a(str: string): string {
   return (h >>> 0).toString(16).padStart(8, '0');
 }
 
-export function audioCacheKey(text: string, lang: string, rate: number, voiceURI?: string): string {
-  return fnv1a([lang, rate, voiceURI ?? 'default', text].join('|'));
+export function audioCacheKey(text: string, lang: string, voiceURI?: string): string {
+  // Speed is deliberately excluded: playback rate is applied per-playback via
+  // audio.playbackRate, so a single generated blob serves every speed setting
+  // (and pre-warming doesn't have to generate one blob per rate).
+  return fnv1a([lang, voiceURI ?? 'default', text].join('|'));
 }
 
 export function audioCacheUrl(key: string): string {

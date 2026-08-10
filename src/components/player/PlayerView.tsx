@@ -12,7 +12,8 @@ import { useDictationMode } from '@/hooks/useDictationMode';
 import { useLists } from '@/hooks/useLists';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
-import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
+import { prewarmSetAudio } from '@/lib/tts/cloudTts';
+import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import { findLanguage } from '@/lib/languages';
 import { formatCountdown } from '@/lib/format';
 import { recordSetPlayed } from '@/lib/libraryMeta';
@@ -142,11 +143,45 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     [set, effective, saveSet],
   );
 
-  // Swappable engine: cached <audio> (offline) when enabled, else speechSynthesis.
+  // Swappable engine: cached <audio> (offline) when enabled, and ALWAYS on iOS
+  // — speechSynthesis is suspended on iOS lock screens, so real <audio>
+  // playback (fed by the prewarm below) is the only hands-free-safe path.
+  // Cache misses fall back to speechSynthesis inside CachedAudioEngine.
   const engine = useMemo<TTSEngine | undefined>(() => {
-    if (!effective.cachedAudio) return undefined;
+    if (!effective.cachedAudio && !isIOSWebKit()) return undefined;
     return new CachedAudioEngine(new SpeechSynthesisEngine());
   }, [effective.cachedAudio]);
+
+  // Background pre-warm: generate + cache audio blobs ahead of the drill so
+  // words play through <audio> (lock-screen safe). Runs on iOS by default and
+  // whenever the user opts into cached audio; explicit voice picks are skipped
+  // (they go through speechSynthesis — Google TTS has its own voices).
+  const setRef = useRef(set);
+  useEffect(() => {
+    setRef.current = set;
+  }, [set]);
+  useEffect(() => {
+    const s = setRef.current;
+    if (!s || s.words.length === 0) return;
+    if (!effective.cachedAudio && !isIOSWebKit()) return;
+    return prewarmSetAudio(s.words, {
+      lang: s.lang,
+      nativeLang:
+        s.nativeLang ?? (typeof navigator !== 'undefined' ? navigator.language : undefined),
+      targetVoiceURI: effective.targetVoiceURI,
+      translationVoiceURI: effective.translationVoiceURI,
+    });
+    // Keyed on stable identity fields so mastery taps (a new `set` object)
+    // don't refetch — the words themselves are read through the ref above.
+  }, [
+    set?.id,
+    set?.words.length,
+    set?.lang,
+    set?.nativeLang,
+    effective.cachedAudio,
+    effective.targetVoiceURI,
+    effective.translationVoiceURI,
+  ]);
 
   const { progress, currentWord, isPlaying, play, pause, stop, skipNext, replayWord } =
     useAudioLoop({

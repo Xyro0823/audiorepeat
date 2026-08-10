@@ -6,8 +6,10 @@ import type { SpeakOptions, TTSEngine, TTSEngineVoice } from './engine';
  * 1. Looks up a pre-generated audio blob in the Cache API (keyed by lang|rate|voice|text).
  * 2. Hit  -> plays it through an <audio> element (real Media Session / background audio).
  * 3. Miss -> delegates to the fallback engine (speechSynthesis, or cloud TTS later).
- * Used when the user enables "cached audio" — the vocabulary downloader writes blobs
- * via putCachedAudioBlob(), and the service worker also caches /audio/* at runtime.
+ * Used when the user enables "cached audio" (and by default on iOS, where
+ * speechSynthesis is suspended on lock screens) — cloudTts.prewarmSetAudio()
+ * writes blobs via putCachedAudioBlob(), and the service worker also caches
+ * /audio/* at runtime.
  *
  * The `generation` counter guards the async cache lookup: if stop() or a newer
  * speak() lands while a lookup is in flight, the stale result is dropped so a
@@ -34,7 +36,7 @@ export class CachedAudioEngine implements TTSEngine {
 
   speak(opts: SpeakOptions): void {
     const gen = ++this.generation;
-    const key = audioCacheKey(opts.text, opts.lang, opts.rate, opts.voiceURI);
+    const key = audioCacheKey(opts.text, opts.lang, opts.voiceURI);
     getCachedAudioBlob(key)
       .then((blob) => {
         // a newer speak() or stop() superseded this lookup — drop it silently

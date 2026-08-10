@@ -1,0 +1,184 @@
+import { audioCacheKey, putCachedAudioBlob } from '@/lib/audio/cache';
+
+/**
+ * Best-effort cloud TTS used to pre-generate audio blobs so playback can run
+ * through a real <audio> element — the only path that keeps playing on an iOS
+ * lock screen (speechSynthesis is suspended when the tab backgrounds).
+ *
+ * Every source here is free/keyless, which means none of them is guaranteed:
+ * Google's endpoint has the best language coverage but no CORS headers, so it
+ * is fetched through third-party proxies that can throttle or time out. To
+ * keep warm-up reliable we try sources in order, abort each one after a short
+ * timeout, and circuit-break any source that fails repeatedly. Every failure
+ * is swallowed — a cache miss simply falls back to speechSynthesis at play
+ * time, so this can never break playback.
+ *
+ * For production, swap TTS_SOURCES for a paid TTS provider. Keep the cache key
+ * format (lang|voice|text — see audioCacheKey) stable, or old blobs go stale.
+ */
+const MAX_TEXT_CHARS = 180; // Google caps a single TTS request at ~200 chars
+const TTS_TIMEOUT_MS = 6000;
+const BREAKER_LIMIT = 3; // consecutive failures before a source is skipped
+
+function googleTtsUrl(text: string, lang: string): string {
+  const q = new URLSearchParams({
+    ie: 'UTF-8',
+    client: 'tw-ob',
+    tl: lang,
+    q: text,
+    total: '1',
+    idx: '0',
+    textlen: String(text.length),
+  }).toString();
+  return `https://translate.google.com/translate_tts?${q}`;
+}
+
+/** fetch() with a hard abort so a hanging proxy can't stall the warm-up queue. */
+async function fetchWithTimeout(url: string, timeoutMs: number): Promise<Response> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
+async function fetchAudioOrThrow(url: string, label: string): Promise<Blob> {
+  const res = await fetchWithTimeout(url, TTS_TIMEOUT_MS);
+  if (!res.ok) throw new Error(`${label}: ${res.status}`);
+  const blob = await res.blob();
+  if (blob.type && !blob.type.startsWith('audio/')) throw new Error(`${label}: not audio`);
+  return blob;
+}
+
+type TtsSource = (text: string, lang: string) => Promise<Blob>;
+
+const TTS_SOURCES: TtsSource[] = [
+  // Direct Google — fails fast where the endpoint rejects the origin (no CORS).
+  (text, lang) => fetchAudioOrThrow(googleTtsUrl(text, lang), 'google tts'),
+  // Third-party CORS proxies in front of Google Translate TTS.
+  (text, lang) =>
+    fetchAudioOrThrow(
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(googleTtsUrl(text, lang))}`,
+      'allorigins',
+    ),
+  (text, lang) =>
+    fetchAudioOrThrow(
+      `https://corsproxy.io/?url=${encodeURIComponent(googleTtsUrl(text, lang))}`,
+      'corsproxy.io',
+    ),
+  (text, lang) =>
+    fetchAudioOrThrow(
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(googleTtsUrl(text, lang))}`,
+      'codetabs',
+    ),
+];
+
+/** Consecutive-failure counts per source; reset on success. Module-level so a
+ *  dead proxy stays dead across sets instead of burning a timeout per word. */
+const sourceFailures = TTS_SOURCES.map(() => 0);
+
+async function fetchCloudTtsBlob(text: string, lang: string): Promise<Blob> {
+  let lastErr: unknown = new Error('no TTS sources');
+  for (let i = 0; i < TTS_SOURCES.length; i += 1) {
+    if (sourceFailures[i] >= BREAKER_LIMIT) continue; // circuit open — skip
+    try {
+      const blob = await TTS_SOURCES[i](text, lang);
+      sourceFailures[i] = 0; // healthy again
+      return blob;
+    } catch (err) {
+      sourceFailures[i] += 1;
+      lastErr = err;
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error('all TTS sources failed');
+}
+
+export interface PrewarmWord {
+  id: string;
+  target: string;
+  translation: string;
+}
+
+interface PrewarmOptions {
+  lang: string;
+  nativeLang?: string;
+  /** When set, target words are skipped (explicit device voice → speechSynthesis). */
+  targetVoiceURI?: string;
+  /** When set, translations are skipped. */
+  translationVoiceURI?: string;
+  /** Cap on words to warm — guards huge C1/C2 sets against request floods. */
+  maxWords?: number;
+  /** Concurrent fetches; keep low — free sources rate-limit per IP. */
+  concurrency?: number;
+  /** Called after each successful word (target + translation count as one). */
+  onProgress?: (done: number, total: number) => void;
+}
+
+/**
+ * Generate + cache audio for a set in the background. Returns a cancel
+ * function. Blobs are written under the same audioCacheKey() the
+ * CachedAudioEngine reads at play time, so once warmed, words play through a
+ * real <audio> element (lock-screen / background-safe) instead of TTS.
+ */
+export function prewarmSetAudio(words: PrewarmWord[], opts: PrewarmOptions): () => void {
+  let cancelled = false;
+  const maxWords = opts.maxWords ?? 150;
+  const concurrency = Math.max(1, opts.concurrency ?? 3);
+
+  // Dedupe by cache key — the same text+lang can appear across words.
+  const seen = new Set<string>();
+  const tasks: Array<{ text: string; lang: string }> = [];
+  for (const w of words.slice(0, maxWords)) {
+    if (!opts.targetVoiceURI) {
+      const text = w.target.trim();
+      if (text.length > 0 && text.length <= MAX_TEXT_CHARS) {
+        const key = audioCacheKey(text, opts.lang);
+        if (!seen.has(key)) {
+          seen.add(key);
+          tasks.push({ text, lang: opts.lang });
+        }
+      }
+    }
+    if (!opts.translationVoiceURI && opts.nativeLang) {
+      const text = w.translation.trim();
+      if (text.length > 0 && text.length <= MAX_TEXT_CHARS) {
+        const key = audioCacheKey(text, opts.nativeLang);
+        if (!seen.has(key)) {
+          seen.add(key);
+          tasks.push({ text, lang: opts.nativeLang });
+        }
+      }
+    }
+  }
+  if (tasks.length === 0) return () => {};
+
+  let next = 0;
+  let done = 0;
+  const total = tasks.length;
+
+  const run = async () => {
+    while (!cancelled) {
+      const i = next;
+      next += 1;
+      if (i >= tasks.length) break;
+      const { text, lang } = tasks[i];
+      try {
+        const blob = await fetchCloudTtsBlob(text, lang);
+        if (cancelled) return;
+        await putCachedAudioBlob(audioCacheKey(text, lang), blob);
+      } catch {
+        // best-effort — a miss just falls back to speechSynthesis
+      }
+      done += 1;
+      opts.onProgress?.(done, total);
+    }
+  };
+
+  for (let i = 0; i < Math.min(concurrency, tasks.length); i += 1) void run();
+
+  return () => {
+    cancelled = true;
+  };
+}

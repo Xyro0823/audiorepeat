@@ -14,6 +14,15 @@ const IS_IOS_WEBKIT =
   /Safari/.test(navigator.userAgent) &&
   !/Chrome|CriOS|Edg/.test(navigator.userAgent);
 
+/**
+ * True on iOS/iPadOS WebKit (incl. standalone PWA). speechSynthesis is
+ * suspended there when the tab backgrounds, so the player routes through the
+ * cached-audio engine (real <audio> playback) and pre-generates blobs.
+ */
+export function isIOSWebKit(): boolean {
+  return IS_IOS_WEBKIT;
+}
+
 function chunkText(text: string, max: number): string[] {
   if (text.length <= max) return [text];
   const sentences = text.match(/[^.!?。！？]+[.!?。！？]*\s*/g) ?? [text];
