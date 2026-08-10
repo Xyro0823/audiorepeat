@@ -271,10 +271,10 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       {/* Hero — central neural node + satellites + SVG connections    */}
       {/* ------------------------------------------------------------ */}
-      <header className="relative mx-auto w-full max-w-7xl px-5 pt-28 lg:px-12 lg:pt-36">
+      <header className="relative mx-auto w-full max-w-7xl px-5 pt-24 lg:px-12 lg:pt-28">
         {/* Neural connection lines (desktop) */}
         <svg
-          className="pointer-events-none absolute inset-x-0 top-20 hidden h-[600px] w-full lg:block"
+          className="pointer-events-none absolute inset-x-0 top-16 hidden h-[560px] w-full lg:block"
           viewBox="0 0 1200 640"
           preserveAspectRatio="none"
           aria-hidden="true"
@@ -285,70 +285,70 @@ export default function LandingPage() {
               <stop offset="90%" stopColor="#22d3ee" />
             </linearGradient>
           </defs>
-          {/* solid pulsing branches */}
+          {/* solid pulsing branches — left/right cards into center node edges */}
           <path
             className="node-line"
             vectorEffect="non-scaling-stroke"
-            d="M 60 140 C 170 175, 230 200, 300 235"
+            d="M 282 212 C 292 220, 302 226, 312 230"
           />
           <path
             className="node-line"
             vectorEffect="non-scaling-stroke"
-            d="M 1140 150 C 1030 185, 970 205, 900 240"
+            d="M 918 217 C 908 225, 898 231, 888 235"
           />
           <path
             className="node-line"
             vectorEffect="non-scaling-stroke"
-            d="M 60 500 C 170 465, 230 440, 300 405"
+            d="M 282 428 C 292 420, 302 414, 312 410"
           />
           <path
             className="node-line"
             vectorEffect="non-scaling-stroke"
-            d="M 1140 490 C 1030 455, 970 435, 900 400"
+            d="M 918 423 C 908 415, 898 409, 888 405"
           />
           {/* dashed flow overlays */}
           <path
             className="node-line-dashed"
             vectorEffect="non-scaling-stroke"
-            d="M 68 148 C 178 183, 238 208, 308 241"
+            d="M 282 202 C 292 210, 302 216, 312 220"
           />
           <path
             className="node-line-dashed"
             vectorEffect="non-scaling-stroke"
-            d="M 1132 158 C 1022 193, 962 212, 892 246"
+            d="M 918 207 C 908 215, 898 221, 888 225"
           />
           <path
             className="node-line-dashed"
             vectorEffect="non-scaling-stroke"
-            d="M 68 508 C 178 473, 238 448, 308 411"
+            d="M 282 438 C 292 430, 302 424, 312 420"
           />
           <path
             className="node-line-dashed"
             vectorEffect="non-scaling-stroke"
-            d="M 1132 498 C 1022 463, 962 442, 892 406"
+            d="M 918 433 C 908 425, 898 419, 888 415"
           />
           {/* node endpoints */}
           {[
-            [300, 235],
-            [900, 240],
-            [300, 405],
-            [900, 400],
+            [312, 230],
+            [888, 235],
+            [312, 410],
+            [888, 405],
           ].map(([cx, cy]) => (
             <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="3.5" fill="#22d3ee" className="animate-pulse" />
           ))}
         </svg>
 
-        {/* Satellites | central node | Satellites — clean grid, text never covered */}
-        <div className="relative z-10 grid items-center gap-6 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)_minmax(0,240px)] lg:gap-8">
-          {/* left satellites */}
-          <div className="hidden flex-col gap-8 lg:flex">
+        {/* 12-col grid — left cards (3) | center node (6) | right cards (3), no overlap */}
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 lg:grid-cols-12">
+          {/* left satellites — Japanese, French */}
+          <div className="hidden flex-col gap-8 lg:col-span-3 lg:flex">
             <SatelliteCard s={SATELLITES[0]} />
-            <SatelliteCard s={SATELLITES[2]} className="lg:ml-auto" />
+            <SatelliteCard s={SATELLITES[2]} />
           </div>
 
           {/* Central node */}
-          <div className="mx-auto w-full max-w-4xl">
-            <div className="glass-neural neural-glow relative overflow-hidden rounded-[2rem] p-10 text-center md:p-12">
+          <div className="mx-auto w-full max-w-4xl lg:col-span-6">
+            <div className="glass-neural neural-glow relative overflow-hidden rounded-[2rem] px-6 py-8 text-center">
               {/* cyan sheen */}
               <div
                 className="pointer-events-none absolute -top-32 left-1/2 h-72 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-500/15 blur-3xl"
@@ -360,19 +360,19 @@ export default function LandingPage() {
                 AI-powered audio drilling
               </p>
 
-              <h1 className="mx-auto mt-6 max-w-3xl font-extrabold leading-[1.06] tracking-tight text-white [font-size:clamp(2.5rem,8vw,5.5rem)]">
+              <h1 className="mx-auto mt-5 max-w-3xl font-extrabold leading-tight tracking-tight text-white text-3xl md:text-5xl lg:text-6xl">
                 Master Any Language with{" "}
                 <span className="bg-gradient-to-r from-[#22d3ee] via-[#06b6d4] to-[#3b82f6] bg-clip-text text-transparent">
                   Hands-Free Audio Repeat
                 </span>
               </h1>
 
-              <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-slate-400">
+              <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400 md:text-[15px]">
                 Loop, repeat and retain vocabulary while you commute, cook or wind down.
                 Neural audio, spaced repetition and 253 languages — no screen required.
               </p>
 
-              <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
+              <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
                 <Link
                   href="/dashboard"
                   className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 active:scale-95"
@@ -388,20 +388,20 @@ export default function LandingPage() {
                 </Link>
               </div>
 
-              <p className="mt-6 text-[11px] uppercase tracking-[0.2em] text-slate-500">
+              <p className="mt-5 text-[11px] uppercase tracking-[0.2em] text-slate-500">
                 No pressure · No commitment · Just listening
               </p>
             </div>
 
             {/* Live pill under the node */}
-            <div className="mt-6 flex justify-center">
+            <div className="mt-5 flex justify-center">
               <LivePill />
             </div>
           </div>
 
-          {/* right satellites */}
-          <div className="hidden flex-col gap-8 lg:flex">
-            <SatelliteCard s={SATELLITES[1]} className="lg:ml-auto" />
+          {/* right satellites — Arabic, Spanish */}
+          <div className="hidden flex-col gap-8 lg:col-span-3 lg:flex">
+            <SatelliteCard s={SATELLITES[1]} />
             <SatelliteCard s={SATELLITES[3]} />
           </div>
         </div>
