@@ -414,7 +414,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     [set, currentWord, saveSet],
   );
 
-  const { voices, loading: voicesLoading } = useSpeechVoices(engine);
+  const { voices, loading: voicesLoading, hasVoice } = useSpeechVoices(engine);
+  // Surface silent / wrong-language words: true when the current target language
+  // has no installed voice at all (the engine falls back to the browser default).
+  const noVoiceForTarget =
+    !!currentWord && !voicesLoading && !hasVoice(currentWord.lang);
 
   // keyboard shortcuts: Space play/pause · ← replay word · → next · S stop
   useEffect(() => {
@@ -741,6 +745,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               total={words.length}
               showHints={effective.showHints}
               showExamples={effective.showExamples}
+              noVoice={noVoiceForTarget}
               onMark={markWord}
             />
             <ProgressBar

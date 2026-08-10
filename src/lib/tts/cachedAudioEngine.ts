@@ -58,6 +58,13 @@ export class CachedAudioEngine implements TTSEngine {
     audio.volume = opts.volume ?? 1;
     this.audio = audio;
 
+    // Keep the media-session / onWordChange contract identical to the speech
+    // path: onStart fires when playback actually begins (cached blobs previously
+    // skipped it, leaving the lock screen stuck on a stale word).
+    audio.onplaying = () => {
+      if (gen !== this.generation) return;
+      opts.onStart?.();
+    };
     audio.onended = () => {
       if (gen !== this.generation) return;
       this.audio = null;

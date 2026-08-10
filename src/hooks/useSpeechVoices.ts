@@ -2,18 +2,15 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import type { TTSEngine, TTSEngineVoice } from '@/lib/tts/engine';
-import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
+import { pickVoiceForLang, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 
-/** Pick the best voice for a language, preferring offline (localService) voices. */
+/**
+ * Best voice for a language, preferring offline (localService) voices.
+ * Shares its logic with the engine's own auto-selection (pickVoiceForLang),
+ * so the UI and the player always agree on which voice will be used.
+ */
 export function pickVoice(voices: TTSEngineVoice[], lang: string): TTSEngineVoice | undefined {
-  const target = lang.toLowerCase();
-  const prefix = target.split('-')[0];
-  const local = voices.filter((v) => v.localService);
-  const pool = local.length > 0 ? local : voices;
-  return (
-    pool.find((v) => v.lang.toLowerCase() === target) ??
-    pool.find((v) => v.lang.toLowerCase().startsWith(prefix))
-  );
+  return pickVoiceForLang(voices, lang);
 }
 
 export function useSpeechVoices(engine?: TTSEngine) {
@@ -44,6 +41,11 @@ export function useSpeechVoices(engine?: TTSEngine) {
     };
   }, [engine]);
 
-  const byLang = useCallback((lang: string) => pickVoice(voices, lang), [voices]);
-  return { voices, loading, byLang };
+  const byLang = useCallback((lang: string) => pickVoiceForLang(voices, lang), [voices]);
+  /** True when any installed voice can cover this language (exact or prefix match). */
+  const hasVoice = useCallback(
+    (lang: string) => pickVoiceForLang(voices, lang) !== undefined,
+    [voices],
+  );
+  return { voices, loading, byLang, hasVoice };
 }

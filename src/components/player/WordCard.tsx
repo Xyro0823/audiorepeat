@@ -13,6 +13,8 @@ interface Props {
   total: number;
   showHints: boolean;
   showExamples: boolean;
+  /** True when no installed TTS voice can cover the target language. */
+  noVoice?: boolean;
   onMark: (status: MasteryStatus | undefined) => void;
 }
 
@@ -25,6 +27,7 @@ export default function WordCard({
   total,
   showHints,
   showExamples,
+  noVoice = false,
   onMark,
 }: Props) {
   const emoji = word && showHints && !isTranslation ? emojiForText(word.translation) : null;
@@ -87,6 +90,28 @@ export default function WordCard({
       <p className="mt-5 text-2xl text-slate-400">
         {isTranslation ? word.target : word.translation}
       </p>
+
+      {!isTranslation && noVoice && (
+        <span
+          title="No speech voice is installed for this language on your device — audio may be silent or use the wrong language. Pick a voice in Settings."
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neon-amber/40 bg-neon-amber/10 px-3 py-1 text-[11px] font-semibold text-neon-amber"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            className="h-3.5 w-3.5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+            <path d="m23 9-6 6" />
+            <path d="m17 9 6 6" />
+          </svg>
+          No voice for this language
+        </span>
+      )}
 
       {!isTranslation && showExamples && word.example && (
         <p className="mt-6 max-w-md text-base italic leading-relaxed text-slate-400">
