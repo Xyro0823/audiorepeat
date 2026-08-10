@@ -10,6 +10,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { useLanguageCount } from "@/hooks/useLanguageCount";
+import NewsletterForm from "./NewsletterForm";
 
 /* ------------------------------------------------------------------ */
 /* Shared bits                                                        */
@@ -259,7 +260,6 @@ function NeuralConnections({
 
 export default function LandingPage() {
   const [annual, setAnnual] = useState(true);
-  const [subscribed, setSubscribed] = useState(false);
   const langCount = useLanguageCount();
   const heroRef = useRef<HTMLDivElement | null>(null);
   const nodeRef = useRef<HTMLDivElement | null>(null);
@@ -699,33 +699,7 @@ export default function LandingPage() {
             <p className="mt-4 text-[13px] leading-relaxed text-slate-400">
               Weekly language-learning tips, zero spam.
             </p>
-            <form
-              className="mt-4 flex items-center rounded-full border border-white/10 bg-white/[0.03] py-1.5 pl-4 pr-1.5 transition focus-within:border-cyan-400/50"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setSubscribed(true);
-              }}
-            >
-              <input
-                type="email"
-                required
-                placeholder="you@email.com"
-                className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none"
-                aria-label="Email address"
-              />
-              <button
-                type="submit"
-                aria-label="Subscribe"
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#06b6d4] to-[#3b82f6] text-white transition hover:brightness-110"
-              >
-                <ArrowUpRight className="h-4 w-4" aria-hidden />
-              </button>
-            </form>
-            {subscribed && (
-              <p className="mt-2 text-xs font-medium text-emerald-400">
-                ✓ You&apos;re in — welcome aboard.
-              </p>
-            )}
+            <NewsletterForm />
           </div>
         </div>
 
