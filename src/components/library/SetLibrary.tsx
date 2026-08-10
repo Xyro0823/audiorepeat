@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { Search } from 'lucide-react';
 import ActivityHeatmap from '@/components/ActivityHeatmap';
 import { flagFor } from '@/components/LanguageBadge';
 import StreakBadge from '@/components/StreakBadge';
@@ -10,9 +11,10 @@ import { useLists } from '@/hooks/useLists';
 import { useLibraryMeta } from '@/hooks/useLibraryMeta';
 import { formatDuration } from '@/lib/format';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
+import { CEFR_META } from '@/lib/starterSets';
 import { decodeSetFromUrl, shareUrlForSet } from '@/lib/sets/share';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
-import type { VocabSet } from '@/types/app';
+import type { CefrLevel, VocabSet } from '@/types/app';
 import CefrBadge from './CefrBadge';
 import LeaderboardModal from './LeaderboardModal';
 import NewSetButton from './NewSetButton';
@@ -41,6 +43,8 @@ function Logo() {
 function languageLabel(code: string): string {
   return findLanguage(code)?.label ?? code;
 }
+
+const CEFR_LEVELS: CefrLevel[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 
 /** Deterministic hue per language code — tints cover gradients distinctively. */
 function hueFor(code: string): number {
@@ -450,6 +454,9 @@ export default function SetLibrary() {
   const [challengeSet, setChallengeSet] = useState<VocabSet | null>(null);
   const [importMsg, setImportMsg] = useState<ImportMsg>(null);
   const [pendingImport, setPendingImport] = useState<VocabSet | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [cefrFilter, setCefrFilter] = useState<CefrLevel | 'all'>('all');
+  const [langFilter, setLangFilter] = useState<string>('all');
 
   const flash = useCallback((msg: ImportMsg) => {
     setImportMsg(msg);
@@ -596,6 +603,44 @@ export default function SetLibrary() {
 
   const totalWords = useMemo(() => sets.reduce((n, s) => n + s.words.length, 0), [sets]);
   const langCount = useMemo(() => new Set(sets.map((s) => s.lang)).size, [sets]);
+
+  // --- Library grid filters (search + CEFR + language, AND'd together) ---
+  const langOptions = useMemo(
+    () =>
+      Array.from(new Set(sets.map((s) => s.lang))).sort((a, b) =>
+        languageLabel(a).localeCompare(languageLabel(b)),
+      ),
+    [sets],
+  );
+  const hasCefrSets = useMemo(() => sets.some((s) => s.cefr), [sets]);
+
+  const filteredSets = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return sets.filter((s) => {
+      if (cefrFilter !== 'all' && s.cefr !== cefrFilter) return false;
+      if (langFilter !== 'all' && s.lang !== langFilter) return false;
+      if (q && !s.name.toLowerCase().includes(q) && !languageLabel(s.lang).toLowerCase().includes(q)) {
+        return false;
+      }
+      return true;
+    });
+  }, [sets, searchQuery, cefrFilter, langFilter]);
+
+  const filtersActive = searchQuery.trim() !== '' || cefrFilter !== 'all' || langFilter !== 'all';
+  const filteredWords = useMemo(
+    () => filteredSets.reduce((n, s) => n + s.words.length, 0),
+    [filteredSets],
+  );
+  const filteredLangCount = useMemo(
+    () => new Set(filteredSets.map((s) => s.lang)).size,
+    [filteredSets],
+  );
+
+  const clearFilters = useCallback(() => {
+    setSearchQuery('');
+    setCefrFilter('all');
+    setLangFilter('all');
+  }, []);
   const hasWeekActivity = week.some((d) => d.words > 0 || d.ms > 0);
 
   // Dashboard metrics: mastery across the whole library + daily goal progress.
@@ -855,7 +900,9 @@ export default function SetLibrary() {
                 <p className="text-xs text-slate-500">
                   {loading
                     ? 'Loading your sets…'
-                    : `${sets.length} set${sets.length === 1 ? '' : 's'} · ${totalWords.toLocaleString()} words · ${langCount} language${langCount === 1 ? '' : 's'}`}
+                    : filtersActive
+                      ? `${filteredSets.length} of ${sets.length} set${sets.length === 1 ? '' : 's'} · ${filteredWords.toLocaleString()} words · ${filteredLangCount} language${filteredLangCount === 1 ? '' : 's'}`
+                      : `${sets.length} set${sets.length === 1 ? '' : 's'} · ${totalWords.toLocaleString()} words · ${langCount} language${langCount === 1 ? '' : 's'}`}
                 </p>
               </div>
               <button
@@ -864,6 +911,79 @@ export default function SetLibrary() {
               >
                 <span aria-hidden>＋</span> Browse library
               </button>
+            </div>
+
+            {/* Search + filters — only affect the grid below */}
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <div className="relative min-w-0 flex-1 sm:max-w-xs">
+                <Search
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+                  aria-hidden
+                />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search sets or languages…"
+                  aria-label="Search sets"
+                  className="btn-clean h-9 w-full rounded-xl pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-neon-violet/60"
+                />
+              </div>
+
+              {hasCefrSets && (
+                <div
+                  className="flex flex-wrap items-center gap-1.5"
+                  role="group"
+                  aria-label="Filter by CEFR level"
+                >
+                  {(['all', ...CEFR_LEVELS] as const).map((lvl) => {
+                    const active = cefrFilter === lvl;
+                    return (
+                      <button
+                        key={lvl}
+                        type="button"
+                        onClick={() => setCefrFilter(lvl)}
+                        aria-pressed={active}
+                        className={`h-8 rounded-full px-3 text-xs font-semibold transition ${
+                          active
+                            ? lvl === 'all'
+                              ? 'bg-white/15 text-white ring-1 ring-white/30'
+                              : CEFR_META[lvl].chip
+                            : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                        }`}
+                      >
+                        {lvl === 'all' ? 'All' : lvl}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {langOptions.length > 1 && (
+                <select
+                  value={langFilter}
+                  onChange={(e) => setLangFilter(e.target.value)}
+                  aria-label="Filter by language"
+                  className="btn-clean h-9 rounded-xl px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-neon-violet/60 [&>option]:bg-slate-900"
+                >
+                  <option value="all">All languages</option>
+                  {langOptions.map((l) => (
+                    <option key={l} value={l}>
+                      {languageLabel(l)}
+                    </option>
+                  ))}
+                </select>
+              )}
+
+              {filtersActive && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-xs font-medium text-neon-violet transition hover:text-white"
+                >
+                  Clear filters
+                </button>
+              )}
             </div>
 
             {loading ? (
@@ -890,9 +1010,22 @@ export default function SetLibrary() {
                   Browse starter library
                 </button>
               </div>
+            ) : filteredSets.length === 0 ? (
+              <div className="glass-card mx-auto max-w-md rounded-2xl p-10 text-center">
+                <p className="text-lg font-semibold text-white">No sets match your filters</p>
+                <p className="mt-2 text-sm text-slate-400">
+                  Try a different search, level, or language.
+                </p>
+                <button
+                  onClick={clearFilters}
+                  className="btn-clean mx-auto mt-5 flex h-10 items-center justify-center rounded-xl px-5 text-sm font-semibold text-white"
+                >
+                  Clear filters
+                </button>
+              </div>
             ) : (
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-                {sets.map((set, i) => (
+                {filteredSets.map((set, i) => (
                   <PortraitCard
                     key={set.id}
                     set={set}
