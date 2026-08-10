@@ -221,7 +221,7 @@ function NeuralConnections({
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-10 hidden h-full w-full md:block"
+      className="pointer-events-none absolute inset-0 z-10 hidden h-full w-full lg:block"
       aria-hidden
     >
       {geo.w > 0 && geo.h > 0 && (
@@ -381,14 +381,15 @@ export default function LandingPage() {
           node first with the satellites below; md+ uses a symmetric 12-col grid
           (3 | 6 | 3) with equal gaps so nothing ever overlaps. */}
       <header ref={heroRef} className="relative mx-auto w-full max-w-7xl px-4 pt-24 md:px-8 lg:pt-28">
-        {/* Neural connection lines — dynamically anchored to the cards (md+ only) */}
+        {/* Neural connection lines — dynamically anchored to the cards (lg+ only) */}
         <NeuralConnections containerRef={heroRef} nodeRef={nodeRef} cardRefs={cardRefs} />
 
-        {/* Responsive grid — mobile: single column (center node first, satellites
-            below); md+: symmetric 12-col grid. */}
-        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 md:grid-cols-12 md:items-center md:justify-center md:gap-6">
-          {/* left satellites — Japanese, French (desktop only) */}
-          <div className="hidden md:flex md:col-span-3 md:col-start-1 md:flex-col md:items-end md:gap-6">
+        {/* Responsive grid — below lg: single centered column with the node only
+            (satellites are purely decorative, hidden on mobile/tablet); lg+:
+            symmetric 12-col grid (3 | 6 | 3). */}
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center lg:justify-center lg:gap-6">
+          {/* left satellites — Japanese, French (lg+ only) */}
+          <div className="hidden lg:flex lg:col-span-3 lg:col-start-1 lg:flex-col lg:items-end lg:gap-6">
             <div ref={(el) => { cardRefs.current[0] = el; }}>
               <SatelliteCard s={SATELLITES[0]} />
             </div>
@@ -398,7 +399,7 @@ export default function LandingPage() {
           </div>
 
           {/* Central node */}
-          <div className="mx-auto w-full max-w-md md:col-span-6 md:col-start-4 md:max-w-4xl md:justify-self-center">
+          <div className="mx-auto w-full max-w-md lg:col-span-6 lg:col-start-4 lg:max-w-4xl lg:justify-self-center">
             <div ref={nodeRef} className="glass-neural neural-glow relative overflow-hidden rounded-[2rem] px-6 py-8 text-center">
               {/* cyan sheen */}
               <div
@@ -450,21 +451,14 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* right satellites — Arabic, Spanish (desktop only) */}
-          <div className="hidden md:flex md:col-span-3 md:col-start-10 md:flex-col md:items-start md:gap-6">
+          {/* right satellites — Arabic, Spanish (lg+ only) */}
+          <div className="hidden lg:flex lg:col-span-3 lg:col-start-10 lg:flex-col lg:items-start lg:gap-6">
             <div ref={(el) => { cardRefs.current[2] = el; }}>
               <SatelliteCard s={SATELLITES[1]} />
             </div>
             <div ref={(el) => { cardRefs.current[3] = el; }}>
               <SatelliteCard s={SATELLITES[3]} />
             </div>
-          </div>
-
-          {/* mobile satellites — stacked below the node on small screens */}
-          <div className="grid w-full grid-cols-1 justify-items-center gap-4 sm:grid-cols-2 md:hidden">
-            {SATELLITES.map((s) => (
-              <SatelliteCard key={s.code} s={s} />
-            ))}
           </div>
         </div>
       </header>
