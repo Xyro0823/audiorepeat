@@ -123,7 +123,7 @@ const SATELLITES: Satellite[] = [
 
 function SatelliteCard({ s, className = "" }: { s: Satellite; className?: string }) {
   return (
-    <div className={`satellite-card group w-[240px] p-3 ${className}`}>
+    <div className={`satellite-card group w-[240px] max-w-full p-3 ${className}`}>
       <div
         className={`sat-cover flex h-24 items-end justify-between rounded-2xl bg-gradient-to-br p-3 ${s.grad}`}
       >
@@ -169,12 +169,10 @@ function NeuralConnections({
   containerRef,
   nodeRef,
   cardRefs,
-  scale,
 }: {
   containerRef: RefObject<HTMLDivElement | null>;
   nodeRef: RefObject<HTMLDivElement | null>;
   cardRefs: RefObject<(HTMLDivElement | null)[]>;
-  scale: number;
 }) {
   const [geo, setGeo] = useState<{ w: number; h: number; lines: NeuralLine[] }>({
     w: 0,
@@ -219,11 +217,11 @@ function NeuralConnections({
       window.removeEventListener("resize", measure);
       window.clearTimeout(t);
     };
-  }, [containerRef, nodeRef, cardRefs, scale]);
+  }, [containerRef, nodeRef, cardRefs]);
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-10 h-full w-full"
+      className="pointer-events-none absolute inset-0 z-10 hidden h-full w-full md:block"
       aria-hidden
     >
       {geo.w > 0 && geo.h > 0 && (
@@ -266,37 +264,8 @@ export default function LandingPage() {
   const [annual, setAnnual] = useState(true);
   const [subscribed, setSubscribed] = useState(false);
   const heroRef = useRef<HTMLDivElement | null>(null);
-  const heroScaleRef = useRef<HTMLDivElement | null>(null);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [heroScale, setHeroScale] = useState(1);
-  const [heroWrapH, setHeroWrapH] = useState<number | undefined>(undefined);
-
-  // Force the desktop 3-column hero on every viewport: the layout always
-  // renders at ≥1024px and is scaled down to fit narrow screens (transform-
-  // origin top center keeps it horizontally centered). The wrapper height is
-  // compensated for the visual shrink so page flow stays correct.
-  useEffect(() => {
-    const measure = () => {
-      const wrap = heroScaleRef.current;
-      const inner = heroRef.current;
-      if (!wrap || !inner) return;
-      if (wrap.clientWidth <= 0) return;
-      const s = Math.min(1, wrap.clientWidth / 1024);
-      setHeroScale(s);
-      setHeroWrapH(Math.ceil(inner.offsetHeight * s));
-    };
-    measure();
-    const ro = new ResizeObserver(measure);
-    if (heroScaleRef.current) ro.observe(heroScaleRef.current);
-    window.addEventListener("resize", measure);
-    const t = window.setTimeout(measure, 400);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", measure);
-      window.clearTimeout(t);
-    };
-  }, []);
 
   const plans = [
     {
@@ -408,23 +377,18 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       {/* Hero — central neural node + satellites + SVG connections    */}
       {/* ------------------------------------------------------------ */}
-      {/* Desktop-scale hero — always renders the 3-column layout at 1024px+
-          and scales down for narrow viewports. */}
-      <div ref={heroScaleRef} style={{ height: heroWrapH }} className="relative w-full">
-        <div
-          style={{ transform: `scale(${heroScale})`, transformOrigin: 'top center' }}
-          className="w-[1024px] max-w-[1024px]"
-        >
-          <header ref={heroRef} className="relative mx-auto w-full max-w-7xl px-5 pt-24 lg:px-12 lg:pt-28">
-        {/* Neural connection lines — dynamically anchored to the cards */}
-        <NeuralConnections containerRef={heroRef} nodeRef={nodeRef} cardRefs={cardRefs} scale={heroScale} />
+      {/* Hero — central node + satellites + SVG connections. Mobile stacks the
+          node first with the satellites below; md+ uses a symmetric 12-col grid
+          (3 | 6 | 3) with equal gaps so nothing ever overlaps. */}
+      <header ref={heroRef} className="relative mx-auto w-full max-w-7xl px-4 pt-24 md:px-8 lg:pt-28">
+        {/* Neural connection lines — dynamically anchored to the cards (md+ only) */}
+        <NeuralConnections containerRef={heroRef} nodeRef={nodeRef} cardRefs={cardRefs} />
 
-        {/* 12-col grid — left cards (3) | center node (6) | right cards (3),
-            symmetric: left cards flush right (items-end), right cards flush
-            left (items-start), equal gap-8 either side of the center node. */}
-        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-12 items-center gap-8">
-          {/* left satellites — Japanese, French */}
-          <div className="flex flex-col gap-6 col-span-3 items-end">
+        {/* Responsive grid — mobile: single column (center node first, satellites
+            below); md+: symmetric 12-col grid. */}
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 md:grid-cols-12 md:items-center md:justify-center md:gap-6">
+          {/* left satellites — Japanese, French (desktop only) */}
+          <div className="hidden md:flex md:col-span-3 md:col-start-1 md:flex-col md:items-end md:gap-6">
             <div ref={(el) => { cardRefs.current[0] = el; }}>
               <SatelliteCard s={SATELLITES[0]} />
             </div>
@@ -434,7 +398,7 @@ export default function LandingPage() {
           </div>
 
           {/* Central node */}
-          <div className="mx-auto w-full max-w-4xl col-span-6 justify-self-center">
+          <div className="mx-auto w-full max-w-md md:col-span-6 md:col-start-4 md:max-w-4xl md:justify-self-center">
             <div ref={nodeRef} className="glass-neural neural-glow relative overflow-hidden rounded-[2rem] px-6 py-8 text-center">
               {/* cyan sheen */}
               <div
@@ -486,8 +450,8 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* right satellites — Arabic, Spanish */}
-          <div className="flex flex-col gap-6 col-span-3 items-start">
+          {/* right satellites — Arabic, Spanish (desktop only) */}
+          <div className="hidden md:flex md:col-span-3 md:col-start-10 md:flex-col md:items-start md:gap-6">
             <div ref={(el) => { cardRefs.current[2] = el; }}>
               <SatelliteCard s={SATELLITES[1]} />
             </div>
@@ -495,10 +459,15 @@ export default function LandingPage() {
               <SatelliteCard s={SATELLITES[3]} />
             </div>
           </div>
+
+          {/* mobile satellites — stacked below the node on small screens */}
+          <div className="grid w-full grid-cols-1 justify-items-center gap-4 sm:grid-cols-2 md:hidden">
+            {SATELLITES.map((s) => (
+              <SatelliteCard key={s.code} s={s} />
+            ))}
+          </div>
         </div>
       </header>
-        </div>
-      </div>
 
       {/* ------------------------------------------------------------ */}
       {/* Features grid                                               */}
