@@ -19,20 +19,20 @@ const THEMES: { id: ThemeName; label: string; desc: string; swatches: string[] }
   {
     id: 'neon',
     label: 'Dark Glass',
-    desc: 'Deep charcoal mesh with violet accents',
-    swatches: ['#0b0c10', '#8b5cf6', '#38bdf8'],
+    desc: 'Deep charcoal mesh with blue accents',
+    swatches: ['#0b0c10', '#3b82f6', '#38bdf8'],
   },
   {
     id: 'dark',
     label: 'Dark Mode',
     desc: 'Muted charcoal, calmer standard accents',
-    swatches: ['#0b0c10', '#38bdf8', '#f472b6'],
+    swatches: ['#0b0c10', '#38bdf8', '#0ea5e9'],
   },
   {
     id: 'light',
     label: 'Minimal Light',
     desc: 'Light surfaces with dark slate text',
-    swatches: ['#f6f7fb', '#0891b2', '#db2777'],
+    swatches: ['#f6f7fb', '#0891b2', '#2563eb'],
   },
 ];
 

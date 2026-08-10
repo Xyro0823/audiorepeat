@@ -78,7 +78,7 @@ export default function WordCard({
 
       <p
         className={`text-5xl font-bold tracking-tight sm:text-6xl ${
-          isTranslation ? 'text-neon-magenta text-glow-magenta' : 'text-neon-cyan text-glow-cyan'
+          isTranslation ? 'text-neon-violet' : 'text-neon-cyan'
         }`}
       >
         {isTranslation ? word.translation : word.target}

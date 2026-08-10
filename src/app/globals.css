@@ -8,6 +8,10 @@
   --font-heading: var(--font-instrument), "Instrument Serif", serif;
   --font-body: var(--font-barlow), "Barlow", sans-serif;
 
+  /* Marketing landing (root /): Plus Jakarta Sans headlines + Inter UI. */
+  --font-display: var(--font-plus-jakarta), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-ui: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
+
   /* Deep dark glass base — Apple/Linear style. */
   --color-night-950: #0b0c10;
   --color-night-900: #12131a;
@@ -16,8 +20,8 @@
   --color-night-600: #2c2f3a;
 
   --color-neon-cyan: #38bdf8;
-  --color-neon-magenta: #f472b6;
-  --color-neon-violet: #8b5cf6;
+  --color-neon-magenta: #f87171;
+  --color-neon-violet: #3b82f6;
   --color-neon-green: #34d399;
   --color-neon-amber: #fbbf24;
 }
@@ -36,7 +40,7 @@ body {
   /* Deep dark mesh gradient with fine noise texture. */
   background:
     url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.028 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E"),
-    radial-gradient(900px 600px at 85% -10%, rgba(139, 92, 246, 0.1), transparent 60%),
+    radial-gradient(900px 600px at 85% -10%, rgba(59, 130, 246, 0.12), transparent 60%),
     radial-gradient(800px 600px at 0% 110%, rgba(56, 189, 248, 0.07), transparent 60%),
     #0b0c10;
   background-attachment: fixed;
@@ -48,8 +52,8 @@ body {
 /* ------------------------------------------------------------------ */
 [data-theme='dark'] {
   --color-neon-cyan: #38bdf8;
-  --color-neon-magenta: #f472b6;
-  --color-neon-violet: #8b5cf6;
+  --color-neon-magenta: #f87171;
+  --color-neon-violet: #3b82f6;
   --color-neon-green: #34d399;
   --color-neon-amber: #fbbf24;
   --color-night-950: #0b0c10;
@@ -81,8 +85,8 @@ body {
   --color-white: #0f172a;
 
   --color-neon-cyan: #0891b2;
-  --color-neon-magenta: #db2777;
-  --color-neon-violet: #7c3aed;
+  --color-neon-magenta: #dc2626;
+  --color-neon-violet: #2563eb;
   --color-neon-green: #059669;
   --color-neon-amber: #b45309;
 }
@@ -90,7 +94,7 @@ body {
   color: #1e293b;
   background:
     radial-gradient(1100px 700px at 85% -10%, rgba(8, 145, 178, 0.08), transparent 60%),
-    radial-gradient(900px 650px at 5% 110%, rgba(219, 39, 119, 0.06), transparent 60%),
+    radial-gradient(900px 650px at 5% 110%, rgba(37, 99, 235, 0.06), transparent 60%),
     #f6f7fb;
   background-attachment: fixed;
 }
@@ -117,8 +121,29 @@ body {
   font-family: var(--font-instrument), "Instrument Serif", serif;
 }
 
+/* ------------------------------------------------------------------ */
+/* Marketing landing page (scoped to #landing so the app keeps its own  */
+/* fonts / theme). Deep black + neural cyan/blue glassmorphism.        */
+/* ------------------------------------------------------------------ */
+#landing {
+  font-family: var(--font-ui), "Inter", ui-sans-serif, system-ui, sans-serif;
+  color: #e8eaef;
+}
+#landing h1,
+#landing h2,
+#landing h3 {
+  font-family: var(--font-display), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Subtle radial dot-grid overlay on the landing background (32px grid,
+   white at 8%). */
+.bg-dots {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
 ::selection {
-  background: rgba(139, 92, 246, 0.3);
+  background: rgba(56, 189, 248, 0.3);
 }
 
 ::-webkit-scrollbar {
@@ -141,6 +166,15 @@ body {
     -webkit-backdrop-filter: blur(14px);
   }
 
+  /* Cover art — dark gradient tinted by --cover-hue (set inline per
+     language), used for card covers and the featured spotlight. */
+  .cover-art {
+    background:
+      radial-gradient(120% 90% at 18% 0%, hsla(var(--cover-hue, 260), 85%, 60%, 0.32), transparent 55%),
+      radial-gradient(130% 100% at 100% 100%, hsla(calc(var(--cover-hue, 260) + 70), 90%, 55%, 0.16), transparent 60%),
+      linear-gradient(160deg, #1b1d26 0%, #101218 100%);
+  }
+
   /* Card — semi-transparent glassmorphic pane with micro-shadows. */
   .glass-card {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.025));
@@ -160,7 +194,7 @@ body {
       inset 0 1px 0 rgba(255, 255, 255, 0.08),
       0 2px 4px rgba(0, 0, 0, 0.25),
       0 16px 40px rgba(0, 0, 0, 0.4),
-      0 0 0 1px rgba(139, 92, 246, 0.08);
+      0 0 0 1px rgba(59, 130, 246, 0.14);
   }
 
   /* Clean minimal button — Apple/Linear style. */
@@ -212,14 +246,14 @@ body {
     pointer-events: none;
   }
 
-  /* Primary action — violet with a subtle glow. */
+  /* Primary action — deep blue→cyan with a subtle glow. */
   .btn-primary {
-    background: linear-gradient(180deg, #8b5cf6, #7c3aed);
-    border: 1px solid rgba(167, 139, 250, 0.4);
+    background: linear-gradient(180deg, #3b82f6, #0ea5e9);
+    border: 1px solid rgba(56, 189, 248, 0.4);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.2),
       0 1px 2px rgba(0, 0, 0, 0.3),
-      0 4px 14px rgba(124, 58, 237, 0.35);
+      0 4px 14px rgba(59, 130, 246, 0.4);
     transition: filter 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
   }
   .btn-primary:hover {
@@ -227,7 +261,7 @@ body {
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.22),
       0 1px 2px rgba(0, 0, 0, 0.3),
-      0 6px 20px rgba(124, 58, 237, 0.45);
+      0 6px 20px rgba(59, 130, 246, 0.5);
   }
   .btn-primary:active {
     transform: scale(0.97);
@@ -248,10 +282,52 @@ body {
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 18px rgba(139, 92, 246, 0.25), 0 0 50px rgba(139, 92, 246, 0.08);
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.25), 0 0 50px rgba(59, 130, 246, 0.08);
   }
   50% {
-    box-shadow: 0 0 30px rgba(139, 92, 246, 0.45), 0 0 70px rgba(139, 92, 246, 0.15);
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.45), 0 0 70px rgba(59, 130, 246, 0.15);
+  }
+}
+
+@keyframes ai-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes live-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.25), 0 18px 44px rgba(0, 0, 0, 0.45);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0), 0 18px 44px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@keyframes pulsing-branch {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.85;
   }
 }
 
@@ -268,10 +344,122 @@ body {
 .animate-pulse-glow {
   animation: pulse-glow 2.2s ease-in-out infinite;
 }
+.animate-ai-bounce {
+  animation: ai-bounce 2.6s ease-in-out infinite;
+}
+.animate-live-pulse {
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+/* Landing neural glass surface — dark glassmorphism per spec:
+   bg rgba(255,255,255,0.04), blur(12px), 1px rgba(255,255,255,0.1). */
+.glass-neural {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 60px rgba(0, 0, 0, 0.5);
+  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease, box-shadow 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Landing primary CTA — cyan→electric-blue gradient with the central glow. */
+.btn-neural {
+  background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+  color: #fff;
+  box-shadow:
+    0 0 60px rgba(6, 182, 212, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  transition: filter 0.2s ease, transform 0.1s ease, box-shadow 0.25s ease;
+}
+.btn-neural:hover {
+  filter: brightness(1.12);
+  box-shadow:
+    0 0 100px rgba(6, 182, 212, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26);
+}
+.btn-neural:active {
+  transform: scale(0.97);
+}
+
+/* Central node glow — 0 0 100px rgba(6,182,212,0.25). */
+.neural-glow {
+  box-shadow:
+    0 0 100px rgba(6, 182, 212, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Neural connection lines — SVG paths linking satellites to the node.
+   Gradient stroke #22d3ee (90%) → #06b6d4 (10%), 2.5px, pulsing. */
+.node-line {
+  fill: none;
+  stroke: url(#neural-line);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  animation: pulsing-branch 3.2s ease-in-out infinite;
+}
+.node-line-dashed {
+  fill: none;
+  stroke: url(#neural-line);
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-dasharray: 5 15;
+  opacity: 0.55;
+  animation: pulsing-branch 3.2s ease-in-out infinite 1.4s;
+}
+
+/* Satellite media card — glass, grayscale→color on hover, cyan glow. */
+.satellite-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 18px 44px rgba(0, 0, 0, 0.45);
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.5s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+}
+.satellite-card:hover {
+  transform: scale(1.05);
+  border-color: rgba(34, 211, 238, 0.35);
+  box-shadow: 0 0 60px rgba(6, 182, 212, 0.35), 0 18px 44px rgba(0, 0, 0, 0.45);
+}
+.satellite-card .sat-cover {
+  filter: grayscale(100%);
+  transition: filter 0.7s ease;
+}
+.satellite-card:hover .sat-cover {
+  filter: grayscale(0%);
+}
+
+/* Live notification pill — breathing status indicator. */
+.live-pill {
+  animation: live-breathe 3s ease-in-out infinite;
+}
+
+/* Entrance reveals — power4.out-style easing (cubic-bezier(0.16,1,0.3,1)). */
+@keyframes neural-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(26px) scale(0.985);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+.reveal {
+  opacity: 0;
+  animation: neural-reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 .animate-fade-up {
   animation: fade-up 0.45s ease-out both;
 }
 .eq-bar {
   transform-origin: bottom;
+  background: #22d3ee;
   animation: eq 1s ease-in-out infinite;
 }

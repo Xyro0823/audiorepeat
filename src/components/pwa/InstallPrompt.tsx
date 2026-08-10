@@ -86,7 +86,7 @@ export default function InstallPrompt() {
   return (
     <div className="pointer-events-none fixed bottom-4 right-4 z-50 flex justify-end">
       <div className="glass animate-fade-up pointer-events-auto flex max-w-xs items-center gap-3 rounded-2xl border-white/10 py-2 pl-3 pr-2 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-neon-magenta to-neon-violet text-night-950">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-neon-cyan to-neon-violet text-night-950">
           <svg
             viewBox="0 0 24 24"
             className="h-4 w-4"

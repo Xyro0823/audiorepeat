@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import AuthScreen from './AuthScreen';
 
@@ -28,6 +29,11 @@ function Splash() {
  */
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const { status } = useAuth();
+  const pathname = usePathname();
+
+  // The marketing landing page (root /) is public — no splash or login gate
+  // there, so visitors land on the pitch, not the auth screen.
+  if (pathname === '/') return <>{children}</>;
 
   if (status === 'loading') return <Splash />;
   if (status === 'signed-out') return <AuthScreen mode="gate" />;

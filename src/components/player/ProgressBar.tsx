@@ -19,7 +19,7 @@ export default function ProgressBar({ wordIndex, repeatIndex, isTranslation, rep
     <div className="mx-auto mt-8 w-full max-w-md">
       <div className="h-1.5 w-full overflow-hidden rounded-full bg-night-800">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-neon-cyan via-neon-violet to-neon-magenta transition-all duration-500"
+          className="h-full rounded-full bg-gradient-to-r from-neon-cyan to-neon-violet transition-all duration-500"
           style={{ width: `${value * 100}%` }}
         />
       </div>

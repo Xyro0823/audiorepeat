@@ -61,7 +61,7 @@ export default function PlayerControls({
           aria-label={isPlaying ? 'Pause' : 'Play'}
           className={`relative flex h-20 w-20 items-center justify-center rounded-full text-night-950 transition active:scale-90 ${
             isPlaying
-              ? 'bg-gradient-to-br from-neon-magenta to-neon-violet glow-magenta'
+              ? 'bg-gradient-to-br from-neon-cyan to-neon-violet'
               : 'bg-gradient-to-br from-neon-cyan to-neon-violet animate-pulse-glow'
           }`}
         >
@@ -80,7 +80,7 @@ export default function PlayerControls({
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
-                  className="eq-bar w-1 rounded-sm bg-neon-magenta"
+                  className="eq-bar w-1 rounded-sm bg-neon-cyan"
                   style={{ height: '100%', animationDelay: `${i * 0.18}s` }}
                 />
               ))}

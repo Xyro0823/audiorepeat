@@ -62,7 +62,7 @@ export default function DictationCard({
     if (total === 0) {
       return (
         <div className="animate-fade-up flex flex-col items-center gap-4 py-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-neon-violet to-neon-magenta text-night-950">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-neon-cyan to-neon-violet text-night-950">
             <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z" />
             </svg>
@@ -106,7 +106,7 @@ export default function DictationCard({
   if (!item) {
     return (
       <div className="animate-fade-up flex flex-col items-center gap-4 py-10 text-center">
-        <div className="flex h-16 w-16 animate-pulse-glow items-center justify-center rounded-full bg-gradient-to-br from-neon-violet to-neon-magenta text-night-950">
+        <div className="flex h-16 w-16 animate-pulse-glow items-center justify-center rounded-full bg-gradient-to-br from-neon-cyan to-neon-violet text-night-950">
           <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M11 5 6 9H2v6h4l5 4V5Z" />
             <path d="M15.5 8.5a5 5 0 0 1 0 7" />
@@ -141,7 +141,7 @@ export default function DictationCard({
         <span
           role="img"
           aria-label="Emoji hint"
-          className="mt-5 text-5xl leading-none drop-shadow-[0_0_18px_rgba(167,139,250,0.35)]"
+          className="mt-5 text-5xl leading-none drop-shadow-[0_0_18px_rgba(59,130,246,0.35)]"
         >
           {emoji}
         </span>
@@ -212,14 +212,14 @@ export default function DictationCard({
             }}
             placeholder="Type what you hear…"
             aria-label="Type the word you hear"
-            className="mt-6 w-full max-w-sm rounded-xl border border-white/10 bg-night-800/80 px-4 py-3 text-center text-xl text-white outline-none transition placeholder:text-slate-600 focus:border-neon-violet/60 focus:shadow-[0_0_20px_rgba(167,139,250,0.15)]"
+            className="mt-6 w-full max-w-sm rounded-xl border border-white/10 bg-night-800/80 px-4 py-3 text-center text-xl text-white outline-none transition placeholder:text-slate-600 focus:border-neon-violet/60 focus:shadow-[0_0_20px_rgba(59,130,246,0.2)]"
           />
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2.5">
             <button
               onClick={onCheck}
               disabled={!canCheck}
-              className="rounded-xl bg-gradient-to-r from-neon-violet to-neon-magenta px-6 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+              className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-6 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Check
             </button>

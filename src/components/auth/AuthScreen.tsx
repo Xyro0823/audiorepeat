@@ -139,7 +139,7 @@ export default function AuthScreen({ mode = 'gate', onClose }: Props) {
     >
       {/* Ambient glows */}
       <div className="pointer-events-none absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-neon-cyan/15 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-neon-magenta/15 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-neon-cyan/15 blur-3xl" />
 
       <div className="glass animate-fade-up m-auto w-full max-w-md rounded-3xl p-8 shadow-[0_0_60px_rgba(34,228,255,0.12)]">
         <div className="flex flex-col items-center text-center">

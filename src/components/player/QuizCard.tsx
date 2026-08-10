@@ -62,7 +62,7 @@ export default function QuizCard({
     if (total === 0) {
       return (
         <div className="animate-fade-up flex flex-col items-center gap-4 py-6 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-neon-violet to-neon-magenta text-night-950">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-neon-cyan to-neon-violet text-night-950">
             <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M13 2 4.5 13.5H11L9.5 22 19 9.5h-6.5L13 2Z" />
             </svg>
@@ -106,7 +106,7 @@ export default function QuizCard({
   if (!question) {
     return (
       <div className="animate-fade-up flex flex-col items-center gap-4 py-10 text-center">
-        <div className="flex h-16 w-16 animate-pulse-glow items-center justify-center rounded-full bg-gradient-to-br from-neon-magenta to-neon-violet text-night-950">
+        <div className="flex h-16 w-16 animate-pulse-glow items-center justify-center rounded-full bg-gradient-to-br from-neon-cyan to-neon-violet text-night-950">
           <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="9" />
             <path d="M12 8v4l2.5 2.5" />
@@ -134,7 +134,7 @@ export default function QuizCard({
         </span>
       </div>
 
-      <p className="mt-6 text-5xl font-bold tracking-tight text-neon-magenta text-glow-magenta sm:text-6xl">
+      <p className="mt-6 text-5xl font-bold tracking-tight text-neon-violet sm:text-6xl">
         {question.word.target}
       </p>
       <p className="mt-3 text-xs uppercase tracking-widest text-slate-500">Pick the translation</p>

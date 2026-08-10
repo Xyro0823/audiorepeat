@@ -1,5 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import {
+  Barlow,
+  Geist,
+  Geist_Mono,
+  Instrument_Serif,
+  Inter,
+  Plus_Jakarta_Sans,
+} from "next/font/google";
 import "./globals.css";
 import AuthGate from "@/components/auth/AuthGate";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
@@ -30,6 +37,21 @@ const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   style: ["normal", "italic"],
+});
+
+// Landing-page fonts — Plus Jakarta Sans for headlines, Inter for the UI
+// precision body. Exposed as CSS vars consumed by the --font-display /
+// --font-ui theme tokens in globals.css (scoped to the #landing section).
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -67,7 +89,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${barlow.variable} ${instrumentSerif.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${barlow.variable} ${instrumentSerif.variable} ${plusJakarta.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <AuthGate>{children}</AuthGate>

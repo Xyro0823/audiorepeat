@@ -15,6 +15,7 @@ import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import { findLanguage } from '@/lib/languages';
 import { formatCountdown } from '@/lib/format';
+import { recordSetPlayed } from '@/lib/libraryMeta';
 import type { TTSEngine } from '@/lib/tts/engine';
 import type { AppSettings, MasteryStatus } from '@/types/app';
 import DictationCard from './DictationCard';
@@ -186,6 +187,12 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, [recordMs, set]);
+
+  // Recently-practiced: stamp the set into the dashboard's "Continue
+  // Practice" sidebar whenever playback starts (or resumes).
+  useEffect(() => {
+    if (isPlaying && set) recordSetPlayed(set);
+  }, [isPlaying, set]);
 
   // Words listened: count each new word that starts playing (not repeats).
   useEffect(() => {

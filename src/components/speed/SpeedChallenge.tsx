@@ -315,7 +315,7 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm">
-      <div className="animate-fade-up glass w-full max-w-md rounded-3xl p-6 text-center shadow-[0_0_60px_rgba(167,139,250,0.15)]">
+      <div className="animate-fade-up glass w-full max-w-md rounded-3xl p-6 text-center shadow-[0_0_60px_rgba(59,130,246,0.15)]">
         {phase === 'intro' && (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-neon-amber to-neon-magenta text-night-950 shadow-[0_0_30px_rgba(255,201,77,0.35)]">

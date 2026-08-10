@@ -1,14 +1,5 @@
-import SetLibrary from "@/components/library/SetLibrary";
-import Hero from "@/components/Hero";
+import LandingPage from "@/components/landing/LandingPage";
 
 export default function HomePage() {
-  return (
-    <>
-      {/* Cinematic HLS video hero at the very top of the page. */}
-      <div id="hero" className="bg-black">
-        <Hero />
-      </div>
-      <SetLibrary />
-    </>
-  );
+  return <LandingPage />;
 }

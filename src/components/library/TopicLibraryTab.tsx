@@ -199,7 +199,7 @@ export default function TopicLibraryTab({ sets, onImport }: Props) {
                       importTopic().catch((err) => console.error('[topic import]', err));
                     }}
                     disabled={!bank || bank.length === 0}
-                    className="rounded-xl bg-gradient-to-r from-neon-violet to-neon-magenta px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                    className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     ⬇ Import topic
                   </button>

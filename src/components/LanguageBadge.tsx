@@ -86,7 +86,7 @@ const FLAGS: Record<string, string> = {
   tg: '🇹🇯',
 };
 
-function flagFor(code: string): string | null {
+export function flagFor(code: string): string | null {
   const base = code.trim().toLowerCase().split('-')[0];
   return FLAGS[base] ?? null;
 }
