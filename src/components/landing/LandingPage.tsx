@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useLanguageCount } from "@/hooks/useLanguageCount";
 import NewsletterForm from "./NewsletterForm";
+import Testimonials from "./Testimonials";
 
 /* ------------------------------------------------------------------ */
 /* Shared bits                                                        */
@@ -658,6 +659,11 @@ export default function LandingPage() {
           ))}
         </div>
       </section>
+
+      {/* ------------------------------------------------------------ */}
+      {/* Testimonials                                                  */}
+      {/* ------------------------------------------------------------ */}
+      <Testimonials />
 
       {/* ------------------------------------------------------------ */}
       {/* Footer                                                       */}
