@@ -36,7 +36,7 @@ export default function StatsView() {
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-5 pb-20 pt-8">
-      <header className="animate-fade-up mb-6 flex items-center gap-2">
+      <header className="animate-fade-up relative z-50 mb-6 flex items-center gap-2">
         <Link
           href="/"
           className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"

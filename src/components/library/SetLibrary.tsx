@@ -630,8 +630,10 @@ export default function SetLibrary() {
 
   return (
     <main className="mx-auto w-full max-w-7xl flex-1 px-5 pb-20 pt-8">
-      {/* Sleek floating glass navbar */}
-      <header className="animate-fade-up glass mb-8 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl px-4 py-3">
+      {/* Sleek floating glass navbar — z-50 lifts its stacking context (the
+          .glass backdrop-blur + fade-up transform both create one) above the
+          hero banner so dropdown popovers always render on top. */}
+      <header className="animate-fade-up glass relative z-50 mb-8 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl px-4 py-3">
         <Logo />
         <div className="mr-auto">
           <h1 className="text-[15px] font-semibold tracking-tight text-white">AudioRepeat</h1>

@@ -83,7 +83,7 @@ export default function InstallAppButton() {
       </button>
 
       {showHint && (
-        <div className="glass animate-fade-up absolute right-0 top-full z-[90] mt-2 w-60 rounded-2xl p-3.5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
+        <div className="glass animate-fade-up absolute right-0 top-full z-[100] mt-2 w-60 rounded-2xl p-3.5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]">
           <p className="text-sm font-semibold text-white">Add to Home Screen</p>
           <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
             Tap <span className="font-semibold text-slate-200">Share</span> in Safari, then{' '}

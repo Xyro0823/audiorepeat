@@ -154,7 +154,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
         <div
           role="menu"
           aria-label="Account & tools"
-          className="glass animate-fade-up absolute right-0 top-full z-[90] mt-2 w-60 rounded-2xl p-2 shadow-[0_20px_60px_rgba(3,2,12,0.7)]"
+          className="glass animate-fade-up absolute right-0 top-full z-[100] mt-2 w-60 rounded-2xl p-2 shadow-[0_20px_60px_rgba(3,2,12,0.7)]"
         >
           {signedIn && (
             <>

@@ -65,7 +65,7 @@ export default function NewSetButton({ onNew, onImport }: Props) {
         <div
           role="menu"
           aria-label="New set"
-          className="glass animate-fade-up absolute right-0 top-full z-[90] mt-2 w-48 rounded-2xl p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+          className="glass animate-fade-up absolute right-0 top-full z-[100] mt-2 w-48 rounded-2xl p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
         >
           <button role="menuitem" className={itemClass} onClick={() => { close(); onNew(); }}>
             <span aria-hidden>✏️</span> New set
