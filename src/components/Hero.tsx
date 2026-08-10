@@ -3,11 +3,13 @@
 import { useEffect, useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
 import Hls from "hls.js";
+import { useLanguageCount } from "@/hooks/useLanguageCount";
 
 const MUX_SRC = "https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8";
 
 const Hero = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const langCount = useLanguageCount();
 
   useEffect(() => {
     const video = videoRef.current;
@@ -63,8 +65,7 @@ const Hero = () => {
           Master languages, hands-free.
         </h2>
         <p className="text-white/60 font-body font-light text-sm md:text-base max-w-xl mx-auto mb-8">
-          Loop, repeat, and retain vocabulary seamlessly with AI-powered audio drilling in 253
-          languages. No pressure, just intuitive learning.
+          Loop, repeat, and retain vocabulary seamlessly with AI-powered audio drilling in {langCount} languages. No pressure, just intuitive learning.
         </p>
         <div className="flex items-center justify-center gap-6">
           <button

@@ -4,15 +4,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import {
   ArrowUpRight,
-  AtSign,
   Languages,
-  Mail,
-  MessageCircle,
   Mic,
   Repeat,
-  Rss,
   WifiOff,
 } from "lucide-react";
+import { useLanguageCount } from "@/hooks/useLanguageCount";
 
 /* ------------------------------------------------------------------ */
 /* Shared bits                                                        */
@@ -263,6 +260,7 @@ function NeuralConnections({
 export default function LandingPage() {
   const [annual, setAnnual] = useState(true);
   const [subscribed, setSubscribed] = useState(false);
+  const langCount = useLanguageCount();
   const heroRef = useRef<HTMLDivElement | null>(null);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -271,6 +269,7 @@ export default function LandingPage() {
     {
       name: "Basic",
       tagline: "For curious beginners",
+      plan: "basic",
       price: 0,
       monthlyNote: "forever free",
       features: ["1 active language", "Standard TTS audio", "300 words / day"],
@@ -280,10 +279,11 @@ export default function LandingPage() {
     {
       name: "Pro",
       tagline: "The full learning engine",
+      plan: "pro",
       price: annual ? 7 : 9,
-      monthlyNote: annual ? "billed annually" : "billed monthly",
+      monthlyNote: annual ? "/mo, billed $84 annually" : "/mo",
       features: [
-        "All 253 languages",
+        `All ${langCount} languages`,
         "AI pronunciation coach",
         "Offline audio packs",
         "Spaced repetition + quiz mode",
@@ -295,8 +295,9 @@ export default function LandingPage() {
     {
       name: "Lifetime",
       tagline: "One payment, forever",
+      plan: "lifetime",
       price: 149,
-      monthlyNote: "one-time",
+      monthlyNote: "one-time payment",
       features: ["Everything in Pro", "Future languages included", "Priority support"],
       cta: "Get Lifetime",
       popular: false,
@@ -421,7 +422,7 @@ export default function LandingPage() {
 
               <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400 md:text-[15px]">
                 Loop, repeat and retain vocabulary while you commute, cook or wind down.
-                Neural audio, spaced repetition and 253 languages — no screen required.
+                Neural audio, spaced repetition and {langCount} languages — no screen required.
               </p>
 
               <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
@@ -433,7 +434,7 @@ export default function LandingPage() {
                   <ArrowUpRight className="h-4 w-4" aria-hidden />
                 </Link>
                 <Link
-                  href="/dashboard"
+                  href="/dashboard#vocab-grid"
                   className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10 active:scale-95"
                 >
                   Explore Library
@@ -501,7 +502,7 @@ export default function LandingPage() {
       <section id="languages" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-28 lg:px-12">
         <div className="glass-neural rounded-[2rem] p-8 text-center md:p-12">
           <h2 className="text-4xl font-extrabold tracking-tight text-white md:text-5xl">
-            253 languages. <span className="bg-gradient-to-r from-[#22d3ee] to-[#3b82f6] bg-clip-text text-transparent">One tap away.</span>
+            {langCount} languages. <span className="bg-gradient-to-r from-[#22d3ee] to-[#3b82f6] bg-clip-text text-transparent">One tap away.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
             From Arabic to Zulu — native neural voices, real word packs, zero setup.
@@ -529,7 +530,7 @@ export default function LandingPage() {
               </span>
             ))}
             <span className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium text-slate-500">
-              + 241 more
+              + {Math.max(0, langCount - 12)} more
             </span>
           </div>
         </div>
@@ -604,7 +605,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link
-                href="/dashboard"
+                href={`/dashboard?plan=${p.plan}`}
                 className={`mt-8 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition ${
                   p.popular ? "btn-neural" : "glass-neural text-white hover:bg-white/[0.07]"
                 }`}
@@ -662,9 +663,9 @@ export default function LandingPage() {
       {/* Footer                                                       */}
       {/* ------------------------------------------------------------ */}
       <footer className="border-t border-white/5">
-        <div className="mx-auto grid w-full max-w-6xl grid-cols-2 gap-10 px-6 py-14 md:grid-cols-3 lg:grid-cols-5 lg:px-12">
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-10 px-6 py-14 md:grid-cols-3 lg:px-12">
           {/* Brand */}
-          <div className="col-span-2 md:col-span-3 lg:col-span-1">
+          <div>
             <div className="flex items-center gap-2.5">
               <LogoMark />
               <span className="text-base font-extrabold tracking-tight text-white">
@@ -672,55 +673,25 @@ export default function LandingPage() {
               </span>
             </div>
             <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-slate-400">
-              Hands-free audio drilling for auditory learners in 253 languages.
+              Hands-free audio drilling for auditory learners in {langCount} languages.
             </p>
-            <div className="mt-6 flex items-center gap-3">
-              {[
-                { icon: AtSign, label: "Email" },
-                { icon: MessageCircle, label: "Community" },
-                { icon: Rss, label: "RSS" },
-                { icon: Mail, label: "Contact" },
-              ].map((s) => (
-                <a
-                  key={s.label}
-                  href="#"
-                  aria-label={s.label}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-300 transition hover:border-cyan-400/50 hover:text-cyan-300"
-                >
-                  <s.icon className="h-4 w-4" aria-hidden />
-                </a>
-              ))}
-            </div>
           </div>
 
-          {/* Link columns */}
-          {[
-            {
-              title: "Product",
-              links: ["Features", "Languages", "Pricing", "Changelog"],
-            },
-            {
-              title: "Company",
-              links: ["About", "Careers", "Press", "Contact"],
-            },
-            {
-              title: "Resources",
-              links: ["Blog", "Help Center", "API", "Community"],
-            },
-          ].map((col) => (
-            <div key={col.title}>
-              <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">{col.title}</h4>
-              <ul className="mt-4 space-y-2.5">
-                {col.links.map((l) => (
-                  <li key={l}>
-                    <a href="#" className="text-[13px] text-slate-400 transition hover:text-white">
-                      {l}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Product links — only pages/sections that actually exist */}
+          <div>
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">Product</h4>
+            <ul className="mt-4 space-y-2.5">
+              <li>
+                <a href="#features" className="text-[13px] text-slate-400 transition hover:text-white">Features</a>
+              </li>
+              <li>
+                <a href="#languages" className="text-[13px] text-slate-400 transition hover:text-white">Languages</a>
+              </li>
+              <li>
+                <a href="#pricing" className="text-[13px] text-slate-400 transition hover:text-white">Pricing</a>
+              </li>
+            </ul>
+          </div>
 
           {/* Newsletter */}
           <div>
