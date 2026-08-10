@@ -391,22 +391,14 @@ body {
 }
 
 /* Neural connection lines — SVG paths linking satellites to the node.
-   Gradient stroke #22d3ee (90%) → #06b6d4 (10%), 2.5px, pulsing. */
+   Gradient stroke cyan-400 → blue-500 (defined in the SVG defs), 2px,
+   subtle pulsing opacity. */
 .node-line {
   fill: none;
   stroke: url(#neural-line);
-  stroke-width: 2.5;
+  stroke-width: 2;
   stroke-linecap: round;
   animation: pulsing-branch 3.2s ease-in-out infinite;
-}
-.node-line-dashed {
-  fill: none;
-  stroke: url(#neural-line);
-  stroke-width: 1.4;
-  stroke-linecap: round;
-  stroke-dasharray: 5 15;
-  opacity: 0.55;
-  animation: pulsing-branch 3.2s ease-in-out infinite 1.4s;
 }
 
 /* Satellite media card — glass, grayscale→color on hover, cyan glow. */

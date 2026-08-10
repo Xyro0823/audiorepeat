@@ -221,7 +221,7 @@ function NeuralConnections({
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-0 hidden lg:block"
+      className="pointer-events-none absolute inset-0 z-10 hidden h-full w-full lg:block"
       aria-hidden
     >
       {geo.w > 0 && geo.h > 0 && (
@@ -231,30 +231,23 @@ function NeuralConnections({
           preserveAspectRatio="none"
         >
           <defs>
-            <linearGradient id="neural-line" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="10%" stopColor="#06b6d4" />
-              <stop offset="90%" stopColor="#22d3ee" />
+            {/* cyan-400 → blue-500 horizontal gradient stroke */}
+            <linearGradient id="neural-line" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="100%" stopColor="#3b82f6" />
             </linearGradient>
           </defs>
           {geo.lines.map((l, i) => {
-            const dx = l.x2 - l.x1;
-            const c1x = l.x1 + dx * 0.4;
-            const c2x = l.x2 - dx * 0.4;
+            const mx = (l.x1 + l.x2) / 2;
+            // Continuous horizontal bezier: enters the card border horizontally
+            // (C1-continuous) and lands on the node border, arching slightly.
             return (
-              <g key={i}>
-                <path
-                  className="node-line"
-                  vectorEffect="non-scaling-stroke"
-                  d={`M ${l.x1} ${l.y1} C ${c1x} ${l.y1}, ${c2x} ${l.y2}, ${l.x2} ${l.y2}`}
-                />
-                <path
-                  className="node-line-dashed"
-                  vectorEffect="non-scaling-stroke"
-                  d={`M ${l.x1} ${l.y1 - 8} C ${c1x} ${l.y1 - 8}, ${c2x} ${l.y2 - 8}, ${l.x2} ${l.y2 - 8}`}
-                />
-                <circle cx={l.x1} cy={l.y1} r="3" fill="#22d3ee" className="animate-pulse" />
-                <circle cx={l.x2} cy={l.y2} r="3.5" fill="#22d3ee" className="animate-pulse" />
-              </g>
+              <path
+                key={i}
+                className="node-line"
+                vectorEffect="non-scaling-stroke"
+                d={`M ${l.x1} ${l.y1} C ${mx} ${l.y1 - 5}, ${mx} ${l.y2 + 5}, ${l.x2} ${l.y2}`}
+              />
             );
           })}
         </svg>
@@ -388,10 +381,12 @@ export default function LandingPage() {
         {/* Neural connection lines — dynamically anchored to the cards */}
         <NeuralConnections containerRef={heroRef} nodeRef={nodeRef} cardRefs={cardRefs} />
 
-        {/* 12-col grid — left cards (3) | center node (6) | right cards (3), no overlap */}
-        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-6 lg:grid-cols-12">
+        {/* 12-col grid — left cards (3) | center node (6) | right cards (3),
+            symmetric: left cards flush right (items-end), right cards flush
+            left (items-start), equal gap-8 either side of the center node. */}
+        <div className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-1 items-center gap-8 lg:grid-cols-12">
           {/* left satellites — Japanese, French */}
-          <div className="hidden flex-col gap-8 lg:col-span-3 lg:flex">
+          <div className="hidden flex-col gap-6 lg:col-span-3 lg:flex lg:items-end">
             <div ref={(el) => { cardRefs.current[0] = el; }}>
               <SatelliteCard s={SATELLITES[0]} />
             </div>
@@ -401,7 +396,7 @@ export default function LandingPage() {
           </div>
 
           {/* Central node */}
-          <div className="mx-auto w-full max-w-4xl lg:col-span-6">
+          <div className="mx-auto w-full max-w-4xl lg:col-span-6 lg:justify-self-center">
             <div ref={nodeRef} className="glass-neural neural-glow relative overflow-hidden rounded-[2rem] px-6 py-8 text-center">
               {/* cyan sheen */}
               <div
@@ -454,7 +449,7 @@ export default function LandingPage() {
           </div>
 
           {/* right satellites — Arabic, Spanish */}
-          <div className="hidden flex-col gap-8 lg:col-span-3 lg:flex">
+          <div className="hidden flex-col gap-6 lg:col-span-3 lg:flex lg:items-start">
             <div ref={(el) => { cardRefs.current[2] = el; }}>
               <SatelliteCard s={SATELLITES[1]} />
             </div>
