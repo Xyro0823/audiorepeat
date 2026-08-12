@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import LanguageLock from '@/components/library/LanguageLock';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
 import { PACK_LANG } from '@/lib/starterSets';
 import { parseSubtitleText } from '@/lib/subtitles/parser';
@@ -19,12 +20,16 @@ interface Props {
   text: string;
   /** Preferred target language (BCP-47); the user can change it. */
   defaultLang: string;
+  /** Free-plan language gate (lib/planGate) — Pro allows all, Free allows
+   *  only the single active language. Early UX layer; SetEditor re-checks
+   *  at save time. */
+  canUseLang: (code: string) => boolean;
   onClose: () => void;
   /** Called with the parsed set (not yet saved) once translations are matched. */
   onCreate: (set: VocabSet) => void;
 }
 
-export default function SubtitleImportModal({ fileName, text, defaultLang, onClose, onCreate }: Props) {
+export default function SubtitleImportModal({ fileName, text, defaultLang, canUseLang, onClose, onCreate }: Props) {
   const [lang, setLang] = useState(defaultLang);
   const [busy, setBusy] = useState(false);
   const [previewCount, setPreviewCount] = useState(12);
@@ -42,8 +47,15 @@ export default function SubtitleImportModal({ fileName, text, defaultLang, onClo
   const langHint = findLanguage(lang)?.label;
   const hasPack = !!PACK_LANG[lang];
 
+  // Early Free-plan gate: an empty/unknown language is NOT blocked (existing
+  // behavior preserved — the editor's save-time validation remains the final
+  // authority); any explicitly chosen language is gated via the shared
+  // planGate logic so a hidden (downgraded) language can never be used here.
+  const locked = lang.trim().length > 0 && !canUseLang(lang);
+
   const create = async () => {
     if (parsed.words.length === 0 || busy) return;
+    if (locked) return; // early layer — never write a set in a locked language
     setBusy(true);
     try {
       const translations = await translateKeywords(
@@ -122,10 +134,12 @@ export default function SubtitleImportModal({ fileName, text, defaultLang, onClo
         <datalist id="sub-lang-presets">
           {LANGUAGES.map((l) => (
             <option key={l.code} value={l.code}>
-              {l.label}
+              {canUseLang(l.code) ? l.label : `🔒 ${l.label}`}
             </option>
           ))}
         </datalist>
+
+        {locked && <LanguageLock className="mt-4" />}
 
         <div className="mt-4">
           <div className="flex items-center justify-between">
@@ -162,7 +176,7 @@ export default function SubtitleImportModal({ fileName, text, defaultLang, onClo
         <div className="mt-6 flex gap-2">
           <button
             onClick={() => void create()}
-            disabled={parsed.words.length === 0 || busy}
+            disabled={parsed.words.length === 0 || busy || locked}
             className="flex-1 rounded-xl bg-gradient-to-r from-neon-amber to-neon-magenta px-5 py-3 text-sm font-bold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {busy ? 'Matching translations…' : `Create set (${parsed.words.length} words)`}

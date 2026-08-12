@@ -1144,6 +1144,7 @@ export default function SetLibrary() {
           fileName={subtitleImport.fileName}
           text={subtitleImport.text}
           defaultLang={defaultSubtitleLang}
+          canUseLang={canUseLang}
           onClose={() => setSubtitleImport(null)}
           onCreate={(set) => {
             // Open the editor to review translations before saving (Save & play).
