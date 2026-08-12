@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import LanguageLock from './LanguageLock';
 import { packLangLabel } from '@/lib/starterSets';
 import {
   getTopicManifest,
@@ -208,17 +208,7 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
               <div className="p-10 text-center text-sm text-neon-amber">{error}</div>
             ) : (
               <div className="mt-5">
-                {upgradePrompt && (
-                  <div className="animate-fade-up mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-neon-amber/40 bg-neon-amber/10 px-3 py-2 text-[12px] text-neon-amber">
-                    <span>⭐ This language needs Pro — your Free plan includes 1 language.</span>
-                    <Link
-                      href="/checkout?plan=pro"
-                      className="shrink-0 rounded-lg bg-neon-amber px-2.5 py-1 text-xs font-bold text-night-950 transition hover:brightness-110"
-                    >
-                      Upgrade
-                    </Link>
-                  </div>
-                )}
+                {upgradePrompt && <LanguageLock className="animate-fade-up mb-3" />}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs text-slate-500">
                     <span className="font-semibold text-white">{bank?.length ?? 0}</span> words

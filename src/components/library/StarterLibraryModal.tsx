@@ -1,7 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import LanguageLock from './LanguageLock';
 import { CEFR_META, PACK_LANG, STARTER_LANGS, starterLangLabel } from '@/lib/starterSets';
 import {
   getWordBankManifest,
@@ -440,17 +440,7 @@ export default function StarterLibraryModal({ sets, pro, onClose, onImport }: Pr
                     </span>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    {upgradePrompt && (
-                      <div className="animate-fade-up flex flex-wrap items-center gap-2 rounded-xl border border-neon-amber/40 bg-neon-amber/10 px-3 py-2 text-[12px] text-neon-amber">
-                        <span>⭐ This language needs Pro — your Free plan includes 1 language.</span>
-                        <Link
-                          href="/checkout?plan=pro"
-                          className="shrink-0 rounded-lg bg-neon-amber px-2.5 py-1 text-xs font-bold text-night-950 transition hover:brightness-110"
-                        >
-                          Upgrade
-                        </Link>
-                      </div>
-                    )}
+                    {upgradePrompt && <LanguageLock className="w-full animate-fade-up" />}
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => {
