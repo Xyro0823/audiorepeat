@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import AuthScreen from './AuthScreen';
 import { useAuth } from '@/hooks/useAuth';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
+import { isProPlan, PLAN_BADGE, planDetail } from '@/lib/plans';
+import { getSettingsSnapshot, subscribeSettings } from '@/lib/settingsStore';
 
 function initialsOf(name: string): string {
   const parts = name.trim().split(/[\s_-]+/).filter(Boolean);
@@ -37,6 +39,12 @@ const itemClass =
  */
 export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }: Props) {
   const { status, user, logout, deleteAccount } = useAuth();
+  // Reactive subscription to the shared settings store (the purchased plan
+  // lives there, persisted by the checkout success flow). The store hydrates
+  // once from IndexedDB; until then it reports the basic default, so the badge
+  // settles within a frame or two of first paint.
+  const settings = useSyncExternalStore(subscribeSettings, getSettingsSnapshot, getSettingsSnapshot);
+  const pro = isProPlan(settings.plan);
   const [open, setOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -161,10 +169,40 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
               <div className="px-3 py-2">
                 <p className="truncate text-sm font-semibold text-white">@{user!.username}</p>
                 <p className="truncate text-[11px] text-slate-500">{user!.email ?? 'Firebase account'}</p>
+                <p className="mt-1.5 flex items-center gap-1.5">
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                      pro
+                        ? 'border-neon-amber/40 bg-neon-amber/15 text-neon-amber'
+                        : 'border-white/10 text-slate-400'
+                    }`}
+                  >
+                    {pro ? '★ ' : ''}
+                    {PLAN_BADGE[settings.plan].short}
+                  </span>
+                  <span className="truncate text-[10px] text-slate-500">
+                    {planDetail(settings.plan, settings.planBilling)}
+                  </span>
+                </p>
               </div>
               <div className="my-1 h-px bg-white/10" />
             </>
           )}
+
+          {pro ? (
+            <Link role="menuitem" href="/checkout" className={itemClass} onClick={close}>
+              <span aria-hidden>⭐</span> Manage plan
+              <span className="ml-auto rounded-full border border-neon-amber/40 bg-neon-amber/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
+                {PLAN_BADGE[settings.plan].short}
+              </span>
+            </Link>
+          ) : (
+            <Link role="menuitem" href="/checkout?plan=pro" className={itemClass} onClick={close}>
+              <span aria-hidden>⭐</span> Upgrade to Pro
+            </Link>
+          )}
+
+          <div className="my-1 h-px bg-white/10" />
 
           {/* Tools — grouped under the profile entry point */}
           <button

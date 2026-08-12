@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { emojiForText } from '@/lib/emoji';
 import type { MasteryStatus } from '@/types/app';
 import type { LoopWord } from '@/types/loop';
@@ -15,6 +16,8 @@ interface Props {
   showExamples: boolean;
   /** True when no installed TTS voice can cover the target language. */
   noVoice?: boolean;
+  /** False hides the mastery (spaced-repetition) buttons behind a Pro link. */
+  canMark?: boolean;
   onMark: (status: MasteryStatus | undefined) => void;
 }
 
@@ -28,6 +31,7 @@ export default function WordCard({
   showHints,
   showExamples,
   noVoice = false,
+  canMark = true,
   onMark,
 }: Props) {
   const emoji = word && showHints && !isTranslation ? emojiForText(word.translation) : null;
@@ -137,46 +141,58 @@ export default function WordCard({
         </div>
       )}
 
-      <div className="mt-8 flex items-center gap-3">
-        <button
-          onClick={() => onMark(word.mastery === 'mastered' ? undefined : 'mastered')}
-          aria-pressed={word.mastery === 'mastered'}
-          title={word.mastery === 'mastered' ? 'Unmark this word' : 'Mark as known'}
-          className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-95 ${
-            word.mastery === 'mastered'
-              ? 'border-neon-green/60 bg-neon-green/15 text-neon-green shadow-[0_0_14px_rgba(77,255,158,0.25)]'
-              : 'border-white/10 bg-white/5 text-slate-400 hover:border-neon-green/50 hover:text-neon-green'
-          }`}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+      {canMark ? (
+        <div className="mt-8 flex items-center gap-3">
+          <button
+            onClick={() => onMark(word.mastery === 'mastered' ? undefined : 'mastered')}
+            aria-pressed={word.mastery === 'mastered'}
+            title={word.mastery === 'mastered' ? 'Unmark this word' : 'Mark as known'}
+            className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-95 ${
+              word.mastery === 'mastered'
+                ? 'border-neon-green/60 bg-neon-green/15 text-neon-green shadow-[0_0_14px_rgba(77,255,158,0.25)]'
+                : 'border-white/10 bg-white/5 text-slate-400 hover:border-neon-green/50 hover:text-neon-green'
+            }`}
           >
-            <path d="M20 6 9 17l-5-5" />
+            <svg
+              viewBox="0 0 24 24"
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+            Known
+          </button>
+          <button
+            onClick={() => onMark(word.mastery === 'hard' ? undefined : 'hard')}
+            aria-pressed={word.mastery === 'hard'}
+            title={word.mastery === 'hard' ? 'Unmark this word' : 'Mark for review'}
+            className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-95 ${
+              word.mastery === 'hard'
+                ? 'border-neon-amber/60 bg-neon-amber/15 text-neon-amber shadow-[0_0_14px_rgba(255,201,77,0.25)]'
+                : 'border-white/10 bg-white/5 text-slate-400 hover:border-neon-amber/50 hover:text-neon-amber'
+            }`}
+          >
+            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+              <path d="M12 2.5 14.9 8.4l6.4.9-4.6 4.5 1.1 6.3L12 17.3 6.2 20.1l1.1-6.3L2.7 9.3l6.4-.9L12 2.5Z" />
           </svg>
-          Known
-        </button>
-        <button
-          onClick={() => onMark(word.mastery === 'hard' ? undefined : 'hard')}
-          aria-pressed={word.mastery === 'hard'}
-          title={word.mastery === 'hard' ? 'Unmark this word' : 'Mark for review'}
-          className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-95 ${
-            word.mastery === 'hard'
-              ? 'border-neon-amber/60 bg-neon-amber/15 text-neon-amber shadow-[0_0_14px_rgba(255,201,77,0.25)]'
-              : 'border-white/10 bg-white/5 text-slate-400 hover:border-neon-amber/50 hover:text-neon-amber'
-          }`}
-        >
-          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
-            <path d="M12 2.5 14.9 8.4l6.4.9-4.6 4.5 1.1 6.3L12 17.3 6.2 20.1l1.1-6.3L2.7 9.3l6.4-.9L12 2.5Z" />
-          </svg>
-          Review
-        </button>
-      </div>
+            Review
+          </button>
+        </div>
+      ) : (
+        <div className="mt-8">
+          <Link
+            href="/checkout?plan=pro"
+            title="Marking words as known / review is a Pro feature"
+            className="inline-flex items-center gap-1.5 rounded-full border border-neon-amber/30 bg-neon-amber/5 px-4 py-2 text-sm font-semibold text-neon-amber/90 transition hover:border-neon-amber/60 hover:text-neon-amber"
+          >
+            <span aria-hidden>⭐</span> Track mastery — Pro
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

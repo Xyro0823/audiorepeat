@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLists } from '@/hooks/useLists';
@@ -8,6 +9,7 @@ import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { buildBackup, downloadBackup, parseBackup, type BackupData } from '@/lib/sets/backup';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
+import { isProPlan, PLAN_BADGE, planDetail } from '@/lib/plans';
 import type { ThemeName } from '@/types/app';
 import { DEFAULT_SETTINGS } from '@/types/app';
 import VoicePicker from '@/components/player/VoicePicker';
@@ -504,12 +506,44 @@ export default function SettingsModal({ onClose }: Props) {
                 label="Example sentences"
                 hint="Show a word's example sentence when it has one"
               />
-              <Toggle
-                checked={settings.cachedAudio}
-                onChange={(v) => saveSettings({ cachedAudio: v })}
-                label="Prefer cached audio (offline playback)"
-                hint="Uses pre-generated audio when available instead of live TTS"
-              />
+              {isProPlan(settings.plan) ? (
+                <Toggle
+                  checked={settings.cachedAudio}
+                  onChange={(v) => saveSettings({ cachedAudio: v })}
+                  label="Prefer cached audio (offline playback)"
+                  hint="Uses pre-generated audio when available instead of live TTS"
+                />
+              ) : (
+                <a
+                  href="/checkout?plan=pro"
+                  className="flex w-full items-center gap-3 text-left"
+                  title="Offline audio packs are a Pro feature"
+                >
+                  <span className="flex h-6 w-11 shrink-0 items-center justify-center rounded-full bg-night-600">
+                    <svg
+                      viewBox="0 0 24 24"
+                      className="h-3.5 w-3.5 text-slate-500"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden
+                    >
+                      <rect x="4" y="11" width="16" height="10" rx="2" />
+                      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+                    </svg>
+                  </span>
+                  <span>
+                    <span className="block text-sm text-slate-300">
+                      Prefer cached audio (offline playback)
+                    </span>
+                    <span className="block text-[11px] text-neon-amber">
+                      ⭐ Pro feature — tap to upgrade
+                    </span>
+                  </span>
+                </a>
+              )}
             </div>
           </div>
         )}
@@ -525,6 +559,25 @@ export default function SettingsModal({ onClose }: Props) {
                   : mode === 'firebase'
                     ? 'You are using the app as a guest. Sign in with Google or an email account from the header.'
                     : "Firebase isn't configured yet — add your config to .env.local (see .env.example) to enable sign-in. Until then, the app runs in guest mode."}
+              </p>
+              <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
+                <span
+                  className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+                    isProPlan(settings.plan)
+                      ? 'border-neon-amber/40 bg-neon-amber/15 text-neon-amber'
+                      : 'border-white/10 text-slate-400'
+                  }`}
+                >
+                  {isProPlan(settings.plan) ? '★ ' : ''}
+                  {PLAN_BADGE[settings.plan].short}
+                </span>
+                <span>{planDetail(settings.plan, settings.planBilling)}</span>
+                <Link
+                  href={isProPlan(settings.plan) ? '/checkout' : '/checkout?plan=pro'}
+                  className="font-semibold text-neon-cyan transition hover:text-neon-amber"
+                >
+                  {isProPlan(settings.plan) ? 'View plans' : 'Upgrade'}
+                </Link>
               </p>
             </div>
 

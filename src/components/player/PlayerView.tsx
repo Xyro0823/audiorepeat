@@ -15,6 +15,7 @@ import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import { findLanguage } from '@/lib/languages';
+import { isProPlan } from '@/lib/plans';
 import { formatCountdown } from '@/lib/format';
 import { recordSetPlayed } from '@/lib/libraryMeta';
 import type { TTSEngine } from '@/lib/tts/engine';
@@ -121,6 +122,14 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     }),
     [settings, set],
   );
+
+  // Pro gate: quiz mode, spaced-repetition filters/marks and offline audio are
+  // paid features per the plan definitions (basic keeps the core audio loop).
+  // Purchases land in settings.plan via the /checkout success flow.
+  const pro = isProPlan(effective.plan);
+  const upgradeToPro = useCallback(() => {
+    void router.push('/checkout?plan=pro');
+  }, [router]);
 
   const changeSettings = useCallback(
     (patch: Partial<AppSettings>) => {
@@ -671,8 +680,12 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         {(
           [
             { key: 'all', label: 'All', count: set.words.length },
-            { key: 'learning', label: 'Learning', count: learningCount },
-            { key: 'hard', label: 'Review', count: hardCount },
+            ...(pro
+              ? ([
+                  { key: 'learning', label: 'Learning', count: learningCount },
+                  { key: 'hard', label: 'Review', count: hardCount },
+                ] as const)
+              : []),
           ] as const
         ).map((f) => (
           <button
@@ -693,17 +706,28 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             {filter === 'hard' ? 'only words marked for review' : 'only words not yet mastered'}
           </span>
         )}
+        {!pro && (
+          <button
+            onClick={upgradeToPro}
+            title="Spaced-repetition filters are a Pro feature"
+            className="rounded-full border border-neon-amber/30 bg-neon-amber/5 px-3 py-1.5 text-xs font-medium text-neon-amber/90 transition hover:border-neon-amber/60 hover:text-neon-amber active:scale-95"
+          >
+            <span aria-hidden>⭐</span> Review · Pro
+          </button>
+        )}
 
         <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
 
         <button
-          onClick={toggleQuiz}
+          onClick={pro ? toggleQuiz : upgradeToPro}
           disabled={words.length === 0}
-          aria-pressed={quizOn}
+          aria-pressed={pro ? quizOn : false}
           title={
             words.length === 0
               ? 'No words to quiz on with this filter'
-              : 'Hear a word, then pick its translation from four choices'
+              : pro
+                ? 'Hear a word, then pick its translation from four choices'
+                : 'Quiz mode is a Pro feature'
           }
           className={`rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
             quizOn
@@ -724,6 +748,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             <path d="M9.5 8.5 15 12l-5.5 3.5v-7Z" />
           </svg>
           Quiz
+          {!pro && (
+            <span className="ml-1.5 rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
+              Pro
+            </span>
+          )}
         </button>
 
         <button
@@ -838,6 +867,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               showHints={effective.showHints}
               showExamples={effective.showExamples}
               noVoice={noVoiceForTarget}
+              canMark={pro}
               onMark={markWord}
             />
             <ProgressBar
@@ -856,6 +886,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         onChange={changeSettings}
         customMode={customMode}
         onToggleCustom={toggleCustom}
+        pro={pro}
         sleepMinutes={sleepMinutes}
         sleepRemaining={sleepRemaining}
         onSleepChange={setSleepTimer}

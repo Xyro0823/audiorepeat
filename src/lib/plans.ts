@@ -12,6 +12,25 @@ export function isPlanId(v: string | undefined | null): v is PlanId {
   return v === 'basic' || v === 'pro' || v === 'lifetime';
 }
 
+/** True when the plan unlocks Pro-only features (Pro or Lifetime). */
+export function isProPlan(plan: PlanId): boolean {
+  return plan === 'pro' || plan === 'lifetime';
+}
+
+/** Short badge text + full label for surfacing the plan in the UI. */
+export const PLAN_BADGE: Record<PlanId, { short: string; label: string }> = {
+  basic: { short: 'Free', label: 'Free plan' },
+  pro: { short: 'Pro', label: 'Pro plan' },
+  lifetime: { short: 'Lifetime', label: 'Lifetime plan' },
+};
+
+/** One-line plan description for the profile dropdown. */
+export function planDetail(plan: PlanId, billing: 'monthly' | 'annual'): string {
+  if (plan === 'lifetime') return 'Lifetime · one-time payment';
+  if (plan === 'pro') return billing === 'annual' ? 'Pro · $7/mo, billed annually' : 'Pro · $9/mo';
+  return 'Free plan — upgrade anytime';
+}
+
 export interface PlanDef {
   id: PlanId;
   name: string;

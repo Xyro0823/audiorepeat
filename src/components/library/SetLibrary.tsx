@@ -13,6 +13,7 @@ import { formatDuration } from '@/lib/format';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit } from '@/lib/tts/speechSynthesisEngine';
+import { isProPlan } from '@/lib/plans';
 import { CEFR_META } from '@/lib/starterSets';
 import { decodeSetFromUrl, shareUrlForSet } from '@/lib/sets/share';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
@@ -221,6 +222,7 @@ function FeaturedCard({ set, bookmarked, onBookmark, onPlay }: FeaturedCardProps
 interface PortraitCardProps {
   set: VocabSet;
   index: number;
+  pro: boolean;
   onPlay: () => void;
   onChallenge: () => void;
   onEdit: () => void;
@@ -232,6 +234,7 @@ interface PortraitCardProps {
 function PortraitCard({
   set,
   index,
+  pro,
   onPlay,
   onChallenge,
   onEdit,
@@ -330,6 +333,11 @@ function PortraitCard({
             onClick={run(onChallenge)}
           >
             <span aria-hidden>⚡</span> 1-Min challenge
+            {!pro && (
+              <span className="ml-auto rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
+                Pro
+              </span>
+            )}
           </button>
           <button
             role="menuitem"
@@ -414,7 +422,7 @@ function PortraitCard({
           </button>
           <button
             onClick={onChallenge}
-            title="Quick 1-minute speed test"
+            title={pro ? 'Quick 1-minute speed test' : 'Speed challenges are a Pro feature'}
             className="btn-clean flex h-9 items-center justify-center gap-1.5 rounded-lg text-[13px] font-medium text-slate-300"
           >
             <svg
@@ -431,6 +439,11 @@ function PortraitCard({
               <path d="M12 9v4l2.5 2.5M9 2h6" />
             </svg>
             Quick Test
+            {!pro && (
+              <span className="rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
+                Pro
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -701,6 +714,20 @@ export default function SetLibrary() {
   const playSet = (set: VocabSet) => {
     warmIfNeeded(set);
     router.push(`/player?id=${set.id}`);
+  };
+
+  // Pro gate: the 1-Minute speed challenge is a paid feature. Free users are
+  // routed to the upgrade flow instead of the challenge modal.
+  const pro = isProPlan(settings.plan);
+  const openChallenge = (set: VocabSet) => {
+    if (!pro) {
+      void router.push('/checkout?plan=pro');
+      return;
+    }
+    // Warm the set at launch (iOS / cached-audio) so the challenge's audio is
+    // cached before its 60s timer runs.
+    warmIfNeeded(set);
+    setChallengeSet(set);
   };
 
   return (
@@ -1060,13 +1087,9 @@ export default function SetLibrary() {
                     key={set.id}
                     set={set}
                     index={i}
+                    pro={pro}
                     onPlay={() => playSet(set)}
-                    onChallenge={() => {
-                      // Warm the set at launch (iOS / cached-audio) so the
-                      // challenge's audio is cached before its 60s timer runs.
-                      warmIfNeeded(set);
-                      setChallengeSet(set);
-                    }}
+                    onChallenge={() => openChallenge(set)}
                     onEdit={() => setEditing(set)}
                     onExport={() => downloadSet(set)}
                     onShare={() => void handleShare(set)}
