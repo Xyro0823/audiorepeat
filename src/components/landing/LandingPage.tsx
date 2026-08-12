@@ -10,6 +10,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { useLanguageCount } from "@/hooks/useLanguageCount";
+import { PLAN_ORDER, PLANS } from "@/lib/plans";
 import NewsletterForm from "./NewsletterForm";
 import Testimonials from "./Testimonials";
 
@@ -266,44 +267,22 @@ export default function LandingPage() {
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const plans = [
-    {
-      name: "Basic",
-      tagline: "For curious beginners",
-      plan: "basic",
-      price: 0,
-      monthlyNote: "forever free",
-      features: ["1 active language", "Standard TTS audio", "300 words / day"],
-      cta: "Start free",
-      popular: false,
-    },
-    {
-      name: "Pro",
-      tagline: "The full learning engine",
-      plan: "pro",
-      price: annual ? 7 : 9,
-      monthlyNote: annual ? "/mo, billed $84 annually" : "/mo",
-      features: [
-        `All ${langCount} languages`,
-        "AI pronunciation coach",
-        "Offline audio packs",
-        "Spaced repetition + quiz mode",
-        "Speed challenges & stats",
-      ],
-      cta: "Go Pro",
-      popular: true,
-    },
-    {
-      name: "Lifetime",
-      tagline: "One payment, forever",
-      plan: "lifetime",
-      price: 149,
-      monthlyNote: "one-time payment",
-      features: ["Everything in Pro", "Future languages included", "Priority support"],
-      cta: "Get Lifetime",
-      popular: false,
-    },
-  ];
+  // Single source of pricing truth (shared with /checkout) — the shape below
+  // keeps the pricing JSX unchanged while prices live in src/lib/plans.ts.
+  const plans = PLAN_ORDER.map((id) => {
+    const p = PLANS[id];
+    const { price, note } = p.priceFor(annual);
+    return {
+      name: p.name,
+      tagline: p.tagline,
+      plan: id,
+      price,
+      monthlyNote: note,
+      features: p.features(langCount),
+      cta: p.cta,
+      popular: p.popular,
+    };
+  });
 
   const voices = [
     { flag: "🇯🇵", name: "Yuki Tanaka", role: "NATIVE JAPANESE VOICE", grad: "from-cyan-500/45 via-sky-500/15 to-transparent" },
@@ -606,7 +585,7 @@ export default function LandingPage() {
                 ))}
               </ul>
               <Link
-                href={`/dashboard?plan=${p.plan}`}
+                href={`/checkout?plan=${p.plan}`}
                 className={`mt-8 inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition ${
                   p.popular ? "btn-neural" : "glass-neural text-white hover:bg-white/[0.07]"
                 }`}
