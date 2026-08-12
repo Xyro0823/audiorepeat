@@ -22,6 +22,10 @@ interface Props {
   voicesLoading: boolean;
   targetLang: string;
   nativeLang: string;
+  /** Pre-warm progress (cloud TTS caching), or null when idle. Purely informational. */
+  prewarm?: { done: number; total: number } | null;
+  /** Brief post-warm-up summary, or null. Auto-dismissed by the caller. */
+  prewarmSummary?: string | null;
 }
 
 function Toggle({
@@ -70,33 +74,57 @@ export default function SettingsPanel({
   voicesLoading,
   targetLang,
   nativeLang,
+  prewarm = null,
+  prewarmSummary = null,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [customMin, setCustomMin] = useState('');
 
   return (
     <section className="animate-fade-up mb-6">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="mx-auto flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 transition hover:border-neon-cyan/40 hover:text-white"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 transition hover:border-neon-cyan/40 hover:text-white"
         >
-          <path d="m6 9 6 6 6-6" />
-        </svg>
-        Loop settings
-        {customMode && (
-          <span className="rounded-full bg-neon-magenta/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-neon-magenta">
-            this set
+          <svg
+            viewBox="0 0 24 24"
+            className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+          Loop settings
+          {customMode && (
+            <span className="rounded-full bg-neon-magenta/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-neon-magenta">
+              this set
+            </span>
+          )}
+        </button>
+        {prewarm && (
+          <span
+            role="status"
+            aria-live="polite"
+            title={`Caching audio for offline / lock-screen playback — ${prewarm.done} of ${prewarm.total} done`}
+            className="flex items-center gap-1.5 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 px-3 py-1.5 text-[11px] font-medium text-neon-cyan"
+          >
+            <span className="h-3 w-3 animate-spin rounded-full border border-neon-cyan/30 border-t-neon-cyan" />
+            Caching audio… {prewarm.done}/{prewarm.total}
           </span>
         )}
-      </button>
+        {prewarmSummary && (
+          <span
+            role="status"
+            aria-live="polite"
+            className="flex items-center gap-1.5 rounded-full border border-neon-amber/40 bg-neon-amber/10 px-3 py-1.5 text-[11px] font-medium text-neon-amber"
+          >
+            {prewarmSummary}
+          </span>
+        )}
+      </div>
 
       {open && (
         <div className="glass animate-fade-up mt-4 grid gap-6 rounded-2xl p-5 sm:grid-cols-2">

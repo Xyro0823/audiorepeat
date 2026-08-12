@@ -112,8 +112,13 @@ interface PrewarmOptions {
   maxWords?: number;
   /** Concurrent fetches; keep low — free sources rate-limit per IP. */
   concurrency?: number;
-  /** Called after each successful word (target + translation count as one). */
-  onProgress?: (done: number, total: number) => void;
+  /**
+   * Called after each word completes (a target + its translation count as one
+   * word). `done`/`total` are words, `succeeded`/`failed` track how many of
+   * those were cached vs. fell back to speechSynthesis. The callback may be
+   * omitted — it is purely observational and never gates warm-up.
+   */
+  onProgress?: (done: number, total: number, succeeded: number, failed: number) => void;
 }
 
 /**
@@ -156,6 +161,8 @@ export function prewarmSetAudio(words: PrewarmWord[], opts: PrewarmOptions): () 
 
   let next = 0;
   let done = 0;
+  let succeeded = 0;
+  let failed = 0;
   const total = tasks.length;
 
   const run = async () => {
@@ -168,11 +175,13 @@ export function prewarmSetAudio(words: PrewarmWord[], opts: PrewarmOptions): () 
         const blob = await fetchCloudTtsBlob(text, lang);
         if (cancelled) return;
         await putCachedAudioBlob(audioCacheKey(text, lang), blob);
+        succeeded += 1;
       } catch {
         // best-effort — a miss just falls back to speechSynthesis
+        failed += 1;
       }
       done += 1;
-      opts.onProgress?.(done, total);
+      opts.onProgress?.(done, total, succeeded, failed);
     }
   };
 

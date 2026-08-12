@@ -156,6 +156,16 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // words play through <audio> (lock-screen safe). Runs on iOS by default and
   // whenever the user opts into cached audio; explicit voice picks are skipped
   // (they go through speechSynthesis — Google TTS has its own voices).
+  //
+  // Progress visibility: warm-up is best-effort, so the indicator is subtle
+  // and purely informational — a small pill near Loop settings that only
+  // appears once warm-up has been running long enough to notice (>1.2s, or
+  // immediately for large sets), then either disappears silently on full
+  // success or shows a brief "x of y cached" summary for a few seconds when
+  // some words failed.
+  const [prewarm, setPrewarm] = useState<{ done: number; total: number } | null>(null);
+  const [prewarmSummary, setPrewarmSummary] = useState<string | null>(null);
+
   const setRef = useRef(set);
   useEffect(() => {
     setRef.current = set;
@@ -164,13 +174,42 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     const s = setRef.current;
     if (!s || s.words.length === 0) return;
     if (!effective.cachedAudio && !isIOSWebKit()) return;
-    return prewarmSetAudio(s.words, {
+    let cancelled = false;
+    let revealed = false;
+    let summaryTimer: number | undefined;
+    const startTs = Date.now();
+    const cancel = prewarmSetAudio(s.words, {
       lang: s.lang,
       nativeLang:
         s.nativeLang ?? (typeof navigator !== 'undefined' ? navigator.language : undefined),
       targetVoiceURI: effective.targetVoiceURI,
       translationVoiceURI: effective.translationVoiceURI,
+      onProgress: (done, total, succeeded, failed) => {
+        if (cancelled) return;
+        // Only surface the pill once warm-up is slow enough to notice — a
+        // fast, fully-successful warm-up should stay completely invisible.
+        if (!revealed && (total > 15 || Date.now() - startTs > 1200)) revealed = true;
+        if (done >= total) {
+          // Finished: dismiss the pill, and summarize only when some words
+          // failed (a partial warm-up is worth knowing about — it means some
+          // words will fall back to speechSynthesis on the lock screen).
+          if (failed > 0) {
+            setPrewarmSummary(`${succeeded} of ${total} cached`);
+            summaryTimer = window.setTimeout(() => setPrewarmSummary(null), 4000);
+          }
+          setPrewarm(null);
+          return;
+        }
+        if (revealed) setPrewarm({ done, total });
+      },
     });
+    return () => {
+      cancelled = true;
+      cancel();
+      setPrewarm(null);
+      setPrewarmSummary(null);
+      if (summaryTimer !== undefined) window.clearTimeout(summaryTimer);
+    };
     // Keyed on stable identity fields so mastery taps (a new `set` object)
     // don't refetch — the words themselves are read through the ref above.
   }, [
@@ -806,6 +845,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         voicesLoading={voicesLoading}
         targetLang={set.lang}
         nativeLang={set.nativeLang}
+        prewarm={prewarm}
+        prewarmSummary={prewarmSummary}
       />
 
       <PlayerControls
