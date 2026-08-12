@@ -11,6 +11,8 @@ import { useLists } from '@/hooks/useLists';
 import { useLibraryMeta } from '@/hooks/useLibraryMeta';
 import { formatDuration } from '@/lib/format';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
+import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
+import { isIOSWebKit } from '@/lib/tts/speechSynthesisEngine';
 import { CEFR_META } from '@/lib/starterSets';
 import { decodeSetFromUrl, shareUrlForSet } from '@/lib/sets/share';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
@@ -439,7 +441,7 @@ function PortraitCard({
 type ImportMsg = { kind: 'ok' | 'err'; text: string } | null;
 
 export default function SetLibrary() {
-  const { sets, loading, saveSet, removeSet } = useLists();
+  const { sets, loading, settings, saveSet, removeSet } = useLists();
   const { wordsToday, msToday, streak, week, recordWords } = usePracticeStats();
   const { recents, favorites, toggleFavorite } = useLibraryMeta();
   const router = useRouter();
@@ -671,7 +673,35 @@ export default function SetLibrary() {
     window.setTimeout(() => el.classList.remove('ring-2', 'ring-blue-400/50'), 1600);
   }, []);
 
-  const playSet = (set: VocabSet) => router.push(`/player?id=${set.id}`);
+  // Start warm-up as soon as a set is tapped, BEFORE the player screen mounts
+  // (iOS / cached-audio only, same conditions as the player). PlayerView adopts
+  // the same run via the shared manager, so this never starts a second queue.
+  const warmIfNeeded = useCallback(
+    (set: VocabSet) => {
+      if (set.words.length === 0) return;
+      if (!settings.cachedAudio && !isIOSWebKit()) return;
+      // Resolve per-set voice overrides exactly like the player's `effective`
+      // settings so the dedupe key matches what PlayerView computes.
+      const overrides = set.settings ?? {};
+      const targetVoiceURI = overrides.targetVoiceURI ?? settings.targetVoiceURI;
+      const translationVoiceURI = overrides.translationVoiceURI ?? settings.translationVoiceURI;
+      const nativeLang =
+        set.nativeLang ?? (typeof navigator !== 'undefined' ? navigator.language : undefined);
+      requestSetPrewarm(set.words, {
+        key: prewarmKey(set.id, set.lang, nativeLang, targetVoiceURI, translationVoiceURI),
+        lang: set.lang,
+        nativeLang,
+        targetVoiceURI,
+        translationVoiceURI,
+      });
+    },
+    [settings],
+  );
+
+  const playSet = (set: VocabSet) => {
+    warmIfNeeded(set);
+    router.push(`/player?id=${set.id}`);
+  };
 
   return (
     <main className="mx-auto w-full max-w-7xl flex-1 px-5 pb-20 pt-8">
@@ -1050,6 +1080,7 @@ export default function SetLibrary() {
           onClose={() => setEditing(null)}
           onSave={async (set) => {
             const saved = await saveSet(set);
+            warmIfNeeded(saved); // Save & play — warm the fresh set too
             router.push(`/player?id=${saved.id}`);
           }}
         />

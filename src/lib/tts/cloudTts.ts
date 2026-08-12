@@ -157,7 +157,12 @@ export function prewarmSetAudio(words: PrewarmWord[], opts: PrewarmOptions): () 
       }
     }
   }
-  if (tasks.length === 0) return () => {};
+  if (tasks.length === 0) {
+    // Nothing to warm (e.g. every voice is an explicit pick) — still report a
+    // completed run so the shared manager never leaves a run "active" forever.
+    opts.onProgress?.(0, 0, 0, 0);
+    return () => {};
+  }
 
   let next = 0;
   let done = 0;
@@ -190,4 +195,156 @@ export function prewarmSetAudio(words: PrewarmWord[], opts: PrewarmOptions): () 
   return () => {
     cancelled = true;
   };
+}
+
+/* ------------------------------------------------------------------ */
+/* Shared prewarm manager                                             */
+/* ------------------------------------------------------------------ */
+/**
+ * Warm-up is triggered from two places for the same set: SetLibrary starts it
+ * the moment a set is tapped (before the player screen mounts — the whole
+ * point of this being an iOS lock-screen feature), and PlayerView also
+ * requests it on mount. This manager keeps ONE run per set+config so the two
+ * triggers never start duplicate queues, and it lets late subscribers (the
+ * player mounting after warm-up already made progress) read the current
+ * snapshot synchronously instead of seeing a misleading 0/Y reset.
+ *
+ * Lifecycle: a run starts via requestSetPrewarm(), is adopted when the first
+ * subscriber attaches (an adoption deadline cancels it if nobody ever does —
+ * e.g. the user tapped a set but navigated away before the player loaded),
+ * is superseded by a different set/config, and is retained briefly after
+ * completing so a same-key request reuses it instead of re-fetching.
+ */
+
+const PREWARM_ADOPTION_MS = 10_000; // grace period before an unadopted run is cancelled
+
+export interface PrewarmProgress {
+  /** True while the queue is still processing. */
+  active: boolean;
+  done: number;
+  total: number;
+  succeeded: number;
+  failed: number;
+  /** Epoch ms when the run started — lets callers judge "was it fast?". */
+  startedAt: number;
+}
+
+export interface PrewarmHandle {
+  /** Stable identity of the run (set id + language + voice config). */
+  key: string;
+  /** Current snapshot — late subscribers see real progress, not a reset. */
+  getProgress(): PrewarmProgress;
+  /** cb fires immediately with the current snapshot, then on every tick. */
+  subscribe(cb: (p: PrewarmProgress) => void): () => void;
+  /** Whether a failure summary was already surfaced (shown once per run). */
+  summaryShown(): boolean;
+  markSummaryShown(): void;
+  /** Cancel the queue (no-op if already finished/cancelled). */
+  cancel(): void;
+}
+
+interface ActiveRun {
+  key: string;
+  cancelQueue: () => void;
+  progress: PrewarmProgress;
+  listeners: Set<(p: PrewarmProgress) => void>;
+  summaryNotified: boolean;
+  /** Pending adoption-deadline timer, cleared once the run is subscribed to. */
+  adoptionTimer?: number;
+}
+
+let activeRun: ActiveRun | null = null;
+
+/** Stable key identifying one warm-up job — MUST be identical across callers. */
+export function prewarmKey(
+  setId: string,
+  lang: string,
+  nativeLang: string | undefined,
+  targetVoiceURI: string | undefined,
+  translationVoiceURI: string | undefined,
+): string {
+  return [setId, lang, nativeLang ?? '', targetVoiceURI ?? '', translationVoiceURI ?? ''].join('|');
+}
+
+function makeHandle(run: ActiveRun): PrewarmHandle {
+  return {
+    key: run.key,
+    getProgress: () => ({ ...run.progress }),
+    subscribe: (cb) => {
+      run.listeners.add(cb);
+      if (run.adoptionTimer !== undefined) {
+        window.clearTimeout(run.adoptionTimer); // adopted — cancel the deadline
+        run.adoptionTimer = undefined;
+      }
+      cb({ ...run.progress }); // immediate snapshot — late subscribers never see 0/Y
+      return () => {
+        run.listeners.delete(cb);
+      };
+    },
+    summaryShown: () => run.summaryNotified,
+    markSummaryShown: () => {
+      run.summaryNotified = true;
+    },
+    cancel: () => run.cancelQueue(),
+  };
+}
+
+export interface RequestPrewarmOptions extends PrewarmOptions {
+  /** Stable identity for dedupe — see prewarmKey(). */
+  key: string;
+}
+
+export function requestSetPrewarm(words: PrewarmWord[], opts: RequestPrewarmOptions): PrewarmHandle {
+  // Same set+config already being warmed (or completed earlier this session)?
+  // Reuse it — this is the dedupe between SetLibrary's tap-time trigger and
+  // PlayerView's mount-time trigger.
+  if (activeRun && activeRun.key === opts.key) {
+    return makeHandle(activeRun);
+  }
+  // A different set/config supersedes the previous run — only one warm-up at
+  // a time (free TTS sources rate-limit per IP; parallel queues would thrash).
+  if (activeRun) {
+    activeRun.cancelQueue();
+    activeRun = null;
+  }
+  const run: ActiveRun = {
+    key: opts.key,
+    cancelQueue: () => {},
+    progress: { active: true, done: 0, total: 0, succeeded: 0, failed: 0, startedAt: Date.now() },
+    listeners: new Set(),
+    summaryNotified: false,
+  };
+  const cancelQueue = prewarmSetAudio(words, {
+    ...opts,
+    onProgress: (done, total, succeeded, failed) => {
+      run.progress.done = done;
+      run.progress.total = total;
+      run.progress.succeeded = succeeded;
+      run.progress.failed = failed;
+      if (done >= total) run.progress.active = false;
+      for (const l of run.listeners) l({ ...run.progress });
+    },
+  });
+  run.cancelQueue = () => {
+    cancelQueue();
+    run.progress.active = false;
+    if (run.adoptionTimer !== undefined) {
+      window.clearTimeout(run.adoptionTimer);
+      run.adoptionTimer = undefined;
+    }
+    // A cancelled run must not be reused by a later same-key request — it
+    // would "complete" silently without ever running the queue to the end.
+    if (activeRun === run) activeRun = null;
+  };
+  // Adoption deadline: if nobody subscribes (the player never mounts — the
+  // user tapped a set but navigated away), stop the background queue rather
+  // than leak work. Subscribe() clears this timer.
+  run.adoptionTimer = window.setTimeout(() => {
+    if (activeRun === run && run.listeners.size === 0) {
+      run.cancelQueue();
+      if (activeRun === run) activeRun = null;
+    }
+  }, PREWARM_ADOPTION_MS);
+  activeRun = run;
+  return makeHandle(run);
 }
