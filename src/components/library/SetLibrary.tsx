@@ -440,8 +440,30 @@ function PortraitCard({
 
 type ImportMsg = { kind: 'ok' | 'err'; text: string } | null;
 
-export default function SetLibrary() {
+const KNOWN_PLANS = new Set(['basic', 'pro', 'lifetime']);
+const PLAN_LABEL: Record<string, string> = {
+  basic: 'Basic',
+  pro: 'Pro',
+  lifetime: 'Lifetime',
+};
+
+export default function SetLibrary({ initialPlan }: { initialPlan?: string }) {
   const { sets, loading, settings, saveSet, removeSet } = useLists();
+
+  // Pricing CTAs on the landing page land here with ?plan=… — surface a small,
+  // dismissible acknowledgment once so the destination isn't silently generic.
+  const [planNotice, setPlanNotice] = useState<string | null>(
+    () => (initialPlan && KNOWN_PLANS.has(initialPlan) ? initialPlan : null),
+  );
+
+  // Strip ?plan= once captured so a refresh doesn't re-show the notice.
+  useEffect(() => {
+    if (!planNotice) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('plan') !== planNotice) return;
+    url.searchParams.delete('plan');
+    window.history.replaceState(null, '', url.pathname + url.search + url.hash);
+  }, [planNotice]);
   const { wordsToday, msToday, streak, week, recordWords } = usePracticeStats();
   const { recents, favorites, toggleFavorite } = useLibraryMeta();
   const router = useRouter();
@@ -752,6 +774,39 @@ export default function SetLibrary() {
           if (file) void handleSubtitleFile(file);
         }}
       />
+
+      {planNotice && (
+        <div className="glass animate-fade-up relative mb-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-neon-violet/30 px-4 py-3">
+          <span className="text-lg" aria-hidden>
+            ✨
+          </span>
+          <p className="min-w-0 text-sm text-slate-300">
+            <span className="font-semibold text-white">
+              {PLAN_LABEL[planNotice]} plan selected.
+            </span>{' '}
+            {planNotice === 'basic'
+              ? 'You\u2019re all set \u2014 everything below is yours to explore.'
+              : 'Checkout is coming soon \u2014 everything is free in the meantime.'}
+          </p>
+          <button
+            onClick={() => setPlanNotice(null)}
+            aria-label="Dismiss plan notice"
+            className="btn-clean ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:text-white"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="h-3.5 w-3.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M18 6 6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      )}
 
       <WelcomeHero
         wordsToday={wordsToday}
