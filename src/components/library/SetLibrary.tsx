@@ -1141,6 +1141,7 @@ export default function SetLibrary() {
       {browse && (
         <StarterLibraryModal
           sets={sets}
+          pro={pro}
           onClose={() => setBrowse(false)}
           onImport={async (set) => {
             try {

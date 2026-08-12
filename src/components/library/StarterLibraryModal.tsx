@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { CEFR_META, PACK_LANG, STARTER_LANGS, starterLangLabel } from '@/lib/starterSets';
 import {
@@ -17,6 +18,8 @@ import VirtualList from './VirtualList';
 interface Props {
   /** The user's existing sets, used to mark levels already imported. */
   sets: VocabSet[];
+  /** Pro gate: the Free plan is limited to 1 active language. */
+  pro: boolean;
   onClose: () => void;
   onImport: (set: VocabSet) => void | Promise<void>;
 }
@@ -64,7 +67,7 @@ function importedLevelKeys(sets: VocabSet[]): Set<string> {
   return keys;
 }
 
-export default function StarterLibraryModal({ sets, onClose, onImport }: Props) {
+export default function StarterLibraryModal({ sets, pro, onClose, onImport }: Props) {
   const [tab, setTab] = useState<'cefr' | 'topics'>('cefr');
   const [manifest, setManifest] = useState<WordBankManifest | null>(null);
   const [lang, setLang] = useState<string | null>(null);
@@ -74,6 +77,25 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [batchSize, setBatchSize] = useState(200);
+  /** Shown when a Free user taps import for a language they don't own yet. */
+  const [upgradePrompt, setUpgradePrompt] = useState(false);
+
+  // Languages the user already owns sets in, normalized to pack codes (seed
+  // sets use BCP-47 tags; bank/topic packs use the bare pack code). Free users
+  // may add packs only in languages they already have — anything beyond the
+  // first language requires Pro.
+  const ownedLangs = useMemo(() => {
+    const langs = new Set<string>();
+    for (const s of sets) {
+      const pack = s.lang ? PACK_LANG[s.lang] : undefined;
+      langs.add(pack ?? s.lang);
+    }
+    return langs;
+  }, [sets]);
+  const canAddLang = useCallback(
+    (packCode: string) => pro || ownedLangs.has(packCode),
+    [pro, ownedLangs],
+  );
 
   // Escape to close
   useEffect(() => {
@@ -159,6 +181,10 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
   const practiceBatch = useCallback(
     async (size: number) => {
       if (!lang || !level || filtered.length === 0) return;
+      if (!canAddLang(lang)) {
+        setUpgradePrompt(true);
+        return;
+      }
       const n = Math.min(size, filtered.length);
       // Random sample without replacement for varied sessions
       const pool = [...filtered];
@@ -193,11 +219,15 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
         updatedAt: Date.now(),
       });
     },
-    [lang, level, filtered, sets, onImport],
+    [lang, level, filtered, sets, onImport, canAddLang],
   );
 
   const importFull = useCallback(async () => {
     if (!lang || !level || !bank || bank.length === 0) return;
+    if (!canAddLang(lang)) {
+      setUpgradePrompt(true);
+      return;
+    }
     const stamp = Date.now();
     // Replace the corresponding full-level or hydrated seed card (not batch
     // cards — those are separate and practiceBatch manages them) so the home
@@ -225,8 +255,7 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
       cefr: level,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    });
-  }, [lang, level, bank, sets, onImport]);
+    });    }, [lang, level, bank, sets, onImport, canAddLang]);
 
   return (
     <div
@@ -279,7 +308,7 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
         </div>
 
         {tab === 'topics' ? (
-          <TopicLibraryTab sets={sets} onImport={onImport} />
+          <TopicLibraryTab sets={sets} onImport={onImport} canAddLang={canAddLang} />
         ) : error && !manifest ? (
           <div className="p-10 text-center text-sm text-neon-amber">{error}</div>
         ) : !manifest ? (
@@ -297,6 +326,7 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
                   setLang(e.target.value || null);
                   setLevel(null);
                   setBank(null);
+                  setUpgradePrompt(false);
                 }}
                 className={selectClass}
                 aria-label="Language"
@@ -311,6 +341,7 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
                     : 0;
                   return (
                     <option key={code} value={pack}>
+                      {canAddLang(pack) ? '' : '🔒 '}
                       {starterLangLabel(code)} · {count.toLocaleString()} words
                     </option>
                   );
@@ -408,30 +439,43 @@ export default function StarterLibraryModal({ sets, onClose, onImport }: Props) 
                       {query && <span> of {bank?.length.toLocaleString() ?? 0}</span>}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        practiceBatch(batchSize).catch((err) =>
-                          console.error('[library batch practice]', err),
-                        );
-                      }}
-                      disabled={filtered.length === 0}
-                      className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      ▶ Practice batch of {Math.min(batchSize, filtered.length)}
-                    </button>
-                    <button
-                      onClick={() => {
-                        importFull().catch((err) =>
-                          console.error('[library full import]', err),
-                        );
-                      }}
-                      disabled={!bank || bank.length === 0}
-                      title="Import the whole level as one set — play all words"
-                      className="rounded-xl border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:border-neon-cyan/60 hover:text-neon-cyan active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      ⬇ Play all {bank ? `(${bank.length.toLocaleString()})` : ''}
-                    </button>
+                  <div className="flex flex-col items-end gap-2">
+                    {upgradePrompt && (
+                      <div className="animate-fade-up flex flex-wrap items-center gap-2 rounded-xl border border-neon-amber/40 bg-neon-amber/10 px-3 py-2 text-[12px] text-neon-amber">
+                        <span>⭐ This language needs Pro — your Free plan includes 1 language.</span>
+                        <Link
+                          href="/checkout?plan=pro"
+                          className="shrink-0 rounded-lg bg-neon-amber px-2.5 py-1 text-xs font-bold text-night-950 transition hover:brightness-110"
+                        >
+                          Upgrade
+                        </Link>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => {
+                          practiceBatch(batchSize).catch((err) =>
+                            console.error('[library batch practice]', err),
+                          );
+                        }}
+                        disabled={filtered.length === 0}
+                        className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        ▶ Practice batch of {Math.min(batchSize, filtered.length)}
+                      </button>
+                      <button
+                        onClick={() => {
+                          importFull().catch((err) =>
+                            console.error('[library full import]', err),
+                          );
+                        }}
+                        disabled={!bank || bank.length === 0}
+                        title="Import the whole level as one set — play all words"
+                        className="rounded-xl border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:border-neon-cyan/60 hover:text-neon-cyan active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
+                      >
+                        ⬇ Play all {bank ? `(${bank.length.toLocaleString()})` : ''}
+                      </button>
+                    </div>
                   </div>
                 </div>
 

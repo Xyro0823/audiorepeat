@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { packLangLabel } from '@/lib/starterSets';
 import {
@@ -16,16 +17,20 @@ const ROW_HEIGHT = 44;
 interface Props {
   /** Existing sets, used to mark topics already imported. */
   sets: VocabSet[];
+  /** Pro gate: true when the Free user may import this language (already owned). */
+  canAddLang: (lang: string) => boolean;
   onImport: (set: VocabSet) => void | Promise<void>;
 }
 
-export default function TopicLibraryTab({ sets, onImport }: Props) {
+export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
   const [manifest, setManifest] = useState<TopicManifest | null>(null);
   const [topic, setTopic] = useState<string | null>(null);
   const [lang, setLang] = useState<string | null>(null);
   const [bank, setBank] = useState<WordBankWord[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Shown when a Free user taps import for a language they don't own yet. */
+  const [upgradePrompt, setUpgradePrompt] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -82,6 +87,10 @@ export default function TopicLibraryTab({ sets, onImport }: Props) {
 
   const importTopic = useCallback(async () => {
     if (!topic || !lang || !bank || bank.length === 0) return;
+    if (!canAddLang(lang)) {
+      setUpgradePrompt(true);
+      return;
+    }
     const stamp = Date.now();
     // Deterministic id: re-importing replaces the same home card.
     const existing = sets.find((s) => s.id === `topic-${topic}-${lang}`);
@@ -98,7 +107,7 @@ export default function TopicLibraryTab({ sets, onImport }: Props) {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-  }, [topic, lang, bank, sets, onImport, selectedMeta]);
+  }, [topic, lang, bank, sets, onImport, selectedMeta, canAddLang]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-4">
@@ -159,10 +168,14 @@ export default function TopicLibraryTab({ sets, onImport }: Props) {
                   const count = selectedMeta?.langs[l] ?? 0;
                   const done = importedTopics.has(`${topic}:${l}`);
                   const active = lang === l;
+                  const locked = !canAddLang(l);
                   return (
                     <button
                       key={l}
-                      onClick={() => setLang(active ? null : l)}
+                      onClick={() => {
+                        setLang(active ? null : l);
+                        setUpgradePrompt(false);
+                      }}
                       className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                         active
                           ? 'border-neon-violet/60 bg-neon-violet/15 text-neon-violet'
@@ -170,6 +183,11 @@ export default function TopicLibraryTab({ sets, onImport }: Props) {
                       }`}
                     >
                       {packLangLabel(l)}
+                      {locked && (
+                        <span aria-hidden title="Pro feature" className="ml-1">
+                          🔒
+                        </span>
+                      )}
                       <span className="ml-1 opacity-60">{count}</span>
                       {done && <span className="ml-1 text-neon-green">✓</span>}
                     </button>
@@ -190,6 +208,17 @@ export default function TopicLibraryTab({ sets, onImport }: Props) {
               <div className="p-10 text-center text-sm text-neon-amber">{error}</div>
             ) : (
               <div className="mt-5">
+                {upgradePrompt && (
+                  <div className="animate-fade-up mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-neon-amber/40 bg-neon-amber/10 px-3 py-2 text-[12px] text-neon-amber">
+                    <span>⭐ This language needs Pro — your Free plan includes 1 language.</span>
+                    <Link
+                      href="/checkout?plan=pro"
+                      className="shrink-0 rounded-lg bg-neon-amber px-2.5 py-1 text-xs font-bold text-night-950 transition hover:brightness-110"
+                    >
+                      Upgrade
+                    </Link>
+                  </div>
+                )}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs text-slate-500">
                     <span className="font-semibold text-white">{bank?.length ?? 0}</span> words
