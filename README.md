@@ -1,5 +1,7 @@
 # AudioRepeat 🔁
 
+[![CI](https://github.com/Xyro0823/audiorepeat/actions/workflows/ci.yml/badge.svg)](https://github.com/Xyro0823/audiorepeat/actions/workflows/ci.yml)
+
 Offline-first, hands-free vocabulary looping for auditory language learners.
 Each word is repeated in your target language N times (1/2/3/5), followed once
 by its translation — looped until you stop it. Built for walks, commutes and
