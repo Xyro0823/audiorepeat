@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { AppSettings, VocabSet, VocabWord } from '@/types/app';
+import { langLimitKey } from '@/lib/planGate';
 import { isProPlan } from '@/lib/plans';
 import { SEED_SETS } from '@/lib/seedSets';
 import { PACK_LANG } from '@/lib/starterSets';
@@ -140,15 +141,6 @@ function removeDeferredSeedIds(): void {
   } catch {
     /* ignore */
   }
-}
-
-/**
- * Normalize a set's BCP-47 language tag to the shared pack code used for the
- * Free-plan language limit (e.g. "es-ES" → "es"). Seed sets use region tags
- * while topic/CEFR packs use bare codes, so both must hide/unhide together.
- */
-function langLimitKey(code: string): string {
-  return PACK_LANG[code] ?? code;
 }
 
 /**

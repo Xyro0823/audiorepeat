@@ -14,6 +14,7 @@ import { findLanguage, LANGUAGES } from '@/lib/languages';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit } from '@/lib/tts/speechSynthesisEngine';
 import { isProPlan } from '@/lib/plans';
+import { canUseLang as planGateCanUseLang } from '@/lib/planGate';
 import { CEFR_META } from '@/lib/starterSets';
 import { decodeSetFromUrl, shareUrlForSet } from '@/lib/sets/share';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
@@ -720,6 +721,16 @@ export default function SetLibrary() {
   // Pro gate: the 1-Minute speed challenge is a paid feature. Free users are
   // routed to the upgrade flow instead of the challenge modal.
   const pro = isProPlan(settings.plan);
+
+  // Free-plan language gate for the + New Set editor: a Free user may only
+  // create/edit sets in languages they already have visible sets in (the
+  // single active language; settings.hiddenLangs already filters visibility).
+  // Pro/Lifetime users can use any language. Shared logic: lib/planGate.
+  const canUseLang = useCallback(
+    (code: string) => planGateCanUseLang(pro, sets, code),
+    [pro, sets],
+  );
+
   const openChallenge = (set: VocabSet) => {
     if (!pro) {
       void router.push('/checkout?plan=pro');
@@ -1108,6 +1119,7 @@ export default function SetLibrary() {
       {editing && (
         <SetEditor
           set={editing === 'new' ? null : editing}
+          canUseLang={canUseLang}
           onClose={() => setEditing(null)}
           onSave={async (set) => {
             const saved = await saveSet(set);

@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
 import { CEFR_META } from '@/lib/starterSets';
@@ -10,6 +11,9 @@ const REPEAT_OPTIONS = [1, 2, 3, 5];
 
 interface Props {
   set: VocabSet | null;
+  /** Free-plan language gate (lib/planGate). Pro/Lifetime → all languages;
+   *  Free → only the single active language. Re-checked at save time. */
+  canUseLang: (code: string) => boolean;
   onClose: () => void;
   onSave: (set: VocabSet) => void | Promise<void>;
 }
@@ -21,7 +25,7 @@ function newWord(): VocabWord {
 const inputClass =
   'w-full rounded-xl border border-white/10 bg-night-800/80 px-4 py-2.5 text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60';
 
-export default function SetEditor({ set, onClose, onSave }: Props) {
+export default function SetEditor({ set, canUseLang, onClose, onSave }: Props) {
   const [name, setName] = useState(set?.name ?? '');
   const [lang, setLang] = useState(set?.lang ?? 'es-ES');
   const [nativeLang, setNativeLang] = useState(set?.nativeLang ?? 'en-US');
@@ -40,11 +44,20 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
   const valid =
     name.trim().length > 0 && words.some((w) => w.target.trim() && w.translation.trim());
 
+  // Free-plan language gate: a Free user may only create/edit sets in their
+  // single active language (the languages they have visible sets in). This
+  // drives the inline lock message + disabled save AND is re-checked inside
+  // submit() so a stale UI state or direct call can never create a set in a
+  // locked language. Editing an EXISTING accessible set is always fine — its
+  // language is necessarily owned (it's visible).
+  const locked = !canUseLang(lang);
+
   const updateWord = (i: number, patch: Partial<VocabWord>) =>
     setWords((prev) => prev.map((w, idx) => (idx === i ? { ...w, ...patch } : w)));
 
   const submit = useCallback(async () => {
     if (!valid || saving) return;
+    if (locked) return; // save-time gate — never create in a locked language
     setSaving(true);
     const clean = words
       // Drop subtitle-import placeholders ('—') so they never reach the player.
@@ -65,7 +78,7 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
       createdAt: set?.createdAt ?? Date.now(),
       updatedAt: Date.now(),
     });
-  }, [valid, saving, name, lang, nativeLang, words, cefr, set, onSave]);
+  }, [valid, saving, locked, name, lang, nativeLang, words, cefr, set, onSave]);
 
   const langHint = findLanguage(lang)?.label;
   const nativeLangHint = findLanguage(nativeLang)?.label;
@@ -139,10 +152,27 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
         <datalist id="lang-presets">
           {LANGUAGES.map((l) => (
             <option key={l.code} value={l.code}>
-              {l.label}
+              {canUseLang(l.code) ? l.label : `🔒 ${l.label}`}
             </option>
           ))}
         </datalist>
+
+        {locked && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-neon-amber/30 bg-neon-amber/[0.06] px-4 py-3">
+            <p className="min-w-0 text-sm text-slate-300">
+              <span className="mr-1.5" aria-hidden>
+                ⭐
+              </span>
+              This language needs Pro — your Free plan includes 1 language.
+            </p>
+            <Link
+              href="/checkout?plan=pro"
+              className="shrink-0 rounded-lg bg-gradient-to-r from-neon-amber to-neon-magenta px-3.5 py-1.5 text-xs font-bold text-night-950 transition hover:brightness-110 active:scale-95"
+            >
+              Upgrade to Pro
+            </Link>
+          </div>
+        )}
 
         <label className="mt-4 block">
           <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
@@ -237,7 +267,7 @@ export default function SetEditor({ set, onClose, onSave }: Props) {
           </button>
           <button
             onClick={() => void submit()}
-            disabled={!valid || saving}
+            disabled={!valid || saving || locked}
             className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
             {saving ? 'Saving…' : set ? 'Save & play' : 'Create & play'}
