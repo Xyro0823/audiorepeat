@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuthScreen from '@/components/auth/AuthScreen';
@@ -66,9 +67,11 @@ export default function CheckoutFlow({
           </Link>
           <div className="flex items-center gap-4">
             {signedIn && user?.photoURL && (
-              <img
+              <Image
                 src={user.photoURL}
                 alt=""
+                width={28}
+                height={28}
                 className="h-7 w-7 rounded-full ring-1 ring-white/20"
               />
             )}
