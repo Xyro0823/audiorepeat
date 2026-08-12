@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { formatCountdown } from '@/lib/format';
 import type { AppSettings } from '@/types/app';
 import type { TTSEngineVoice } from '@/lib/tts/engine';
+import PrewarmStatus from './PrewarmStatus';
 import VoicePicker from './VoicePicker';
 
 const REPEAT_OPTIONS = [1, 2, 3, 5];
@@ -104,26 +105,7 @@ export default function SettingsPanel({
             </span>
           )}
         </button>
-        {prewarm && (
-          <span
-            role="status"
-            aria-live="polite"
-            title={`Caching audio for offline / lock-screen playback — ${prewarm.done} of ${prewarm.total} done`}
-            className="flex items-center gap-1.5 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 px-3 py-1.5 text-[11px] font-medium text-neon-cyan"
-          >
-            <span className="h-3 w-3 animate-spin rounded-full border border-neon-cyan/30 border-t-neon-cyan" />
-            Caching audio… {prewarm.done}/{prewarm.total}
-          </span>
-        )}
-        {prewarmSummary && (
-          <span
-            role="status"
-            aria-live="polite"
-            className="flex items-center gap-1.5 rounded-full border border-neon-amber/40 bg-neon-amber/10 px-3 py-1.5 text-[11px] font-medium text-neon-amber"
-          >
-            {prewarmSummary}
-          </span>
-        )}
+        <PrewarmStatus prewarm={prewarm} summary={prewarmSummary} />
       </div>
 
       {open && (

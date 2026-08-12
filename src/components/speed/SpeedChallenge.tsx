@@ -4,8 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLists } from '@/hooks/useLists';
 import { useAuth } from '@/hooks/useAuth';
 import { bestScoreStorageKey } from '@/lib/auth/scopes';
+import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
-import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
+import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
+import PrewarmStatus from '@/components/player/PrewarmStatus';
 import type { TTSEngine } from '@/lib/tts/engine';
 import type { VocabSet } from '@/types/app';
 
@@ -68,13 +70,67 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
   const { user } = useAuth();
   const bestKey = set ? bestScoreStorageKey(user?.id, set.id) : '';
 
+  // Same engine selection as the player: cached <audio> playback on iOS or
+  // when the user opts in, falling back to speechSynthesis on cache misses.
   const engine = useMemo<TTSEngine>(
     () => {
       const synth = new SpeechSynthesisEngine();
-      return settings.cachedAudio ? new CachedAudioEngine(synth) : synth;
+      return settings.cachedAudio || isIOSWebKit() ? new CachedAudioEngine(synth) : synth;
     },
     [settings.cachedAudio],
   );
+
+  // Warm the set's audio at launch (SetLibrary also fires at tap time; the
+  // shared manager dedupes by key). We subscribe so the intro screen can show
+  // the caching pill, and deliberately do NOT cancel on unmount — leaving the
+  // challenge early must not kill a warm-up still useful for normal practice
+  // on the same set (the manager's adoption/supersede logic covers abandonment).
+  const [prewarm, setPrewarm] = useState<{ done: number; total: number } | null>(null);
+  const [prewarmSummary, setPrewarmSummary] = useState<string | null>(null);
+
+  useEffect(() => {
+    const s = set;
+    if (!s || s.words.length === 0) return;
+    if (!settings.cachedAudio && !isIOSWebKit()) return;
+    const overrides = s.settings ?? {};
+    const targetVoiceURI = overrides.targetVoiceURI ?? settings.targetVoiceURI;
+    const translationVoiceURI = overrides.translationVoiceURI ?? settings.translationVoiceURI;
+    const nativeLang =
+      s.nativeLang ?? (typeof navigator !== 'undefined' ? navigator.language : undefined);
+    let revealed = false;
+    let summaryTimer: number | undefined;
+    const handle = requestSetPrewarm(s.words, {
+      key: prewarmKey(s.id, s.lang, nativeLang, targetVoiceURI, translationVoiceURI),
+      lang: s.lang,
+      nativeLang,
+      targetVoiceURI,
+      translationVoiceURI,
+    });
+    const unsubscribe = handle.subscribe((p) => {
+      if (p.active) {
+        // `p.total > 0` guards the pre-first-tick window (a fresh run reports
+        // total=0 until its first word completes) — no misleading "0/0" flash.
+        if (!revealed && p.total > 0 && (p.total > 15 || Date.now() - p.startedAt > 1200))
+          revealed = true;
+        if (revealed) setPrewarm({ done: p.done, total: p.total });
+      } else {
+        // Completed (possibly before this screen mounted). Summarize only when
+        // some words failed, and only once per warm-up run.
+        if (p.failed > 0 && !handle.summaryShown()) {
+          handle.markSummaryShown();
+          setPrewarmSummary(`${p.succeeded} of ${p.total} cached`);
+          summaryTimer = window.setTimeout(() => setPrewarmSummary(null), 4000);
+        }
+        setPrewarm(null);
+      }
+    });
+    return () => {
+      unsubscribe();
+      setPrewarm(null);
+      setPrewarmSummary(null);
+      if (summaryTimer !== undefined) window.clearTimeout(summaryTimer);
+    };
+  }, [set, settings.cachedAudio, settings.targetVoiceURI, settings.translationVoiceURI]);
 
   const [phase, setPhase] = useState<'intro' | 'playing' | 'finished'>('intro');
   const phaseRef = useRef(phase);
@@ -331,6 +387,11 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
               Hear each word and pick its translation as fast as you can — how
               many can you get in {CHALLENGE_SECONDS} seconds?
             </p>
+            {(prewarm || prewarmSummary) && (
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                <PrewarmStatus prewarm={prewarm} summary={prewarmSummary} />
+              </div>
+            )}
             {best.best > 0 && (
               <p className="mt-3 text-sm font-semibold text-neon-amber">
                 ⚡ Personal best: {best.best} · {best.plays} play{best.plays === 1 ? '' : 's'}

@@ -1061,7 +1061,12 @@ export default function SetLibrary() {
                     set={set}
                     index={i}
                     onPlay={() => playSet(set)}
-                    onChallenge={() => setChallengeSet(set)}
+                    onChallenge={() => {
+                      // Warm the set at launch (iOS / cached-audio) so the
+                      // challenge's audio is cached before its 60s timer runs.
+                      warmIfNeeded(set);
+                      setChallengeSet(set);
+                    }}
                     onEdit={() => setEditing(set)}
                     onExport={() => downloadSet(set)}
                     onShare={() => void handleShare(set)}
