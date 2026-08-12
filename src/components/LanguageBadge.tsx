@@ -28,6 +28,8 @@ const FLAGS: Record<string, string> = {
   el: '🇬🇷',
   sv: '🇸🇪',
   no: '🇳🇴',
+  nb: '🇳🇴',
+  nn: '🇳🇴',
   vi: '🇻🇳',
   id: '🇮🇩',
   uk: '🇺🇦',

@@ -63,6 +63,7 @@ export const LANGUAGES: LanguageOption[] = [
   { code: 'dv', label: 'Dhivehi' },
   { code: 'dz', label: 'Dzongkha' },
   { code: 'ee', label: 'Ewe' },
+  { code: 'el', label: 'Greek' },
   { code: 'en', label: 'English' },
   { code: 'en-AU', label: 'English (Australia)' },
   { code: 'en-CA', label: 'English (Canada)' },
