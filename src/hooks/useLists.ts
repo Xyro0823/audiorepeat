@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { AppSettings, VocabSet, VocabWord } from '@/types/app';
+import { isProPlan } from '@/lib/plans';
 import { SEED_SETS } from '@/lib/seedSets';
 import { PACK_LANG } from '@/lib/starterSets';
 import { loadWordBank } from '@/lib/vocab/wordBanks';
@@ -100,6 +101,77 @@ function matchesCuratedSeed(existing: VocabSet, curated: VocabSet): boolean {
   });
 }
 
+/* ------------------------------------------------------------------ */
+/* Free-plan deferred seeding                                          */
+/* ------------------------------------------------------------------ */
+// A Free install seeds only the first language's starter set; the remaining
+// seed sets are recorded here and seeded once the user upgrades to Pro. This
+// is what makes the "unlock the rest" upgrade path work: the version marker
+// can advance for the free install (so deleted seeds stay deleted), while the
+// deferred list remembers what was held back.
+const DEFERRED_SEED_KEY = 'audiorepeat-deferred-seed-ids';
+
+function readDeferredSeedIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(DEFERRED_SEED_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) return parsed.filter((x): x is string => typeof x === 'string');
+    }
+  } catch {
+    /* corrupted — treat as empty */
+  }
+  return [];
+}
+
+function writeDeferredSeedIds(ids: string[]): void {
+  try {
+    window.localStorage.setItem(DEFERRED_SEED_KEY, JSON.stringify(ids));
+  } catch {
+    /* storage unavailable — upgrade seeding just won't be deferred */
+  }
+}
+
+function removeDeferredSeedIds(): void {
+  try {
+    window.localStorage.removeItem(DEFERRED_SEED_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Seed every deferred (Free-plan) seed set now that the user is Pro. Each
+ * deferred language is hydrated with its full A1 word pack, matching how the
+ * main merge seeds new installs. The deferred list is cleared only when every
+ * seed succeeded; failed ids stay behind for a retry on the next launch.
+ */
+async function seedDeferredSeeds(now: number): Promise<{ seeded: number; failed: number }> {
+  const deferred = readDeferredSeedIds();
+  if (deferred.length === 0) return { seeded: 0, failed: 0 };
+  const failed: string[] = [];
+  let seeded = 0;
+  for (const id of deferred) {
+    const seed = SEED_SETS.find((s) => s.id === id);
+    if (!seed) continue;
+    try {
+      const h = await hydrateSeedWords(seed);
+      if (!h.hydrated) {
+        failed.push(id);
+        continue;
+      }
+      await putSet({ ...seed, words: h.words, createdAt: now, updatedAt: now });
+      seeded += 1;
+    } catch {
+      failed.push(id);
+    }
+  }
+  if (failed.length === 0) removeDeferredSeedIds();
+  else writeDeferredSeedIds(failed);
+  return { seeded, failed: failed.length };
+}
+
 export function useLists() {
   const [sets, setSets] = useState<VocabSet[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,6 +183,10 @@ export function useLists() {
     let alive = true;
     (async () => {
       let list = await getAllSets();
+      // Hydrate the shared settings store FIRST so the seed merge below can
+      // honor the purchased plan: Free seeds only one language, Pro seeds all.
+      await hydrateSettings();
+      const pro = isProPlan(getSettingsSnapshot().plan);
       // One-time merge of missing seed sets, gated by a version marker so
       // new starter sets reach existing installs without resurrecting seed
       // sets the user deliberately deleted.
@@ -123,6 +199,10 @@ export function useLists() {
       }
       if (seedVersion < SEED_VERSION) {
         const knownIds = new Set(list.map((s) => s.id));
+        const deferred: string[] = [];
+        // Free installs seed only the first language; the remaining seed sets
+        // are recorded as deferred and seeded once the user upgrades to Pro.
+        const firstSeedLang = SEED_SETS[0].lang;
         // Only advance the version marker when every pack-language seed was
         // actually hydrated; if any fetch failed (offline), keep the marker
         // behind so the merge retries next launch instead of trapping cards
@@ -131,6 +211,12 @@ export function useLists() {
         for (const set of SEED_SETS) {
           if (!knownIds.has(set.id)) {
             // New install: pull the full A1 word pack when the language has one.
+            // A Free user gets their first language only — any other new
+            // language is recorded as deferred for a future upgrade.
+            if (!pro && set.lang !== firstSeedLang) {
+              deferred.push(set.id);
+              continue;
+            }
             const h = await hydrateSeedWords(set);
             if (!h.hydrated) hydrationComplete = false;
             await putSet({
@@ -181,6 +267,11 @@ export function useLists() {
             }
           }
         }
+        if (deferred.length > 0) {
+          // Persist (merging with anything deferred by an earlier run) so the
+          // deferred languages are seeded the moment the plan becomes Pro.
+          writeDeferredSeedIds([...new Set([...readDeferredSeedIds(), ...deferred])]);
+        }
         list = await getAllSets();
         if (hydrationComplete) {
           try {
@@ -190,7 +281,12 @@ export function useLists() {
           }
         }
       }
-      await hydrateSettings(); // shared store — idempotent across instances
+      // Upgrade path: a Free install deferred the other languages — seed them
+      // now that the plan is Pro. No-op for Pro installs (nothing deferred).
+      if (pro) {
+        const r = await seedDeferredSeeds(now);
+        if (r.seeded > 0) list = await getAllSets();
+      }
       if (alive) {
         setSets(list);
         setLoading(false);
@@ -204,7 +300,25 @@ export function useLists() {
     };
   }, []);
 
-
+  // When the plan flips to Pro in-place (a successful checkout, or restoring
+  // a Pro backup while the dashboard is already mounted), seed the languages a
+  // Free install deferred. Idempotent with the mount-time check — fresh Pro
+  // installs never write the deferred list, so this is a no-op for them.
+  const prevPlanRef = useRef(settings.plan);
+  useEffect(() => {
+    const current = settings.plan;
+    const upgraded = !isProPlan(prevPlanRef.current) && isProPlan(current);
+    prevPlanRef.current = current;
+    if (!upgraded) return;
+    void (async () => {
+      try {
+        const r = await seedDeferredSeeds(Date.now());
+        if (r.seeded > 0) setSets(await getAllSets());
+      } catch {
+        /* failed ids stay deferred — retried on the next launch */
+      }
+    })();
+  }, [settings.plan]);
 
   const saveSet = useCallback(async (set: VocabSet): Promise<VocabSet> => {
     const next = { ...set, updatedAt: Date.now() };

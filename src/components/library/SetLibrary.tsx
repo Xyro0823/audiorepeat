@@ -30,6 +30,7 @@ import SubtitleImportModal from './SubtitleImportModal';
 import InstallAppButton from '@/components/pwa/InstallAppButton';
 import AiAssistantButton from '@/components/dashboard/AiAssistantButton';
 import AiInsightsCard from '@/components/dashboard/AiInsightsCard';
+import FreePlanNotice from '@/components/dashboard/FreePlanNotice';
 import MetricCards from '@/components/dashboard/MetricCards';
 import WelcomeHero from '@/components/dashboard/WelcomeHero';
 
@@ -786,6 +787,8 @@ export default function SetLibrary() {
         streak={streak}
         onStart={featured ? () => playSet(featured) : undefined}
       />
+
+      <FreePlanNotice sets={sets} pro={pro} />
 
       <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[300px_minmax(0,1fr)]">
         {/* ------------------------------------------------------------ */}
