@@ -17,6 +17,9 @@ export function isProPlan(plan: PlanId): boolean {
   return plan === 'pro' || plan === 'lifetime';
 }
 
+/** Number of active languages included with the Free plan. */
+export const FREE_LANG_LIMIT = 1;
+
 /** Short badge text + full label for surfacing the plan in the UI. */
 export const PLAN_BADGE: Record<PlanId, { short: string; label: string }> = {
   basic: { short: 'Free', label: 'Free plan' },
@@ -50,7 +53,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     cta: 'Start free',
     popular: false,
     priceFor: () => ({ price: 0, note: 'forever free' }),
-    features: () => ['1 active language', 'Standard TTS audio', '300 words / day'],
+    features: () => [`${FREE_LANG_LIMIT} active language${FREE_LANG_LIMIT === 1 ? '' : 's'}`, 'Standard TTS audio', '300 words / day'],
   },
   pro: {
     id: 'pro',

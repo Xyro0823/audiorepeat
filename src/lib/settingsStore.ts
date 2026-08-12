@@ -15,6 +15,7 @@ import { DEFAULT_SETTINGS } from '@/types/app';
 let settings: AppSettings = DEFAULT_SETTINGS;
 let hydrated = false;
 let persistTimer: number | null = null;
+let refreshInFlight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
 function emit(): void {
@@ -59,10 +60,48 @@ export async function hydrateSettings(): Promise<void> {
   emit();
 }
 
+/**
+ * Force a re-read of persisted settings and notify every subscriber. The store
+ * only hydrates once, so plan changes made in ANOTHER tab (e.g. a checkout
+ * finishing there) aren't observed until this is called — use it on refocus.
+ */
+export async function refreshSettings(): Promise<void> {
+  // Coalesce concurrent calls: multiple focus listeners (several mounted
+  // useLists instances, StrictMode double-effects) can fire one 'focus' event
+  // simultaneously. Without this, two async reads would both resolve with the
+  // same stale snapshot and the second would overwrite a just-applied update
+  // (e.g. clearing hiddenLangs after an upgrade) before it persists.
+  if (refreshInFlight) return refreshInFlight;
+  refreshInFlight = (async () => {
+    try {
+      const stored = await getSettings();
+      settings = {
+        ...DEFAULT_SETTINGS,
+        ...stored,
+        targetGapMs: Math.min(
+          5000,
+          Math.max(1000, stored?.targetGapMs ?? DEFAULT_SETTINGS.targetGapMs),
+        ),
+      };
+    } catch {
+      settings = { ...DEFAULT_SETTINGS };
+    }
+    emit();
+  })();
+  try {
+    await refreshInFlight;
+  } finally {
+    refreshInFlight = null;
+  }
+}
+
 function persist(): void {
+  // Snapshot at schedule time: a later in-memory mutation (e.g. a concurrent
+  // refreshSettings re-read) must never corrupt what this write commits.
+  const snapshot = settings;
   if (persistTimer !== null) clearTimeout(persistTimer);
   persistTimer = window.setTimeout(() => {
-    void putSettings(settings).catch((err) => console.error('[settings] save', err));
+    void putSettings(snapshot).catch((err) => console.error('[settings] save', err));
   }, 250);
 }
 

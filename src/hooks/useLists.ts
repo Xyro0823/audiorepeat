@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { AppSettings, VocabSet, VocabWord } from '@/types/app';
 import { isProPlan } from '@/lib/plans';
 import { SEED_SETS } from '@/lib/seedSets';
@@ -10,6 +10,7 @@ import { clearAllSets as dbClearAllSets, deleteSet as dbDeleteSet, getAllSets, p
 import {
   getSettingsSnapshot,
   hydrateSettings,
+  refreshSettings,
   replaceSettingsFull,
   subscribeSettings,
   updateSettings,
@@ -139,6 +140,15 @@ function removeDeferredSeedIds(): void {
   } catch {
     /* ignore */
   }
+}
+
+/**
+ * Normalize a set's BCP-47 language tag to the shared pack code used for the
+ * Free-plan language limit (e.g. "es-ES" → "es"). Seed sets use region tags
+ * while topic/CEFR packs use bare codes, so both must hide/unhide together.
+ */
+function langLimitKey(code: string): string {
+  return PACK_LANG[code] ?? code;
 }
 
 /**
@@ -302,7 +312,8 @@ export function useLists() {
 
   // When the plan flips to Pro in-place (a successful checkout, or restoring
   // a Pro backup while the dashboard is already mounted), seed the languages a
-  // Free install deferred. Idempotent with the mount-time check — fresh Pro
+  // Free install deferred AND un-hide any languages a downgrade hid — sets
+  // return automatically. Idempotent with the mount-time check — fresh Pro
   // installs never write the deferred list, so this is a no-op for them.
   const prevPlanRef = useRef(settings.plan);
   useEffect(() => {
@@ -313,12 +324,33 @@ export function useLists() {
     void (async () => {
       try {
         const r = await seedDeferredSeeds(Date.now());
+        if (getSettingsSnapshot().hiddenLangs.length > 0) {
+          updateSettings({ hiddenLangs: [] });
+        }
         if (r.seeded > 0) setSets(await getAllSets());
       } catch {
         /* failed ids stay deferred — retried on the next launch */
       }
     })();
   }, [settings.plan]);
+
+  // Live cross-tab sync: the settings store is in-memory and only hydrates
+  // once, so a plan change made in ANOTHER tab (e.g. a checkout finishing
+  // there, or a downgrade from a second window) wouldn't be seen until a
+  // reload. On refocus, re-read persisted settings — the plan-flip effect
+  // above then seeds deferred languages / restores hidden ones as needed.
+  useEffect(() => {
+    const sync = () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+      void refreshSettings();
+    };
+    document.addEventListener('visibilitychange', sync);
+    window.addEventListener('focus', sync);
+    return () => {
+      document.removeEventListener('visibilitychange', sync);
+      window.removeEventListener('focus', sync);
+    };
+  }, []);
 
   const saveSet = useCallback(async (set: VocabSet): Promise<VocabSet> => {
     const next = { ...set, updatedAt: Date.now() };
@@ -355,5 +387,26 @@ export function useLists() {
     updateSettings(patch);
   }, []);
 
-  return { sets, settings, loading, saveSet, removeSet, saveSettings, replaceSettings, clearSets };
+  // A Free-plan downgrade hides every language except the one the user chose to
+  // keep. Hidden sets stay in IndexedDB (nothing is deleted — upgrade restores
+  // them), but every UI surface sees only the visible ones via this filter.
+  // `allSets` is the unfiltered list, used by backup export so hidden sets are
+  // never lost when moving devices.
+  const visibleSets = useMemo(() => {
+    if (settings.hiddenLangs.length === 0) return sets;
+    const hidden = new Set(settings.hiddenLangs.map(langLimitKey));
+    return sets.filter((s) => !hidden.has(langLimitKey(s.lang)));
+  }, [sets, settings.hiddenLangs]);
+
+  return {
+    sets: visibleSets,
+    allSets: sets,
+    settings,
+    loading,
+    saveSet,
+    removeSet,
+    saveSettings,
+    replaceSettings,
+    clearSets,
+  };
 }

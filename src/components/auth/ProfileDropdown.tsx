@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import AuthScreen from './AuthScreen';
+import DowngradeModal from '@/components/checkout/DowngradeModal';
 import { useAuth } from '@/hooks/useAuth';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
 import { isProPlan, PLAN_BADGE, planDetail } from '@/lib/plans';
@@ -47,6 +48,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
   const pro = isProPlan(settings.plan);
   const [open, setOpen] = useState(false);
   const [showAuth, setShowAuth] = useState(false);
+  const [showDowngrade, setShowDowngrade] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [menuError, setMenuError] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -190,12 +192,24 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
           )}
 
           {pro ? (
-            <Link role="menuitem" href="/checkout" className={itemClass} onClick={close}>
-              <span aria-hidden>⭐</span> Manage plan
-              <span className="ml-auto rounded-full border border-neon-amber/40 bg-neon-amber/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
-                {PLAN_BADGE[settings.plan].short}
-              </span>
-            </Link>
+            <>
+              <Link role="menuitem" href="/checkout" className={itemClass} onClick={close}>
+                <span aria-hidden>⭐</span> Manage plan
+                <span className="ml-auto rounded-full border border-neon-amber/40 bg-neon-amber/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
+                  {PLAN_BADGE[settings.plan].short}
+                </span>
+              </Link>
+              <button
+                role="menuitem"
+                className={itemClass}
+                onClick={() => {
+                  close();
+                  setShowDowngrade(true);
+                }}
+              >
+                <span aria-hidden>⬇️</span> Switch to Free plan
+              </button>
+            </>
           ) : (
             <Link role="menuitem" href="/checkout?plan=pro" className={itemClass} onClick={close}>
               <span aria-hidden>⭐</span> Upgrade to Pro
@@ -310,6 +324,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
       )}
 
       {showAuth && <AuthScreen mode="overlay" onClose={() => setShowAuth(false)} />}
+      {showDowngrade && <DowngradeModal onClose={() => setShowDowngrade(false)} />}
     </div>
   );
 }

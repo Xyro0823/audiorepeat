@@ -15,7 +15,7 @@ import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import { findLanguage } from '@/lib/languages';
-import { isProPlan } from '@/lib/plans';
+import { FREE_LANG_LIMIT, isProPlan } from '@/lib/plans';
 import { formatCountdown } from '@/lib/format';
 import { recordSetPlayed } from '@/lib/libraryMeta';
 import type { TTSEngine } from '@/lib/tts/engine';
@@ -713,6 +713,15 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             className="rounded-full border border-neon-amber/30 bg-neon-amber/5 px-3 py-1.5 text-xs font-medium text-neon-amber/90 transition hover:border-neon-amber/60 hover:text-neon-amber active:scale-95"
           >
             <span aria-hidden>⭐</span> Review · Pro
+          </button>
+        )}
+        {!pro && (
+          <button
+            onClick={upgradeToPro}
+            title={`The Free plan includes ${FREE_LANG_LIMIT} active language${FREE_LANG_LIMIT === 1 ? '' : 's'} — upgrade to unlock all languages`}
+            className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-neon-amber/40 hover:text-neon-amber active:scale-95"
+          >
+            <span aria-hidden>⭐</span> Free · {FREE_LANG_LIMIT} language
           </button>
         )}
 

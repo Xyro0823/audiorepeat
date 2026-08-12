@@ -7,6 +7,7 @@ import { useLists } from '@/hooks/useLists';
 import { useAuth } from '@/hooks/useAuth';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
+import DowngradeModal from '@/components/checkout/DowngradeModal';
 import { buildBackup, downloadBackup, parseBackup, type BackupData } from '@/lib/sets/backup';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
 import { isProPlan, PLAN_BADGE, planDetail } from '@/lib/plans';
@@ -80,7 +81,9 @@ interface Props {
 }
 
 export default function SettingsModal({ onClose }: Props) {
-  const { sets, settings, loading, saveSettings, replaceSettings, clearSets, saveSet } = useLists();
+  const { allSets, sets, settings, loading, saveSettings, replaceSettings, clearSets, saveSet } =
+    useLists();
+  const [showDowngrade, setShowDowngrade] = useState(false);
   const { days } = usePracticeStats();
   // Stats/username live per account (guests use the shared legacy keys).
   const { user, mode } = useAuth();
@@ -208,10 +211,12 @@ export default function SettingsModal({ onClose }: Props) {
       !user && typeof window !== 'undefined'
         ? (window.localStorage.getItem(usernameStorageKey(null)) ?? undefined)
         : undefined;
-    const json = buildBackup({ settings, sets, days, username });
+    // Export the FULL library (including languages hidden by a downgrade) so a
+    // backup never loses sets that will return on upgrade.
+    const json = buildBackup({ settings, sets: allSets, days, username });
     downloadBackup(json, `audiorepeat-backup-${new Date().toISOString().slice(0, 10)}.json`);
     flash('ok', 'Backup downloaded — keep it somewhere safe.');
-  }, [settings, sets, days, user, flash]);
+  }, [settings, allSets, days, user, flash]);
 
   const handleImportFile = useCallback(
     async (file: File) => {
@@ -578,6 +583,14 @@ export default function SettingsModal({ onClose }: Props) {
                 >
                   {isProPlan(settings.plan) ? 'View plans' : 'Upgrade'}
                 </Link>
+                {isProPlan(settings.plan) && (
+                  <button
+                    onClick={() => setShowDowngrade(true)}
+                    className="font-semibold text-slate-400 underline decoration-slate-600 underline-offset-2 transition hover:text-neon-amber hover:decoration-neon-amber/50"
+                  >
+                    Switch to Free
+                  </button>
+                )}
               </p>
             </div>
 
@@ -715,6 +728,9 @@ export default function SettingsModal({ onClose }: Props) {
           </div>
         )}
       </div>
+
+      {/* Downgrade flow (z-120 keeps it above this modal's z-100 portal) */}
+      {showDowngrade && <DowngradeModal onClose={() => setShowDowngrade(false)} />}
 
       {/* Restore-confirmation overlay (kept above the modal content) */}
       {pendingImport && (

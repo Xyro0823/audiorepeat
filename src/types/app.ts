@@ -40,6 +40,12 @@ export interface AppSettings extends LoopSettings {
   plan: PlanId;
   /** Billing cycle for the plan; only meaningful for paid plans. */
   planBilling: 'monthly' | 'annual';
+  /**
+   * Languages hidden by a Free-plan downgrade (normalized codes, e.g. "es").
+   * Sets in these languages are filtered from the UI but NOT deleted — they
+   * return automatically when the user upgrades again.
+   */
+  hiddenLangs: string[];
   cachedAudio: boolean; // prefer pre-generated cached audio (offline) when available
   /** Show contextual emoji hints on word cards. */
   showHints: boolean;
@@ -61,6 +67,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   loop: true,
   plan: 'basic',
   planBilling: 'annual',
+  hiddenLangs: [],
   cachedAudio: false,
   showHints: true,
   theme: 'neon',
