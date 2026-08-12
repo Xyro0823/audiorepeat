@@ -18,7 +18,13 @@ function LogoMark() {
   );
 }
 
-export default function CheckoutFlow({ initialPlan }: { initialPlan?: string }) {
+export default function CheckoutFlow({
+  initialPlan,
+  canceled = false,
+}: {
+  initialPlan?: string;
+  canceled?: boolean;
+}) {
   const router = useRouter();
   const { status, user, mode: authMode } = useAuth();
   // Pre-select the plan from ?plan= when valid; otherwise default to the
@@ -27,6 +33,9 @@ export default function CheckoutFlow({ initialPlan }: { initialPlan?: string }) 
   const [annual, setAnnual] = useState(true);
   const [step, setStep] = useState<'plan' | 'payment'>('plan');
   const [authOpen, setAuthOpen] = useState(false);
+  // Client-safe build flag: the Stripe pay button only appears when the
+  // publishable key is configured (the secret key stays server-side).
+  const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
   const signedIn = status === 'signed-in';
   // Firebase unconfigured → the app is guests-only, so there's nothing to
@@ -74,6 +83,12 @@ export default function CheckoutFlow({ initialPlan }: { initialPlan?: string }) 
       </header>
 
       <div className="relative z-10 mx-auto w-full max-w-5xl px-5 py-12 lg:px-8">
+        {canceled && (
+          <div className="mx-auto mb-6 max-w-lg rounded-2xl border border-neon-amber/30 bg-neon-amber/10 px-4 py-3 text-center text-sm text-neon-amber">
+            Your checkout was canceled — nothing was charged.
+          </div>
+        )}
+
         {step === 'plan' ? (
           <>
           <div className="text-center">
@@ -220,6 +235,7 @@ export default function CheckoutFlow({ initialPlan }: { initialPlan?: string }) 
                 billing={annual ? 'annual' : 'monthly'}
                 signedIn={signedIn}
                 user={user}
+                stripeEnabled={stripeEnabled}
                 onBack={() => setStep('plan')}
                 onContinueFree={() => router.push('/dashboard')}
               />

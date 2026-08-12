@@ -1,4 +1,5 @@
 import type { LoopSettings } from './loop';
+import type { PlanId } from '@/lib/plans';
 
 export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 export type CefrLevel = (typeof CEFR_LEVELS)[number];
@@ -35,6 +36,10 @@ export interface VocabSet {
 }
 
 export interface AppSettings extends LoopSettings {
+  /** Purchased membership plan — 'basic' (free) until a verified checkout lands. */
+  plan: PlanId;
+  /** Billing cycle for the plan; only meaningful for paid plans. */
+  planBilling: 'monthly' | 'annual';
   cachedAudio: boolean; // prefer pre-generated cached audio (offline) when available
   /** Show contextual emoji hints on word cards. */
   showHints: boolean;
@@ -54,6 +59,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   targetGapMs: 1000,
   translationGapMs: 900,
   loop: true,
+  plan: 'basic',
+  planBilling: 'annual',
   cachedAudio: false,
   showHints: true,
   theme: 'neon',

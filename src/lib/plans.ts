@@ -8,7 +8,7 @@ export type PlanId = 'basic' | 'pro' | 'lifetime';
 
 export const PLAN_ORDER: PlanId[] = ['basic', 'pro', 'lifetime'];
 
-export function isPlanId(v: string | undefined): v is PlanId {
+export function isPlanId(v: string | undefined | null): v is PlanId {
   return v === 'basic' || v === 'pro' || v === 'lifetime';
 }
 

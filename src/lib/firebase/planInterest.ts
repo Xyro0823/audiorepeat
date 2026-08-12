@@ -55,3 +55,30 @@ export async function recordPlanInterest(
   };
   await setDoc(ref, data, { merge: true });
 }
+
+/**
+ * Record a completed purchase (called from the checkout success view after
+ * the session was verified server-side). Same lazy-import + set-merge pattern;
+ * best-effort — a failure never blocks the success UI.
+ */
+export async function recordPlanPurchase(
+  userId: string,
+  plan: string,
+  billing: string,
+): Promise<void> {
+  if (!isFirebaseConfigured()) {
+    throw new Error('firebase-not-configured');
+  }
+  const ref = doc(getDb(), 'plan_purchases', `${userId}_${plan}`);
+  await setDoc(
+    ref,
+    {
+      userId,
+      plan,
+      billing,
+      source: 'checkout_success',
+      purchasedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}

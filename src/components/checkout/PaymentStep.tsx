@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import type { AuthUser } from '@/types/auth';
 import type { PlanDef } from '@/lib/plans';
 
@@ -9,34 +9,43 @@ interface Props {
   billing: 'monthly' | 'annual';
   signedIn: boolean;
   user: AuthUser | null;
+  /** True when NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is set at build time. */
+  stripeEnabled: boolean;
   onBack: () => void;
   onContinueFree: () => void;
 }
 
 type NotifyState = 'idle' | 'saving' | 'done' | 'error';
+type PayState = 'idle' | 'starting' | 'error';
 
 /**
- * Payment step — the swap point for a real Stripe integration.
+ * Payment step — the swap point for real payments.
  *
- * Today there is no payment provider, so this renders an honest placeholder:
- * a plan summary, an explicit "payments are coming soon" note, and a
- * "notify me" interest-capture action. There is deliberately NO credit-card
- * form — nothing here pretends to charge the user.
- *
- * When Stripe (or another provider) is wired in, replace the placeholder
- * body below with the checkout form while keeping the same props/contract,
- * so the surrounding flow (plan select → auth → pay) stays untouched.
+ * When Stripe is configured this creates a hosted Checkout Session via the
+ * server API and redirects the browser to Stripe's payment page (the secret
+ * key never leaves the server). When it isn't, it renders an honest
+ * placeholder — plan summary, "payments coming soon" note, and a
+ * "notify me" interest-capture action. There is deliberately no credit-card
+ * form on this page in either mode; Card/ExpressCheckout UI lives inside
+ * Stripe's hosted Checkout.
  */
 export default function PaymentStep({
   plan,
   billing,
   signedIn,
   user,
+  stripeEnabled,
   onBack,
   onContinueFree,
 }: Props) {
   const { price, note } = plan.priceFor(billing === 'annual');
   const [notify, setNotify] = useState<NotifyState>('idle');
+  const [pay, setPay] = useState<PayState>('idle');
+  // Refs keep the in-flight guard out of the callback's dep array so its
+  // identity stays stable across renders.
+  const startingRef = useRef(false);
+
+  const canPayWithStripe = stripeEnabled && plan.id !== 'basic';
 
   const recordInterest = useCallback(async () => {
     if (!user) return;
@@ -50,6 +59,29 @@ export default function PaymentStep({
       setNotify('error');
     }
   }, [user, plan.id, billing]);
+
+  const startCheckout = useCallback(async () => {
+    if (startingRef.current) return;
+    startingRef.current = true;
+    setPay('starting');
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId: plan.id, billing, userId: user?.id }),
+      });
+      const data = (await res.json()) as { url?: string; error?: string; message?: string };
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? 'checkout-failed');
+      }
+      // Hosted Checkout — the browser leaves for Stripe's payment page, then
+      // returns to /checkout/success?session_id=… or /checkout?canceled=1.
+      window.location.assign(data.url);
+    } catch {
+      startingRef.current = false;
+      setPay('error');
+    }
+  }, [plan.id, billing, user]);
 
   return (
     <div className="mx-auto w-full max-w-lg">
@@ -98,47 +130,107 @@ export default function PaymentStep({
           </ul>
         </div>
 
-        {/* Honest placeholder — no fake card form, nothing pretends to charge. */}
-        <div className="mt-4 rounded-2xl border border-neon-amber/30 bg-neon-amber/10 p-4">
-          <p className="text-sm font-semibold text-neon-amber">
-            💳 Payment integration coming soon
-          </p>
-          <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300">
-            AudioRepeat doesn&apos;t charge for anything yet. This screen is where checkout will
-            live once payments launch — you won&apos;t be billed today, and nothing here processes a
-            payment.
-          </p>
-        </div>
-
-        {signedIn && (
-          <div className="mt-4">
+        {canPayWithStripe ? (
+          /* ---------------------------------------------------------- */
+          /* Real Stripe Checkout — hosted payment page via the server.   */
+          /* ---------------------------------------------------------- */
+          <>
             <button
               type="button"
-              onClick={() => void recordInterest()}
-              disabled={notify === 'saving' || notify === 'done'}
-              className="btn-clean flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-medium text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={() => void startCheckout()}
+              disabled={pay === 'starting'}
+              className="btn-primary mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold text-white"
             >
-              {notify === 'saving' ? (
-                <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" />
-              ) : notify === 'done' ? (
-                '✓ Thanks — we\'ll let you know when payments go live'
+              {pay === 'starting' ? (
+                <>
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" />
+                  Opening secure checkout…
+                </>
               ) : (
-                'Notify me when payments launch'
+                <>
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="h-4 w-4"
+                    fill="currentColor"
+                    aria-hidden
+                  >
+                    <path d="M12 1.5 3 6v5c0 5 3.9 9.4 9 11.5C17.1 20.4 21 16 21 11V6l-9-4.5ZM10.8 15.3 7 11.5l1.4-1.4 2.4 2.4 4.8-4.8 1.4 1.4-6.2 6.2Z" />
+                  </svg>
+                  Pay securely with Stripe — ${price}
+                  <span className="text-xs font-medium opacity-80">{note}</span>
+                </>
               )}
             </button>
-            {notify === 'error' && (
-              <p className="mt-2 text-center text-xs text-neon-magenta">
-                Couldn&apos;t save that right now — no problem, everything is free for the time being.
+            {pay === 'error' && (
+              <p className="mt-2 rounded-xl border border-neon-magenta/40 bg-neon-magenta/10 px-3 py-2 text-xs text-neon-magenta">
+                Couldn&apos;t start checkout — please try again. You won&apos;t be charged
+                unless you complete payment on Stripe&apos;s page.
               </p>
             )}
+            <p className="mt-2.5 text-center text-[11px] text-slate-500">
+              🔒 Secure payment handled by Stripe — card details never touch AudioRepeat.
+            </p>
+          </>
+        ) : plan.id === 'basic' ? (
+          /* ---------------------------------------------------------- */
+          /* Free plan — no payment needed.                               */
+          /* ---------------------------------------------------------- */
+          <div className="mt-4 rounded-2xl border border-neon-green/30 bg-neon-green/10 p-4">
+            <p className="text-sm font-semibold text-neon-green">
+              🎉 Basic is free — no payment needed
+            </p>
+            <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300">
+              Everything on the Basic plan is yours to use right now. Upgrade to Pro or
+              Lifetime whenever you&apos;re ready.
+            </p>
           </div>
+        ) : (
+          /* ---------------------------------------------------------- */
+          /* Honest placeholder — no fake card form, nothing charges.     */
+          /* ---------------------------------------------------------- */
+          <>
+            <div className="mt-4 rounded-2xl border border-neon-amber/30 bg-neon-amber/10 p-4">
+              <p className="text-sm font-semibold text-neon-amber">
+                💳 Payment integration coming soon
+              </p>
+              <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300">
+                AudioRepeat doesn&apos;t charge for anything yet. This screen is where checkout
+                will live once payments launch — you won&apos;t be billed today, and nothing here
+                processes a payment.
+              </p>
+            </div>
+
+            {signedIn && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={() => void recordInterest()}
+                  disabled={notify === 'saving' || notify === 'done'}
+                  className="btn-clean flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-medium text-slate-200 transition disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {notify === 'saving' ? (
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" />
+                  ) : notify === 'done' ? (
+                    "✓ Thanks — we'll let you know when payments go live"
+                  ) : (
+                    'Notify me when payments launch'
+                  )}
+                </button>
+                {notify === 'error' && (
+                  <p className="mt-2 text-center text-xs text-neon-magenta">
+                    Couldn&apos;t save that right now — no problem, everything is free for the time being.
+                  </p>
+                )}
+              </div>
+            )}
+          </>
         )}
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <button
             type="button"
             onClick={onContinueFree}
-            className="btn-primary flex h-11 flex-1 items-center justify-center rounded-xl px-5 text-sm font-semibold text-white"
+            className="btn-clean flex h-11 flex-1 items-center justify-center rounded-xl px-5 text-sm font-medium text-slate-300"
           >
             Continue with free access
           </button>
