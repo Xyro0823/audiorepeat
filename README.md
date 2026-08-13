@@ -66,8 +66,14 @@ or the hybrid `CachedAudioEngine` (cached `<audio>` → speech fallback) when
 ## Deploying
 
 Live at **https://audiorepeat.vercel.app** — Vercel + GitHub connected.
-Every push to  on github.com/Xyro0823/audiorepeat deploys automatically.
-Manual CLI deploy: https://audiorepeat-dky9rki8u-xyro7.vercel.app from this folder.
+Every push to github.com/Xyro0823/audiorepeat deploys automatically.
+Manual CLI deploy: `vercel --prod` from this folder.
+
+**Environment variables:** all app vars are documented in `.env.example`.
+The 7 `NEXT_PUBLIC_FIREBASE_*` values are configured in Vercel Production
+(Firebase Auth for project `audiorepeat-819d9`, domain `audiorepeat.vercel.app`
+authorized). Stripe keys are intentionally not configured yet — checkout shows
+the placeholder state until payments go live.
 
 ## Roadmap
 
