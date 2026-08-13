@@ -34,9 +34,9 @@ export default function CheckoutFlow({
   const [annual, setAnnual] = useState(true);
   const [step, setStep] = useState<'plan' | 'payment'>('plan');
   const [authOpen, setAuthOpen] = useState(false);
-  // Client-safe build flag: the Stripe pay button only appears when the
-  // publishable key is configured (the secret key stays server-side).
-  const stripeEnabled = !!process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
+  // Client-safe build flag: the Paddle pay button only appears when the
+  // client token is configured (the API key stays server-side).
+  const paddleEnabled = !!process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
 
   const signedIn = status === 'signed-in';
   // Firebase unconfigured → the app is guests-only, so there's nothing to
@@ -218,7 +218,9 @@ export default function CheckoutFlow({
               <span className="text-xs font-medium opacity-80">{note}</span>
             </button>
             <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
-              No charge today · payments coming soon
+              {paddleEnabled
+                ? 'Secure payments handled by Paddle'
+                : 'No charge today · payments coming soon'}
             </p>
           </div>
           </>
@@ -238,7 +240,7 @@ export default function CheckoutFlow({
                 billing={annual ? 'annual' : 'monthly'}
                 signedIn={signedIn}
                 user={user}
-                stripeEnabled={stripeEnabled}
+                paddleEnabled={paddleEnabled}
                 onBack={() => setStep('plan')}
                 onContinueFree={() => router.push('/dashboard')}
               />

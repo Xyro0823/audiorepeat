@@ -2,8 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const h = vi.hoisted(() => {
   const verifyIdToken = vi.fn();
-  const createCheckoutSession = vi.fn();
-  return { verifyIdToken, createCheckoutSession };
+  const createCheckoutTransaction = vi.fn();
+  const isPaddleConfigured = vi.fn(() => true);
+  return { verifyIdToken, createCheckoutTransaction, isPaddleConfigured };
 });
 
 vi.mock('@/lib/firebase/admin', () => ({
@@ -11,9 +12,9 @@ vi.mock('@/lib/firebase/admin', () => ({
   verifyIdToken: h.verifyIdToken,
 }));
 
-vi.mock('@/lib/stripe/server', () => ({
-  isStripeConfigured: () => true,
-  createCheckoutSession: h.createCheckoutSession,
+vi.mock('@/lib/paddle/server', () => ({
+  isPaddleConfigured: h.isPaddleConfigured,
+  createCheckoutTransaction: h.createCheckoutTransaction,
 }));
 
 import { POST } from '@/app/api/checkout/route';
@@ -30,8 +31,13 @@ function checkoutRequest(body: unknown, token?: string): Request {
 
 beforeEach(() => {
   h.verifyIdToken.mockReset();
-  h.createCheckoutSession.mockReset();
-  h.createCheckoutSession.mockResolvedValue({ url: 'https://checkout.stripe.com/c/pay/cs_test' });
+  h.createCheckoutTransaction.mockReset();
+  h.isPaddleConfigured.mockReset();
+  h.isPaddleConfigured.mockReturnValue(true);
+  h.createCheckoutTransaction.mockResolvedValue({
+    transactionId: 'txn_test_123',
+    checkoutUrl: 'https://checkout.paddle.com/checkout/txn_test_123',
+  });
 });
 
 describe('POST /api/checkout — authentication', () => {
@@ -39,7 +45,7 @@ describe('POST /api/checkout — authentication', () => {
     const res = await POST(checkoutRequest({ planId: 'pro', billing: 'annual' }));
     expect(res.status).toBe(401);
     expect(await res.json()).toMatchObject({ error: 'unauthenticated' });
-    expect(h.createCheckoutSession).not.toHaveBeenCalled();
+    expect(h.createCheckoutTransaction).not.toHaveBeenCalled();
   });
 
   it('rejects requests with a non-Bearer header', async () => {
@@ -60,7 +66,7 @@ describe('POST /api/checkout — authentication', () => {
     const res = await POST(checkoutRequest({ planId: 'pro', billing: 'annual' }, 'bad-token'));
     expect(res.status).toBe(401);
     expect(await res.json()).toMatchObject({ error: 'unauthenticated' });
-    expect(h.createCheckoutSession).not.toHaveBeenCalled();
+    expect(h.createCheckoutTransaction).not.toHaveBeenCalled();
   });
 });
 
@@ -71,9 +77,12 @@ describe('POST /api/checkout — identity', () => {
       checkoutRequest({ planId: 'pro', billing: 'annual', userId: 'spoofed-uid' }, 'real-id-token'),
     );
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ url: 'https://checkout.stripe.com/c/pay/cs_test' });
+    expect(await res.json()).toEqual({
+      transactionId: 'txn_test_123',
+      checkoutUrl: 'https://checkout.paddle.com/checkout/txn_test_123',
+    });
     expect(h.verifyIdToken).toHaveBeenCalledWith('real-id-token');
-    const args = h.createCheckoutSession.mock.calls[0][0];
+    const args = h.createCheckoutTransaction.mock.calls[0][0];
     expect(args.uid).toBe('verified-uid-123');
     expect(args.planId).toBe('pro');
     expect(args.billing).toBe('annual');
@@ -86,9 +95,43 @@ describe('POST /api/checkout — identity', () => {
     h.verifyIdToken.mockResolvedValue('uid-1');
     const res = await POST(checkoutRequest({ planId: 'lifetime', billing: 'monthly' }, 'tok'));
     expect(res.status).toBe(200);
-    expect(h.createCheckoutSession.mock.calls[0][0].billing).toBe('monthly');
+    expect(h.createCheckoutTransaction.mock.calls[0][0].billing).toBe('monthly');
     const res2 = await POST(checkoutRequest({ planId: 'basic', billing: 'annual' }, 'tok'));
     expect(res2.status).toBe(400);
-    expect(h.createCheckoutSession).toHaveBeenCalledTimes(1);
+    expect(h.createCheckoutTransaction).toHaveBeenCalledTimes(1);
+    const res3 = await POST(checkoutRequest({ planId: 'enterprise', billing: 'annual' }, 'tok'));
+    expect(res3.status).toBe(400);
+  });
+
+  it('rejects an unparseable body', async () => {
+    h.verifyIdToken.mockResolvedValue('uid-1');
+    const res = await POST(
+      new Request('https://audiorepeat.vercel.app/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer tok' },
+        body: '{not json',
+      }),
+    );
+    expect(res.status).toBe(400);
+    expect(h.createCheckoutTransaction).not.toHaveBeenCalled();
+  });
+
+  it('rejects an invalid billing value', async () => {
+    h.verifyIdToken.mockResolvedValue('uid-1');
+    const res = await POST(checkoutRequest({ planId: 'pro', billing: 'weekly' }, 'tok'));
+    expect(res.status).toBe(400);
+    expect(await res.json()).toMatchObject({ error: 'invalid-billing' });
+    expect(h.createCheckoutTransaction).not.toHaveBeenCalled();
+  });
+});
+
+describe('POST /api/checkout — configuration', () => {
+  it('returns 503 when Paddle is not configured', async () => {
+    h.isPaddleConfigured.mockReturnValue(false);
+    h.verifyIdToken.mockResolvedValue('uid-1');
+    const res = await POST(checkoutRequest({ planId: 'pro', billing: 'annual' }, 'tok'));
+    expect(res.status).toBe(503);
+    expect(await res.json()).toMatchObject({ error: 'paddle-not-configured' });
+    expect(h.createCheckoutTransaction).not.toHaveBeenCalled();
   });
 });

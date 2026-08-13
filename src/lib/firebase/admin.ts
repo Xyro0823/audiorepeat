@@ -57,17 +57,22 @@ export function getAdminDb(): Firestore {
 
 const ENTITLEMENTS_COLLECTION = 'entitlements';
 const STRIPE_EVENTS_COLLECTION = 'stripe_events';
+const PADDLE_EVENTS_COLLECTION = 'paddle_events';
 
 /**
  * Firestore-backed entitlement store.
  *
  * - `entitlements/{uid}` — one document per user (document id == uid).
- * - `stripe_events/{eventId}` — idempotency markers for processed Stripe
- *   events; a document is written only AFTER the event was applied, so a
- *   retried delivery is a no-op while a failed apply is retried.
+ * - webhook idempotency markers: `stripe_events/{eventId}` by default, or
+ *   `paddle_events/{eventId}` when `{ events: 'paddle' }` is passed (each
+ *   provider keeps its own marker collection). A document is written only
+ *   AFTER the event was applied, so a retried delivery is a no-op while a
+ *   failed apply is retried by the provider.
  */
-export function createEntitlementStore(): EntitlementStore {
+export function createEntitlementStore(options?: { events?: 'stripe' | 'paddle' }): EntitlementStore {
   const db = getAdminDb();
+  const eventsCollection =
+    options?.events === 'paddle' ? PADDLE_EVENTS_COLLECTION : STRIPE_EVENTS_COLLECTION;
 
   return {
     async getEntitlement(uid) {
@@ -81,6 +86,8 @@ export function createEntitlementStore(): EntitlementStore {
         stripeCustomerId: data.stripeCustomerId ?? null,
         stripeSubscriptionId: data.stripeSubscriptionId ?? null,
         stripePriceId: data.stripePriceId ?? null,
+        paddleSubscriptionId: data.paddleSubscriptionId ?? null,
+        paddlePriceId: data.paddlePriceId ?? null,
         status: data.status ?? 'active',
         currentPeriodEnd: data.currentPeriodEnd ?? null,
         updatedAt: data.updatedAt ?? null,
@@ -103,14 +110,24 @@ export function createEntitlementStore(): EntitlementStore {
       return snap.docs[0].id;
     },
 
+    async findUidByPaddleSubscription(paddleSubscriptionId) {
+      const snap = await db
+        .collection(ENTITLEMENTS_COLLECTION)
+        .where('paddleSubscriptionId', '==', paddleSubscriptionId)
+        .limit(1)
+        .get();
+      if (snap.empty) return null;
+      return snap.docs[0].id;
+    },
+
     async isEventProcessed(eventId) {
-      const snap = await db.doc(`${STRIPE_EVENTS_COLLECTION}/${eventId}`).get();
+      const snap = await db.doc(`${eventsCollection}/${eventId}`).get();
       return snap.exists;
     },
 
     async markEventProcessed(eventId) {
       await db
-        .doc(`${STRIPE_EVENTS_COLLECTION}/${eventId}`)
+        .doc(`${eventsCollection}/${eventId}`)
         .set({ eventId, processedAt: Timestamp.now() });
     },
   };

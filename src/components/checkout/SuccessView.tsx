@@ -15,12 +15,12 @@ interface Props {
 /**
  * Checkout success screen.
  *
- * The Stripe webhook / entitlement record is the source of truth — reaching
- * this page is NOT proof of payment. The page shows the order as received and
- * then polls the server entitlement until it reflects the purchased plan
- * (webhook delivery usually beats the redirect, but can lag a few seconds).
- * Local settings are only mirrored to the server-confirmed value, so a stale
- * or spoofed success page can never grant Pro by itself.
+ * The webhook / entitlement record is the source of truth — reaching this
+ * page is NOT proof of payment. The page shows the order as received and then
+ * polls the server entitlement until it reflects the purchased plan (webhook
+ * delivery usually beats the redirect, but can lag a few seconds). Local
+ * settings are only mirrored to the server-confirmed value, so a stale or
+ * spoofed success page can never grant Pro by itself.
  */
 export default function SuccessView({ planId, billing, email }: Props) {
   // No verified plan → render the generic fallback from the first paint (no
@@ -159,7 +159,7 @@ export default function SuccessView({ planId, billing, email }: Props) {
             </h1>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
               {state === 'verifying'
-                ? `We're confirming your ${plan?.name ?? 'plan'} with Stripe.`
+                ? `We're confirming your ${plan?.name ?? 'plan'} with our payment provider.`
                 : 'Your payment went through. Your plan is being activated on our side — this usually takes a few seconds. It may take a moment for all your Pro features to unlock.'}
             </p>
             <div className="mt-7 flex flex-col gap-2.5">
@@ -188,8 +188,8 @@ export default function SuccessView({ planId, billing, email }: Props) {
             <h1 className="mt-4 text-xl font-bold tracking-tight text-white">Thanks for your order</h1>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
               We couldn&apos;t verify the payment on this screen, but if you completed a
-              checkout, Stripe will email you a receipt shortly. Everything remains free
-              until it&apos;s confirmed.
+              checkout, the payment provider will email you a receipt shortly. Everything
+              remains free until it&apos;s confirmed.
             </p>
             <Link
               href="/dashboard"

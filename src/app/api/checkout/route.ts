@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createCheckoutSession, isStripeConfigured, type Billing } from '@/lib/stripe/server';
+import { createCheckoutTransaction, isPaddleConfigured, type Billing } from '@/lib/paddle/server';
 import { isAdminConfigured, verifyIdToken } from '@/lib/firebase/admin';
 import { isPlanId } from '@/lib/plans';
 
@@ -14,19 +14,24 @@ function bearerToken(request: Request): string | null {
 }
 
 /**
- * Create a Stripe Checkout Session for the selected paid plan.
+ * Create a Paddle transaction for the selected paid plan.
  *
  * The caller MUST be an authenticated Firebase user: the client sends their
  * ID token as `Authorization: Bearer <idToken>`, it is verified server-side
- * with firebase-admin, and the verified uid is used for the Stripe Customer +
- * session metadata. A client-supplied `userId` in the body is never trusted.
+ * with firebase-admin, and the verified uid is placed in the transaction's
+ * server-controlled `customData` (copied to the created subscription). A
+ * client-supplied `userId` in the body is never trusted.
  *
- * When Stripe or the admin layer isn't configured, this returns 503 and the
+ * The client then opens the Paddle hosted checkout (overlay) for the returned
+ * transaction id using Paddle.js; on completion the customer is redirected to
+ * /checkout/success and the /api/paddle/webhook grants entitlement.
+ *
+ * When Paddle or the admin layer isn't configured, this returns 503 and the
  * UI keeps the honest placeholder + free-access fallback.
  */
 export async function POST(request: Request) {
-  if (!isStripeConfigured()) {
-    return NextResponse.json({ error: 'stripe-not-configured' }, { status: 503 });
+  if (!isPaddleConfigured()) {
+    return NextResponse.json({ error: 'paddle-not-configured' }, { status: 503 });
   }
   if (!isAdminConfigured()) {
     return NextResponse.json(
@@ -54,30 +59,27 @@ export async function POST(request: Request) {
   }
 
   const { planId } = body;
-  const billing: Billing = body.billing === 'monthly' ? 'monthly' : 'annual';
+  if (body.billing !== 'monthly' && body.billing !== 'annual') {
+    return NextResponse.json({ error: 'invalid-billing' }, { status: 400 });
+  }
+  const billing: Billing = body.billing;
 
   if (!isPlanId(planId) || planId === 'basic') {
     return NextResponse.json({ error: 'invalid-plan' }, { status: 400 });
   }
 
-  const origin = new URL(request.url).origin;
-  if (!origin) {
-    return NextResponse.json({ error: 'missing-origin' }, { status: 400 });
-  }
-
   try {
-    const { url } = await createCheckoutSession({
+    const { transactionId, checkoutUrl } = await createCheckoutTransaction({
       planId,
       billing,
-      origin,
       uid,
     });
-    return NextResponse.json({ url });
+    return NextResponse.json({ transactionId, checkoutUrl });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'checkout-failed';
     if (message === 'price-not-configured') {
       return NextResponse.json(
-        { error: 'price-not-configured', message: 'This plan has no Stripe price configured yet.' },
+        { error: 'price-not-configured', message: 'This plan has no Paddle price configured yet.' },
         { status: 400 },
       );
     }
@@ -87,7 +89,7 @@ export async function POST(request: Request) {
         { status: 503 },
       );
     }
-    console.error('[checkout] create session failed:', message);
+    console.error('[checkout] create transaction failed:', message);
     return NextResponse.json(
       { error: 'checkout-failed', message: 'Could not start checkout — please try again.' },
       { status: 500 },

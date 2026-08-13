@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import SuccessView from "@/components/checkout/SuccessView";
-import { isStripeConfigured, verifyCheckoutSession } from "@/lib/stripe/server";
+import { isPaddleConfigured, verifyPaddleTransaction } from "@/lib/paddle/server";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -9,18 +9,23 @@ export const metadata: Metadata = {
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ session_id?: string }>;
+  // Paddle redirects here after a completed checkout with ?transaction_id=…
+  // appended to the configured successUrl. (Display only — entitlement is
+  // granted by the webhook and confirmed via /api/entitlement.)
+  searchParams: Promise<{ transaction_id?: string }>;
 }) {
-  const { session_id } = await searchParams;
+  const { transaction_id } = await searchParams;
 
-  // Server-side verification: only a paid session with known metadata counts
-  // as a completed purchase. Anything else falls back to a generic message.
+  // Server-side verification (display only): a completed transaction with a
+  // known catalog price counts as a completed purchase for the confirmation
+  // copy. This NEVER grants anything — the webhook → Firestore record is the
+  // source of truth and the client polls /api/entitlement for the actual plan.
   let verified: { planId: string; billing: string; email?: string } | null = null;
-  if (session_id && isStripeConfigured()) {
+  if (transaction_id && isPaddleConfigured()) {
     try {
-      verified = await verifyCheckoutSession(session_id);
+      verified = await verifyPaddleTransaction(transaction_id);
     } catch (err) {
-      console.error("[checkout] session verify failed:", err);
+      console.error("[checkout] transaction verify failed:", err);
     }
   }
 

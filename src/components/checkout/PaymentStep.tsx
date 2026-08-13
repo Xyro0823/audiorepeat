@@ -9,8 +9,8 @@ interface Props {
   billing: 'monthly' | 'annual';
   signedIn: boolean;
   user: AuthUser | null;
-  /** True when NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is set at build time. */
-  stripeEnabled: boolean;
+  /** True when NEXT_PUBLIC_PADDLE_CLIENT_TOKEN is set at build time. */
+  paddleEnabled: boolean;
   onBack: () => void;
   onContinueFree: () => void;
 }
@@ -18,23 +18,72 @@ interface Props {
 type NotifyState = 'idle' | 'saving' | 'done' | 'error';
 type PayState = 'idle' | 'starting' | 'error';
 
+/** Minimal global typings for Paddle.js (loaded from CDN at checkout time). */
+declare global {
+  interface Window {
+    Paddle?: {
+      Initialize: (options: { token: string }) => void;
+      Checkout: {
+        open: (options: {
+          settings?: {
+            displayMode?: 'overlay' | 'inline';
+            theme?: 'light' | 'dark';
+            successUrl?: string;
+          };
+          transactionId?: string;
+        }) => void;
+      };
+    };
+  }
+}
+
+/** Load Paddle.js once; resolves when window.Paddle is ready. */
+function loadPaddleJs(timeoutMs = 8000): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (typeof window !== 'undefined' && window.Paddle) {
+      resolve();
+      return;
+    }
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[data-paddle-js]',
+    );
+    if (existing) {
+      existing.addEventListener('load', () => resolve(), { once: true });
+      existing.addEventListener('error', () => reject(new Error('paddle-script-error')), {
+        once: true,
+      });
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
+    script.dataset.paddleJs = 'true';
+    script.async = true;
+    script.addEventListener('load', () => resolve(), { once: true });
+    script.addEventListener('error', () => reject(new Error('paddle-script-error')), {
+      once: true,
+    });
+    document.head.appendChild(script);
+    window.setTimeout(() => reject(new Error('paddle-script-timeout')), timeoutMs);
+  });
+}
+
 /**
- * Payment step — the swap point for real payments.
+ * Payment step — Paddle checkout.
  *
- * When Stripe is configured this creates a hosted Checkout Session via the
- * server API and redirects the browser to Stripe's payment page (the secret
- * key never leaves the server). When it isn't, it renders an honest
- * placeholder — plan summary, "payments coming soon" note, and a
- * "notify me" interest-capture action. There is deliberately no credit-card
- * form on this page in either mode; Card/ExpressCheckout UI lives inside
- * Stripe's hosted Checkout.
+ * Flow: the server creates a Paddle transaction (auth-verified, uid in custom
+ * data) via /api/checkout, then this component opens the hosted Paddle
+ * checkout overlay with Paddle.js using the transaction id. On completion the
+ * customer is redirected to /checkout/success; entitlement is granted only by
+ * the /api/paddle/webhook and confirmed via /api/entitlement — never by this
+ * screen. When Paddle isn't configured it renders an honest placeholder (no
+ * fake card form, nothing charges).
  */
 export default function PaymentStep({
   plan,
   billing,
   signedIn,
   user,
-  stripeEnabled,
+  paddleEnabled,
   onBack,
   onContinueFree,
 }: Props) {
@@ -45,10 +94,10 @@ export default function PaymentStep({
   // identity stays stable across renders.
   const startingRef = useRef(false);
 
-  // Stripe checkout requires a verified server-side identity — the pay button
+  // Paddle checkout requires a verified server-side identity — the pay button
   // only appears for signed-in users (the checkout gate already sends
   // anonymous users to sign in first).
-  const canPayWithStripe = stripeEnabled && signedIn && plan.id !== 'basic';
+  const canPayWithPaddle = paddleEnabled && signedIn && plan.id !== 'basic';
 
   const recordInterest = useCallback(async () => {
     if (!user) return;
@@ -72,11 +121,8 @@ export default function PaymentStep({
       // request body carries no identity at all.
       const { getFirebaseIdToken } = await import('@/lib/firebase/client');
       const token = await getFirebaseIdToken();
-      if (!token) {
-        startingRef.current = false;
-        setPay('error');
-        return;
-      }
+      if (!token) throw new Error('no-token');
+
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: {
@@ -85,13 +131,47 @@ export default function PaymentStep({
         },
         body: JSON.stringify({ planId: plan.id, billing }),
       });
-      const data = (await res.json()) as { url?: string; error?: string; message?: string };
-      if (!res.ok || !data.url) {
+      const data = (await res.json()) as {
+        transactionId?: string;
+        checkoutUrl?: string;
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok || !data.transactionId) {
         throw new Error(data.error ?? 'checkout-failed');
       }
-      // Hosted Checkout — the browser leaves for Stripe's payment page, then
-      // returns to /checkout/success?session_id=… or /checkout?canceled=1.
-      window.location.assign(data.url);
+
+      // Open the hosted Paddle checkout overlay for the server-created
+      // transaction. On completion Paddle redirects to our success page with
+      // ?transaction_id=… appended.
+      try {
+        await loadPaddleJs();
+        const clientToken = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
+        if (!clientToken || !window.Paddle) throw new Error('paddle-unavailable');
+        window.Paddle.Initialize({ token: clientToken });
+        window.Paddle.Checkout.open({
+          settings: {
+            displayMode: 'overlay',
+            theme: 'dark',
+            successUrl: `${window.location.origin}/checkout/success`,
+          },
+          transactionId: data.transactionId,
+        });
+        // The overlay keeps the user on this page — reset the guard so they
+        // can retry if they close it without paying.
+        startingRef.current = false;
+        setPay('idle');
+        return;
+      } catch {
+        // Paddle.js unavailable (script blocked / token missing) → fall back
+        // to the hosted payment link. Entitlement still flows through the
+        // webhook regardless of which checkout surface the user pays on.
+        if (data.checkoutUrl) {
+          window.location.assign(data.checkoutUrl);
+          return;
+        }
+        throw new Error('no-checkout-url');
+      }
     } catch {
       startingRef.current = false;
       setPay('error');
@@ -145,9 +225,9 @@ export default function PaymentStep({
           </ul>
         </div>
 
-        {canPayWithStripe ? (
+        {canPayWithPaddle ? (
           /* ---------------------------------------------------------- */
-          /* Real Stripe Checkout — hosted payment page via the server.   */
+          /* Real Paddle Checkout — hosted overlay via Paddle.js.        */
           /* ---------------------------------------------------------- */
           <>
             <button
@@ -171,7 +251,7 @@ export default function PaymentStep({
                   >
                     <path d="M12 1.5 3 6v5c0 5 3.9 9.4 9 11.5C17.1 20.4 21 16 21 11V6l-9-4.5ZM10.8 15.3 7 11.5l1.4-1.4 2.4 2.4 4.8-4.8 1.4 1.4-6.2 6.2Z" />
                   </svg>
-                  Pay securely with Stripe — ${price}
+                  Pay securely with Paddle — ${price}
                   <span className="text-xs font-medium opacity-80">{note}</span>
                 </>
               )}
@@ -179,11 +259,11 @@ export default function PaymentStep({
             {pay === 'error' && (
               <p className="mt-2 rounded-xl border border-neon-magenta/40 bg-neon-magenta/10 px-3 py-2 text-xs text-neon-magenta">
                 Couldn&apos;t start checkout — please try again. You won&apos;t be charged
-                unless you complete payment on Stripe&apos;s page.
+                unless you complete payment on Paddle&apos;s page.
               </p>
             )}
             <p className="mt-2.5 text-center text-[11px] text-slate-500">
-              🔒 Secure payment handled by Stripe — card details never touch AudioRepeat.
+              🔒 Secure payment handled by Paddle — card details never touch AudioRepeat.
             </p>
           </>
         ) : plan.id === 'basic' ? (

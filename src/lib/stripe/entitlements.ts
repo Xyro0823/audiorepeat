@@ -29,6 +29,10 @@ export interface EntitlementRecord {
   stripeSubscriptionId: string | null;
   /** The current Stripe price id, when known. */
   stripePriceId: string | null;
+  /** Paddle subscription id (Paddle webhook path). Optional — Stripe records never set it. */
+  paddleSubscriptionId?: string | null;
+  /** The current Paddle price id (Paddle webhook path). Optional — Stripe records never set it. */
+  paddlePriceId?: string | null;
   /** Stripe subscription status ('active', 'trialing', 'past_due', …) or 'active' for Lifetime. */
   status: string;
   /** Unix seconds when the current billing period ends (subscriptions only). */
@@ -43,7 +47,12 @@ export interface EntitlementStore {
   putEntitlement(uid: string, patch: Partial<EntitlementRecord>): Promise<void>;
   /** Map a Stripe subscription id back to the owning uid (for events whose payload lacks metadata). */
   findUidBySubscription(stripeSubscriptionId: string): Promise<string | null>;
-  /** Idempotency markers for processed Stripe events. */
+  /**
+   * Map a Paddle subscription id back to the owning uid. Optional — the
+   * Paddle path normally carries the uid in custom data, this is a fallback.
+   */
+  findUidByPaddleSubscription?(paddleSubscriptionId: string): Promise<string | null>;
+  /** Idempotency markers for processed webhook events (collection chosen by the store). */
   isEventProcessed(eventId: string): Promise<boolean>;
   markEventProcessed(eventId: string): Promise<void>;
 }
@@ -77,6 +86,43 @@ export interface InvoiceLike {
   subscription?: string | null;
   status?: string | null;
 }
+
+/* ------------------------------------------------------------------------ */
+/* Paddle Billing payload shapes + price resolution                          */
+/* ------------------------------------------------------------------------ */
+
+/** The minimal subset of a Paddle transaction webhook payload we read. */
+export interface PaddleTransactionLike {
+  id: string;
+  status?: string | null;
+  /** Server-set custom data: { uid, planId, billing } — the uid is authoritative. */
+  customData?: Record<string, unknown> | null;
+  items?: { price?: { id?: string | null } | null }[] | null;
+  /** Set when the transaction created a subscription (Pro purchases). */
+  subscriptionId?: string | null;
+}
+
+/** The minimal subset of a Paddle subscription webhook payload we read. */
+export interface PaddleSubscriptionLike {
+  id: string;
+  status?: string | null;
+  customData?: Record<string, unknown> | null;
+  items?: { price?: { id?: string | null } | null }[] | null;
+  currentBillingPeriod?: { endsAt?: string | null } | null;
+}
+
+/**
+ * Maps a Paddle price id to plan + billing. Injected by callers (the webhook
+ * route passes the env-driven resolver from `@/lib/paddle/server`) so this
+ * module stays free of `process.env` and remains unit-testable.
+ */
+export interface PaddlePriceResolver {
+  resolvePlan(priceId: string | null | undefined): PlanId | null;
+  resolveBilling(priceId: string | null | undefined): 'monthly' | 'annual' | null;
+}
+
+/** Paddle subscription statuses that keep Pro entitlement active. */
+const PADDLE_ENTITLED_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing']);
 
 /* ------------------------------------------------------------------------ */
 /* Pure computations                                                        */
@@ -255,4 +301,157 @@ export async function handleInvoicePaymentFailed(
   const uid = await store.findUidBySubscription(patch.stripeSubscriptionId as string);
   if (!uid) return;
   await store.putEntitlement(uid, patch);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Paddle computations                                                      */
+/* ------------------------------------------------------------------------ */
+
+/**
+ * Derive the entitlement patch for a completed Paddle transaction
+ * (`transaction.completed` / `transaction.paid`). Returns null when the event
+ * should be ignored (not completed, missing uid, unknown price).
+ *
+ * - Lifetime price → permanent Lifetime entitlement (no subscription).
+ * - Pro price → Pro entitlement (the transaction's first payment captured the
+ *   subscription); ongoing lifecycle is refined by subscription events.
+ */
+export function computePaddleTransactionEntitlement(
+  txn: PaddleTransactionLike,
+  prices: PaddlePriceResolver,
+): Omit<EntitlementRecord, 'updatedAt'> | null {
+  const uid = txn.customData?.uid;
+  if (typeof uid !== 'string' || uid.length === 0) return null;
+  if (txn.status !== 'completed') return null;
+
+  const priceId = txn.items?.[0]?.price?.id ?? null;
+  const plan = prices.resolvePlan(priceId);
+  if (!plan) return null;
+
+  if (plan === 'lifetime') {
+    return {
+      uid,
+      plan: 'lifetime',
+      billing: 'lifetime',
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      stripePriceId: null,
+      paddleSubscriptionId: null,
+      paddlePriceId: priceId,
+      status: 'active',
+      currentPeriodEnd: null,
+    };
+  }
+  // Pro — the checkout created a subscription; capture its id for lifecycle
+  // mapping (the exact billing comes from the price resolver).
+  return {
+    uid,
+    plan: 'pro',
+    billing: prices.resolveBilling(priceId) ?? 'annual',
+    stripeCustomerId: null,
+    stripeSubscriptionId: null,
+    stripePriceId: null,
+    paddleSubscriptionId: txn.subscriptionId ?? null,
+    paddlePriceId: priceId,
+    status: 'active',
+    currentPeriodEnd: null,
+  };
+}
+
+/**
+ * Derive the entitlement patch for a Paddle subscription event
+ * (`subscription.activated` / `updated` / `canceled` / `paused` / `past_due`).
+ * Active/trialing keeps Pro (with refreshed period + price); every other
+ * status revokes Pro back to Free.
+ */
+export function computePaddleSubscriptionEntitlement(
+  sub: PaddleSubscriptionLike,
+  prices: PaddlePriceResolver,
+): Omit<
+  EntitlementRecord,
+  'updatedAt' | 'uid' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'stripePriceId'
+> {
+  const status = sub.status ?? 'active';
+  const priceId = sub.items?.[0]?.price?.id ?? null;
+  const currentPeriodEnd = sub.currentBillingPeriod?.endsAt
+    ? Math.floor(Date.parse(sub.currentBillingPeriod.endsAt) / 1000)
+    : null;
+
+  if (PADDLE_ENTITLED_SUBSCRIPTION_STATUSES.has(status)) {
+    return {
+      plan: 'pro',
+      billing: prices.resolveBilling(priceId) ?? null,
+      paddleSubscriptionId: sub.id,
+      paddlePriceId: priceId,
+      status,
+      currentPeriodEnd,
+    };
+  }
+  // Not entitled — revoke Pro but keep the subscription id + status for history.
+  return {
+    plan: 'basic',
+    billing: null,
+    paddleSubscriptionId: sub.id,
+    paddlePriceId: priceId,
+    status,
+    currentPeriodEnd,
+  };
+}
+
+/* ------------------------------------------------------------------------ */
+/* Paddle event handlers                                                    */
+/* ------------------------------------------------------------------------ */
+
+/**
+ * Apply a `transaction.completed` / `transaction.paid` event.
+ *
+ * Lifetime protection: if the user already owns Lifetime, a later Pro
+ * purchase keeps Lifetime (the strongest entitlement always wins).
+ */
+export async function handlePaddleTransactionCompleted(
+  store: EntitlementStore,
+  txn: PaddleTransactionLike,
+  prices: PaddlePriceResolver,
+): Promise<void> {
+  const patch = computePaddleTransactionEntitlement(txn, prices);
+  if (!patch) return;
+  const current = await store.getEntitlement(patch.uid);
+  // Lifetime is permanent — a later purchase never downgrades it (and a
+  // redundant purchase for an existing Lifetime owner changes nothing).
+  if (current?.plan === 'lifetime') return;
+  await store.putEntitlement(patch.uid, patch);
+}
+
+/**
+ * Apply a Paddle subscription lifecycle event
+ * (`subscription.activated` / `created` / `updated` / `canceled` / `paused` /
+ * `past_due`). Active/trialing → Pro; anything else revokes. A revoke NEVER
+ * touches an account that already owns Lifetime.
+ */
+export async function handlePaddleSubscriptionEvent(
+  store: EntitlementStore,
+  sub: PaddleSubscriptionLike,
+  prices: PaddlePriceResolver,
+): Promise<void> {
+  const uid =
+    (typeof sub.customData?.uid === 'string' && sub.customData.uid.length > 0
+      ? sub.customData.uid
+      : null) ?? (await store.findUidByPaddleSubscription?.(sub.id)) ?? null;
+  if (!uid) return; // unknown subscription — nothing to update
+
+  const patch = computePaddleSubscriptionEntitlement(sub, prices);
+  const current = await store.getEntitlement(uid);
+  if (current?.plan === 'lifetime') {
+    // Lifetime is permanent — a subscription lifecycle event never downgrades
+    // it. A would-be Pro grant keeps Lifetime (strongest wins) while still
+    // refreshing the subscription state for history.
+    if (patch.plan === 'pro') {
+      await store.putEntitlement(uid, { ...patch, uid, plan: 'lifetime', billing: 'lifetime' });
+    }
+    return; // revokes don't touch a Lifetime owner
+  }
+  // Nothing to revoke when the user has no record yet — a payment-failure or
+  // cancellation event for an unknown subscription never creates one.
+  if (!current && patch.plan === 'basic') return;
+  await store.putEntitlement(uid, { ...patch, uid });
 }
