@@ -57,6 +57,34 @@ async function loadClient(): Promise<typeof import('@/lib/firebase/client')> {
   return import('@/lib/firebase/client');
 }
 
+/**
+ * Mirror the server-side entitlement (the source of truth) into local
+ * settings so the Free/Pro gating reflects the real plan. Best-effort and
+ * non-blocking: when the server layer isn't configured or the fetch fails,
+ * local settings stay as they are (guests-only fallback keeps working).
+ */
+async function syncPlanFromServer(): Promise<void> {
+  try {
+    const { getFirebaseIdToken } = await loadClient();
+    const token = await getFirebaseIdToken();
+    if (!token) return;
+    const res = await fetch('/api/entitlement', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return; // 503 = server entitlement not configured — keep local state
+    const data = (await res.json()) as { plan?: string; billing?: string | null };
+    const plan = data.plan;
+    if (plan !== 'basic' && plan !== 'pro' && plan !== 'lifetime') return;
+    const { updateSettings } = await import('@/lib/settingsStore');
+    updateSettings({
+      plan,
+      planBilling: plan === 'lifetime' ? 'annual' : data.billing === 'monthly' ? 'monthly' : 'annual',
+    });
+  } catch {
+    // Best-effort — entitlement sync must never block auth.
+  }
+}
+
 /** Restore the Firebase session once (idempotent across all consumers). */
 export async function hydrateAuth(): Promise<void> {
   if (hydrated) return;
@@ -76,6 +104,9 @@ export async function hydrateAuth(): Promise<void> {
     onFirebaseAuthChange(auth, (fbUser) => {
       if (fbUser) {
         setState({ status: 'signed-in', user: firebaseUserToAuthUser(fbUser) });
+        // Server entitlement is authoritative — mirror it into local settings
+        // so gating uses the real plan (no-op when not configured).
+        void syncPlanFromServer();
       } else {
         // Signed out. An explicit `logout()` already moved to 'signed-out'
         // (login screen); anything else (fresh visit) becomes a guest.

@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "firebase": "^12.17.1",
+    "firebase-admin": "^14.2.0",
     "hls.js": "^1.6.17",
     "idb": "^8.0.3",
     "lucide-react": "^1.30.0",

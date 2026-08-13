@@ -10,6 +10,7 @@
  */
 import Stripe from 'stripe';
 import { isPlanId, type PlanId } from '@/lib/plans';
+import { createEntitlementStore } from '@/lib/firebase/admin';
 
 export type Billing = 'monthly' | 'annual';
 
@@ -51,16 +52,22 @@ export interface CheckoutSessionResult {
 }
 
 /**
- * Create a Checkout Session for a paid plan. Throws on misconfiguration or a
- * Stripe error — the API route maps failures to clean HTTP responses.
+ * Create a Checkout Session for a paid plan on behalf of an authenticated
+ * user (uid is the server-verified Firebase uid — never a client-supplied
+ * value). The user is associated with a Stripe Customer (reusing any stored
+ * customer id) so subscription lifecycle events can be mapped back to them,
+ * and the uid travels in both the session and subscription metadata.
+ *
+ * Throws on misconfiguration or a Stripe error — the API route maps failures
+ * to clean HTTP responses.
  */
 export async function createCheckoutSession(args: {
   planId: string;
   billing: Billing;
   origin: string;
-  userId?: string;
+  uid: string;
 }): Promise<CheckoutSessionResult> {
-  const { planId, billing, origin, userId } = args;
+  const { planId, billing, origin, uid } = args;
   if (!isPlanId(planId) || planId === 'basic') {
     throw new Error('invalid-plan');
   }
@@ -68,15 +75,35 @@ export async function createCheckoutSession(args: {
   if (!priceId) {
     throw new Error('price-not-configured');
   }
-  const session = await getStripe().checkout.sessions.create({
+
+  const stripe = getStripe();
+  const store = createEntitlementStore();
+
+  // Associate the authenticated user with a Stripe Customer (reuse existing,
+  // create + persist otherwise) so subscription/webhook events resolve back
+  // to the Firebase uid.
+  const existing = await store.getEntitlement(uid);
+  let customerId = existing?.stripeCustomerId ?? null;
+  if (!customerId) {
+    const customer = await stripe.customers.create({ metadata: { uid } });
+    customerId = customer.id;
+    await store.putEntitlement(uid, { uid, stripeCustomerId: customerId });
+  }
+
+  const session = await stripe.checkout.sessions.create({
     mode: planId === 'lifetime' ? 'payment' : 'subscription',
+    customer: customerId,
     line_items: [{ price: priceId, quantity: 1 }],
     // On success Stripe redirects here with the session id; the success page
     // verifies it server-side before showing the confirmation.
     success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/checkout?plan=${planId}&canceled=1`,
-    metadata: { planId, billing, userId: userId ?? '' },
-    customer_email: undefined, // collected by Stripe Checkout by default
+    metadata: { uid, planId, billing },
+    // Copied onto the created subscription so customer.subscription.* events
+    // can be mapped back to the Firebase uid without an extra lookup.
+    ...(planId === 'pro'
+      ? { subscription_data: { metadata: { uid, planId, billing } } }
+      : {}),
   });
   if (!session.url) throw new Error('stripe-no-session-url');
   return { url: session.url };

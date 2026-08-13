@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
-import { isPlanId, PLANS } from '@/lib/plans';
+import { isPlanId, PLANS, type PlanId } from '@/lib/plans';
 import { updateSettings } from '@/lib/settingsStore';
 
 interface Props {
@@ -13,25 +12,73 @@ interface Props {
   email?: string;
 }
 
+/**
+ * Checkout success screen.
+ *
+ * The Stripe webhook / entitlement record is the source of truth — reaching
+ * this page is NOT proof of payment. The page shows the order as received and
+ * then polls the server entitlement until it reflects the purchased plan
+ * (webhook delivery usually beats the redirect, but can lag a few seconds).
+ * Local settings are only mirrored to the server-confirmed value, so a stale
+ * or spoofed success page can never grant Pro by itself.
+ */
 export default function SuccessView({ planId, billing, email }: Props) {
-  const { user } = useAuth();
+  // No verified plan → render the generic fallback from the first paint (no
+  // setState inside the effect below).
+  const [state, setState] = useState<'verifying' | 'activating' | 'active' | 'unverified'>(
+    isPlanId(planId) ? 'verifying' : 'unverified',
+  );
   const handled = useRef(false);
 
-  // Once: persist the purchased plan into the app settings, and (best-effort)
-  // record the purchase to Firestore for the admin/analytics record.
+  const plan = isPlanId(planId) ? PLANS[planId] : null;
+
   useEffect(() => {
     if (handled.current || !isPlanId(planId)) return;
     handled.current = true;
-    const cycle = billing === 'monthly' ? 'monthly' : 'annual';
-    updateSettings({ plan: planId, planBilling: cycle });
-    if (user) {
-      void import('@/lib/firebase/planInterest')
-        .then((m) => m.recordPlanPurchase(user.id, planId, billing).catch(() => {}))
-        .catch(() => {});
-    }
-  }, [planId, billing, user]);
 
-  const plan = isPlanId(planId) ? PLANS[planId] : null;
+    let cancelled = false;
+    let attempts = 0;
+
+    const pollEntitlement = async () => {
+      if (cancelled) return;
+      attempts += 1;
+      try {
+        const { getFirebaseIdToken } = await import('@/lib/firebase/client');
+        const token = await getFirebaseIdToken();
+        if (!token) {
+          if (!cancelled) setState('unverified');
+          return;
+        }
+        const res = await fetch('/api/entitlement', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { plan?: PlanId };
+          if (data.plan === planId) {
+            // Server confirmed — mirror into local settings (client cache of
+            // the server state, not proof in its own right).
+            const cycle = billing === 'monthly' ? 'monthly' : 'annual';
+            updateSettings({ plan: planId, planBilling: cycle });
+            if (!cancelled) setState('active');
+            return;
+          }
+        }
+      } catch {
+        /* fall through to retry */
+      }
+      if (attempts < 15 && !cancelled) {
+        // Webhook can lag the redirect by a few seconds — keep polling.
+        window.setTimeout(() => void pollEntitlement(), 2000);
+      } else if (!cancelled) {
+        setState('activating');
+      }
+    };
+
+    void pollEntitlement();
+    return () => {
+      cancelled = true;
+    };
+  }, [planId, billing]);
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-x-clip bg-night-950 px-5 text-[#e8eaef]">
@@ -41,7 +88,7 @@ export default function SuccessView({ planId, billing, email }: Props) {
       </div>
 
       <div className="glass relative z-10 w-full max-w-lg animate-fade-up rounded-3xl p-8 text-center">
-        {plan ? (
+        {state === 'active' && plan ? (
           <>
             <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-neon-green/40 bg-neon-green/10">
               <svg
@@ -93,6 +140,46 @@ export default function SuccessView({ planId, billing, email }: Props) {
               Start practicing
             </Link>
           </>
+        ) : state === 'activating' || state === 'verifying' ? (
+          <>
+            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-neon-amber/30 bg-neon-amber/10">
+              {state === 'verifying' ? (
+                <span
+                  className="inline-block h-7 w-7 animate-spin rounded-full border-2 border-neon-amber/30 border-t-neon-amber"
+                  aria-hidden
+                />
+              ) : (
+                <span className="text-2xl" aria-hidden>
+                  📬
+                </span>
+              )}
+            </span>
+            <h1 className="mt-5 text-2xl font-bold tracking-tight text-white">
+              {state === 'verifying' ? 'Confirming your payment…' : 'Payment received — activating your plan'}
+            </h1>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
+              {state === 'verifying'
+                ? `We're confirming your ${plan?.name ?? 'plan'} with Stripe.`
+                : 'Your payment went through. Your plan is being activated on our side — this usually takes a few seconds. It may take a moment for all your Pro features to unlock.'}
+            </p>
+            <div className="mt-7 flex flex-col gap-2.5">
+              <Link
+                href="/dashboard"
+                className="btn-primary inline-flex h-12 items-center justify-center rounded-xl px-8 text-sm font-semibold text-white"
+              >
+                Go to dashboard
+              </Link>
+              {state === 'activating' && (
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="btn-clean inline-flex h-11 items-center justify-center rounded-xl px-8 text-sm font-medium text-slate-300"
+                >
+                  Check again
+                </button>
+              )}
+            </div>
+          </>
         ) : (
           <>
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-neon-amber/30 bg-neon-amber/10 text-2xl">
@@ -102,7 +189,7 @@ export default function SuccessView({ planId, billing, email }: Props) {
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
               We couldn&apos;t verify the payment on this screen, but if you completed a
               checkout, Stripe will email you a receipt shortly. Everything remains free
-              until then.
+              until it&apos;s confirmed.
             </p>
             <Link
               href="/dashboard"

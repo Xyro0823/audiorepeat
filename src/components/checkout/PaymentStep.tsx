@@ -45,7 +45,10 @@ export default function PaymentStep({
   // identity stays stable across renders.
   const startingRef = useRef(false);
 
-  const canPayWithStripe = stripeEnabled && plan.id !== 'basic';
+  // Stripe checkout requires a verified server-side identity — the pay button
+  // only appears for signed-in users (the checkout gate already sends
+  // anonymous users to sign in first).
+  const canPayWithStripe = stripeEnabled && signedIn && plan.id !== 'basic';
 
   const recordInterest = useCallback(async () => {
     if (!user) return;
@@ -65,10 +68,22 @@ export default function PaymentStep({
     startingRef.current = true;
     setPay('starting');
     try {
+      // The server verifies this ID token and derives the uid itself — the
+      // request body carries no identity at all.
+      const { getFirebaseIdToken } = await import('@/lib/firebase/client');
+      const token = await getFirebaseIdToken();
+      if (!token) {
+        startingRef.current = false;
+        setPay('error');
+        return;
+      }
       const res = await fetch('/api/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: plan.id, billing, userId: user?.id }),
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ planId: plan.id, billing }),
       });
       const data = (await res.json()) as { url?: string; error?: string; message?: string };
       if (!res.ok || !data.url) {
@@ -81,7 +96,7 @@ export default function PaymentStep({
       startingRef.current = false;
       setPay('error');
     }
-  }, [plan.id, billing, user]);
+  }, [plan.id, billing]);
 
   return (
     <div className="mx-auto w-full max-w-lg">

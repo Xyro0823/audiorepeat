@@ -46,6 +46,21 @@ export function getFirebaseAuth(): Auth | null {
   return isFirebaseConfigured() ? initFirebase().auth : null;
 }
 
+/**
+ * Fresh ID token for the signed-in user (null when signed out / unconfigured).
+ * Used to authenticate server calls like /api/checkout and /api/entitlement.
+ */
+export async function getFirebaseIdToken(): Promise<string | null> {
+  const auth = getFirebaseAuth();
+  const current = auth?.currentUser;
+  if (!current) return null;
+  try {
+    return await current.getIdToken();
+  } catch {
+    return null;
+  }
+}
+
 /** Live binding — populated after the first init (see module docstring). */
 export { auth };
 
