@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import type { ReactNode } from "react";
 import {
   Barlow,
   Geist,
@@ -81,7 +82,7 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     // suppressHydrationWarning: browser extensions (e.g. CRXLauncher) inject
     // attributes like crxlauncher="" onto <html> after SSR, which React flags
