@@ -72,8 +72,14 @@ Manual CLI deploy: `vercel --prod` from this folder.
 **Environment variables:** all app vars are documented in `.env.example`.
 The 7 `NEXT_PUBLIC_FIREBASE_*` values are configured in Vercel Production
 (Firebase Auth for project `audiorepeat-819d9`, domain `audiorepeat.vercel.app`
-authorized). Stripe keys are intentionally not configured yet — checkout shows
-the placeholder state until payments go live.
+authorized).
+
+**Payments:** checkout currently shows the honest placeholder state until
+payment credentials are configured. The app previously used Stripe; a Paddle
+migration is in progress (provider-agnostic entitlement infrastructure is in
+place and Paddle catalog prices are reflected in the UI, but no Paddle
+checkout/webhook is implemented yet). The Stripe code paths remain until the
+Paddle cutover is complete.
 
 ## Roadmap
 

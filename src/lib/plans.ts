@@ -2,6 +2,10 @@
  * Shared plan/pricing data — the single source of truth for plan names,
  * prices and features. Used by the landing page pricing section and the
  * /checkout flow so a future real payment backend reads the same numbers.
+ *
+ * Display prices reflect the Paddle catalog (migration in progress):
+ * Pro $4.99/mo, Pro $39.99/yr, Lifetime $79.99 one-time. Provider billing
+ * (Stripe IDs etc.) is intentionally NOT in this file.
  */
 
 export type PlanId = 'basic' | 'pro' | 'lifetime';
@@ -30,7 +34,7 @@ export const PLAN_BADGE: Record<PlanId, { short: string; label: string }> = {
 /** One-line plan description for the profile dropdown. */
 export function planDetail(plan: PlanId, billing: 'monthly' | 'annual'): string {
   if (plan === 'lifetime') return 'Lifetime · one-time payment';
-  if (plan === 'pro') return billing === 'annual' ? 'Pro · $7/mo, billed annually' : 'Pro · $9/mo';
+  if (plan === 'pro') return billing === 'annual' ? 'Pro · $39.99/yr' : 'Pro · $4.99/mo';
   return 'Free plan — upgrade anytime';
 }
 
@@ -63,8 +67,8 @@ export const PLANS: Record<PlanId, PlanDef> = {
     popular: true,
     priceFor: (annual) =>
       annual
-        ? { price: 7, note: '/mo, billed $84 annually' }
-        : { price: 9, note: '/mo' },
+        ? { price: 39.99, note: '/year' }
+        : { price: 4.99, note: '/mo' },
     features: (langCount) => [
       `All ${langCount} languages`,
       'AI pronunciation coach',
@@ -79,7 +83,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
     tagline: 'One payment, forever',
     cta: 'Get Lifetime',
     popular: false,
-    priceFor: () => ({ price: 149, note: 'one-time payment' }),
+    priceFor: () => ({ price: 79.99, note: 'one-time payment' }),
     features: () => ['Everything in Pro', 'Future languages included', 'Priority support'],
   },
 };
