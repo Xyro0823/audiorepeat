@@ -13,6 +13,11 @@
  * Usage:
  *   npm run vocab:health
  *   npm run vocab:health -- --json
+ *   npm run vocab:health -- --topic health
+ *   npm run vocab:health -- --lang mn
+ *
+ * --topic and --lang narrow the TEXT report (per-topic detail / per-language
+ * coverage card). JSON mode always returns the complete report.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -229,48 +234,110 @@ export function analyze({
     manifestCountMismatch: [],
     fileLanguageMismatch: [],
   };
+  // Structured per-topic diagnostics (extended Topic Library detail).
+  const topicDetails = [];
+  const topicLanguageSummary = {};
+  const topicLanguageSets = {};
+  const addTopicPairs = (lang, n) => {
+    topicLanguageSummary[lang] ??= { topicsCovered: 0, totalPairs: 0 };
+    topicLanguageSummary[lang].topicsCovered += 1;
+    topicLanguageSummary[lang].totalPairs += n;
+  };
   for (const [topic, meta] of Object.entries(topicManifest ?? {})) {
     const data = topics[topic];
+    const entry = {
+      id: topic,
+      languages: 0,
+      counts: {},
+      totalPairs: 0,
+      coreSize: 0,
+      parityStatus: 'OK',
+      issues: [],
+    };
     if (!data) {
+      entry.parityStatus = 'FAIL';
+      entry.issues.push('no file on disk');
       failures.push(`topic ${topic}: no file on disk`);
+      topicDetails.push(entry);
       continue;
     }
     const langs = Object.keys(meta.langs ?? {});
     const ref = langs[0];
-    if (ref && data[ref]) {
-      const core = data[ref].map(([, e]) => norm(e));
-      for (const l of langs) {
-        const list = data[l] ?? [];
-        topicStats.totalTopicPairs += list.length;
-        topicStats.topicLanguages.add(l);
-        if (list.length !== core.length) {
-          topicStats.coreMismatches.push(`${topic}[${l}]: count ${list.length} != core ${core.length}`);
-        } else {
-          const theirs = list.map(([, e]) => norm(e));
-          if (JSON.stringify(theirs) !== JSON.stringify(core)) {
-            topicStats.coreMismatches.push(`${topic}[${l}]: core order/content differs`);
-          }
-        }
-        const expected = meta.langs?.[l];
-        if (expected !== undefined && expected !== list.length) {
-          topicStats.manifestCountMismatch.push(`${topic}[${l}]: manifest ${expected} != file ${list.length}`);
+    const core = ref && data[ref] ? data[ref].map(([, e]) => norm(e)) : [];
+    entry.coreSize = core.length;
+    const fileLangs = Object.keys(data);
+    const missingLangs = langs.filter((l) => !data[l]);
+    const extraLangs = fileLangs.filter((l) => !meta.langs?.[l]);
+    for (const l of missingLangs) {
+      entry.issues.push(`missing language: ${l}`);
+      entry.parityStatus = 'FAIL';
+    }
+    for (const l of extraLangs) {
+      const n = (data[l] ?? []).length;
+      entry.issues.push(`extra language: ${l} (${n} pairs)`);
+      entry.parityStatus = 'FAIL';
+      addTopicPairs(l, n);
+    }
+    for (const l of langs) {
+      const list = data[l] ?? [];
+      topicStats.totalTopicPairs += list.length;
+      topicStats.topicLanguages.add(l);
+      addTopicPairs(l, list.length);
+      entry.counts[l] = list.length;
+      entry.totalPairs += list.length;
+      const expected = meta.langs?.[l];
+      if (expected !== undefined && expected !== list.length) {
+        entry.issues.push(`manifest count mismatch: ${l} ${expected} != ${list.length}`);
+        topicStats.manifestCountMismatch.push(`${topic}[${l}]: manifest ${expected} != file ${list.length}`);
+        entry.parityStatus = 'FAIL';
+      }
+      if (core.length && list.length !== core.length) {
+        entry.issues.push(`concept count mismatch: ${l} ${list.length} != core ${core.length}`);
+        topicStats.coreMismatches.push(`${topic}[${l}]: count ${list.length} != core ${core.length}`);
+        entry.parityStatus = 'FAIL';
+      } else if (core.length) {
+        const theirs = list.map(([, e]) => norm(e));
+        if (JSON.stringify(theirs) !== JSON.stringify(core)) {
+          entry.issues.push(`core order/content differs: ${l}`);
+          topicStats.coreMismatches.push(`${topic}[${l}]: core order/content differs`);
+          entry.parityStatus = 'FAIL';
         }
       }
     }
-    const fileLangs = Object.keys(data);
-    const metaLangs = Object.keys(meta.langs ?? {});
-    if (JSON.stringify([...fileLangs].sort()) !== JSON.stringify([...metaLangs].sort())) {
+    entry.languages = langs.length;
+    topicLanguageSets[topic] = new Set(fileLangs);
+    if (JSON.stringify([...fileLangs].sort()) !== JSON.stringify([...langs].sort())) {
       topicStats.fileLanguageMismatch.push(`${topic}: file langs != manifest langs`);
     }
     for (const pack of packs) {
       if (!meta.langs?.[pack]) topicStats.packCoverageMissing.push(`${topic}: missing ${pack}`);
     }
+    topicDetails.push(entry);
   }
   topicStats.topicLanguageCount = topicStats.topicLanguages.size;
   for (const m of topicStats.coreMismatches) failures.push(`topic core: ${m}`);
   for (const m of topicStats.manifestCountMismatch) failures.push(`topic manifest: ${m}`);
   for (const m of topicStats.fileLanguageMismatch) failures.push(`topic: ${m}`);
   for (const m of topicStats.packCoverageMissing) failures.push(`topic: ${m}`);
+
+  // Topic-language coverage summary: common set across topics, pack gaps,
+  // topic-only languages, and topics deviating from the common language set.
+  const allTopicLangs = new Set();
+  const sets = Object.values(topicLanguageSets);
+  const commonLangs = sets.length ? new Set(sets[0]) : new Set();
+  for (const set of sets) {
+    for (const l of set) allTopicLangs.add(l);
+    for (const l of [...commonLangs]) if (!set.has(l)) commonLangs.delete(l);
+  }
+  const topicCoverage = {
+    totalLanguages: allTopicLangs.size,
+    languagesInAllTopics: [...commonLangs].sort(),
+    packMissingFromAnyTopic: packs.filter((p) => !commonLangs.has(p)),
+    topicOnlyLanguages: [...allTopicLangs].filter((l) => !packs.includes(l)).sort(),
+    topicsWithDifferentLanguageSet: Object.entries(topicLanguageSets)
+      .filter(([, s]) => s.size !== commonLangs.size || [...s].some((l) => !commonLangs.has(l)))
+      .map(([t]) => t),
+  };
 
   // ---- B1 overlap guard (existing test limit) ----------------------------
   const b1Overlap = {};
@@ -309,6 +376,9 @@ export function analyze({
     },
     perLanguage: perLang,
     topicStats,
+    topicDetails,
+    topicLanguageSummary,
+    topicCoverage,
     crossLevel,
     isolation,
     terminology,
@@ -336,8 +406,11 @@ export function loadRepo() {
   return { vocabManifest, banks, topicManifest, topics };
 }
 
-/** Render a human-readable summary. */
-export function renderSummary(report) {
+/**
+ * Render a human-readable summary.
+ * opts.topic and opts.lang narrow the topic/per-language sections (text only).
+ */
+export function renderSummary(report, opts = {}) {
   const L = [];
   L.push(`Evoq vocabulary health: ${report.status.toUpperCase()}`);
   L.push('');
@@ -349,12 +422,84 @@ export function renderSummary(report) {
     const lv = Object.keys(e.levels).join(',');
     L.push(`  ${e.lang}: ${e.missing.length ? `MISSING ${e.missing.join(',')}` : lv}`);
   }
-  L.push('');
+  if (opts.lang) {
+    const pl = report.perLanguage[opts.lang];
+    const ts = report.topicLanguageSummary?.[opts.lang];
+    L.push('');
+    L.push(`Language: ${opts.lang}`);
+    if (pl) {
+      L.push(`  bank levels: ${Object.entries(pl.levels).map(([l, n]) => `${l} ${n}`).join(', ')}`);
+      if (pl.missing.length) L.push(`  missing: ${pl.missing.join(', ')}`);
+    } else {
+      L.push('  bank levels: (no pack)');
+    }
+    L.push(
+      ts
+        ? `  topics covered: ${ts.topicsCovered}/${report.counts.topics}   ${ts.totalPairs.toLocaleString()} pairs`
+        : '  topics covered: none',
+    );
+    L.push('');
+  }
   L.push('Cross-level overlap (highest per language):');
   for (const [lang, c] of Object.entries(report.crossLevel)) {
     L.push(`  ${lang}: target ${c.worstTargetOverlap}% (${c.worstTargetPair}) | pair ${c.worstPairOverlap}% (${c.worstPairPair})`);
   }
   L.push('');
+  L.push('Topic detail:');
+  const topicRows = opts.topic
+    ? report.topicDetails.filter((t) => t.id === opts.topic)
+    : report.topicDetails;
+  for (const t of topicRows) {
+    const counts = Object.values(t.counts);
+    const per =
+      counts.length && counts.every((c) => c === counts[0])
+        ? `${counts[0]}/lang`
+        : `${Math.min(...counts)}-${Math.max(...counts)}/lang`;
+    L.push(
+      `  ${t.id.padEnd(12)} ${String(t.languages).padStart(2)} langs   ${per.padStart(9)}   ${String(t.totalPairs).padStart(4)} total   ${t.parityStatus}`,
+    );
+  }
+  if (opts.topic) {
+    const t = report.topicDetails.find((x) => x.id === opts.topic);
+    if (t) {
+      L.push('');
+      L.push(`Topic ${t.id} per-language:`);
+      for (const [lang, n] of Object.entries(t.counts)) {
+        L.push(`  ${lang.padEnd(4)} ${String(n).padStart(5)} pairs`);
+      }
+      if (t.issues.length) {
+        L.push('  issues:');
+        for (const i of t.issues) L.push(`    - ${i}`);
+      }
+    } else {
+      L.push(`  (unknown topic: ${opts.topic})`);
+    }
+  }
+  L.push('');
+  L.push('Per-language topic totals:');
+  for (const [lang, s] of Object.entries(report.topicLanguageSummary ?? {})) {
+    L.push(
+      `  ${lang.padEnd(4)} ${String(s.topicsCovered).padStart(2)}/${report.counts.topics}   ${s.totalPairs.toLocaleString()} pairs`,
+    );
+  }
+  L.push('');
+  const cov = report.topicCoverage;
+  if (cov) {
+    L.push('Topic coverage:');
+    L.push(
+      `  languages in all topics: ${cov.languagesInAllTopics.length} (${cov.languagesInAllTopics.join(', ')})`,
+    );
+    L.push(
+      `  pack languages missing from any topic: ${cov.packMissingFromAnyTopic.length ? cov.packMissingFromAnyTopic.join(', ') : 'none'}`,
+    );
+    L.push(
+      `  topic-only languages: ${cov.topicOnlyLanguages.length ? cov.topicOnlyLanguages.join(', ') : 'none'}`,
+    );
+    L.push(
+      `  topics with a different language set: ${cov.topicsWithDifferentLanguageSet.length ? cov.topicsWithDifferentLanguageSet.join(', ') : 'none'}`,
+    );
+    L.push('');
+  }
   L.push(`Language isolation: worst ${report.isolation.worstOverlap}% (${report.isolation.langPair} @ ${report.isolation.level})`);
   L.push(`B1 overlap: ${Object.entries(report.b1Overlap).map(([l, v]) => `${l} ${(v * 100).toFixed(0)}%`).join(', ')}`);
   L.push(`Terminology: ${report.terminology.violations.length}/${report.terminology.configured} violations`);
@@ -376,12 +521,19 @@ export function renderSummary(report) {
 // CLI entry point.
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   const json = process.argv.includes('--json');
+  let topicFilter;
+  let langFilter;
+  const args = process.argv.slice(2);
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--topic') topicFilter = args[i + 1];
+    if (args[i] === '--lang') langFilter = args[i + 1];
+  }
   const repo = loadRepo();
   const report = analyze(repo);
   if (json) {
     console.log(JSON.stringify(report, null, 2));
   } else {
-    console.log(renderSummary(report));
+    console.log(renderSummary(report, { topic: topicFilter, lang: langFilter }));
   }
   process.exit(report.status === 'ok' ? 0 : 1);
 }

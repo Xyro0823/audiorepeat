@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analyze } from '../../scripts/vocab-health.mjs';
+import { analyze, renderSummary } from '../../scripts/vocab-health.mjs';
 
 type Word = [string, string];
 type Bank = { lang: string; level: string; words: Word[] };
@@ -10,6 +10,8 @@ type Repo = {
   topics: Record<string, Record<string, Word[]>>;
   packCodes: string[];
 };
+
+type TopicLangSummary = Record<string, { topicsCovered: number; totalPairs: number }>;
 
 /** Minimal healthy synthetic repo for one pack language. */
 function healthyRepo(): Repo {
@@ -104,5 +106,81 @@ describe('vocab-health report analysis', () => {
     expect(
       report.failures.some((f: string) => f.includes('topic manifest') || f.includes('topic core')),
     ).toBe(true);
+  });
+
+  it('topic detail and per-language summary are produced', () => {
+    const report = analyze(healthyRepo());
+    expect(report.topicDetails).toHaveLength(1);
+    expect(report.topicDetails[0]).toMatchObject({
+      id: 'home',
+      languages: 1,
+      totalPairs: 2,
+      coreSize: 2,
+      parityStatus: 'OK',
+    });
+    expect(report.topicDetails[0].counts).toEqual({ xx: 2 });
+    expect((report.topicLanguageSummary as TopicLangSummary).xx).toEqual({
+      topicsCovered: 1,
+      totalPairs: 2,
+    });
+  });
+
+  it('topic coverage summary is produced on healthy data', () => {
+    const report = analyze(healthyRepo());
+    expect(report.topicCoverage).toEqual({
+      totalLanguages: 1,
+      languagesInAllTopics: ['xx'],
+      packMissingFromAnyTopic: [],
+      topicOnlyLanguages: [],
+      topicsWithDifferentLanguageSet: [],
+    });
+  });
+
+  it('missing topic language is reported in topic detail', () => {
+    const repo = healthyRepo();
+    // File drops the manifest language (xx) and adds an unexpected one.
+    repo.topics.home = { yy: [['a', 'alpha'], ['b', 'beta']] };
+    const report = analyze(repo);
+    const home = report.topicDetails[0];
+    expect(home.parityStatus).toBe('FAIL');
+    expect(home.issues.some((i: string) => i.includes('missing language: xx'))).toBe(true);
+    expect(home.issues.some((i: string) => i.includes('extra language: yy'))).toBe(true);
+    expect(report.status).toBe('fail');
+  });
+
+  it('topic concept-count mismatch is reported in topic detail', () => {
+    const repo = healthyRepo();
+    // Add a second language so the reference core is defined independently;
+    // then break yy by adding a concept the core does not have.
+    repo.topicManifest.home.langs = { xx: 2, yy: 2 };
+    repo.topics.home.yy = [['ya', 'alpha'], ['yb', 'beta'], ['yc', 'extra']];
+    const report = analyze(repo);
+    const home = report.topicDetails[0];
+    expect(home.parityStatus).toBe('FAIL');
+    expect(home.issues.some((i: string) => i.includes('concept count mismatch: yy'))).toBe(true);
+    expect(report.status).toBe('fail');
+  });
+
+  it('JSON shape adds topic fields and preserves existing ones', () => {
+    const report = analyze(healthyRepo());
+    expect(report.status).toBe('ok');
+    for (const key of ['status', 'counts', 'perLanguage', 'topicStats', 'crossLevel', 'isolation', 'terminology', 'b1Overlap']) {
+      expect(key in report).toBe(true);
+    }
+    expect(Array.isArray(report.topicDetails)).toBe(true);
+    expect(typeof report.topicLanguageSummary).toBe('object');
+    expect(typeof report.topicCoverage).toBe('object');
+    expect(report.counts.topics).toBe(1);
+  });
+
+  it('renderSummary supports --topic and --lang filters', () => {
+    const report = analyze(healthyRepo());
+    const topicText = renderSummary(report, { topic: 'home' });
+    expect(topicText).toContain('Topic home per-language:');
+    expect(topicText).toContain('xx');
+    const langText = renderSummary(report, { lang: 'xx' });
+    expect(langText).toContain('Language: xx');
+    expect(langText).toContain('topics covered: 1/1');
+    expect(langText).toContain('bank levels:');
   });
 });
