@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { analyze, loadRepo, renderSummary } from '../../scripts/vocab-health.mjs';
+import { analyze, loadRepo } from '@/lib/vocabHealth';
+import { renderSummary } from '../../scripts/vocab-health.mjs';
 
 type Word = [string, string];
 type Bank = { lang: string; level: string; words: Word[] };

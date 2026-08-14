@@ -273,6 +273,12 @@ export default function AdminEntitlements() {
           Grant Pro/Lifetime access without any Paddle payment. Grants are server-authoritative; the target user
           never needs to be on the admin allowlist.
         </p>
+        <a
+          href="/admin/diagnostics"
+          className="mt-2 inline-block text-xs font-semibold text-neon-cyan underline-offset-2 hover:underline"
+        >
+          Language diagnostics →
+        </a>
       </header>
 
       <div className="space-y-5">

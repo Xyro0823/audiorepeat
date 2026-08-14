@@ -63,6 +63,23 @@ describe('PWA service worker — admin surfaces are never cached', () => {
     expect(fallbackSection).not.toMatch(/admin/);
   });
 
+  it('covers the /admin/diagnostics page and its API as network-only', () => {
+    // Extract the real guard function from the shipped artifact and execute it
+    // against the new admin surfaces — the prefix rules must match them.
+    const fnSrc = sw.match(/function isNetworkOnly\(url\) \{[\s\S]*?\n\}/)?.[0];
+    expect(fnSrc).toBeDefined();
+    const isNetworkOnly = new Function('url', `return (${fnSrc})(url);`) as (u: {
+      pathname: string;
+    }) => boolean;
+    expect(isNetworkOnly({ pathname: '/admin/diagnostics' })).toBe(true);
+    expect(isNetworkOnly({ pathname: '/admin/diagnostics/' })).toBe(true);
+    expect(isNetworkOnly({ pathname: '/api/admin/diagnostics/languages' })).toBe(true);
+    // Normal safe routes stay outside the guard.
+    expect(isNetworkOnly({ pathname: '/' })).toBe(false);
+    expect(isNetworkOnly({ pathname: '/player' })).toBe(false);
+    expect(isNetworkOnly({ pathname: '/data/vocab/manifest.json' })).toBe(false);
+  });
+
   it('keeps normal safe PWA routes unaffected', () => {
     // Regular offline functionality is still served by the worker.
     expect(sw).toContain('"/audio/"');
