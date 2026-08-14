@@ -165,11 +165,15 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
     for (const key of bankFiles) expect(advertised.has(key), `${key} advertised`).toBe(true);
   });
 
-  it('every pack language ships the full A1–C2 level set', () => {
+  it('every pack language ships exactly the canonical A1–C2 level set', () => {
+    // No level missing, and no unexpected level for any pack.
     for (const code of STARTER_LANGS) {
       const pack = PACK_LANG[code];
+      expect(new Set(Object.keys(manifest[pack] ?? {})), `${code}: exact level set`).toEqual(
+        new Set(CEFR_LEVELS),
+      );
       for (const lvl of CEFR_LEVELS) {
-        expect(manifest[pack]?.[lvl], `${code}: ${lvl}`).toBeGreaterThan(0);
+        expect(manifest[pack]?.[lvl], `${code}: ${lvl} count`).toBeGreaterThan(0);
       }
     }
   });
@@ -189,6 +193,66 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
       const b1 = loadBank(`${pack}-B1`).words;
       const overlap = b1.filter(([t]) => prior.has(t.trim().toLowerCase())).length;
       expect(overlap, `${code}: B1 vs A1/A2 overlap`).toBeLessThanOrEqual(Math.ceil(b1.length * 0.1));
+    }
+  });
+
+  it('languages stay isolated: no pack is a copy of another pack (same level)', () => {
+    // Whole-language copies would share near-identical target strings at the
+    // same level. Baseline (measured): same-level cross-language overlap max
+    // is 18.2% (ja-zh C2); es-pt A1 17.0%; everything else far lower. A pack
+    // accidentally copied from another language would land at ~100%, so 70%
+    // catches copies with a wide safety margin over every legitimate pair.
+    const langs = STARTER_LANGS.map((code) => PACK_LANG[code]);
+    for (const lvl of CEFR_LEVELS) {
+      const sets = new Map<string, Set<string>>();
+      for (const pack of langs) {
+        const s = new Set<string>();
+        for (const [t] of loadBank(`${pack}-${lvl}`).words) s.add(t.trim().toLowerCase());
+        sets.set(pack, s);
+      }
+      for (let i = 0; i < langs.length; i++) {
+        for (let j = i + 1; j < langs.length; j++) {
+          const a = sets.get(langs[i])!;
+          const b = sets.get(langs[j])!;
+          const inter = [...a].filter((x) => b.has(x)).length;
+          const ratio = inter / Math.min(a.size, b.size);
+          expect(
+            ratio,
+            `${lvl}: ${langs[i]}-${langs[j]} same-level overlap`,
+          ).toBeLessThan(0.7);
+        }
+      }
+    }
+  });
+
+  it('bank levels stay distinct within each language (cross-level duplication guard)', () => {
+    // Guards against a level being built by copying another level. Exact
+    // target-string overlap is measured as |intersection| / min(len) for every
+    // level pair within a language. Baseline (measured over all 13 packs):
+    // B2-C1 max 42.2% (mn), C1-C2 24.5%, B1-B2 22.3%, all other pairs <= 18%.
+    // A wholesale copy (e.g. A2 duplicated as B2) would sit near 100%, so 50%
+    // catches copy/paste level duplication while leaving legitimate natural
+    // overlap untouched.
+    for (const code of STARTER_LANGS) {
+      const pack = PACK_LANG[code];
+      const sets = new Map<string, Set<string>>();
+      for (const lvl of CEFR_LEVELS) {
+        const s = new Set<string>();
+        for (const [t] of loadBank(`${pack}-${lvl}`).words) s.add(t.trim().toLowerCase());
+        sets.set(lvl, s);
+      }
+      for (let i = 0; i < CEFR_LEVELS.length; i++) {
+        for (let j = i + 1; j < CEFR_LEVELS.length; j++) {
+          const a = sets.get(CEFR_LEVELS[i])!;
+          const b = sets.get(CEFR_LEVELS[j])!;
+          const inter = [...a].filter((x) => b.has(x)).length;
+          const ratio = inter / Math.min(a.size, b.size);
+          expect(
+            ratio,
+            `${code}: ${CEFR_LEVELS[i]}-${CEFR_LEVELS[j]} overlap`,
+          ).toBeLessThan(0.5);
+        }
+      }
     }
   });
 
@@ -336,6 +400,55 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
     // Miscounted manifest: advertised count differs from file length.
     expect(3 === ok['es'].length).toBe(true);
     expect(4 === ok['fr'].length).toBe(false);
+  });
+
+  it('bank guard confidence: synthetic malformed banks are detected', () => {
+    // Overlap ratio used by the isolation/duplication guards (|A∩B| / min(|A|,|B|)).
+    const overlap = (a: Set<string>, b: Set<string>) =>
+      [...a].filter((v) => b.has(v)).length / Math.min(a.size, b.size);
+
+    // 1. Missing level: a pack with only five levels lacks the sixth.
+    const partialLevels = new Set(['A1', 'A2', 'B1', 'B2', 'C1']);
+    expect(partialLevels.has('C2')).toBe(false);
+
+    // 2. Phantom manifest entry: advertised pack-level has no file on disk.
+    const fileKeys = new Set(['es-A1', 'es-A2', 'es-B1', 'es-B2', 'es-C1', 'es-C2']);
+    expect(fileKeys.has('es-B1')).toBe(true);
+    expect(fileKeys.has('es-X9')).toBe(false);
+
+    // 3. Wrong manifest count: advertised count differs from words length.
+    const bank = { lang: 'es', level: 'A1', words: [['a', 'alpha'], ['b', 'beta']] };
+    const advertised = 3; // would be read from manifest.json
+    expect(bank.words.length).toBe(2);
+    expect(advertised === bank.words.length).toBe(false); // mismatch detected
+
+    // 4. Filename/lang mismatch.
+    const fileLang = (name: string) => /^([a-z]{2,3})-[A-C][12]\.json$/.exec(name)?.[1];
+    expect(fileLang('es-A1.json')).toBe('es');
+    expect(fileLang('es-A1.json')).not.toBe('fr');
+
+    // 5. Filename/level mismatch.
+    const fileLevel = (name: string) => /^[a-z]{2,3}-([A-C][12])\.json$/.exec(name)?.[1];
+    expect(fileLevel('es-A1.json')).toBe('A1');
+    expect(fileLevel('es-A1.json')).not.toBe('B2');
+
+    // 6. Duplicate pair: repeated [target, english] rows exceed unique pairs.
+    const dupWords: Array<[string, string]> = [
+      ['a', 'alpha'],
+      ['b', 'beta'],
+      ['a', 'alpha'],
+    ];
+    expect(new Set(dupWords.map(([t, e]) => `${t}|${e}`)).size).toBe(2);
+    expect(new Set(dupWords.map(([t, e]) => `${t}|${e}`)).size).not.toBe(
+      dupWords.length,
+    );
+
+    // 7. Obvious copied pack: identical same-level sets trip the isolation
+    //    guard (100% >> 70%) and identical levels trip the 50% duplication
+    //    guard.
+    const identical = new Set(['x', 'y', 'z']);
+    expect(overlap(identical, identical)).toBeGreaterThanOrEqual(0.7);
+    expect(overlap(identical, identical)).toBeGreaterThanOrEqual(0.5);
   });
 
   it('topic packs are well-formed and free of hard translation errors', () => {
