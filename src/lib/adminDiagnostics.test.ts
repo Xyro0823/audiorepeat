@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  checkAdminAccess,
   filterConceptRows,
   filterVariants,
   languageSummary,
@@ -152,5 +153,66 @@ describe('adminDiagnostics — real repository data', () => {
         expect(rows!.length).toBe(t.coreSize);
       }
     }
+  });
+});
+
+describe('checkAdminAccess', () => {
+  function fakeFetch(status: number | (() => Promise<never>)): {
+    fn: typeof fetch;
+    calls: Array<{ url: string; init?: RequestInit }>;
+  } {
+    const calls: Array<{ url: string; init?: RequestInit }> = [];
+    const fn = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      calls.push({ url, init });
+      if (typeof status === 'function') return status();
+      return new Response(JSON.stringify({ ok: status < 400 }), { status });
+    }) as typeof fetch;
+    return { fn, calls };
+  }
+
+  it('maps a null/empty token to no-token without calling the network', async () => {
+    const { fn, calls } = fakeFetch(200);
+    expect(await checkAdminAccess({ token: null, fetchImpl: fn })).toBe('no-token');
+    expect(await checkAdminAccess({ token: '  ', fetchImpl: fn })).toBe('no-token');
+    expect(calls.length).toBe(0);
+  });
+
+  it('maps 200 to admin and sends the Bearer token with no-store', async () => {
+    const { fn, calls } = fakeFetch(200);
+    expect(await checkAdminAccess({ token: 'tok-123', fetchImpl: fn })).toBe('admin');
+    expect(calls.length).toBe(1);
+    expect(calls[0].url).toBe('/api/admin/status');
+    expect(calls[0].init?.headers).toEqual({ Authorization: 'Bearer tok-123' });
+    expect(calls[0].init?.cache).toBe('no-store');
+  });
+
+  it('maps 403 to forbidden', async () => {
+    expect(await checkAdminAccess({ token: 't', fetchImpl: fakeFetch(403).fn })).toBe('forbidden');
+  });
+
+  it('maps any other non-OK status to server-error (never a silent hang)', async () => {
+    expect(await checkAdminAccess({ token: 't', fetchImpl: fakeFetch(500).fn })).toBe('server-error');
+    expect(await checkAdminAccess({ token: 't', fetchImpl: fakeFetch(503).fn })).toBe('server-error');
+  });
+
+  it('maps a rejected request to server-error', async () => {
+    const { fn } = fakeFetch(() => Promise.reject(new TypeError('network down')));
+    expect(await checkAdminAccess({ token: 't', fetchImpl: fn })).toBe('server-error');
+  });
+
+  it('aborts and maps a hung request to server-error after the timeout', async () => {
+    const fn = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+      const signal = init?.signal;
+      return new Promise<Response>((_resolve, reject) => {
+        signal?.addEventListener('abort', () =>
+          reject(new DOMException('The operation was aborted.', 'AbortError')),
+        );
+      });
+    }) as typeof fetch;
+    const started = Date.now();
+    const result = await checkAdminAccess({ token: 't', fetchImpl: fn, timeoutMs: 50 });
+    expect(Date.now() - started).toBeGreaterThanOrEqual(45);
+    expect(result).toBe('server-error');
   });
 });

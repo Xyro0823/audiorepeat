@@ -1,4 +1,5 @@
 import AdminDiagnostics from '@/components/admin/AdminDiagnostics';
+import AdminPageErrorBoundary from '@/components/admin/AdminPageErrorBoundary';
 
 // Privileged page HTML must never be prerendered or cached — force-dynamic
 // keeps it server-rendered per request (Next emits Cache-Control:
@@ -8,5 +9,9 @@ import AdminDiagnostics from '@/components/admin/AdminDiagnostics';
 export const dynamic = 'force-dynamic';
 
 export default function AdminDiagnosticsPage() {
-  return <AdminDiagnostics />;
+  return (
+    <AdminPageErrorBoundary>
+      <AdminDiagnostics />
+    </AdminPageErrorBoundary>
+  );
 }

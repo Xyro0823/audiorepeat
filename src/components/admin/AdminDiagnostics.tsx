@@ -6,6 +6,7 @@ import { getAuthIdToken } from '@/lib/authStore';
 import type { HealthReport, TermErrorRow, VariantRow } from '@/lib/vocabHealth';
 import { packLangLabel } from '@/lib/starterSets';
 import {
+  checkAdminAccess,
   filterConceptRows,
   filterVariants,
   languageSummary,
@@ -108,32 +109,33 @@ export default function AdminDiagnostics() {
   const [filter, setFilter] = useState<RowFilter | 'errors'>('all');
   const [search, setSearch] = useState('');
   const [variantSearch, setVariantSearch] = useState('');
+  // Bumped by the retry button so the authorization check re-runs.
+  const [checkNonce, setCheckNonce] = useState(0);
 
-  // Re-check authorization whenever the signed-in user changes.
+  // Re-check authorization whenever the signed-in user changes (or the user
+  // retries). Every failure — including a rejected/hung token acquisition —
+  // resolves to a visible error state via checkAdminAccess(); the page never
+  // hangs silently on the checking spinner with no API call.
   useEffect(() => {
     let cancelled = false;
     async function check() {
       setAdminState('checking');
       if (status !== 'signed-in' || !user) return;
-      const token = await getAuthIdToken();
-      if (!token) return;
-      try {
-        const res = await fetch('/api/admin/status', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (cancelled) return;
-        if (res.ok) setAdminState('admin');
-        else if (res.status === 403) setAdminState('forbidden');
-        else setAdminState('server-error');
-      } catch {
-        if (!cancelled) setAdminState('server-error');
-      }
+      // Token acquisition failure must NOT reject the effect (an unhandled
+      // rejection would leave the page stuck on 'checking' forever) — map it
+      // to null and let checkAdminAccess() surface 'no-token' → server-error.
+      const token = await getAuthIdToken().catch(() => null);
+      const result = await checkAdminAccess({ token });
+      if (cancelled) return;
+      if (result === 'admin') setAdminState('admin');
+      else if (result === 'forbidden') setAdminState('forbidden');
+      else setAdminState('server-error');
     }
     void check();
     return () => {
       cancelled = true;
     };
-  }, [status, user]);
+  }, [status, user, checkNonce]);
 
   const loadReport = useCallback(async () => {
     setLoadState('loading');
@@ -213,8 +215,18 @@ export default function AdminDiagnostics() {
 
   if (status === 'loading' || (status === 'signed-in' && adminState === 'checking')) {
     return (
-      <main className="flex flex-1 items-center justify-center">
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-5 py-10">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
+        <p className="text-sm text-slate-400">Checking admin access…</p>
+        {status === 'signed-in' && (
+          <button
+            type="button"
+            onClick={() => setCheckNonce((n) => n + 1)}
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:bg-white/5"
+          >
+            Try again
+          </button>
+        )}
       </main>
     );
   }
@@ -249,9 +261,16 @@ export default function AdminDiagnostics() {
       <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-5 py-10">
         <Card title="Admin · Language Diagnostics">
           <p className="text-sm text-slate-400">
-            The admin service isn&apos;t ready (server-side auth or the admin allowlist isn&apos;t configured). Try again
-            later.
+            Couldn&apos;t verify admin access — the admin service, the allowlist, or your sign-in session isn&apos;t
+            ready. This is a visible error, not a silent hang: check your connection and try again.
           </p>
+          <button
+            type="button"
+            onClick={() => setCheckNonce((n) => n + 1)}
+            className="mt-4 rounded-lg bg-neon-cyan/90 px-4 py-2 text-sm font-semibold text-night-950 transition hover:bg-neon-cyan"
+          >
+            Try again
+          </button>
         </Card>
       </main>
     );

@@ -134,3 +134,53 @@ export function filterVariants(report: HealthReport, opts: VariantSearchOpts = {
 export function topicList(report: HealthReport): TopicDetail[] {
   return report.topicDetails;
 }
+
+/** Result of the server-side admin check (see checkAdminAccess). */
+export type AdminCheckResult = 'admin' | 'forbidden' | 'server-error' | 'no-token';
+
+export interface AdminCheckOptions {
+  /** Firebase ID token for the signed-in user; null/'' when unavailable. */
+  token: string | null;
+  /** Injectable fetch for tests (defaults to the global fetch). */
+  fetchImpl?: typeof fetch;
+  /** Abort the status request after this many ms (default 12000). */
+  timeoutMs?: number;
+}
+
+/**
+ * Resolve the server-side admin decision for /api/admin/status.
+ *
+ * This is the ONLY place the page decides admin/forbidden/error, so every
+ * failure mode is testable without rendering React:
+ *
+ * - no token (token acquisition failed/rejected) → 'no-token' — the caller
+ *   must surface a visible error instead of hanging on a spinner forever;
+ * - HTTP 200 → 'admin'; 403 → 'forbidden'; anything else → 'server-error';
+ * - a rejected request or a timeout (abort) → 'server-error'.
+ *
+ * Never resolves to a silent state: any problem yields an explicit result the
+ * UI can show.
+ */
+export async function checkAdminAccess(opts: AdminCheckOptions): Promise<AdminCheckResult> {
+  const token = opts.token?.trim();
+  if (!token) return 'no-token';
+  const fetchImpl = opts.fetchImpl ?? fetch;
+  const timeoutMs = opts.timeoutMs ?? 12000;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetchImpl('/api/admin/status', {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+    if (res.ok) return 'admin';
+    if (res.status === 403) return 'forbidden';
+    return 'server-error';
+  } catch {
+    // Network failure or timeout (AbortError) — visible error, never silent.
+    return 'server-error';
+  } finally {
+    clearTimeout(timer);
+  }
+}
