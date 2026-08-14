@@ -242,4 +242,53 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
     expect(langLimitKey('ko-KR')).toBe('ko-KR');
     expect(langLimitKey('it-CH')).toBe('it-CH');
   });
+
+  it('topic packs are well-formed and free of hard translation errors', () => {
+    // Structure: every topic file is a map of language -> [target, english].
+    for (const [topic, meta] of Object.entries(topicManifest)) {
+      const raw = fs.readFileSync(path.join(TOPICS_DIR, `${topic}.json`), 'utf8');
+      const data = JSON.parse(raw) as Record<string, Array<[string, string]>>;
+      for (const lang of Object.keys(meta.langs)) {
+        const list = data[lang];
+        expect(Array.isArray(list), `${topic}[${lang}]: array`).toBe(true);
+        for (const [target, en] of list) {
+          expect(target.trim(), `${topic}[${lang}]: target ${en}`).not.toBe('');
+          expect(en.trim(), `${topic}[${lang}]: english`).not.toBe('');
+        }
+      }
+    }
+
+    // Hard terminology errors: bank and topic both translate the same
+    // concept, but one side is clearly the wrong word (not a synonym/register
+    // variant). Keyed by normalized english concept per pack language.
+    // E.g. mn health 'temperature' -> 'халуун' (hot) while the mn banks use
+    // 'температур' — a genuine meaning mismatch.
+    const hardErrors: Record<string, Record<string, string>> = {
+      mn: { temperature: 'температур' }, // topic had 'халуун' (hot)
+    };
+    for (const code of STARTER_LANGS) {
+      const pack = PACK_LANG[code];
+      const banks = new Map<string, string[]>();
+      for (const lvl of CEFR_LEVELS) {
+        for (const [target, en] of loadBank(`${pack}-${lvl}`).words) {
+          const key = en.trim().toLowerCase();
+          banks.set(key, [...(banks.get(key) ?? []), target.trim()]);
+        }
+      }
+      const expected = hardErrors[pack];
+      if (!expected) continue;
+      for (const [en, correct] of Object.entries(expected)) {
+        const bankTargets = banks.get(en) ?? [];
+        expect(bankTargets, `${pack}: bank has ${en}`).toContain(correct);
+        for (const topic of Object.keys(topicManifest)) {
+          const raw = JSON.parse(
+            fs.readFileSync(path.join(TOPICS_DIR, `${topic}.json`), 'utf8'),
+          ) as Record<string, Array<[string, string]>>;
+          const entry = (raw[pack] ?? []).find(([, e]) => e.trim().toLowerCase() === en);
+          if (!entry) continue;
+          expect(entry[0].trim(), `${pack} ${topic}: ${en} equals bank`).toBe(correct);
+        }
+      }
+    }
+  });
 });
