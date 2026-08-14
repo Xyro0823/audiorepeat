@@ -6,6 +6,15 @@ import { findLanguage } from '@/lib/languages';
 import { DEFAULT_ALLOWED_LANG, canUseLang, langLimitKey } from '@/lib/planGate';
 import { SEED_SETS } from '@/lib/seedSets';
 import { PACK_LANG, STARTER_LANGS, starterLangLabel } from '@/lib/starterSets';
+import {
+  B1_OVERLAP_MAX,
+  CROSS_LEVEL_PAIR_MAX,
+  CROSS_LEVEL_TARGET_MAX,
+  LANGUAGE_ISOLATION_MAX,
+  overlapRatio,
+  pairSet,
+  targetSet,
+} from '@/lib/vocabThresholds';
 import { CEFR_LEVELS, type CefrLevel, type VocabSet, type VocabWord } from '@/types/app';
 
 const VOCAB_DIR = path.join(process.cwd(), 'public/data/vocab');
@@ -192,7 +201,9 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
       }
       const b1 = loadBank(`${pack}-B1`).words;
       const overlap = b1.filter(([t]) => prior.has(t.trim().toLowerCase())).length;
-      expect(overlap, `${code}: B1 vs A1/A2 overlap`).toBeLessThanOrEqual(Math.ceil(b1.length * 0.1));
+      expect(overlap, `${code}: B1 vs A1/A2 overlap`).toBeLessThanOrEqual(
+        Math.ceil(b1.length * B1_OVERLAP_MAX),
+      );
     }
   });
 
@@ -214,12 +225,11 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
         for (let j = i + 1; j < langs.length; j++) {
           const a = sets.get(langs[i])!;
           const b = sets.get(langs[j])!;
-          const inter = [...a].filter((x) => b.has(x)).length;
-          const ratio = inter / Math.min(a.size, b.size);
+          const ratio = overlapRatio(a, b);
           expect(
             ratio,
             `${lvl}: ${langs[i]}-${langs[j]} same-level overlap`,
-          ).toBeLessThan(0.7);
+          ).toBeLessThan(LANGUAGE_ISOLATION_MAX);
         }
       }
     }
@@ -244,38 +254,23 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
       const pairs = new Map<string, Set<string>>();
       for (const lvl of CEFR_LEVELS) {
         const words = loadBank(`${pack}-${lvl}`).words;
-        targets.set(
-          lvl,
-          new Set(words.map(([t]) => t.trim().toLowerCase())),
-        );
-        pairs.set(
-          lvl,
-          new Set(words.map(([t, e]) => `${t.trim().toLowerCase()}|${e.trim().toLowerCase()}`)),
-        );
+        targets.set(lvl, targetSet(words));
+        pairs.set(lvl, pairSet(words));
       }
       for (let i = 0; i < CEFR_LEVELS.length; i++) {
         for (let j = i + 1; j < CEFR_LEVELS.length; j++) {
           const lvlA = CEFR_LEVELS[i];
           const lvlB = CEFR_LEVELS[j];
-          const sizeA = targets.get(lvlA)!.size;
-          const sizeB = targets.get(lvlB)!.size;
-          const minSize = Math.min(sizeA, sizeB);
-          const targetInter = [...targets.get(lvlA)!].filter((x) =>
-            targets.get(lvlB)!.has(x),
-          ).length;
-          const targetRatio = targetInter / minSize;
+          const targetRatio = overlapRatio(targets.get(lvlA)!, targets.get(lvlB)!);
           expect(
             targetRatio,
             `${code}: ${lvlA}-${lvlB} target overlap`,
-          ).toBeLessThan(0.5);
-          const pairInter = [...pairs.get(lvlA)!].filter((x) =>
-            pairs.get(lvlB)!.has(x),
-          ).length;
-          const pairRatio = pairInter / minSize;
+          ).toBeLessThan(CROSS_LEVEL_TARGET_MAX);
+          const pairRatio = overlapRatio(pairs.get(lvlA)!, pairs.get(lvlB)!);
           expect(
             pairRatio,
             `${code}: ${lvlA}-${lvlB} exact pair overlap`,
-          ).toBeLessThan(0.5);
+          ).toBeLessThan(CROSS_LEVEL_PAIR_MAX);
         }
       }
     }
@@ -472,36 +467,28 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
     //    guard (100% >> 70%) and identical levels trip the 50% duplication
     //    guard.
     const identical = new Set(['x', 'y', 'z']);
-    expect(overlap(identical, identical)).toBeGreaterThanOrEqual(0.7);
-    expect(overlap(identical, identical)).toBeGreaterThanOrEqual(0.5);
+    expect(overlap(identical, identical)).toBeGreaterThanOrEqual(LANGUAGE_ISOLATION_MAX);
+    expect(overlap(identical, identical)).toBeGreaterThanOrEqual(CROSS_LEVEL_TARGET_MAX);
 
     // 8. Pair-based signal: a near-copy level shares exact [target, English]
     //    pairs and must trip the pair-overlap guard (100% >> 50%).
     const wordsA: Array<[string, string]> = [['a', 'alpha'], ['b', 'beta'], ['c', 'gamma']];
     const wordsB: Array<[string, string]> = [['a', 'alpha'], ['b', 'beta'], ['c', 'gamma']];
-    const pairSet = (w: Array<[string, string]>) =>
-      new Set(w.map(([t, e]) => `${t.trim().toLowerCase()}|${e.trim().toLowerCase()}`));
-    const pairOverlap = (w1: Array<[string, string]>, w2: Array<[string, string]>) => {
-      const s1 = pairSet(w1);
-      const s2 = pairSet(w2);
-      return [...s1].filter((p) => s2.has(p)).length / Math.min(s1.size, s2.size);
-    };
-    expect(pairOverlap(wordsA, wordsB)).toBeGreaterThanOrEqual(0.5);
+    expect(overlapRatio(pairSet(wordsA), pairSet(wordsB))).toBeGreaterThanOrEqual(
+      CROSS_LEVEL_PAIR_MAX,
+    );
 
     // 9. Translation convergence: the same target used with DIFFERENT English
     //    senses across levels raises target-only overlap but must NOT trip the
     //    pair-overlap guard (shared pairs = 0%).
     const convA: Array<[string, string]> = [['bank', 'financial institution'], ['run', 'to run fast']];
     const convB: Array<[string, string]> = [['bank', 'river bank'], ['run', 'a run in a race']];
-    const targetSet = (w: Array<[string, string]>) =>
-      new Set(w.map(([t]) => t.trim().toLowerCase()));
-    const targetOverlap = (w1: Array<[string, string]>, w2: Array<[string, string]>) => {
-      const s1 = targetSet(w1);
-      const s2 = targetSet(w2);
-      return [...s1].filter((t) => s2.has(t)).length / Math.min(s1.size, s2.size);
-    };
-    expect(targetOverlap(convA, convB)).toBeGreaterThanOrEqual(0.5);
-    expect(pairOverlap(convA, convB)).toBeLessThan(0.5);
+    expect(overlapRatio(targetSet(convA), targetSet(convB))).toBeGreaterThanOrEqual(
+      CROSS_LEVEL_TARGET_MAX,
+    );
+    expect(overlapRatio(pairSet(convA), pairSet(convB))).toBeLessThan(
+      CROSS_LEVEL_PAIR_MAX,
+    );
   });
 
   it('topic packs are well-formed and free of hard translation errors', () => {
