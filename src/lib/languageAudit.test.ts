@@ -192,14 +192,13 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
     }
   });
 
-  it('topic packs cover all pack languages except the known mn gap', () => {
+  it('topic packs cover every pack language', () => {
     const topicLangs = new Set<string>();
     for (const t of Object.values(topicManifest)) {
       for (const l of Object.keys(t.langs)) topicLangs.add(l);
     }
     for (const code of STARTER_LANGS) {
       const pack = PACK_LANG[code];
-      if (pack === 'mn') continue; // known gap: no Mongolian topic packs
       expect(topicLangs.has(pack), `${code}: topic coverage`).toBe(true);
     }
     // Topic languages are either pack languages or have display labels.

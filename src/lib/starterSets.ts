@@ -4,12 +4,13 @@ import { findLanguage } from '@/lib/languages';
 /**
  * CEFR-leveled starter vocabulary library.
  *
- * Every supported language ships a full A1-C2 word pack stored as static JSON
- * under /data/vocab/<pack-lang>-<level>.json (see src/lib/vocab/wordBanks.ts).
- * Counts are comprehensive per level — A1/A2 ~200-300 words, B1/B2 ~500,
- * C1/C2 ~1,000 — so an imported starter level is a real study deck, not a
- * handful of demo words. This file only maps BCP-47 tags (used by the player)
- * to pack codes (used by the manifest) and carries display metadata.
+ * Thirteen pack languages (STARTER_LANGS) ship a full A1–C2 word pack stored
+ * as static JSON under /data/vocab/<pack-lang>-<level>.json (see
+ * src/lib/vocab/wordBanks.ts). Counts are comprehensive per level — A1/A2
+ * ~250-300 words, B1/B2 ~280-550, C1/C2 ~300-2,500 — so an imported starter
+ * level is a real study deck, not a handful of demo words. This file only maps
+ * BCP-47 tags (used by the player) to pack codes (used by the manifest) and
+ * carries display metadata.
  */
 
 export const CEFR_META: Record<

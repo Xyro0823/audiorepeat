@@ -4,7 +4,7 @@
  *
  * Checks per file:
  *  - valid JSON
- *  - all 8 expected languages present
+ *  - all 15 supported languages present
  *  - each list has >= 30 words
  *  - no duplicate translations within a language list (would break quiz distractors)
  *  - no duplicate target+translation pairs
@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const TOPICS_DIR = 'public/data/topics';
-const LANGS = ['es', 'fr', 'de', 'ja', 'it', 'pt', 'ko', 'zh', 'ru', 'ar', 'hi', 'tr', 'nl', 'sv'];
+const LANGS = ['es', 'fr', 'de', 'ja', 'it', 'pt', 'ko', 'zh', 'ru', 'ar', 'hi', 'tr', 'nl', 'sv', 'mn'];
 const LABELS = {
   travel: { label: 'Travel & Airport', emoji: '✈️' },
   business: { label: 'Business & Work', emoji: '💼' },
