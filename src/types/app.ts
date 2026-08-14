@@ -41,6 +41,13 @@ export interface AppSettings extends LoopSettings {
   /** Billing cycle for the plan; only meaningful for paid plans. */
   planBilling: 'monthly' | 'annual';
   /**
+   * Where the plan came from — 'manual' (server-admin gift) vs 'paddle'
+   * (verified billing) vs null (free/unknown). Mirrored from
+   * /api/entitlement's `source`; used only for neutral display copy
+   * ("Pro · Gift access" instead of a price the user never paid).
+   */
+  planSource: 'manual' | 'paddle' | null;
+  /**
    * Languages hidden by a Free-plan downgrade (normalized codes, e.g. "es").
    * Sets in these languages are filtered from the UI but NOT deleted — they
    * return automatically when the user upgrades again.
@@ -67,6 +74,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   loop: true,
   plan: 'basic',
   planBilling: 'annual',
+  planSource: null,
   hiddenLangs: [],
   cachedAudio: false,
   showHints: true,

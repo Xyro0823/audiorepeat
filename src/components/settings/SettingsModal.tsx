@@ -576,7 +576,7 @@ export default function SettingsModal({ onClose }: Props) {
                   {isProPlan(settings.plan) ? '★ ' : ''}
                   {PLAN_BADGE[settings.plan].short}
                 </span>
-                <span>{planDetail(settings.plan, settings.planBilling)}</span>
+                <span>{planDetail(settings.plan, settings.planBilling, settings.planSource)}</span>
                 <Link
                   href={isProPlan(settings.plan) ? '/checkout' : '/checkout?plan=pro'}
                   className="font-semibold text-neon-cyan transition hover:text-neon-amber"

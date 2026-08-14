@@ -31,10 +31,22 @@ export const PLAN_BADGE: Record<PlanId, { short: string; label: string }> = {
   lifetime: { short: 'Lifetime', label: 'Lifetime plan' },
 };
 
-/** One-line plan description for the profile dropdown. */
-export function planDetail(plan: PlanId, billing: 'monthly' | 'annual'): string {
+/**
+ * One-line plan description for the profile dropdown / settings.
+ *
+ * A manual/gift Pro (`source === 'manual'`) shows neutral copy instead of a
+ * price the user never paid. Paid Paddle users keep their billing detail.
+ */
+export function planDetail(
+  plan: PlanId,
+  billing: 'monthly' | 'annual',
+  source?: 'manual' | 'paddle' | null,
+): string {
   if (plan === 'lifetime') return 'Lifetime · one-time payment';
-  if (plan === 'pro') return billing === 'annual' ? 'Pro · $39.99/yr' : 'Pro · $4.99/mo';
+  if (plan === 'pro') {
+    if (source === 'manual') return 'Pro · Gift access';
+    return billing === 'annual' ? 'Pro · $39.99/yr' : 'Pro · $4.99/mo';
+  }
   return 'Free plan — upgrade anytime';
 }
 

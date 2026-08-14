@@ -19,6 +19,31 @@ import { isPlanId, type PlanId } from '@/lib/plans';
 
 export type EntitlementBilling = 'monthly' | 'annual' | 'lifetime' | null;
 
+/**
+ * A server-admin-managed grant (gift / tester / creator / support), entirely
+ * independent of billing. It lives in its own `manual` field on the record so
+ * provider (Paddle/Stripe) events can never accidentally erase it.
+ *
+ * Expiry is computed at read time (see `isManualActive`) — expiring a gift
+ * never requires deleting data.
+ */
+export interface ManualEntitlement {
+  /** The granted level: 'pro' or 'lifetime'. */
+  plan: 'pro' | 'lifetime';
+  /** Optional human-readable reason (e.g. "Creator gift"). Never shown publicly. */
+  reason: string | null;
+  /** Unix seconds when the grant expires; null = never. */
+  expiresAt: number | null;
+  /** Unix seconds when granted. */
+  grantedAt: number;
+  /** Admin uid who granted it. */
+  grantedBy: string | null;
+  /** Unix seconds when revoked; null = not revoked (kept for audit). */
+  revokedAt: number | null;
+  /** Admin uid who revoked it. */
+  revokedBy: string | null;
+}
+
 export interface EntitlementRecord {
   /** Firebase uid — the document id in Firestore is also the uid. */
   uid: string;
@@ -37,6 +62,12 @@ export interface EntitlementRecord {
   status: string;
   /** Unix seconds when the current billing period ends (subscriptions only). */
   currentPeriodEnd: number | null;
+  /**
+   * Server-admin-managed grant (gift/comp/support), if any. Written only by
+   * the admin grant/revoke API — provider webhook events preserve it.
+   * Optional so legacy records (pre-manual) stay valid.
+   */
+  manual?: ManualEntitlement | null;
   /** Server timestamp of the last write. */
   updatedAt: unknown;
 }
@@ -123,6 +154,124 @@ export interface PaddlePriceResolver {
 
 /** Paddle subscription statuses that keep Pro entitlement active. */
 const PADDLE_ENTITLED_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing']);
+
+/* ------------------------------------------------------------------------ */
+/* Manual grants + effective entitlement                                     */
+/* ------------------------------------------------------------------------ */
+
+/** True while a manual grant is valid (not revoked and not expired). */
+export function isManualActive(manual: ManualEntitlement, nowSec: number): boolean {
+  if (manual.revokedAt !== null) return false;
+  if (manual.expiresAt !== null && nowSec >= manual.expiresAt) return false;
+  return true;
+}
+
+/** The computed plan a user is entitled to right now. */
+export interface EffectiveEntitlement {
+  plan: PlanId;
+  billing: EntitlementBilling;
+  status: string | null;
+  currentPeriodEnd: number | null;
+}
+
+const FREE_ENTITLEMENT: EffectiveEntitlement = {
+  plan: 'basic',
+  billing: null,
+  status: null,
+  currentPeriodEnd: null,
+};
+
+/**
+ * Compute the effective entitlement from a record using
+ * "strongest valid entitlement wins" semantics:
+ *
+ *   Lifetime (any source) > active manual Pro > active provider subscription > Free
+ *
+ * The flat fields (`plan`/`billing`/`status`/`currentPeriodEnd`) are provider
+ * state, written only by webhook events. Manual grants live in `manual` and
+ * are never overwritten by provider events, so a Paddle cancellation or
+ * payment failure can never revoke an active manual grant (or Lifetime).
+ * Expiry is evaluated here, at read time — no cleanup job required.
+ */
+export function computeEffectiveEntitlement(
+  rec: EntitlementRecord | null,
+  nowSec: number,
+): EffectiveEntitlement {
+  if (!rec) return FREE_ENTITLEMENT;
+
+  const manualActive = rec.manual ? isManualActive(rec.manual, nowSec) : false;
+
+  // 1) Lifetime from any source wins everything.
+  if (manualActive && rec.manual?.plan === 'lifetime') {
+    return { plan: 'lifetime', billing: 'lifetime', status: 'active', currentPeriodEnd: null };
+  }
+  // Provider Lifetime (billing === 'lifetime' is only ever written by a
+  // lifetime purchase; manual grants never touch the flat fields).
+  if (rec.plan === 'lifetime' && rec.billing === 'lifetime') {
+    return { plan: 'lifetime', billing: 'lifetime', status: 'active', currentPeriodEnd: null };
+  }
+
+  // 2) An active manual Pro (gift) beats an active provider subscription.
+  if (manualActive && rec.manual?.plan === 'pro') {
+    return { plan: 'pro', billing: null, status: 'active', currentPeriodEnd: null };
+  }
+
+  // 3) Active provider subscription (Stripe or Paddle). The flat plan is only
+  //    ever 'pro' when a provider event wrote it, so this is unambiguous.
+  const providerSubActive = rec.status === 'active' || rec.status === 'trialing';
+  if (
+    providerSubActive &&
+    (Boolean(rec.paddleSubscriptionId || rec.stripeSubscriptionId) || rec.plan === 'pro')
+  ) {
+    return {
+      plan: 'pro',
+      billing: rec.billing ?? null,
+      status: rec.status ?? null,
+      currentPeriodEnd: rec.currentPeriodEnd ?? null,
+    };
+  }
+
+  return FREE_ENTITLEMENT;
+}
+
+/**
+ * The effective entitlement plus which source drives it — shared by
+ * `/api/entitlement` (user-facing) and the admin lookup endpoint.
+ * `manualExpiresAt` is only set when an active manual grant actually drives
+ * the current plan.
+ */
+export interface EffectiveEntitlementView extends EffectiveEntitlement {
+  /** 'manual' (server-admin gift) vs 'paddle' (verified billing) vs null (Free). */
+  source: 'manual' | 'paddle' | null;
+  /** When the driving manual grant expires (null = never / not manual-driven). */
+  manualExpiresAt: number | null;
+}
+
+export function effectiveEntitlementView(
+  rec: EntitlementRecord | null,
+  nowSec: number,
+): EffectiveEntitlementView {
+  const effective = computeEffectiveEntitlement(rec, nowSec);
+  const manualActive = Boolean(rec?.manual && isManualActive(rec.manual, nowSec));
+  const manualDrives =
+    manualActive &&
+    ((effective.plan === 'pro' && rec?.manual?.plan === 'pro') ||
+      (effective.plan === 'lifetime' && rec?.manual?.plan === 'lifetime'));
+  return {
+    ...effective,
+    source: effective.plan === 'basic' ? null : manualDrives ? 'manual' : 'paddle',
+    manualExpiresAt: manualDrives && rec?.manual ? rec.manual.expiresAt : null,
+  };
+}
+
+/**
+ * What the provider (Paddle/Stripe) alone would grant — used by the admin UI
+ * to show whether a user is also a paying subscriber under a gift.
+ */
+export function providerPlanOf(rec: EntitlementRecord | null, nowSec: number): PlanId {
+  if (!rec) return 'basic';
+  return computeEffectiveEntitlement({ ...rec, manual: null }, nowSec).plan;
+}
 
 /* ------------------------------------------------------------------------ */
 /* Pure computations                                                        */
@@ -418,8 +567,9 @@ export async function handlePaddleTransactionCompleted(
   const current = await store.getEntitlement(patch.uid);
   // Lifetime is permanent — a later purchase never downgrades it (and a
   // redundant purchase for an existing Lifetime owner changes nothing).
-  if (current?.plan === 'lifetime') return;
-  await store.putEntitlement(patch.uid, patch);
+  if (current?.plan === 'lifetime' || current?.billing === 'lifetime') return;
+  // Preserve the manual grant (if any) — a purchase never erases a gift.
+  await store.putEntitlement(patch.uid, { ...patch, manual: current?.manual ?? null });
 }
 
 /**
@@ -441,17 +591,27 @@ export async function handlePaddleSubscriptionEvent(
 
   const patch = computePaddleSubscriptionEntitlement(sub, prices);
   const current = await store.getEntitlement(uid);
-  if (current?.plan === 'lifetime') {
+  if (current?.plan === 'lifetime' || current?.billing === 'lifetime') {
     // Lifetime is permanent — a subscription lifecycle event never downgrades
     // it. A would-be Pro grant keeps Lifetime (strongest wins) while still
     // refreshing the subscription state for history.
     if (patch.plan === 'pro') {
-      await store.putEntitlement(uid, { ...patch, uid, plan: 'lifetime', billing: 'lifetime' });
+      await store.putEntitlement(uid, {
+        ...patch,
+        uid,
+        plan: 'lifetime',
+        billing: 'lifetime',
+        manual: current.manual ?? null,
+      });
     }
     return; // revokes don't touch a Lifetime owner
   }
   // Nothing to revoke when the user has no record yet — a payment-failure or
   // cancellation event for an unknown subscription never creates one.
   if (!current && patch.plan === 'basic') return;
-  await store.putEntitlement(uid, { ...patch, uid });
+  // Provider state (status, ids, period end) is recorded as-is, but an active
+  // manual grant keeps the effective plan — computeEffectiveEntitlement ranks
+  // the manual grant above provider state at read time, so a cancellation or
+  // payment failure can never revoke a gift.
+  await store.putEntitlement(uid, { ...patch, uid, manual: current?.manual ?? null });
 }

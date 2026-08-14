@@ -72,17 +72,32 @@ async function syncPlanFromServer(): Promise<void> {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return; // 503 = server entitlement not configured — keep local state
-    const data = (await res.json()) as { plan?: string; billing?: string | null };
+    const data = (await res.json()) as {
+      plan?: string;
+      billing?: string | null;
+      source?: string | null;
+    };
     const plan = data.plan;
     if (plan !== 'basic' && plan !== 'pro' && plan !== 'lifetime') return;
     const { updateSettings } = await import('@/lib/settingsStore');
     updateSettings({
       plan,
       planBilling: plan === 'lifetime' ? 'annual' : data.billing === 'monthly' ? 'monthly' : 'annual',
+      // Neutral display source — 'manual' (gift) vs 'paddle' (billing).
+      planSource: plan === 'basic' ? null : data.source === 'manual' ? 'manual' : 'paddle',
     });
   } catch {
     // Best-effort — entitlement sync must never block auth.
   }
+}
+
+/**
+ * Fresh Firebase ID token for the signed-in user (null when signed out or
+ * Firebase isn't configured). Used by server-authenticated calls.
+ */
+export async function getAuthIdToken(): Promise<string | null> {
+  const { getFirebaseIdToken } = await loadClient();
+  return getFirebaseIdToken();
 }
 
 /** Restore the Firebase session once (idempotent across all consumers). */

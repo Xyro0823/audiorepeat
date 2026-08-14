@@ -183,7 +183,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
                     {PLAN_BADGE[settings.plan].short}
                   </span>
                   <span className="truncate text-[10px] text-slate-500">
-                    {planDetail(settings.plan, settings.planBilling)}
+                    {planDetail(settings.plan, settings.planBilling, settings.planSource)}
                   </span>
                 </p>
               </div>

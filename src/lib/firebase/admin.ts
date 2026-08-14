@@ -16,25 +16,29 @@
  * UI keeps the honest "payments not ready" placeholder.
  */
 import { cert, getApps, initializeApp, type App } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
+import { getAuth, type Auth } from 'firebase-admin/auth';
 import { getFirestore, Timestamp, type Firestore } from 'firebase-admin/firestore';
-import type { EntitlementRecord, EntitlementStore } from '@/lib/stripe/entitlements';
-
-const SERVICE_ACCOUNT = process.env.FIREBASE_SERVICE_ACCOUNT;
+import type {
+  EntitlementRecord,
+  EntitlementStore,
+  ManualEntitlement,
+} from '@/lib/stripe/entitlements';
 
 /** True when the admin SDK has a service-account credential to use. */
 export function isAdminConfigured(): boolean {
-  return Boolean(SERVICE_ACCOUNT && SERVICE_ACCOUNT.trim().length > 0);
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
+  return Boolean(serviceAccount && serviceAccount.trim().length > 0);
 }
 
 function getAdminApp(): App {
+  const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!isAdminConfigured()) {
     throw new Error('firebase-admin-not-configured');
   }
   const existing = getApps()[0];
   if (existing) return existing;
   return initializeApp({
-    credential: cert(JSON.parse(SERVICE_ACCOUNT as string)),
+    credential: cert(JSON.parse(serviceAccount as string)),
   });
 }
 
@@ -55,9 +59,58 @@ export function getAdminDb(): Firestore {
   return getFirestore(getAdminApp());
 }
 
+/** Admin Auth instance (same lazy app) — used for user lookup by the admin API. */
+export function getAdminAuth(): Auth {
+  return getAuth(getAdminApp());
+}
+
 const ENTITLEMENTS_COLLECTION = 'entitlements';
 const STRIPE_EVENTS_COLLECTION = 'stripe_events';
 const PADDLE_EVENTS_COLLECTION = 'paddle_events';
+
+/* ------------------------------------------------------------------------ */
+/* Admin authorization (manual/gift entitlement management)                  */
+/* ------------------------------------------------------------------------ */
+
+/**
+ * True when `uid` is on the server-side admin allowlist (`ADMIN_UIDS` — a
+ * comma-separated list of Firebase UIDs). This is the ONLY admin gate for the
+ * manual entitlement API; a client-supplied "isAdmin" flag is never trusted.
+ * No value configured = no admins (everyone is denied).
+ */
+export function isAdminUid(uid: string): boolean {
+  const allowlist = (process.env.ADMIN_UIDS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  return allowlist.includes(uid);
+}
+
+/**
+ * Authenticate an admin API request: requires the admin layer to be
+ * configured, a valid Firebase ID token whose uid is on the `ADMIN_UIDS`
+ * allowlist. Never trusts any client-supplied identity.
+ */
+export async function verifyAdminRequest(
+  request: Request,
+): Promise<{ ok: true; adminUid: string } | { ok: false; status: number; error: string }> {
+  if (!isAdminConfigured()) {
+    return { ok: false, status: 503, error: 'auth-server-not-configured' };
+  }
+  const auth = request.headers.get('authorization');
+  const token = auth?.startsWith('Bearer ') ? auth.slice('Bearer '.length).trim() : null;
+  if (!token) {
+    return { ok: false, status: 401, error: 'unauthenticated' };
+  }
+  const uid = await verifyIdToken(token);
+  if (!uid) {
+    return { ok: false, status: 401, error: 'unauthenticated' };
+  }
+  if (!isAdminUid(uid)) {
+    return { ok: false, status: 403, error: 'forbidden' };
+  }
+  return { ok: true, adminUid: uid };
+}
 
 /**
  * Firestore-backed entitlement store.
@@ -90,6 +143,7 @@ export function createEntitlementStore(options?: { events?: 'stripe' | 'paddle' 
         paddlePriceId: data.paddlePriceId ?? null,
         status: data.status ?? 'active',
         currentPeriodEnd: data.currentPeriodEnd ?? null,
+        manual: (data.manual as ManualEntitlement | null | undefined) ?? null,
         updatedAt: data.updatedAt ?? null,
       };
     },
