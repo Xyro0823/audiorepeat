@@ -128,7 +128,7 @@ function sanitizeDays(raw: unknown): DayMap | undefined {
 }
 
 /**
- * Parse and validate an AudioRepeat backup. Returns the safe slices of the
+ * Parse and validate an Evoq backup. Returns the safe slices of the
  * document (settings, sets, stats days, username), or null if it isn't one.
  */
 export function parseBackup(text: string): BackupData | null {

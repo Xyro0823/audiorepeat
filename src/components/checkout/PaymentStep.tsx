@@ -277,7 +277,7 @@ export default function PaymentStep({
               </p>
             )}
             <p className="mt-2.5 text-center text-[11px] text-slate-500">
-              🔒 Secure payment handled by Paddle — card details never touch AudioRepeat.
+              🔒 Secure payment handled by Paddle — card details never touch Evoq.
             </p>
           </>
         ) : plan.id === 'basic' ? (
@@ -303,7 +303,7 @@ export default function PaymentStep({
                 💳 Payment integration coming soon
               </p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300">
-                AudioRepeat doesn&apos;t charge for anything yet. This screen is where checkout
+                Evoq doesn&apos;t charge for anything yet. This screen is where checkout
                 will live once payments launch — you won&apos;t be billed today, and nothing here
                 processes a payment.
               </p>

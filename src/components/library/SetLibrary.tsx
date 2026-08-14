@@ -485,7 +485,7 @@ export default function SetLibrary() {
       const text = await file.text();
       const parsed = parseSetJson(text);
       if (!parsed) {
-        flash({ kind: 'err', text: 'That file is not a valid AudioRepeat set.' });
+        flash({ kind: 'err', text: 'That file is not a valid Evoq set.' });
         return;
       }
       await saveSet(parsed);
@@ -750,7 +750,7 @@ export default function SetLibrary() {
       <header className="animate-fade-up glass relative z-50 mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl px-3 py-2.5 sm:mb-8 sm:gap-x-4 sm:gap-y-3 sm:px-4 sm:py-3">
         <Logo />
         <div className="mr-auto">
-          <h1 className="text-[15px] font-semibold tracking-tight text-white">AudioRepeat</h1>
+          <h1 className="text-[15px] font-semibold tracking-tight text-white">Evoq</h1>
           <p className="hidden text-[11px] text-slate-500 sm:block">
             {LANGUAGES.length} languages · hands-free drilling
           </p>

@@ -147,7 +147,7 @@ export default function SettingsModal({ onClose }: Props) {
         type: 'SET_REMINDER',
         timestamp: next.getTime(),
         title: 'Time to practice! 🔁',
-        body: 'Keep your streak alive — a quick AudioRepeat session is waiting.',
+        body: 'Keep your streak alive — a quick Evoq session is waiting.',
       });
     },
     [postToSW],
@@ -196,7 +196,7 @@ export default function SettingsModal({ onClose }: Props) {
     postToSW({
       type: 'SET_REMINDER',
       timestamp: Date.now() + 1000,
-      title: 'AudioRepeat reminder 🔁',
+      title: 'Evoq reminder 🔁',
       body: 'If you see this, daily reminders are armed and working.',
       tag: 'reminder-test',
     });
@@ -224,7 +224,7 @@ export default function SettingsModal({ onClose }: Props) {
         const text = await file.text();
         const parsed = parseBackup(text);
         if (!parsed) {
-          flash('err', 'That file is not a valid AudioRepeat backup.');
+          flash('err', 'That file is not a valid Evoq backup.');
           return;
         }
         setPendingImport(parsed);

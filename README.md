@@ -1,4 +1,4 @@
-# AudioRepeat 🔁
+# Evoq 🔁
 
 [![CI](https://github.com/Xyro0823/audiorepeat/actions/workflows/ci.yml/badge.svg)](https://github.com/Xyro0823/audiorepeat/actions/workflows/ci.yml)
 

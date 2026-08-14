@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "AudioRepeat — Language Loop Driller",
-    short_name: "AudioRepeat",
+    name: "Evoq — Language Loop Driller",
+    short_name: "Evoq",
     description:
       "Offline-first, hands-free vocabulary looping for auditory language learners.",
     id: "/",

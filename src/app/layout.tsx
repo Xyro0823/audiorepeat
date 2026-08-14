@@ -57,19 +57,19 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "AudioRepeat",
-    template: "%s · AudioRepeat",
+    default: "Evoq",
+    template: "%s · Evoq",
   },
   description:
     "Offline-first, hands-free vocabulary looping for auditory language learners. Hear each word repeated in your target language, then its translation.",
-  applicationName: "AudioRepeat",
+  applicationName: "Evoq",
   icons: {
     icon: "/icon.svg",
     apple: "/apple-touch-icon.png",
   },
   appleWebApp: {
     capable: true,
-    title: "AudioRepeat",
+    title: "Evoq",
     statusBarStyle: "black-translucent",
   },
   manifest: "/manifest.webmanifest",

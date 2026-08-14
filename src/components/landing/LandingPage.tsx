@@ -449,7 +449,7 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       <section id="features" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-24 pt-28 lg:px-12">
         <div className="text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">Why AudioRepeat</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">Why Evoq</p>
           <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-white md:text-5xl">
             An audio engine built for retention
           </h2>
@@ -690,7 +690,7 @@ export default function LandingPage() {
 
         <div className="border-t border-white/5">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-6 py-7 sm:flex-row lg:px-12">
-            <p className="text-xs text-slate-500">© 2026 AudioRepeat · Loop, repeat, retain.</p>
+            <p className="text-xs text-slate-500">© 2026 Evoq · Loop, repeat, retain.</p>
             <div className="flex items-center gap-6 text-xs text-slate-500">
               <a href="#features" className="transition hover:text-cyan-300">Features</a>
               <a href="#languages" className="transition hover:text-cyan-300">Languages</a>
