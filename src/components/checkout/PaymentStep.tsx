@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 import type { AuthUser } from '@/types/auth';
 import type { PlanDef } from '@/lib/plans';
+import { checkoutSuccessUrl } from '@/lib/checkoutUrl';
 
 interface Props {
   plan: PlanDef;
@@ -163,7 +164,10 @@ export default function PaymentStep({
           settings: {
             displayMode: 'overlay',
             theme: 'dark',
-            successUrl: `${window.location.origin}/checkout/success`,
+            successUrl: checkoutSuccessUrl(
+              window.location.origin,
+              process.env.NEXT_PUBLIC_VERCEL_BYPASS_QUERY,
+            ),
           },
           transactionId: data.transactionId,
         });
