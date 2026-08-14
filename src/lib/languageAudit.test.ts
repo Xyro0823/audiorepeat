@@ -225,31 +225,56 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
     }
   });
 
-  it('bank levels stay distinct within each language (cross-level duplication guard)', () => {
-    // Guards against a level being built by copying another level. Exact
-    // target-string overlap is measured as |intersection| / min(len) for every
-    // level pair within a language. Baseline (measured over all 13 packs):
-    // B2-C1 max 42.2% (mn), C1-C2 24.5%, B1-B2 22.3%, all other pairs <= 18%.
-    // A wholesale copy (e.g. A2 duplicated as B2) would sit near 100%, so 50%
-    // catches copy/paste level duplication while leaving legitimate natural
-    // overlap untouched.
+  it('bank levels stay distinct within each language (cross-level duplication guards)', () => {
+    // Two complementary signals for every level pair within a language:
+    //   A. targetOverlap = |shared target strings| / min(level sizes)  < 50%
+    //   B. pairOverlap    = |shared exact [target, English] pairs| / min < 50%
+    // A wholesale copy (e.g. A2 duplicated as B2) sits near 100% on both.
+    //
+    // Baselines (measured over all 13 packs): targetOverlap max is 42.2%
+    // (mn B2-C1); pairOverlap max is 28.2% (hi B2-C1), CJK family
+    // 21.6-28.2%, all other languages <= 18.6%, median 1.2%. A 50% cap on
+    // both leaves generous headroom above the natural maximum while still
+    // catching copy/paste duplication. pairOverlap additionally stays low
+    // when a shared target carries different English senses across levels
+    // (translation convergence), which targetOverlap alone would over-count.
     for (const code of STARTER_LANGS) {
       const pack = PACK_LANG[code];
-      const sets = new Map<string, Set<string>>();
+      const targets = new Map<string, Set<string>>();
+      const pairs = new Map<string, Set<string>>();
       for (const lvl of CEFR_LEVELS) {
-        const s = new Set<string>();
-        for (const [t] of loadBank(`${pack}-${lvl}`).words) s.add(t.trim().toLowerCase());
-        sets.set(lvl, s);
+        const words = loadBank(`${pack}-${lvl}`).words;
+        targets.set(
+          lvl,
+          new Set(words.map(([t]) => t.trim().toLowerCase())),
+        );
+        pairs.set(
+          lvl,
+          new Set(words.map(([t, e]) => `${t.trim().toLowerCase()}|${e.trim().toLowerCase()}`)),
+        );
       }
       for (let i = 0; i < CEFR_LEVELS.length; i++) {
         for (let j = i + 1; j < CEFR_LEVELS.length; j++) {
-          const a = sets.get(CEFR_LEVELS[i])!;
-          const b = sets.get(CEFR_LEVELS[j])!;
-          const inter = [...a].filter((x) => b.has(x)).length;
-          const ratio = inter / Math.min(a.size, b.size);
+          const lvlA = CEFR_LEVELS[i];
+          const lvlB = CEFR_LEVELS[j];
+          const sizeA = targets.get(lvlA)!.size;
+          const sizeB = targets.get(lvlB)!.size;
+          const minSize = Math.min(sizeA, sizeB);
+          const targetInter = [...targets.get(lvlA)!].filter((x) =>
+            targets.get(lvlB)!.has(x),
+          ).length;
+          const targetRatio = targetInter / minSize;
           expect(
-            ratio,
-            `${code}: ${CEFR_LEVELS[i]}-${CEFR_LEVELS[j]} overlap`,
+            targetRatio,
+            `${code}: ${lvlA}-${lvlB} target overlap`,
+          ).toBeLessThan(0.5);
+          const pairInter = [...pairs.get(lvlA)!].filter((x) =>
+            pairs.get(lvlB)!.has(x),
+          ).length;
+          const pairRatio = pairInter / minSize;
+          expect(
+            pairRatio,
+            `${code}: ${lvlA}-${lvlB} exact pair overlap`,
           ).toBeLessThan(0.5);
         }
       }
@@ -449,6 +474,34 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
     const identical = new Set(['x', 'y', 'z']);
     expect(overlap(identical, identical)).toBeGreaterThanOrEqual(0.7);
     expect(overlap(identical, identical)).toBeGreaterThanOrEqual(0.5);
+
+    // 8. Pair-based signal: a near-copy level shares exact [target, English]
+    //    pairs and must trip the pair-overlap guard (100% >> 50%).
+    const wordsA: Array<[string, string]> = [['a', 'alpha'], ['b', 'beta'], ['c', 'gamma']];
+    const wordsB: Array<[string, string]> = [['a', 'alpha'], ['b', 'beta'], ['c', 'gamma']];
+    const pairSet = (w: Array<[string, string]>) =>
+      new Set(w.map(([t, e]) => `${t.trim().toLowerCase()}|${e.trim().toLowerCase()}`));
+    const pairOverlap = (w1: Array<[string, string]>, w2: Array<[string, string]>) => {
+      const s1 = pairSet(w1);
+      const s2 = pairSet(w2);
+      return [...s1].filter((p) => s2.has(p)).length / Math.min(s1.size, s2.size);
+    };
+    expect(pairOverlap(wordsA, wordsB)).toBeGreaterThanOrEqual(0.5);
+
+    // 9. Translation convergence: the same target used with DIFFERENT English
+    //    senses across levels raises target-only overlap but must NOT trip the
+    //    pair-overlap guard (shared pairs = 0%).
+    const convA: Array<[string, string]> = [['bank', 'financial institution'], ['run', 'to run fast']];
+    const convB: Array<[string, string]> = [['bank', 'river bank'], ['run', 'a run in a race']];
+    const targetSet = (w: Array<[string, string]>) =>
+      new Set(w.map(([t]) => t.trim().toLowerCase()));
+    const targetOverlap = (w1: Array<[string, string]>, w2: Array<[string, string]>) => {
+      const s1 = targetSet(w1);
+      const s2 = targetSet(w2);
+      return [...s1].filter((t) => s2.has(t)).length / Math.min(s1.size, s2.size);
+    };
+    expect(targetOverlap(convA, convB)).toBeGreaterThanOrEqual(0.5);
+    expect(pairOverlap(convA, convB)).toBeLessThan(0.5);
   });
 
   it('topic packs are well-formed and free of hard translation errors', () => {
