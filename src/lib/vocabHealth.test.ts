@@ -12,6 +12,50 @@ type Repo = {
 };
 
 type TopicLangSummary = Record<string, { topicsCovered: number; totalPairs: number }>;
+type CoverageRow = {
+  english: string;
+  target: string;
+  levels: string[];
+  status: 'MATCH' | 'VARIANT' | 'TOPIC-ONLY';
+  bankTargets: string[];
+};
+type CoverageSummary = Record<string, { covered: number; matches: number; variants: number; topicOnly: number }>;
+type TopicDetail = {
+  id: string;
+  coreSize: number;
+  core: string[];
+  targets: Record<string, string[]>;
+  bankCoverage: Record<string, CoverageRow[]>;
+  coverageSummary: CoverageSummary;
+};
+
+/** Fixture with deliberate MATCH / VARIANT / TOPIC-ONLY bank coverage. */
+function coverageRepo(): Repo {
+  const banks: Record<string, Bank> = {
+    'xx-A1': { lang: 'xx', level: 'A1', words: [['tempA1', 'temperature'], ['pain1', 'pain']] },
+    'xx-A2': { lang: 'xx', level: 'A2', words: [['tempA2', 'temperature']] },
+    'xx-B1': { lang: 'xx', level: 'B1', words: [['alt', 'temperature']] },
+    'xx-B2': { lang: 'xx', level: 'B2', words: [] },
+    'xx-C1': { lang: 'xx', level: 'C1', words: [] },
+    'xx-C2': { lang: 'xx', level: 'C2', words: [] },
+  };
+  const vocabManifest: Record<string, Record<string, number>> = {
+    xx: { A1: 2, A2: 1, B1: 1, B2: 0, C1: 0, C2: 0 },
+  };
+  const topics = {
+    med: {
+      xx: [
+        ['tempA1', 'temperature'], // MATCH at A1, A2, B1
+        ['зонтик', 'umbrella'], // TOPIC-ONLY
+        ['бол', 'pain'], // VARIANT (bank target is pain1)
+      ] as Word[],
+    },
+  };
+  const topicManifest = {
+    med: { label: 'Med', emoji: '💊', langs: { xx: 3 } },
+  };
+  return { vocabManifest, banks, topicManifest, topics, packCodes: ['xx'] };
+}
 
 /** Minimal healthy synthetic repo for one pack language. */
 function healthyRepo(): Repo {
@@ -178,17 +222,96 @@ describe('vocab-health report analysis', () => {
     expect(full).not.toContain('Core concepts');
   });
 
-  it('real data: health/mn targets align with core and temperature = температур', () => {
+  it('bank coverage classifies MATCH / VARIANT / TOPIC-ONLY with canonical levels', () => {
+    const report = analyze(coverageRepo());
+    expect(report.status).toBe('ok'); // diagnostic only — never a hard gate.
+    const med = report.topicDetails[0] as unknown as TopicDetail;
+    const rows = med.bankCoverage.xx;
+    expect(rows[0]).toMatchObject({
+      english: 'temperature',
+      target: 'tempA1',
+      levels: ['A1', 'A2', 'B1'], // canonical order preserved
+      status: 'MATCH',
+      bankTargets: ['tempA1', 'tempA2', 'alt'],
+    });
+    expect(rows[1]).toMatchObject({ english: 'umbrella', levels: [], status: 'TOPIC-ONLY' });
+    expect(rows[2]).toMatchObject({
+      english: 'pain',
+      target: 'бол',
+      levels: ['A1'],
+      status: 'VARIANT',
+      bankTargets: ['pain1'],
+    });
+  });
+
+  it('bank coverage aligns index-for-index with core', () => {
+    const report = analyze(coverageRepo());
+    const med = report.topicDetails[0] as unknown as TopicDetail;
+    const rows = med.bankCoverage.xx;
+    const core = med.core;
+    const targets = med.targets.xx;
+    expect(rows).toHaveLength(core.length);
+    rows.forEach((r, i) => {
+      expect(r.english).toBe(core[i]);
+      expect(r.target).toBe(targets[i]);
+    });
+  });
+
+  it('coverage summary is produced per language', () => {
+    const report = analyze(coverageRepo());
+    const med = report.topicDetails[0] as unknown as TopicDetail;
+    expect(med.coverageSummary.xx).toEqual({
+      covered: 2,
+      matches: 1,
+      variants: 1,
+      topicOnly: 1,
+    });
+  });
+
+  it('renderSummary --topic --lang shows Bank/Status columns and summary', () => {
+    const report = analyze(coverageRepo());
+    const text = renderSummary(report, { topic: 'med', lang: 'xx' });
+    expect(text).toContain('Bank');
+    expect(text).toContain('Status');
+    expect(text).toContain('MATCH');
+    expect(text).toContain('TOPIC-ONLY');
+    expect(text).toContain('VARIANT');
+    expect(text).toContain('Topic concepts covered by CEFR banks:');
+    expect(text).toContain('covered: 2 (67%)');
+  });
+
+  it('default report stays concise without bank columns', () => {
+    const report = analyze(coverageRepo());
+    const full = renderSummary(report);
+    expect(full).not.toContain('MATCH');
+    expect(full).not.toContain('TOPIC-ONLY');
+  });
+
+  it('real data: health/mn temperature is A2 + MATCH', () => {
     const report = analyze(loadRepo());
-    const health = report.topicDetails.find((t) => t.id === 'health')!;
-    expect(health).toBeDefined();
+    const health = report.topicDetails.find((t) => t.id === 'health')! as unknown as TopicDetail;
+    const core = health.core;
+    const rows = health.bankCoverage.mn;
+    const i = core.indexOf('temperature');
+    expect(rows[i].levels).toContain('A2');
+    expect(rows[i].status).toBe('MATCH');
+  });
+
+  it('real data: targets align with core for every topic/language', () => {
+    const report = analyze(loadRepo());
+    expect(report.status).toBe('ok');
+    for (const t of report.topicDetails) {
+      const core = t.core as string[];
+      const targets = t.targets as Record<string, string[]>;
+      for (const arr of Object.values(targets)) {
+        expect(arr).toHaveLength(core.length);
+      }
+    }
+    // health/mn temperature must still resolve to температур.
+    const health = report.topicDetails.find((x) => x.id === 'health')!;
     const core = health.core as string[];
     const targets = health.targets as Record<string, string[]>;
-    const i = core.indexOf('temperature');
-    expect(targets.mn[i]).toBe('температур');
-    for (const arr of Object.values(targets)) {
-      expect(arr).toHaveLength(core.length);
-    }
+    expect(targets.mn[core.indexOf('temperature')]).toBe('температур');
   });
 
   it('renderSummary --topic shows the ordered core, default report does not', () => {

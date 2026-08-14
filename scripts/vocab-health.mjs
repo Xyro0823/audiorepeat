@@ -225,6 +225,29 @@ export function analyze({
   for (const v of terminology.violations) failures.push(`terminology: ${v}`);
 
   // ---- G. Topic/core parity ----------------------------------------------
+  // Bank English-gloss index per pack language: norm(english) -> { levels,
+  // targets }. Levels are appended in canonical order (CEFR_LEVELS) and
+  // targets are deduped preserving first-seen order. Used only for the
+  // diagnostic per-row bank coverage below — never a correctness gate.
+  const bankIndex = {};
+  for (const lang of packs) {
+    const idx = new Map();
+    for (const lvl of levels) {
+      for (const [t, e] of banks[`${lang}-${lvl}`]?.words ?? []) {
+        const key = norm(e);
+        let rec = idx.get(key);
+        if (!rec) {
+          rec = { levels: [], targets: [] };
+          idx.set(key, rec);
+        }
+        if (!rec.levels.includes(lvl)) rec.levels.push(lvl);
+        const nt = norm(t);
+        if (!rec.targets.some((x) => norm(x) === nt)) rec.targets.push(t);
+      }
+    }
+    bankIndex[lang] = idx;
+  }
+
   const topicStats = {
     topics: Object.keys(topicManifest ?? {}).length,
     topicLanguages: new Set(),
@@ -274,7 +297,39 @@ export function analyze({
     // aligned index-for-index with entry.core (both derive from the same
     // ordered [target, english] pair arrays).
     entry.targets = {};
-    for (const [l, list] of Object.entries(data)) entry.targets[l] = list.map(([t]) => t);
+    entry.bankCoverage = {};
+    entry.coverageSummary = {};
+    for (const [l, list] of Object.entries(data)) {
+      entry.targets[l] = list.map(([t]) => t);
+      // Diagnostic per-row bank coverage: which CEFR levels contain this exact
+      // English concept for this language, and whether the topic target is an
+      // exact bank target (MATCH), a different target for the same concept
+      // (VARIANT), or the concept is absent from the banks (TOPIC-ONLY).
+      const idx = bankIndex[l] ?? new Map();
+      const rows = [];
+      const summary = { covered: 0, matches: 0, variants: 0, topicOnly: 0 };
+      for (const [t, e] of list) {
+        const rec = idx.get(norm(e));
+        const levels = rec ? [...rec.levels] : [];
+        const bankTargets = rec ? [...rec.targets] : [];
+        let status;
+        if (!rec) {
+          status = 'TOPIC-ONLY';
+          summary.topicOnly++;
+        } else if (bankTargets.some((x) => norm(x) === norm(t))) {
+          status = 'MATCH';
+          summary.covered++;
+          summary.matches++;
+        } else {
+          status = 'VARIANT';
+          summary.covered++;
+          summary.variants++;
+        }
+        rows.push({ english: e, target: t, levels, status, bankTargets });
+      }
+      entry.bankCoverage[l] = rows;
+      entry.coverageSummary[l] = summary;
+    }
     const fileLangs = Object.keys(data);
     const missingLangs = langs.filter((l) => !data[l]);
     const extraLangs = fileLangs.filter((l) => !meta.langs?.[l]);
@@ -480,14 +535,35 @@ export function renderSummary(report, opts = {}) {
       const targetLang = opts.lang && t.targets?.[opts.lang] ? opts.lang : undefined;
       if (targetLang) {
         const targets = t.targets[targetLang];
+        const coverage = t.bankCoverage?.[targetLang];
         const nw = Math.max(1, String(t.core.length).length);
         const ew = Math.max(7, ...t.core.map((c) => c.length));
+        const tw = Math.max(6, ...targets.map((x) => x.length));
+        const bw = coverage
+          ? Math.max(4, ...coverage.map((r) => (r.levels.length ? r.levels.join(', ').length : 1)))
+          : 4;
         L.push('');
         L.push(`Language: ${targetLang}`);
-        L.push(`  ${'#'.padStart(nw)}  ${'English'.padEnd(ew)}  Target`);
+        L.push(
+          `  ${'#'.padStart(nw)}  ${'English'.padEnd(ew)}  ${'Target'.padEnd(tw)}  ${'Bank'.padEnd(bw)}  Status`,
+        );
         t.core.forEach((c, i) => {
-          L.push(`  ${String(i + 1).padStart(nw)}  ${c.padEnd(ew)}  ${targets[i]}`);
+          const row = coverage?.[i];
+          const bank = row && row.levels.length ? row.levels.join(', ') : '—';
+          const status = row ? row.status : '';
+          L.push(
+            `  ${String(i + 1).padStart(nw)}  ${c.padEnd(ew)}  ${targets[i].padEnd(tw)}  ${bank.padEnd(bw)}  ${status}`,
+          );
         });
+        const summary = coverage ? t.coverageSummary?.[targetLang] : undefined;
+        if (summary) {
+          const pct = Math.round((summary.covered / Math.max(1, t.core.length)) * 100);
+          L.push('');
+          L.push('Topic concepts covered by CEFR banks:');
+          L.push(
+            `  covered: ${summary.covered} (${pct}%)  matches: ${summary.matches}  variants: ${summary.variants}  topic-only: ${summary.topicOnly}`,
+          );
+        }
       } else {
         if (t.core?.length) {
           L.push('');
