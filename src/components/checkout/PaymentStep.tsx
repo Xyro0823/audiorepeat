@@ -23,6 +23,9 @@ declare global {
   interface Window {
     Paddle?: {
       Initialize: (options: { token: string }) => void;
+      Environment: {
+        set: (environment: 'sandbox' | 'production') => void;
+      };
       Checkout: {
         open: (options: {
           settings?: {
@@ -148,6 +151,13 @@ export default function PaymentStep({
         await loadPaddleJs();
         const clientToken = process.env.NEXT_PUBLIC_PADDLE_CLIENT_TOKEN;
         if (!clientToken || !window.Paddle) throw new Error('paddle-unavailable');
+        // Paddle.js defaults to production unless told otherwise — the
+        // sandbox account must opt in, or the overlay tries to open a
+        // production checkout for a sandbox transaction and shows
+        // "Something went wrong". Mirrors the server-side PADDLE_ENV.
+        if (process.env.NEXT_PUBLIC_PADDLE_ENV === 'sandbox') {
+          window.Paddle.Environment.set('sandbox');
+        }
         window.Paddle.Initialize({ token: clientToken });
         window.Paddle.Checkout.open({
           settings: {
