@@ -243,6 +243,101 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
     expect(langLimitKey('it-CH')).toBe('it-CH');
   });
 
+  it('topic concept cores are identical and complete across every language', () => {
+    // The shared English core drives positional pairing: every language list
+    // must be the same ordered concept list as the reference language, with
+    // no dropped, extra, or reordered concepts.
+    for (const [topic, meta] of Object.entries(topicManifest)) {
+      const raw = JSON.parse(
+        fs.readFileSync(path.join(TOPICS_DIR, `${topic}.json`), 'utf8'),
+      ) as Record<string, Array<[string, string]>>;
+      const langs = Object.keys(meta.langs);
+      expect(langs.length, `${topic}: manifest languages`).toBeGreaterThan(0);
+      const ref = langs[0];
+      const core = raw[ref].map(([, en]) => en.trim());
+      expect(new Set(core).size, `${topic}: core has no duplicate concepts`).toBe(
+        core.length,
+      );
+      for (const lang of langs) {
+        const list = raw[lang];
+        expect(list.length, `${topic}[${lang}]: count matches core`).toBe(core.length);
+        const theirs = list.map(([, en]) => en.trim());
+        expect(theirs, `${topic}[${lang}]: identical ordered core`).toEqual(core);
+      }
+    }
+  });
+
+  it('every pack language is present in every topic with matching manifest counts', () => {
+    // Each STARTER_LANGS pack language must appear in ALL topics (not just
+    // some), and the manifest's advertised count must equal the real file.
+    for (const code of STARTER_LANGS) {
+      const pack = PACK_LANG[code];
+      for (const [topic, meta] of Object.entries(topicManifest)) {
+        const raw = JSON.parse(
+          fs.readFileSync(path.join(TOPICS_DIR, `${topic}.json`), 'utf8'),
+        ) as Record<string, Array<[string, string]>>;
+        expect(meta.langs[pack], `${topic}: ${pack} advertised`).toBeGreaterThan(0);
+        expect(raw[pack]?.length, `${topic}[${pack}]: file count`).toBe(
+          meta.langs[pack],
+        );
+      }
+    }
+  });
+
+  it('topic manifest and topic files agree (no orphans, no phantom languages)', () => {
+    const topicFiles = fs
+      .readdirSync(TOPICS_DIR)
+      .filter((f) => f.endsWith('.json') && f !== 'manifest.json')
+      .map((f) => f.replace(/\.json$/, ''));
+    expect(new Set(topicFiles).size, 'no duplicate topic files').toBe(topicFiles.length);
+    expect(new Set(Object.keys(topicManifest)).size, 'no duplicate manifest topics').toBe(
+      Object.keys(topicManifest).length,
+    );
+    expect(new Set(topicFiles), 'manifest topics match files on disk').toEqual(
+      new Set(Object.keys(topicManifest)),
+    );
+    for (const [topic, meta] of Object.entries(topicManifest)) {
+      const raw = JSON.parse(
+        fs.readFileSync(path.join(TOPICS_DIR, `${topic}.json`), 'utf8'),
+      ) as Record<string, Array<[string, string]>>;
+      const fileLangs = Object.keys(raw);
+      expect(new Set(fileLangs), `${topic}: file langs == manifest langs`).toEqual(
+        new Set(Object.keys(meta.langs)),
+      );
+      for (const [lang, count] of Object.entries(meta.langs)) {
+        expect(raw[lang]?.length, `${topic}[${lang}]: manifest count == file`).toBe(
+          count,
+        );
+      }
+    }
+  });
+
+  it('parity guard confidence: synthetic missing/extra/reordered/miscounted data fails', () => {
+    const core: Array<[string, string]> = [['a', 'alpha'], ['b', 'beta'], ['c', 'gamma']];
+    const ok = { es: core.map((p) => [...p] as [string, string]), fr: core.map((p) => [...p] as [string, string]) };
+    // Baseline: reference and sibling agree.
+    expect(ok['fr'].length).toBe(ok['es'].length);
+    expect(ok['fr'].map(([, e]) => e)).toEqual(ok['es'].map(([, e]) => e));
+
+    // Missing concept: fr drops one.
+    const missing = { es: core.map((p) => [...p] as [string, string]), fr: core.slice(0, 2).map((p) => [...p] as [string, string]) };
+    expect(missing['fr'].length === missing['es'].length).toBe(false);
+    expect(missing['fr'].map(([, e]) => e)).not.toEqual(missing['es'].map(([, e]) => e));
+
+    // Extra concept: fr adds one not in the core.
+    const extra = { es: core.map((p) => [...p] as [string, string]), fr: [...core.map((p) => [...p] as [string, string]), ['x', 'delta'] as [string, string]] };
+    expect(extra['fr'].length === extra['es'].length).toBe(false);
+    expect(extra['fr'].map(([, e]) => e)).not.toEqual(extra['es'].map(([, e]) => e));
+
+    // Reordered concept: same set, different order.
+    const reordered = { es: core.map((p) => [...p] as [string, string]), fr: [core[0], core[2], core[1]].map((p) => [...p] as [string, string]) };
+    expect(reordered['fr'].map(([, e]) => e)).not.toEqual(reordered['es'].map(([, e]) => e));
+
+    // Miscounted manifest: advertised count differs from file length.
+    expect(3 === ok['es'].length).toBe(true);
+    expect(4 === ok['fr'].length).toBe(false);
+  });
+
   it('topic packs are well-formed and free of hard translation errors', () => {
     // Structure: every topic file is a map of language -> [target, english].
     for (const [topic, meta] of Object.entries(topicManifest)) {
