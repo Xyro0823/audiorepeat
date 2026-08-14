@@ -6,6 +6,7 @@ import {
   resolvePlanForPrice,
 } from '@/lib/paddle/server';
 import { createEntitlementStore, isAdminConfigured } from '@/lib/firebase/admin';
+import { NO_STORE_HEADERS } from '@/lib/http';
 import {
   handlePaddleSubscriptionEvent,
   handlePaddleTransactionCompleted,
@@ -41,19 +42,31 @@ const PRICES: PaddlePriceResolver = {
 export async function POST(request: Request) {
   const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    return NextResponse.json({ error: 'webhook-not-configured' }, { status: 503 });
+    return NextResponse.json(
+      { error: 'webhook-not-configured' },
+      { status: 503, headers: NO_STORE_HEADERS },
+    );
   }
   if (!isPaddleConfigured()) {
-    return NextResponse.json({ error: 'paddle-not-configured' }, { status: 503 });
+    return NextResponse.json(
+      { error: 'paddle-not-configured' },
+      { status: 503, headers: NO_STORE_HEADERS },
+    );
   }
   if (!isAdminConfigured()) {
-    return NextResponse.json({ error: 'auth-server-not-configured' }, { status: 503 });
+    return NextResponse.json(
+      { error: 'auth-server-not-configured' },
+      { status: 503, headers: NO_STORE_HEADERS },
+    );
   }
 
   const signature = request.headers.get('paddle-signature');
   const rawBody = await request.text();
   if (!signature) {
-    return NextResponse.json({ error: 'missing-signature' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'missing-signature' },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
   }
 
   let event: { eventId: string; eventType: string; data: object };
@@ -65,14 +78,17 @@ export async function POST(request: Request) {
       data: object;
     };
   } catch {
-    return NextResponse.json({ error: 'invalid-signature' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'invalid-signature' },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
   }
 
   const store = createEntitlementStore({ events: 'paddle' });
 
   // Idempotency: already-processed events are acknowledged and skipped.
   if (await store.isEventProcessed(event.eventId)) {
-    return NextResponse.json({ received: true, duplicate: true });
+    return NextResponse.json({ received: true, duplicate: true }, { headers: NO_STORE_HEADERS });
   }
 
   try {
@@ -104,15 +120,18 @@ export async function POST(request: Request) {
       default:
         // Unrelated event types are acknowledged and ignored (never mark them
         // processed — irrelevant types can arrive again without consequence).
-        return NextResponse.json({ received: true });
+        return NextResponse.json({ received: true }, { headers: NO_STORE_HEADERS });
     }
   } catch (err) {
     console.error('[paddle-webhook] event processing failed:', err);
     // 5xx → Paddle retries the same event (the marker was NOT written).
-    return NextResponse.json({ error: 'processing-failed' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'processing-failed' },
+      { status: 500, headers: NO_STORE_HEADERS },
+    );
   }
 
   // Mark AFTER applying so a failure above lets Paddle retry the same event.
   await store.markEventProcessed(event.eventId);
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true }, { headers: NO_STORE_HEADERS });
 }

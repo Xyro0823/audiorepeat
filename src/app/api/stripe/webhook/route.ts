@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import type Stripe from 'stripe';
 import { getStripe, isStripeConfigured } from '@/lib/stripe/server';
 import { createEntitlementStore, isAdminConfigured } from '@/lib/firebase/admin';
+import { NO_STORE_HEADERS } from '@/lib/http';
 import {
   handleCheckoutSessionCompleted,
   handleInvoicePaymentFailed,
@@ -29,33 +30,51 @@ export const runtime = 'nodejs';
 export async function POST(request: Request) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {
-    return NextResponse.json({ error: 'webhook-not-configured' }, { status: 503 });
+    return NextResponse.json(
+      { error: 'webhook-not-configured' },
+      { status: 503, headers: NO_STORE_HEADERS },
+    );
   }
   if (!isStripeConfigured()) {
-    return NextResponse.json({ error: 'stripe-not-configured' }, { status: 503 });
+    return NextResponse.json(
+      { error: 'stripe-not-configured' },
+      { status: 503, headers: NO_STORE_HEADERS },
+    );
   }
   if (!isAdminConfigured()) {
-    return NextResponse.json({ error: 'auth-server-not-configured' }, { status: 503 });
+    return NextResponse.json(
+      { error: 'auth-server-not-configured' },
+      { status: 503, headers: NO_STORE_HEADERS },
+    );
   }
 
   const signature = request.headers.get('stripe-signature');
   const rawBody = await request.text();
   if (!signature) {
-    return NextResponse.json({ error: 'missing-signature' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'missing-signature' },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
   }
 
   let event: Stripe.Event;
   try {
     event = getStripe().webhooks.constructEvent(rawBody, signature, webhookSecret);
   } catch {
-    return NextResponse.json({ error: 'invalid-signature' }, { status: 400 });
+    return NextResponse.json(
+      { error: 'invalid-signature' },
+      { status: 400, headers: NO_STORE_HEADERS },
+    );
   }
 
   const store = createEntitlementStore();
 
   // Idempotency: already-processed events are acknowledged and skipped.
   if (await store.isEventProcessed(event.id)) {
-    return NextResponse.json({ received: true, duplicate: true });
+    return NextResponse.json(
+      { received: true, duplicate: true },
+      { headers: NO_STORE_HEADERS },
+    );
   }
 
   switch (event.type) {
@@ -74,10 +93,10 @@ export async function POST(request: Request) {
     default:
       // Unrelated event types are acknowledged and ignored (never mark them
       // processed — irrelevant types can arrive again without consequence).
-      return NextResponse.json({ received: true });
+      return NextResponse.json({ received: true }, { headers: NO_STORE_HEADERS });
   }
 
   // Mark AFTER applying so a failure above lets Stripe retry the same event.
   await store.markEventProcessed(event.id);
-  return NextResponse.json({ received: true });
+  return NextResponse.json({ received: true }, { headers: NO_STORE_HEADERS });
 }

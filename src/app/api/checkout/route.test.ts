@@ -135,3 +135,26 @@ describe('POST /api/checkout — configuration', () => {
     expect(h.createCheckoutTransaction).not.toHaveBeenCalled();
   });
 });
+
+describe('POST /api/checkout — caching', () => {
+  it('returns Cache-Control: no-store on success, auth and validation responses', async () => {
+    h.verifyIdToken.mockResolvedValue('uid-1');
+
+    const ok = await POST(checkoutRequest({ planId: 'pro', billing: 'annual' }, 'tok'));
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get('Cache-Control')).toBe('no-store');
+
+    const noAuth = await POST(checkoutRequest({ planId: 'pro', billing: 'annual' }));
+    expect(noAuth.headers.get('Cache-Control')).toBe('no-store');
+
+    const badPlan = await POST(checkoutRequest({ planId: 'basic', billing: 'annual' }, 'tok'));
+    expect(badPlan.headers.get('Cache-Control')).toBe('no-store');
+
+    const badBilling = await POST(checkoutRequest({ planId: 'pro', billing: 'weekly' }, 'tok'));
+    expect(badBilling.headers.get('Cache-Control')).toBe('no-store');
+
+    h.isPaddleConfigured.mockReturnValue(false);
+    const unconfigured = await POST(checkoutRequest({ planId: 'pro', billing: 'annual' }, 'tok'));
+    expect(unconfigured.headers.get('Cache-Control')).toBe('no-store');
+  });
+});

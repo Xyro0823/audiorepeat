@@ -2,6 +2,28 @@
  * Registered only in production builds (see src/components/pwa/SwRegister.tsx).
  */
 const CACHE = "audiorepeat-v2";
+
+/* Privileged and payment-sensitive surfaces must ALWAYS come from the live
+ * server: admin pages/APIs, checkout pages, the checkout API and the payment
+ * webhooks are never cached, never precached, and never served from the
+ * offline navigation fallback. A network-only fetch failure here (e.g.
+ * offline) must fail the request rather than reveal cached or shell content.
+ */
+function isNetworkOnly(url) {
+  return (
+    url.pathname === "/admin" ||
+    url.pathname.startsWith("/admin/") ||
+    url.pathname === "/api/admin" ||
+    url.pathname.startsWith("/api/admin/") ||
+    // Payment/billing surfaces: /checkout and /checkout/* (incl. the success
+    // page) plus the checkout API and both payment webhooks.
+    url.pathname === "/checkout" ||
+    url.pathname.startsWith("/checkout/") ||
+    url.pathname === "/api/checkout" ||
+    url.pathname === "/api/paddle/webhook" ||
+    url.pathname === "/api/stripe/webhook"
+  );
+}
 const SHELL = [
   "/",
   "/player",
@@ -50,7 +72,11 @@ self.addEventListener("message", (event) => {
     const urls = data.urls.filter((u) => {
       try {
         const url = new URL(u, self.location.origin);
-        return url.origin === self.location.origin && url.protocol === "http:";
+        return (
+          url.origin === self.location.origin &&
+          url.protocol === "http:" &&
+          !isNetworkOnly(url)
+        );
       } catch {
         return false;
       }
@@ -156,6 +182,14 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Privileged admin surfaces are ALWAYS network-only. This guard runs before
+  // every caching branch below (including the offline navigation fallback), so
+  // /admin/* pages and /api/admin/* responses can never be served from cache.
+  if (isNetworkOnly(url)) {
+    event.respondWith(fetch(request));
+    return;
+  }
 
   // Pre-generated TTS audio → cache first (written by lib/audio/cache.ts)
   if (url.pathname.startsWith("/audio/")) {

@@ -269,6 +269,44 @@ describe('POST /api/paddle/webhook — entitlement events', () => {
   });
 });
 
+describe('POST /api/paddle/webhook — caching', () => {
+  it('returns Cache-Control: no-store on every response kind', async () => {
+    // Missing signature (400)
+    const missing = await POST(webhookRequest(eventPayload('transaction.completed', {})));
+    expect(missing.status).toBe(400);
+    expect(missing.headers.get('Cache-Control')).toBe('no-store');
+
+    // Invalid signature (400)
+    h.unmarshal.mockImplementation(() => {
+      throw new Error('invalid signature');
+    });
+    const badSig = await POST(webhookRequest(eventPayload('transaction.completed', {}), 'sig'));
+    expect(badSig.status).toBe(400);
+    expect(badSig.headers.get('Cache-Control')).toBe('no-store');
+
+    // Successful apply + duplicate acknowledgement (200)
+    h.unmarshal.mockImplementation((rawBody: string, secret: string) => {
+      if (secret !== SECRET) throw new Error('invalid signature');
+      return JSON.parse(rawBody);
+    });
+    const ok = await POST(webhookRequest(eventPayload('transaction.completed', completedProTransaction()), 'sig'));
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get('Cache-Control')).toBe('no-store');
+
+    const dup = await POST(
+      webhookRequest(eventPayload('transaction.completed', completedProTransaction(), 'evt_hdr'), 'sig'),
+    );
+    expect(dup.status).toBe(200);
+    expect(dup.headers.get('Cache-Control')).toBe('no-store');
+
+    // Webhook secret not configured (503)
+    delete process.env.PADDLE_WEBHOOK_SECRET;
+    const unconfigured = await POST(webhookRequest(eventPayload('transaction.completed', {}), 'sig'));
+    expect(unconfigured.status).toBe(503);
+    expect(unconfigured.headers.get('Cache-Control')).toBe('no-store');
+  });
+});
+
 describe('POST /api/paddle/webhook — idempotency & retries', () => {
   it('is idempotent — a duplicate event is acknowledged without re-applying', async () => {
     const body = eventPayload('transaction.completed', completedProTransaction(), 'evt_dup');

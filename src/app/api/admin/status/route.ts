@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verifyAdminRequest } from '@/lib/firebase/admin';
+import { NO_STORE_HEADERS } from '@/lib/http';
 
 export const runtime = 'nodejs';
 
@@ -16,7 +17,7 @@ export const runtime = 'nodejs';
 export async function GET(request: Request) {
   const auth = await verifyAdminRequest(request);
   if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
+    return NextResponse.json({ error: auth.error }, { status: auth.status, headers: NO_STORE_HEADERS });
   }
-  return NextResponse.json({ ok: true, admin: true });
+  return NextResponse.json({ ok: true, admin: true }, { headers: NO_STORE_HEADERS });
 }

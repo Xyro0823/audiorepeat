@@ -4,6 +4,7 @@ import {
   getAdminAuth,
   verifyAdminRequest,
 } from '@/lib/firebase/admin';
+import { NO_STORE_HEADERS } from '@/lib/http';
 import { effectiveEntitlementView, providerPlanOf } from '@/lib/stripe/entitlements';
 import type { PlanId } from '@/lib/plans';
 
@@ -24,17 +25,17 @@ export const runtime = 'nodejs';
 export async function GET(request: Request) {
   const auth = await verifyAdminRequest(request);
   if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
+    return NextResponse.json({ error: auth.error }, { status: auth.status, headers: NO_STORE_HEADERS });
   }
 
   const url = new URL(request.url);
   const email = url.searchParams.get('email')?.trim().toLowerCase() ?? '';
   const uid = url.searchParams.get('uid')?.trim() ?? '';
   if ((email && uid) || (!email && !uid)) {
-    return NextResponse.json({ error: 'invalid-query' }, { status: 400 });
+    return NextResponse.json({ error: 'invalid-query' }, { status: 400, headers: NO_STORE_HEADERS });
   }
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return NextResponse.json({ error: 'invalid-query' }, { status: 400 });
+    return NextResponse.json({ error: 'invalid-query' }, { status: 400, headers: NO_STORE_HEADERS });
   }
 
   let record: { uid: string; email?: string; displayName?: string; photoURL?: string };
@@ -48,10 +49,10 @@ export async function GET(request: Request) {
     const code = (err as { code?: string })?.code;
     // firebase-admin reports unknown users as auth/user-not-found.
     if (code === 'auth/user-not-found') {
-      return NextResponse.json({ error: 'user-not-found' }, { status: 404 });
+      return NextResponse.json({ error: 'user-not-found' }, { status: 404, headers: NO_STORE_HEADERS });
     }
     console.error('[admin/lookup] failed:', code ?? err);
-    return NextResponse.json({ error: 'lookup-failed' }, { status: 500 });
+    return NextResponse.json({ error: 'lookup-failed' }, { status: 500, headers: NO_STORE_HEADERS });
   }
 
   const nowSec = Math.floor(Date.now() / 1000);
@@ -81,5 +82,5 @@ export async function GET(request: Request) {
         : null,
       providerPlan,
     },
-  });
+  }, { headers: NO_STORE_HEADERS });
 }

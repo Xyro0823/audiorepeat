@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createEntitlementStore, verifyAdminRequest } from '@/lib/firebase/admin';
+import { NO_STORE_HEADERS } from '@/lib/http';
 import type { ManualEntitlement } from '@/lib/stripe/entitlements';
 
 export const runtime = 'nodejs';
@@ -63,18 +64,18 @@ function parseGrantBody(body: unknown): ParsedGrant {
 export async function POST(request: Request) {
   const auth = await verifyAdminRequest(request);
   if (!auth.ok) {
-    return NextResponse.json({ error: auth.error }, { status: auth.status });
+    return NextResponse.json({ error: auth.error }, { status: auth.status, headers: NO_STORE_HEADERS });
   }
 
   let raw: unknown;
   try {
     raw = await request.json();
   } catch {
-    return NextResponse.json({ error: 'invalid-body' }, { status: 400 });
+    return NextResponse.json({ error: 'invalid-body' }, { status: 400, headers: NO_STORE_HEADERS });
   }
   const parsed = parseGrantBody(raw);
   if (!parsed.ok) {
-    return NextResponse.json({ error: parsed.error }, { status: 400 });
+    return NextResponse.json({ error: parsed.error }, { status: 400, headers: NO_STORE_HEADERS });
   }
 
   const manual: ManualEntitlement = {
@@ -90,5 +91,5 @@ export async function POST(request: Request) {
   const store = createEntitlementStore();
   await store.putEntitlement(parsed.uid, { manual });
 
-  return NextResponse.json({ ok: true, uid: parsed.uid, plan: parsed.plan });
+  return NextResponse.json({ ok: true, uid: parsed.uid, plan: parsed.plan }, { headers: NO_STORE_HEADERS });
 }

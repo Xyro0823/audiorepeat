@@ -194,4 +194,52 @@ describe('POST /api/stripe/webhook', () => {
     expect(await res.json()).toEqual({ received: true });
     expect(h.store.entitlementWrites).toBe(0);
   });
+
+  it('returns Cache-Control: no-store on every response kind', async () => {
+    // Missing signature (400)
+    const missing = await POST(webhookRequest(eventPayload('checkout.session.completed', {})));
+    expect(missing.status).toBe(400);
+    expect(missing.headers.get('Cache-Control')).toBe('no-store');
+
+    // Invalid signature (400)
+    h.constructEvent.mockImplementation(() => {
+      throw new Error('No signatures found matching the expected signature');
+    });
+    const badSig = await POST(
+      webhookRequest(eventPayload('checkout.session.completed', {}), 'bad_sig'),
+    );
+    expect(badSig.status).toBe(400);
+    expect(badSig.headers.get('Cache-Control')).toBe('no-store');
+
+    // Successful apply + duplicate acknowledgement (200)
+    h.constructEvent.mockImplementation((rawBody: string, _sig: string, secret: string) => {
+      if (secret !== SECRET) throw new Error('wrong secret');
+      return JSON.parse(rawBody);
+    });
+    const session = {
+      id: 'cs_1',
+      mode: 'subscription',
+      payment_status: 'paid',
+      customer: 'cus_1',
+      subscription: 'sub_1',
+      metadata: { uid: 'user-1', planId: 'pro', billing: 'annual' },
+    };
+    const ok = await POST(webhookRequest(eventPayload('checkout.session.completed', session), 'tsec_sig'));
+    expect(ok.status).toBe(200);
+    expect(ok.headers.get('Cache-Control')).toBe('no-store');
+
+    const dup = await POST(
+      webhookRequest(eventPayload('checkout.session.completed', session, 'evt_hdr'), 'tsec_sig'),
+    );
+    expect(dup.status).toBe(200);
+    expect(dup.headers.get('Cache-Control')).toBe('no-store');
+
+    // Webhook secret not configured (503)
+    delete process.env.STRIPE_WEBHOOK_SECRET;
+    const unconfigured = await POST(
+      webhookRequest(eventPayload('checkout.session.completed', {}), 'sig'),
+    );
+    expect(unconfigured.status).toBe(503);
+    expect(unconfigured.headers.get('Cache-Control')).toBe('no-store');
+  });
 });

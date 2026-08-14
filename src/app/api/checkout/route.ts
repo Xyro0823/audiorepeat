@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createCheckoutTransaction, isPaddleConfigured, type Billing } from '@/lib/paddle/server';
 import { isAdminConfigured, verifyIdToken } from '@/lib/firebase/admin';
+import { NO_STORE_HEADERS } from '@/lib/http';
 import { isPlanId } from '@/lib/plans';
 
 export const runtime = 'nodejs';
@@ -31,41 +32,41 @@ function bearerToken(request: Request): string | null {
  */
 export async function POST(request: Request) {
   if (!isPaddleConfigured()) {
-    return NextResponse.json({ error: 'paddle-not-configured' }, { status: 503 });
+    return NextResponse.json({ error: 'paddle-not-configured' }, { status: 503, headers: NO_STORE_HEADERS });
   }
   if (!isAdminConfigured()) {
     return NextResponse.json(
       { error: 'auth-server-not-configured', message: 'Server-side auth is not configured yet.' },
-      { status: 503 },
+      { status: 503, headers: NO_STORE_HEADERS },
     );
   }
 
   const token = bearerToken(request);
   if (!token) {
-    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: NO_STORE_HEADERS });
   }
   // The uid is derived from the verified token — the body never contributes
   // identity (a spoofed `userId` payload is ignored by simply not reading it).
   const uid = await verifyIdToken(token);
   if (!uid) {
-    return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+    return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: NO_STORE_HEADERS });
   }
 
   let body: { planId?: string; billing?: string };
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: 'invalid-body' }, { status: 400 });
+    return NextResponse.json({ error: 'invalid-body' }, { status: 400, headers: NO_STORE_HEADERS });
   }
 
   const { planId } = body;
   if (body.billing !== 'monthly' && body.billing !== 'annual') {
-    return NextResponse.json({ error: 'invalid-billing' }, { status: 400 });
+    return NextResponse.json({ error: 'invalid-billing' }, { status: 400, headers: NO_STORE_HEADERS });
   }
   const billing: Billing = body.billing;
 
   if (!isPlanId(planId) || planId === 'basic') {
-    return NextResponse.json({ error: 'invalid-plan' }, { status: 400 });
+    return NextResponse.json({ error: 'invalid-plan' }, { status: 400, headers: NO_STORE_HEADERS });
   }
 
   try {
@@ -74,25 +75,25 @@ export async function POST(request: Request) {
       billing,
       uid,
     });
-    return NextResponse.json({ transactionId, checkoutUrl });
+    return NextResponse.json({ transactionId, checkoutUrl }, { headers: NO_STORE_HEADERS });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'checkout-failed';
     if (message === 'price-not-configured') {
       return NextResponse.json(
         { error: 'price-not-configured', message: 'This plan has no Paddle price configured yet.' },
-        { status: 400 },
+        { status: 400, headers: NO_STORE_HEADERS },
       );
     }
     if (message === 'firebase-admin-not-configured') {
       return NextResponse.json(
         { error: 'auth-server-not-configured', message: 'Server-side auth is not configured yet.' },
-        { status: 503 },
+        { status: 503, headers: NO_STORE_HEADERS },
       );
     }
     console.error('[checkout] create transaction failed:', message);
     return NextResponse.json(
       { error: 'checkout-failed', message: 'Could not start checkout — please try again.' },
-      { status: 500 },
+      { status: 500, headers: NO_STORE_HEADERS },
     );
   }
 }
