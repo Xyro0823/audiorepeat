@@ -252,6 +252,7 @@ export function analyze({
       totalPairs: 0,
       coreSize: 0,
       core: [],
+      targets: {},
       parityStatus: 'OK',
       issues: [],
     };
@@ -269,6 +270,11 @@ export function analyze({
     // Canonical ordered English concept list (raw strings, not normalized) —
     // used as the parity reference and shown in --topic mode for human review.
     entry.core = ref && data[ref] ? data[ref].map(([, e]) => e) : [];
+    // Raw target translations per language actually present in the file,
+    // aligned index-for-index with entry.core (both derive from the same
+    // ordered [target, english] pair arrays).
+    entry.targets = {};
+    for (const [l, list] of Object.entries(data)) entry.targets[l] = list.map(([t]) => t);
     const fileLangs = Object.keys(data);
     const missingLangs = langs.filter((l) => !data[l]);
     const extraLangs = fileLangs.filter((l) => !meta.langs?.[l]);
@@ -471,10 +477,27 @@ export function renderSummary(report, opts = {}) {
       for (const [lang, n] of Object.entries(t.counts)) {
         L.push(`  ${lang.padEnd(4)} ${String(n).padStart(5)} pairs`);
       }
-      if (t.core?.length) {
+      const targetLang = opts.lang && t.targets?.[opts.lang] ? opts.lang : undefined;
+      if (targetLang) {
+        const targets = t.targets[targetLang];
+        const nw = Math.max(1, String(t.core.length).length);
+        const ew = Math.max(7, ...t.core.map((c) => c.length));
         L.push('');
-        L.push(`Core concepts (${t.core.length}):`);
-        t.core.forEach((c, i) => L.push(`  ${String(i + 1).padStart(2)}. ${c}`));
+        L.push(`Language: ${targetLang}`);
+        L.push(`  ${'#'.padStart(nw)}  ${'English'.padEnd(ew)}  Target`);
+        t.core.forEach((c, i) => {
+          L.push(`  ${String(i + 1).padStart(nw)}  ${c.padEnd(ew)}  ${targets[i]}`);
+        });
+      } else {
+        if (t.core?.length) {
+          L.push('');
+          L.push(`Core concepts (${t.core.length}):`);
+          t.core.forEach((c, i) => L.push(`  ${String(i + 1).padStart(2)}. ${c}`));
+        }
+        if (opts.lang) {
+          L.push('');
+          L.push(`  (language ${opts.lang} is not present in topic ${t.id})`);
+        }
       }
       if (t.issues.length) {
         L.push('  issues:');

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { analyze, renderSummary } from '../../scripts/vocab-health.mjs';
+import { analyze, loadRepo, renderSummary } from '../../scripts/vocab-health.mjs';
 
 type Word = [string, string];
 type Bank = { lang: string; level: string; words: Word[] };
@@ -134,6 +134,63 @@ describe('vocab-health report analysis', () => {
     expect(home.coreSize).toBe(2);
   });
 
+  it('topic details expose ordered targets aligned index-for-index with core', () => {
+    const repo = healthyRepo();
+    const report = analyze(repo);
+    const home = report.topicDetails[0];
+    const core = home.core as string[];
+    const targets = home.targets as Record<string, string[]>;
+    expect(targets).toEqual({ xx: ['xy', 'xz'] });
+    expect(targets.xx).toHaveLength(core.length);
+    for (let i = 0; i < core.length; i++) {
+      // [targets[lang][i], core[i]] equals the raw source pair at index i.
+      expect([targets.xx[i], core[i]]).toEqual(repo.topics.home.xx[i]);
+    }
+  });
+
+  it('renderSummary --topic --lang renders English + target table in order', () => {
+    const report = analyze(healthyRepo());
+    const text = renderSummary(report, { topic: 'home', lang: 'xx' });
+    expect(text).toContain('house');
+    expect(text).toContain('xy');
+    expect(text).toContain('table');
+    expect(text).toContain('xz');
+    // Ordering preserved (English core and target column).
+    expect(text.indexOf('house')).toBeLessThan(text.indexOf('table'));
+    expect(text.indexOf('xy')).toBeLessThan(text.indexOf('xz'));
+    // The table subsumes the plain core list, so no duplicate dump.
+    expect(text).not.toContain('Core concepts');
+  });
+
+  it('unknown language in --topic mode is handled safely', () => {
+    const report = analyze(healthyRepo());
+    const text = renderSummary(report, { topic: 'home', lang: 'yy' });
+    expect(text).toContain('not present in topic home');
+    // Core list still available for review; no bogus target table.
+    expect(text).toContain('Core concepts');
+    expect(text).not.toContain('(unknown topic');
+  });
+
+  it('default report does not dump translation tables', () => {
+    const report = analyze(healthyRepo());
+    const full = renderSummary(report);
+    expect(full).not.toContain('Target');
+    expect(full).not.toContain('Core concepts');
+  });
+
+  it('real data: health/mn targets align with core and temperature = температур', () => {
+    const report = analyze(loadRepo());
+    const health = report.topicDetails.find((t) => t.id === 'health')!;
+    expect(health).toBeDefined();
+    const core = health.core as string[];
+    const targets = health.targets as Record<string, string[]>;
+    const i = core.indexOf('temperature');
+    expect(targets.mn[i]).toBe('температур');
+    for (const arr of Object.values(targets)) {
+      expect(arr).toHaveLength(core.length);
+    }
+  });
+
   it('renderSummary --topic shows the ordered core, default report does not', () => {
     const report = analyze(healthyRepo());
     const topicText = renderSummary(report, { topic: 'home' });
@@ -198,6 +255,11 @@ describe('vocab-health report analysis', () => {
     // Backward-compatible JSON: existing fields preserved, core is additive.
     expect(report.topicDetails[0]).toHaveProperty('core');
     expect(report.topicDetails[0].core).toEqual(['house', 'table']);
+    // targets is additive and aligned with core.
+    expect(report.topicDetails[0]).toHaveProperty('targets');
+    const tTargets = report.topicDetails[0].targets as Record<string, string[]>;
+    expect(tTargets.xx).toEqual(['xy', 'xz']);
+    expect(tTargets.xx).toHaveLength(report.topicDetails[0].core.length);
     expect(typeof report.topicLanguageSummary).toBe('object');
     expect(typeof report.topicCoverage).toBe('object');
     expect(report.counts.topics).toBe(1);
