@@ -297,6 +297,21 @@ describe('vocab-health report analysis', () => {
     expect(rows[i].status).toBe('MATCH');
   });
 
+  it('real data: confirmed terminology fixes hold (mn disappointed, ar calm)', () => {
+    const report = analyze(loadRepo());
+    expect(report.status).toBe('ok');
+    expect(report.terminology.violations).toEqual([]);
+    // mn emotions topic: disappointed = урам хугарсан (fixed typo).
+    const emotions = report.topicDetails.find((t) => t.id === 'emotions')!;
+    const core = emotions.core as string[];
+    const mnTargets = (emotions.targets as Record<string, string[]>).mn;
+    expect(mnTargets[core.indexOf('disappointed')]).toBe('урам хугарсан');
+    // ar bank B1: calm = هادئ (fixed mistranslation).
+    const arB1 = (loadRepo().banks as Record<string, Bank>)['ar-B1'];
+    const calm = arB1.words.find((w: Word) => w[1] === 'calm');
+    expect(calm?.[0]).toBe('هادئ');
+  });
+
   it('real data: targets align with core for every topic/language', () => {
     const report = analyze(loadRepo());
     expect(report.status).toBe('ok');

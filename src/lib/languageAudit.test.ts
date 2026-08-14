@@ -510,9 +510,12 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
     // concept, but one side is clearly the wrong word (not a synonym/register
     // variant). Keyed by normalized english concept per pack language.
     // E.g. mn health 'temperature' -> 'халуун' (hot) while the mn banks use
-    // 'температур' — a genuine meaning mismatch.
+    // 'температур' — a genuine meaning mismatch; mn emotions 'disappointed'
+    // -> 'урам хуарсан' (typo for 'урам хугарсан'); ar 'calm' -> 'مطمئن'
+    // (confident/sure, not calm).
     const hardErrors: Record<string, Record<string, string>> = {
-      mn: { temperature: 'температур' }, // topic had 'халуун' (hot)
+      mn: { temperature: 'температур', disappointed: 'урам хугарсан' },
+      ar: { calm: 'هادئ' },
     };
     for (const code of STARTER_LANGS) {
       const pack = PACK_LANG[code];

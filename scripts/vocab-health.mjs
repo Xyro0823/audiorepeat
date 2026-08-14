@@ -40,8 +40,10 @@ const TOPICS_DIR = path.join(ROOT, 'public', 'data', 'topics');
 
 // Hard terminology errors known to be fixed in the data. Keyed by pack
 // language -> english concept -> expected translation in both bank and topic.
+// Mirrors the CI-gated guard in src/lib/languageAudit.test.ts.
 const HARD_TERMINOLOGY_ERRORS = {
-  mn: { temperature: 'температур' },
+  mn: { temperature: 'температур', disappointed: 'урам хугарсан' },
+  ar: { calm: 'هادئ' },
 };
 
 // Canonical pack-language codes (2-letter, as used in bank/topic filenames).
