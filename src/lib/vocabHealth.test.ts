@@ -78,6 +78,24 @@ function healthyRepo(): Repo {
   return { vocabManifest, banks, topicManifest, topics, packCodes: ['xx'] };
 }
 
+/** Synthetic repo where a configured hard terminology error is violated. */
+function brokenTerminologyRepo(): Repo {
+  const banks: Record<string, Bank> = {};
+  const vocabManifest: Record<string, Record<string, number>> = {};
+  for (const lvl of ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']) {
+    // mn-A1 carries the wrong target for the guarded concept `temperature`.
+    const words: Word[] =
+      lvl === 'A1' ? [['буруу', 'temperature']] : [[`t${lvl}`, `english ${lvl}`]];
+    banks[`mn-${lvl}`] = { lang: 'mn', level: lvl, words };
+    vocabManifest.mn = { ...(vocabManifest.mn ?? {}), [lvl]: words.length };
+  }
+  const topics = { med: { mn: [['буруу', 'temperature']] as Word[] } };
+  const topicManifest = {
+    med: { label: 'Med', emoji: '💊', langs: { mn: 1 } },
+  };
+  return { vocabManifest, banks, topicManifest, topics, packCodes: ['mn'] };
+}
+
 describe('vocab-health report analysis', () => {
   it('healthy synthetic repo passes with no failures', () => {
     const report = analyze(healthyRepo());
@@ -412,5 +430,96 @@ describe('vocab-health report analysis', () => {
     expect(langText).toContain('Language: xx');
     expect(langText).toContain('topics covered: 1/1');
     expect(langText).toContain('bank levels:');
+  });
+
+  // ---- Human-review filters (--only-variants / --errors-only) -------------
+
+  it('--only-variants lists exactly the VARIANT rows', () => {
+    const report = analyze(coverageRepo());
+    // Fixture has exactly one VARIANT: pain (topic бол vs bank pain1).
+    expect(report.variantRows).toHaveLength(1);
+    expect(report.variantRows[0]).toMatchObject({
+      lang: 'xx',
+      topic: 'med',
+      english: 'pain',
+      topicTarget: 'бол',
+      bankTargets: ['pain1'],
+      status: 'VARIANT',
+    });
+    const text = renderSummary(report, { onlyVariants: true });
+    expect(text).toContain('VARIANT rows (human review only):');
+    expect(text).toContain('xx | med | pain | бол | pain1');
+    // MATCH/TOPIC-ONLY rows must not appear in the variant list.
+    expect(text).not.toContain('temperature');
+    expect(text).not.toContain('umbrella');
+  });
+
+  it('--only-variants --lang filters to one language', () => {
+    const report = analyze(coverageRepo());
+    const text = renderSummary(report, { onlyVariants: true, lang: 'xx' });
+    expect(text).toContain('xx | med | pain');
+    const none = renderSummary(report, { onlyVariants: true, lang: 'zz' });
+    expect(none).toContain('none');
+  });
+
+  it('--only-variants --topic filters to one topic', () => {
+    const report = analyze(coverageRepo());
+    const text = renderSummary(report, { onlyVariants: true, topic: 'med' });
+    expect(text).toContain('xx | med | pain');
+    const none = renderSummary(report, { onlyVariants: true, topic: 'nope' });
+    expect(none).toContain('none');
+  });
+
+  it('--only-variants --topic --lang combines both filters', () => {
+    const report = analyze(coverageRepo());
+    const text = renderSummary(report, { onlyVariants: true, topic: 'med', lang: 'xx' });
+    expect(text).toContain('xx | med | pain');
+    const none = renderSummary(report, { onlyVariants: true, topic: 'med', lang: 'zz' });
+    expect(none).toContain('none');
+  });
+
+  it('--errors-only shows none on healthy data', () => {
+    const report = analyze(healthyRepo());
+    expect(report.hardErrorRows).toEqual([]);
+    const text = renderSummary(report, { errorsOnly: true });
+    expect(text).toContain('Hard terminology errors:');
+    expect(text).toContain('  none');
+  });
+
+  it('--errors-only surfaces synthetic hard terminology errors', () => {
+    const report = analyze(brokenTerminologyRepo());
+    expect(report.terminology.violations.length).toBeGreaterThan(0);
+    const text = renderSummary(report, { errorsOnly: true });
+    expect(text).toContain('Hard terminology errors:');
+    expect(text).toContain('temperature');
+    expect(text).toContain('температур');
+    // A hard failure must also flip overall status to fail.
+    expect(report.status).toBe('fail');
+  });
+
+  it('--only-variants and --errors-only together are rejected', () => {
+    const report = analyze(healthyRepo());
+    expect(() => renderSummary(report, { onlyVariants: true, errorsOnly: true })).toThrow(
+      '--only-variants and --errors-only cannot be combined',
+    );
+  });
+
+  it('default report does not include the VARIANT rows section', () => {
+    const report = analyze(coverageRepo());
+    const text = renderSummary(report);
+    expect(text).not.toContain('VARIANT rows (human review only):');
+    expect(text).not.toContain('lang | topic | english');
+  });
+
+  it('JSON is backward-compatible with variantRows and hardErrorRows', () => {
+    const report = analyze(healthyRepo());
+    expect(Array.isArray(report.variantRows)).toBe(true);
+    expect(Array.isArray(report.hardErrorRows)).toBe(true);
+    expect(report.variantRows).toHaveLength(0);
+    expect(report.hardErrorRows).toHaveLength(0);
+    // Top-level fields from before the filter feature remain intact.
+    for (const key of ['status', 'counts', 'perLanguage', 'topicStats', 'topicDetails', 'topicLanguageSummary', 'topicCoverage', 'crossLevel', 'isolation', 'terminology', 'b1Overlap', 'warnings', 'failures']) {
+      expect(key in report).toBe(true);
+    }
   });
 });

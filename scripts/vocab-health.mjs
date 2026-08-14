@@ -199,7 +199,7 @@ export function analyze({
   isolation.worstOverlap = +(isolation.worstOverlap * 100).toFixed(1);
 
   // ---- F. Terminology health ---------------------------------------------
-  const terminology = { configured: 0, violations: [] };
+  const terminology = { configured: 0, violations: [], errorRows: [] };
   for (const [pack, entries] of Object.entries(HARD_TERMINOLOGY_ERRORS)) {
     // Skip packs that have no data at all (synthetic fixtures / partial
     // repos) — the check is only meaningful when the pack actually exists.
@@ -214,11 +214,19 @@ export function analyze({
       }
       if (hasPack && (bankHits.length === 0 || !bankHits.every(Boolean))) {
         terminology.violations.push(`${pack}: bank "${en}" != "${correct}"`);
+        terminology.errorRows.push({
+          pack,
+          source: 'bank',
+          english: en,
+          target: '(missing or mismatched bank target)',
+          expected: correct,
+        });
       }
       for (const [topic, data] of Object.entries(topics)) {
         for (const [t, e] of data[pack] ?? []) {
           if (norm(e) === en && norm(t) !== norm(correct)) {
             terminology.violations.push(`${pack} ${topic}: "${en}" -> "${t}" (expected "${correct}")`);
+            terminology.errorRows.push({ pack, source: `topic:${topic}`, english: en, target: t, expected: correct });
           }
         }
       }
@@ -406,6 +414,28 @@ export function analyze({
       .map(([t]) => t),
   };
 
+  // ---- Human-review filters (diagnostic only) -----------------------------
+  // Flat VARIANT list: same concept exists in the banks, topic target differs.
+  // These are NOT errors — the filter exists for human terminology review.
+  const variantRows = [];
+  for (const t of topicDetails) {
+    for (const [lang, rows] of Object.entries(t.bankCoverage ?? {})) {
+      for (const r of rows) {
+        if (r.status === 'VARIANT') {
+          variantRows.push({
+            lang,
+            topic: t.id,
+            english: r.english,
+            topicTarget: r.target,
+            bankTargets: r.bankTargets,
+            levels: r.levels,
+            status: r.status,
+          });
+        }
+      }
+    }
+  }
+
   // ---- B1 overlap guard (existing test limit) ----------------------------
   const b1Overlap = {};
   for (const lang of packs) {
@@ -450,6 +480,8 @@ export function analyze({
     isolation,
     terminology,
     b1Overlap,
+    variantRows,
+    hardErrorRows: terminology.errorRows,
     warnings,
     failures,
   };
@@ -625,6 +657,39 @@ export function renderSummary(report, opts = {}) {
   } else {
     L.push('All hard invariants pass.');
   }
+
+  // ---- Human-review filters (diagnostic only, never a correctness gate) --
+  if (opts.onlyVariants && opts.errorsOnly) {
+    throw new Error('--only-variants and --errors-only cannot be combined');
+  }
+  if (opts.errorsOnly) {
+    L.push('');
+    L.push('Hard terminology errors:');
+    const rows = report.hardErrorRows ?? [];
+    if (!rows.length) {
+      L.push('  none');
+    } else {
+      for (const r of rows) {
+        L.push(`  ${r.pack} ${r.source}: "${r.english}" -> "${r.target}" (expected "${r.expected}")`);
+      }
+    }
+  } else if (opts.onlyVariants) {
+    let rows = report.variantRows ?? [];
+    if (opts.topic) rows = rows.filter((r) => r.topic === opts.topic);
+    if (opts.lang) rows = rows.filter((r) => r.lang === opts.lang);
+    L.push('');
+    L.push('VARIANT rows (human review only):');
+    if (!rows.length) {
+      L.push('  none');
+    } else {
+      L.push('  lang | topic | english | topicTarget | bankTargets | levels | status');
+      for (const r of rows) {
+        L.push(
+          `  ${r.lang} | ${r.topic} | ${r.english} | ${r.topicTarget} | ${(r.bankTargets ?? []).join(' | ')} | ${r.levels.join(',')} | ${r.status}`,
+        );
+      }
+    }
+  }
   return L.join('\n');
 }
 
@@ -633,6 +698,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const json = process.argv.includes('--json');
   let topicFilter;
   let langFilter;
+  const onlyVariants = process.argv.includes('--only-variants');
+  const errorsOnly = process.argv.includes('--errors-only');
   const args = process.argv.slice(2);
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--topic') topicFilter = args[i + 1];
@@ -641,9 +708,15 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   const repo = loadRepo();
   const report = analyze(repo);
   if (json) {
+    // Filters are display-oriented; JSON always returns the complete report.
     console.log(JSON.stringify(report, null, 2));
   } else {
-    console.log(renderSummary(report, { topic: topicFilter, lang: langFilter }));
+    try {
+      console.log(renderSummary(report, { topic: topicFilter, lang: langFilter, onlyVariants, errorsOnly }));
+    } catch (e) {
+      console.error(e.message);
+      process.exit(1);
+    }
   }
   process.exit(report.status === 'ok' ? 0 : 1);
 }
