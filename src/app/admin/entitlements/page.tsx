@@ -1,12 +1,12 @@
-import { headers } from 'next/headers';
 import AdminEntitlements from '@/components/admin/AdminEntitlements';
 
-// Privileged page HTML must never be prerendered or cached — it is always
-// generated per request and marked no-store (defense-in-depth on top of the
-// service worker's network-only handling of /admin/*).
+// Privileged page HTML must never be prerendered or cached — force-dynamic
+// keeps it server-rendered per request (Next emits Cache-Control:
+// no-cache,no-store for dynamic pages) and the service worker treats
+// /admin/* as network-only. Note: do NOT use headers().set() here — it
+// throws "Headers cannot be modified" at runtime in Next 16.
 export const dynamic = 'force-dynamic';
 
-export default async function AdminEntitlementsPage() {
-  (await headers()).set('Cache-Control', 'no-store');
+export default function AdminEntitlementsPage() {
   return <AdminEntitlements />;
 }

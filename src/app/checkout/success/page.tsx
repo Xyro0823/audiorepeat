@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import SuccessView from "@/components/checkout/SuccessView";
 import { isPaddleConfigured, verifyPaddleTransaction } from "@/lib/paddle/server";
 
@@ -7,9 +6,9 @@ export const metadata: Metadata = {
   title: "Checkout",
 };
 
-// Purchase state must never be cached — the success page is always rendered
-// per request and marked no-store (the service worker treats /checkout/* as
-// network-only).
+// Purchase state must never be cached — the page is force-dynamic (never
+// prerendered; Next emits Cache-Control: no-cache,no-store for dynamic
+// pages) and the service worker treats /checkout/* as network-only.
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutSuccessPage({
@@ -20,7 +19,6 @@ export default async function CheckoutSuccessPage({
   // granted by the webhook and confirmed via /api/entitlement.)
   searchParams: Promise<{ transaction_id?: string }>;
 }) {
-  (await headers()).set("Cache-Control", "no-store");
   const { transaction_id } = await searchParams;
 
   // Server-side verification (display only): a completed transaction with a

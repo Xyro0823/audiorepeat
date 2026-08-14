@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import CheckoutFlow from "@/components/checkout/CheckoutFlow";
 
 export const metadata: Metadata = {
   title: "Checkout",
 };
 
-// Payment state must never be cached — the page is always rendered per
-// request and marked no-store (service worker treats /checkout as network-only).
+// Payment state must never be cached — the page is force-dynamic (never
+// prerendered; Next emits Cache-Control: no-cache,no-store for dynamic
+// pages) and the service worker treats /checkout as network-only.
 export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage({
@@ -15,8 +15,6 @@ export default async function CheckoutPage({
 }: {
   searchParams: Promise<{ plan?: string; canceled?: string }>;
 }) {
-  (await headers()).set("Cache-Control", "no-store");
-
   // Landing-page pricing CTAs link here with ?plan=basic|pro|lifetime.
   // An invalid/missing value is handled inside the flow (defaults to Pro,
   // all three plans shown for selection). Stripe returns here with
