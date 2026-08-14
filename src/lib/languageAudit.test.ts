@@ -165,19 +165,31 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
     for (const key of bankFiles) expect(advertised.has(key), `${key} advertised`).toBe(true);
   });
 
-  it('every pack language ships A1+A2 (and B1 gap is the known documented set)', () => {
+  it('every pack language ships the full A1–C2 level set', () => {
     for (const code of STARTER_LANGS) {
       const pack = PACK_LANG[code];
-      expect(manifest[pack]?.A1, `${code}: A1`).toBeGreaterThan(0);
-      expect(manifest[pack]?.A2, `${code}: A2`).toBeGreaterThan(0);
+      for (const lvl of CEFR_LEVELS) {
+        expect(manifest[pack]?.[lvl], `${code}: ${lvl}`).toBeGreaterThan(0);
+      }
     }
-    // Known data-completeness gap: these languages ship no B1 pack (the UI
-    // disables the B1 button with "Not available yet"). Tracked explicitly so
-    // adding a B1 pack updates this test instead of going unnoticed.
-    const withB1 = STARTER_LANGS.filter((c) => (manifest[PACK_LANG[c]]?.B1 ?? 0) > 0)
-      .map((c) => PACK_LANG[c])
-      .sort();
-    expect(withB1).toEqual(['de', 'es', 'fr', 'it', 'pt', 'ru', 'tr']);
+  });
+
+  it('B1 does not duplicate A1/A2 vocabulary (overlap guard)', () => {
+    // B1 must meaningfully expand vocabulary, not recycle the basics. Exact
+    // target-string overlap with A1+A2 is capped at 10% of the B1 pack — the
+    // pre-existing packs (fr/de/it/pt/ru/tr) run 5.7-7.1% natural overlap, so
+    // anything at ~100% means the level was built by copying the basics. The
+    // six packs added in the B1 fill measure 0%.
+    for (const code of STARTER_LANGS) {
+      const pack = PACK_LANG[code];
+      const prior = new Set<string>();
+      for (const lvl of ['A1', 'A2'] as CefrLevel[]) {
+        for (const [t] of loadBank(`${pack}-${lvl}`).words) prior.add(t.trim().toLowerCase());
+      }
+      const b1 = loadBank(`${pack}-B1`).words;
+      const overlap = b1.filter(([t]) => prior.has(t.trim().toLowerCase())).length;
+      expect(overlap, `${code}: B1 vs A1/A2 overlap`).toBeLessThanOrEqual(Math.ceil(b1.length * 0.1));
+    }
   });
 
   it('topic packs cover all pack languages except the known mn gap', () => {
