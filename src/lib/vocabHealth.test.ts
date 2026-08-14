@@ -125,6 +125,33 @@ describe('vocab-health report analysis', () => {
     });
   });
 
+  it('topic detail includes the ordered canonical English core', () => {
+    const report = analyze(healthyRepo());
+    const home = report.topicDetails[0];
+    expect(home.core).toEqual(['house', 'table']);
+    // Core length must equal coreSize (parity reference length).
+    expect(home.core).toHaveLength(home.coreSize);
+    expect(home.coreSize).toBe(2);
+  });
+
+  it('renderSummary --topic shows the ordered core, default report does not', () => {
+    const report = analyze(healthyRepo());
+    const topicText = renderSummary(report, { topic: 'home' });
+    expect(topicText).toContain('Core concepts (2):');
+    // Ordering preserved exactly as in the data.
+    expect(topicText.indexOf('1. house')).toBeGreaterThan(-1);
+    expect(topicText.indexOf('2. table')).toBeGreaterThan(topicText.indexOf('1. house'));
+    // The full (unfiltered) report stays concise — no core dump.
+    const fullText = renderSummary(report);
+    expect(fullText).not.toContain('Core concepts');
+  });
+
+  it('renderSummary with unknown topic is safe', () => {
+    const report = analyze(healthyRepo());
+    const text = renderSummary(report, { topic: 'nope' });
+    expect(text).toContain('(unknown topic: nope)');
+  });
+
   it('topic coverage summary is produced on healthy data', () => {
     const report = analyze(healthyRepo());
     expect(report.topicCoverage).toEqual({
@@ -168,6 +195,9 @@ describe('vocab-health report analysis', () => {
       expect(key in report).toBe(true);
     }
     expect(Array.isArray(report.topicDetails)).toBe(true);
+    // Backward-compatible JSON: existing fields preserved, core is additive.
+    expect(report.topicDetails[0]).toHaveProperty('core');
+    expect(report.topicDetails[0].core).toEqual(['house', 'table']);
     expect(typeof report.topicLanguageSummary).toBe('object');
     expect(typeof report.topicCoverage).toBe('object');
     expect(report.counts.topics).toBe(1);

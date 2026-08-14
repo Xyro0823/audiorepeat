@@ -251,6 +251,7 @@ export function analyze({
       counts: {},
       totalPairs: 0,
       coreSize: 0,
+      core: [],
       parityStatus: 'OK',
       issues: [],
     };
@@ -265,6 +266,9 @@ export function analyze({
     const ref = langs[0];
     const core = ref && data[ref] ? data[ref].map(([, e]) => norm(e)) : [];
     entry.coreSize = core.length;
+    // Canonical ordered English concept list (raw strings, not normalized) —
+    // used as the parity reference and shown in --topic mode for human review.
+    entry.core = ref && data[ref] ? data[ref].map(([, e]) => e) : [];
     const fileLangs = Object.keys(data);
     const missingLangs = langs.filter((l) => !data[l]);
     const extraLangs = fileLangs.filter((l) => !meta.langs?.[l]);
@@ -466,6 +470,11 @@ export function renderSummary(report, opts = {}) {
       L.push(`Topic ${t.id} per-language:`);
       for (const [lang, n] of Object.entries(t.counts)) {
         L.push(`  ${lang.padEnd(4)} ${String(n).padStart(5)} pairs`);
+      }
+      if (t.core?.length) {
+        L.push('');
+        L.push(`Core concepts (${t.core.length}):`);
+        t.core.forEach((c, i) => L.push(`  ${String(i + 1).padStart(2)}. ${c}`));
       }
       if (t.issues.length) {
         L.push('  issues:');
