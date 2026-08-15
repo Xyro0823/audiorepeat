@@ -338,7 +338,7 @@ export default function LandingPage() {
             {/* Wordmark hidden on ultra-narrow screens so the logo mark +
                 Sign in + Start Practice always fit without overflow. */}
             <span className="hidden text-lg font-extrabold tracking-tight text-white min-[400px]:inline">
-              Evoq
+              Audio<span className="text-cyan-400">Repeat</span>
             </span>
           </Link>
 
@@ -425,7 +425,7 @@ export default function LandingPage() {
               <h1 className="mx-auto mt-5 max-w-3xl font-extrabold leading-tight tracking-tight text-white text-3xl md:text-5xl lg:text-6xl">
                 Master Any Language with{" "}
                 <span className="bg-gradient-to-r from-[#22d3ee] via-[#06b6d4] to-[#3b82f6] bg-clip-text text-transparent">
-                  Hands-Free Evoq
+                  Hands-Free Audio Repeat
                 </span>
               </h1>
 
@@ -683,7 +683,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-2.5">
               <LogoMark />
               <span className="text-base font-extrabold tracking-tight text-white">
-                Evoq
+                Audio<span className="text-cyan-400">Repeat</span>
               </span>
             </div>
             <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-slate-400">
