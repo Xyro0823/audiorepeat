@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import AuthScreen from './AuthScreen';
 import DowngradeModal from '@/components/checkout/DowngradeModal';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { useAuth } from '@/hooks/useAuth';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
 import { isProPlan, PLAN_BADGE, planDetail } from '@/lib/plans';
@@ -40,6 +41,10 @@ const itemClass =
  */
 export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }: Props) {
   const { status, user, logout, deleteAccount } = useAuth();
+  // Server-verified admin gate — admin links render only for allowlisted
+  // admins and never flash before verification (fail-closed). This is a UX
+  // convenience; the admin pages/APIs enforce access server-side regardless.
+  const admin = useAdminStatus();
   // Reactive subscription to the shared settings store (the purchased plan
   // lives there, persisted by the checkout success flow). The store hydrates
   // once from IndexedDB; until then it reports the basic default, so the badge
@@ -252,6 +257,21 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
           >
             <span aria-hidden>📚</span> Browse library
           </button>
+
+          {admin === 'admin' && (
+            <>
+              <div className="my-1 h-px bg-white/10" />
+              <div className="px-3 pb-1 pt-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                Admin
+              </div>
+              <Link role="menuitem" href="/admin/entitlements" className={itemClass} onClick={close}>
+                <span aria-hidden>🎁</span> Gift Pro
+              </Link>
+              <Link role="menuitem" href="/admin/diagnostics" className={itemClass} onClick={close}>
+                <span aria-hidden>🩺</span> Language Diagnostics
+              </Link>
+            </>
+          )}
 
           <div className="my-1 h-px bg-white/10" />
 

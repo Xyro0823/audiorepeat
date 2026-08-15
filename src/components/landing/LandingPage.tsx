@@ -9,7 +9,10 @@ import {
   Repeat,
   WifiOff,
 } from "lucide-react";
+import AuthScreen from "@/components/auth/AuthScreen";
+import { useAuth } from "@/hooks/useAuth";
 import { useLanguageCount } from "@/hooks/useLanguageCount";
+import { landingAuthAction } from "@/lib/adminNav";
 import { PLAN_ORDER, PLANS } from "@/lib/plans";
 import NewsletterForm from "./NewsletterForm";
 import Testimonials from "./Testimonials";
@@ -262,6 +265,9 @@ function NeuralConnections({
 
 export default function LandingPage() {
   const [annual, setAnnual] = useState(true);
+  const { status } = useAuth();
+  const [showAuth, setShowAuth] = useState(false);
+  const landingAction = landingAuthAction(status);
   const langCount = useLanguageCount();
   const heroRef = useRef<HTMLDivElement | null>(null);
   const nodeRef = useRef<HTMLDivElement | null>(null);
@@ -329,8 +335,10 @@ export default function LandingPage() {
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6 lg:px-12">
           <Link href="/" className="flex items-center gap-2.5">
             <LogoMark />
-            <span className="text-lg font-extrabold tracking-tight text-white">
-              Audio<span className="text-cyan-400">Repeat</span>
+            {/* Wordmark hidden on ultra-narrow screens so the logo mark +
+                Sign in + Start Practice always fit without overflow. */}
+            <span className="hidden text-lg font-extrabold tracking-tight text-white min-[400px]:inline">
+              Evoq
             </span>
           </Link>
 
@@ -346,12 +354,33 @@ export default function LandingPage() {
             ))}
           </div>
 
-          <Link
-            href="/dashboard"
-            className="rounded-full bg-white px-5 py-2 text-[13px] font-semibold text-black shadow-[0_4px_20px_rgba(255,255,255,0.15)] transition hover:bg-slate-100 active:scale-95"
-          >
-            Start Practice
-          </Link>
+          {/* Auth-aware secondary action: Sign in (signed out) / Dashboard
+              (signed in). Hidden while auth is loading so the wrong state
+              never flashes; the primary CTA is always Start Practice. */}
+          <div className="flex items-center gap-2.5">
+            {landingAction?.kind === 'link' ? (
+              <Link
+                href={landingAction.href}
+                className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-white/10 active:scale-95"
+              >
+                {landingAction.label}
+              </Link>
+            ) : landingAction?.kind === 'auth' ? (
+              <button
+                type="button"
+                onClick={() => setShowAuth(true)}
+                className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-white/10 active:scale-95"
+              >
+                {landingAction.label}
+              </button>
+            ) : null}
+            <Link
+              href="/dashboard"
+              className="rounded-full bg-white px-5 py-2 text-[13px] font-semibold text-black shadow-[0_4px_20px_rgba(255,255,255,0.15)] transition hover:bg-slate-100 active:scale-95"
+            >
+              Start Practice
+            </Link>
+          </div>
         </div>
       </nav>
 
@@ -396,7 +425,7 @@ export default function LandingPage() {
               <h1 className="mx-auto mt-5 max-w-3xl font-extrabold leading-tight tracking-tight text-white text-3xl md:text-5xl lg:text-6xl">
                 Master Any Language with{" "}
                 <span className="bg-gradient-to-r from-[#22d3ee] via-[#06b6d4] to-[#3b82f6] bg-clip-text text-transparent">
-                  Hands-Free Audio Repeat
+                  Hands-Free Evoq
                 </span>
               </h1>
 
@@ -654,7 +683,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-2.5">
               <LogoMark />
               <span className="text-base font-extrabold tracking-tight text-white">
-                Audio<span className="text-cyan-400">Repeat</span>
+                Evoq
               </span>
             </div>
             <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-slate-400">
@@ -699,6 +728,11 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Reuses the existing Firebase sign-in flow (same overlay the in-app
+          profile menu opens). Guests keep browsing; after sign-in the navbar
+          action switches to Dashboard. */}
+      {showAuth && <AuthScreen mode="overlay" onClose={() => setShowAuth(false)} />}
     </div>
   );
 }
