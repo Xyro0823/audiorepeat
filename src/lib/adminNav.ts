@@ -27,10 +27,17 @@ export function resolveAdminStatus(result: AdminCheckResult): Exclude<AdminGate,
 /** Auth statuses surfaced by useAuth() that the landing page cares about. */
 export type LandingAuthStatus = 'loading' | 'guest' | 'signed-out' | 'signed-in';
 
+/**
+ * Canonical route for the signed-in normal app. Used by the landing navbar
+ * (Dashboard action), the admin pages' back-to-app link, and anywhere else
+ * that needs to leave an admin tool and return to the regular dashboard.
+ */
+export const ADMIN_DASHBOARD_ROUTE = '/dashboard';
+
 /** The landing navbar's auth-dependent secondary action. */
 export type LandingAction =
   | { kind: 'auth'; label: 'Sign in' }
-  | { kind: 'link'; label: 'Dashboard'; href: '/dashboard' };
+  | { kind: 'link'; label: 'Dashboard'; href: typeof ADMIN_DASHBOARD_ROUTE };
 
 /**
  * Which secondary action the landing navbar should show for an auth state:
@@ -40,7 +47,7 @@ export type LandingAction =
  *   any flash of the wrong state)
  */
 export function landingAuthAction(status: LandingAuthStatus): LandingAction | null {
-  if (status === 'signed-in') return { kind: 'link', label: 'Dashboard', href: '/dashboard' };
+  if (status === 'signed-in') return { kind: 'link', label: 'Dashboard', href: ADMIN_DASHBOARD_ROUTE };
   if (status === 'loading') return null;
   return { kind: 'auth', label: 'Sign in' };
 }

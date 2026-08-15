@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { getAuthIdToken } from '@/lib/authStore';
+import AdminBackNav from '@/components/admin/AdminBackNav';
 import type { HealthReport, TermErrorRow, VariantRow } from '@/lib/vocabHealth';
 import { packLangLabel } from '@/lib/starterSets';
 import {
@@ -218,15 +219,18 @@ export default function AdminDiagnostics() {
       <main className="flex flex-1 flex-col items-center justify-center gap-4 px-5 py-10">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
         <p className="text-sm text-slate-400">Checking admin access…</p>
-        {status === 'signed-in' && (
-          <button
-            type="button"
-            onClick={() => setCheckNonce((n) => n + 1)}
-            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:bg-white/5"
-          >
-            Try again
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {status === 'signed-in' && (
+            <button
+              type="button"
+              onClick={() => setCheckNonce((n) => n + 1)}
+              className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:bg-white/5"
+            >
+              Try again
+            </button>
+          )}
+          <AdminBackNav />
+        </div>
       </main>
     );
   }
@@ -238,6 +242,9 @@ export default function AdminDiagnostics() {
           <p className="text-sm text-slate-400">
             Sign in with an admin account to inspect language/vocabulary health. Guests cannot access this area.
           </p>
+          <div className="mt-4">
+            <AdminBackNav />
+          </div>
         </Card>
       </main>
     );
@@ -251,6 +258,9 @@ export default function AdminDiagnostics() {
           <p className="mt-2 text-sm text-slate-400">
             This page is restricted to accounts on the server-side admin allowlist.
           </p>
+          <div className="mt-4">
+            <AdminBackNav />
+          </div>
         </Card>
       </main>
     );
@@ -271,6 +281,9 @@ export default function AdminDiagnostics() {
           >
             Try again
           </button>
+          <div className="mt-4">
+            <AdminBackNav />
+          </div>
         </Card>
       </main>
     );
@@ -290,14 +303,17 @@ export default function AdminDiagnostics() {
             runs. Read-only — nothing here changes data.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => void loadReport()}
-          disabled={loadState === 'loading'}
-          className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:bg-white/5 disabled:opacity-50"
-        >
-          {loadState === 'loading' ? 'Refreshing…' : 'Refresh'}
-        </button>
+        <div className="flex items-center gap-2">
+          <AdminBackNav />
+          <button
+            type="button"
+            onClick={() => void loadReport()}
+            disabled={loadState === 'loading'}
+            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs font-semibold text-slate-300 transition hover:bg-white/5 disabled:opacity-50"
+          >
+            {loadState === 'loading' ? 'Refreshing…' : 'Refresh'}
+          </button>
+        </div>
       </header>
 
       {loadState === 'loading' && (

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { getAuthIdToken } from '@/lib/authStore';
+import AdminBackNav from '@/components/admin/AdminBackNav';
 import type { PlanId } from '@/lib/plans';
 
 /** Where the target's plan comes from — returned by the lookup API. */
@@ -223,6 +224,9 @@ export default function AdminEntitlements() {
           <p className="text-sm text-slate-400">
             Sign in with an admin account to manage Gift Pro entitlements. Guests cannot access this area.
           </p>
+          <div className="mt-4">
+            <AdminBackNav />
+          </div>
         </Card>
       </main>
     );
@@ -245,6 +249,9 @@ export default function AdminEntitlements() {
             This console is restricted to accounts on the server-side admin allowlist. If you believe this is an
             error, contact the site owner.
           </p>
+          <div className="mt-4">
+            <AdminBackNav />
+          </div>
         </Card>
       </main>
     );
@@ -258,6 +265,9 @@ export default function AdminEntitlements() {
             The admin service isn&apos;t ready (server-side auth or the admin allowlist isn&apos;t configured). Try again
             later.
           </p>
+          <div className="mt-4">
+            <AdminBackNav />
+          </div>
         </Card>
       </main>
     );
@@ -268,11 +278,16 @@ export default function AdminEntitlements() {
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-5 py-10">
       <header className="mb-6">
-        <h1 className="font-display text-xl font-bold text-slate-100">Admin · Gift Pro</h1>
-        <p className="mt-1 text-xs text-slate-500">
-          Grant Pro/Lifetime access without any Paddle payment. Grants are server-authoritative; the target user
-          never needs to be on the admin allowlist.
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h1 className="font-display text-xl font-bold text-slate-100">Admin · Gift Pro</h1>
+            <p className="mt-1 text-xs text-slate-500">
+              Grant Pro/Lifetime access without any Paddle payment. Grants are server-authoritative; the target
+              user never needs to be on the admin allowlist.
+            </p>
+          </div>
+          <AdminBackNav />
+        </div>
         <a
           href="/admin/diagnostics"
           className="mt-2 inline-block text-xs font-semibold text-neon-cyan underline-offset-2 hover:underline"
