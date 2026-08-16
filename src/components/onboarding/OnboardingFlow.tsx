@@ -1,12 +1,19 @@
 'use client';
 
-import { useCallback, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { flagFor } from '@/components/LanguageBadge';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  buildRecommendedSet,
+  findRecommendedSet,
+  recommendFirstPractice,
+  type FirstPracticeRecommendation,
+} from '@/lib/firstPractice';
 import { buildSeedSetForLang, hideAllExcept, seedCodeForLangKey } from '@/lib/freeLang';
 import { seedSetForLang } from '@/lib/seedSets';
 import { findLanguage } from '@/lib/languages';
+import { getTopicManifest, getWordBankManifest } from '@/lib/vocab/wordBanks';
 import {
   ONBOARDING_GOALS,
   ONBOARDING_LEVELS,
@@ -81,6 +88,45 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
   const [level, setLevel] = useState<CefrLevel | null>(record?.level ?? null);
   const [goal, setGoal] = useState<GoalId | null>(record?.goal ?? null);
   const [finishing, setFinishing] = useState(false);
+  // Personalized first-session recommendation, computed once the manifests are
+  // available. Until then the seed-based fallback is shown, so the Ready step
+  // is never blank and never dead-ends.
+  const [recommendation, setRecommendation] = useState<FirstPracticeRecommendation | null>(null);
+
+  useEffect(() => {
+    if (!lang || !level || !goal) return;
+    let alive = true;
+    void (async () => {
+      let availableBanks = null;
+      let availableTopics = null;
+      try {
+        availableBanks = await getWordBankManifest();
+      } catch {
+        /* offline — recommendation falls back to the seed */
+      }
+      try {
+        availableTopics = await getTopicManifest();
+      } catch {
+        /* offline — topic recommendations unavailable */
+      }
+      if (!alive) return;
+      setRecommendation(
+        recommendFirstPractice({ lang, level, goal, availableBanks, availableTopics }),
+      );
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [lang, level, goal]);
+
+  // Fallback shown immediately (and used if the manifest fetch fails): with no
+  // manifests the pure helper always lands on the curated seed. Null only when
+  // the flow hasn't reached a full selection yet (step < 4).
+  const shownRecommendation: FirstPracticeRecommendation | null =
+    recommendation ??
+    (lang && level && goal
+      ? recommendFirstPractice({ lang, level, goal, availableBanks: null, availableTopics: null })
+      : null);
 
   const save = useCallback(
     (patch: OnboardingRecord) => saveOnboardingRecord(uid, patch),
@@ -114,43 +160,78 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
     [save],
   );
 
-  const finish = useCallback(async () => {
-    if (!lang || !level || !goal || finishing) return;
-    setFinishing(true);
-    try {
-      // Seed the chosen language's starter content, idempotently: never touch
-      // a set that already exists (would erase mastery marks), and never seed
-      // the old Spanish default merely because it used to be the default.
-      const existing = await getAllSets();
-      const seed = seedSetForLang(lang);
-      if (seed && !existing.some((s) => s.id === seed.id)) {
-        const built = await buildSeedSetForLang(lang);
-        if (built) await putSet(built);
+  const finish = useCallback(
+    async (start: boolean) => {
+      if (!lang || !level || !goal || finishing) return;
+      setFinishing(true);
+      try {
+        // Seed the chosen language's starter content, idempotently: never touch
+        // a set that already exists (would erase mastery marks), and never seed
+        // the old Spanish default merely because it used to be the default.
+        const existing = await getAllSets();
+        const seed = seedSetForLang(lang);
+        if (seed && !existing.some((s) => s.id === seed.id)) {
+          const built = await buildSeedSetForLang(lang);
+          if (built) await putSet(built);
+        }
+        // Re-read so the idempotency check sees the freshly seeded card.
+        const current = await getAllSets();
+
+        // Recommended first session: reuse an existing equivalent set when one
+        // already exists (never duplicate), otherwise build it from the bank or
+        // topic data. Any failure falls back to the starter seed — the start
+        // action never dead-ends.
+        let openId: string | null = null;
+        if (start) {
+          // The guard above guarantees lang/level/goal are set, so the fallback
+          // recommendation is always non-null here.
+          const rec =
+            shownRecommendation ??
+            recommendFirstPractice({ lang, level, goal, availableBanks: null, availableTopics: null });
+          if (rec.type !== 'seed') {
+            const reuse = findRecommendedSet(current, rec);
+            if (reuse) {
+              openId = reuse.id;
+            } else {
+              const built = await buildRecommendedSet(rec);
+              if (built) {
+                await putSet(built);
+                openId = built.id;
+              }
+            }
+          }
+          // Never dead-end: any failure (or a seed recommendation) falls back
+          // to the starter seed. "Go to dashboard" (start=false) skips all of
+          // this and lands on the dashboard.
+          openId ??= seed?.id ?? null;
+        }
+
+        // Persist the choice through the ACCOUNT-scoped prefs store (normalized
+        // pack key — planGate.canUseLang enforces it for Free; harmless for Pro).
+        // Onboarding only runs for signed-in accounts, so this always writes the
+        // uid's own record — never another account's, and never the guest's
+        // global settings. For Free, every OTHER owned language (e.g. device-
+        // level sets inherited from an earlier guest session) is hidden — never
+        // deleted — so the library matches the one-language plan. Pro keeps
+        // everything visible.
+        const proNow = isProPlan(getSettingsSnapshot().plan);
+        updateAccountPrefs(
+          proNow
+            ? { selectedFreeLang: lang }
+            : { selectedFreeLang: lang, hiddenLangs: hideAllExcept(current, lang) },
+        );
+        // Completing clears the pending marker (and bumps the observable store),
+        // which hides the overlay automatically — no local state flip needed.
+        completeOnboarding(uid, { lang, level, goal });
+        // Notify any mounted library so it picks up the new seed immediately.
+        window.dispatchEvent(new Event('audiorepeat:data-changed'));
+        router.push(openId ? `/player?id=${openId}` : '/dashboard');
+      } finally {
+        setFinishing(false);
       }
-      // Persist the choice through the ACCOUNT-scoped prefs store (normalized
-      // pack key — planGate.canUseLang enforces it for Free; harmless for Pro).
-      // Onboarding only runs for signed-in accounts, so this always writes the
-      // uid's own record — never another account's, and never the guest's
-      // global settings. For Free, every OTHER owned language (e.g. device-
-      // level sets inherited from an earlier guest session) is hidden — never
-      // deleted — so the library matches the one-language plan. Pro keeps
-      // everything visible.
-      const proNow = isProPlan(getSettingsSnapshot().plan);
-      updateAccountPrefs(
-        proNow
-          ? { selectedFreeLang: lang }
-          : { selectedFreeLang: lang, hiddenLangs: hideAllExcept(existing, lang) },
-      );
-      // Completing clears the pending marker (and bumps the observable store),
-      // which hides the overlay automatically — no local state flip needed.
-      completeOnboarding(uid, { lang, level, goal });
-      // Notify any mounted library so it picks up the new seed immediately.
-      window.dispatchEvent(new Event('audiorepeat:data-changed'));
-      router.push(seed ? `/player?id=${seed.id}` : '/dashboard');
-    } finally {
-      setFinishing(false);
-    }
-  }, [lang, level, goal, finishing, uid, router]);
+    },
+    [lang, level, goal, finishing, uid, router, shownRecommendation],
+  );
 
   if (!visible) return null;
 
@@ -360,22 +441,43 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
                 ))}
               </dl>
 
+              {/* Recommended first session — always present once step 4
+                  renders (step 4 requires a full selection, so the fallback
+                  recommendation is non-null by construction). */}
+              {shownRecommendation && (
+                <div className="mt-5 rounded-2xl border border-neon-cyan/25 bg-neon-cyan/[0.06] p-4 text-left">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neon-cyan/80">
+                    Recommended first session
+                  </p>
+                  <p className="mt-1.5 text-sm font-bold text-white">{shownRecommendation.title}</p>
+                  <p className="mt-0.5 text-xs text-slate-400">{shownRecommendation.reason}</p>
+                </div>
+              )}
+
               <button
                 type="button"
-                onClick={() => void finish()}
+                onClick={() => void finish(true)}
                 disabled={finishing}
-                className="mt-7 w-full rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-3.5 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-5 w-full rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-3.5 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {finishing ? (
                   <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-night-950/30 border-t-night-950 align-middle" />
                 ) : (
-                  'Start practicing'
+                  'Start recommended practice'
                 )}
               </button>
               <button
                 type="button"
+                onClick={() => void finish(false)}
+                disabled={finishing}
+                className="mt-2.5 w-full rounded-xl border border-white/10 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
+              >
+                Go to dashboard
+              </button>
+              <button
+                type="button"
                 onClick={() => setStep(3)}
-                className="mt-3 w-full rounded-xl border border-white/10 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
+                className="mt-2 w-full text-xs font-medium text-slate-500 transition hover:text-slate-300"
               >
                 ← Back
               </button>
