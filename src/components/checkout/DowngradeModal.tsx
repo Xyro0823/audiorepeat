@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { flagFor } from '@/components/LanguageBadge';
 import { useLists } from '@/hooks/useLists';
 import { findLanguage } from '@/lib/languages';
+import { updateAccountPrefs } from '@/lib/accountPrefs';
 import { FREE_LANG_LIMIT } from '@/lib/plans';
 import { updateSettings } from '@/lib/settingsStore';
 import { PACK_LANG } from '@/lib/starterSets';
@@ -68,12 +69,14 @@ export default function DowngradeModal({ onClose }: Props) {
 
   const confirm = () => {
     if (!keep) return;
-    // Persist the Free plan with every other language hidden (normalized
-    // keys). Sets stay in IndexedDB — the useLists filter un-hides them the
-    // moment the plan flips back to Pro.
-    updateSettings({
-      plan: 'basic',
-      planBilling: 'annual',
+    // The plan itself stays in the (device-global) settings record — that is
+    // the shipped architecture; the entitlement mirror re-verifies it from
+    // /api/entitlement. The kept language + hidden set are ACCOUNT-SCOPED:
+    // signed-in users write their own uid record, guests the global settings
+    // record, so one account's downgrade never alters another's language.
+    updateSettings({ plan: 'basic', planBilling: 'annual' });
+    updateAccountPrefs({
+      selectedFreeLang: keep.key,
       hiddenLangs: langs.filter((l) => l.key !== keep.key).map((l) => l.key),
     });
     setDone(true);

@@ -1,12 +1,22 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
-import type { AppSettings, VocabSet, VocabWord } from '@/types/app';
+import type { AppSettings, VocabSet } from '@/types/app';
+import { getAuthSnapshot } from '@/lib/authStore';
+import {
+  accountPrefsActivatedFor,
+  activateAccountPrefs,
+  EMPTY_ACCOUNT_PREFS,
+  getAccountPrefsSnapshot,
+  subscribeAccountPrefs,
+  updateAccountPrefs,
+} from '@/lib/accountPrefs';
 import { langLimitKey } from '@/lib/planGate';
+import { resolveFreeLanguage } from '@/lib/freeLang';
+import { readOnboardingPending } from '@/lib/onboarding';
 import { isProPlan } from '@/lib/plans';
-import { SEED_SETS } from '@/lib/seedSets';
+import { hydrateSeedWords, SEED_SETS } from '@/lib/seedSets';
 import { PACK_LANG } from '@/lib/starterSets';
-import { loadWordBank } from '@/lib/vocab/wordBanks';
 import { clearAllSets as dbClearAllSets, deleteSet as dbDeleteSet, getAllSets, putSet } from '@/lib/db/indexedDb';
 import {
   getSettingsSnapshot,
@@ -55,37 +65,6 @@ const ORIGINAL_SEED_WORD_IDS: Record<string, string[]> = {
   'seed-filipino-basics': ['w-fil-kumusta', 'w-fil-salamat', 'w-fil-pakiusap', 'w-fil-oo', 'w-fil-paalam'],
   'seed-mongolian-basics': ['w-mn-sain', 'w-mn-bayarlalaa', 'w-mn-guiya', 'w-mn-tiim', 'w-mn-ugui'],
 };
-
-/**
- * Pull the full A1 word pack for a seed set's language when one exists, so the
- * home-screen card reflects the real dataset (200+ words) instead of the small
- * curated demo array.
- *
- * `hydrated` is false when the language HAS a pack but it could not be loaded
- * (offline / fetch error). In that case the curated words are used as a
- * fallback AND the seed-version marker is left behind so the merge retries on
- * a later launch — otherwise the card would stay at ~20 words forever.
- */
-async function hydrateSeedWords(set: VocabSet): Promise<{ words: VocabWord[]; hydrated: boolean }> {
-  const pack = PACK_LANG[set.lang];
-  if (!pack) return { words: set.words, hydrated: true }; // nothing to hydrate
-  try {
-    const bank = await loadWordBank(pack, 'A1');
-    if (bank && bank.words.length > 0) {
-      return {
-        words: bank.words.map(([target, translation], i) => ({
-          id: `pk-${pack}-a1-${i}`,
-          target,
-          translation,
-        })),
-        hydrated: true,
-      };
-    }
-  } catch {
-    /* offline / pack unavailable: fall back below */
-  }
-  return { words: set.words, hydrated: false };
-}
 
 /** True when `existing` still carries exactly the shipped curated seed words. */
 function matchesCuratedSeed(existing: VocabSet, curated: VocabSet): boolean {
@@ -152,11 +131,19 @@ function removeDeferredSeedIds(): void {
 async function seedDeferredSeeds(now: number): Promise<{ seeded: number; failed: number }> {
   const deferred = readDeferredSeedIds();
   if (deferred.length === 0) return { seeded: 0, failed: 0 };
+  const existingIds = new Set((await getAllSets()).map((s) => s.id));
   const failed: string[] = [];
   let seeded = 0;
   for (const id of deferred) {
     const seed = SEED_SETS.find((s) => s.id === id);
     if (!seed) continue;
+    // Idempotent: a set that already exists (e.g. the Free-language starter
+    // seeded during onboarding) must never be overwritten — that would erase
+    // any mastery marks the user has earned on it.
+    if (existingIds.has(id)) {
+      seeded += 1;
+      continue;
+    }
     try {
       const h = await hydrateSeedWords(seed);
       if (!h.hydrated) {
@@ -180,6 +167,20 @@ export function useLists() {
   // Settings are global (shared store): every mounted consumer sees changes
   // immediately — e.g. the Settings modal and the layout-level ThemeManager.
   const settings = useSyncExternalStore(subscribeSettings, getSettingsSnapshot, getSettingsSnapshot);
+  // Account-scoped Free-plan prefs (selectedFreeLang/hiddenLangs) live in a
+  // per-uid record for signed-in users and in the global settings for guests.
+  // The account-prefs store only reports the record of the uid it was last
+  // ACTIVATED for; effectiveAccountPrefs treats a not-yet-activated (or stale)
+  // snapshot as empty, so another account's prefs can never gate this session.
+  const accountSnapshot = useSyncExternalStore(
+    subscribeAccountPrefs,
+    getAccountPrefsSnapshot,
+    getAccountPrefsSnapshot,
+  );
+  const uid = getAuthSnapshot().user?.id ?? null;
+  const accountPrefs = accountPrefsActivatedFor(uid)
+    ? accountSnapshot
+    : EMPTY_ACCOUNT_PREFS;
 
   useEffect(() => {
     let alive = true;
@@ -188,7 +189,42 @@ export function useLists() {
       // Hydrate the shared settings store FIRST so the seed merge below can
       // honor the purchased plan: Free seeds only one language, Pro seeds all.
       await hydrateSettings();
+      const uid = getAuthSnapshot().user?.id ?? null;
+      const onboardingPendingMarker = uid ? readOnboardingPending(uid) : false;
+      // Point the account-prefs store at this session. Signed-in users read
+      // (and, on first activation, one-time adopt the legacy global
+      // hiddenLangs from) their OWN uid record — adoption is skipped while a
+      // fresh account's onboarding is pending so it never inherits another
+      // session's state. Guests keep using the global settings record.
+      if (!accountPrefsActivatedFor(uid)) {
+        activateAccountPrefs(uid, getSettingsSnapshot(), {
+          skipAdoption: !!onboardingPendingMarker,
+        });
+      }
+      // Deterministic migration for legacy Free users with no explicit
+      // selected language: infer it from their visible sets when unambiguous.
+      // Idempotent — once selectedFreeLang is set this is a no-op, and it
+      // never runs for Pro users or while onboarding is pending (the picker
+      // decides, and completion records the choice). Only the selection is
+      // written — the account's hiddenLangs (e.g. an adopted downgrade set)
+      // is preserved, never replaced.
+      {
+        const ap = getAccountPrefsSnapshot();
+        const snap = getSettingsSnapshot();
+        if (!isProPlan(snap.plan) && !ap.selectedFreeLang && !onboardingPendingMarker) {
+          const res = resolveFreeLanguage(list, ap.hiddenLangs, null);
+          if (res.key) {
+            updateAccountPrefs({ selectedFreeLang: res.key });
+          }
+        }
+      }
       const pro = isProPlan(getSettingsSnapshot().plan);
+      // First-time onboarding: a brand-new Free account must NOT inherit the
+      // old Spanish default (or a language a PREVIOUS guest/account chose on
+      // this device — settings are device-level) — defer every seed set and
+      // let the onboarding flow seed the chosen language instead. The per-uid
+      // pending marker is the source of truth; completion clears it.
+      const onboardingPending = !pro && onboardingPendingMarker;
       // One-time merge of missing seed sets, gated by a version marker so
       // new starter sets reach existing installs without resurrecting seed
       // sets the user deliberately deleted.
@@ -202,9 +238,17 @@ export function useLists() {
       if (seedVersion < SEED_VERSION) {
         const knownIds = new Set(list.map((s) => s.id));
         const deferred: string[] = [];
-        // Free installs seed only the first language; the remaining seed sets
-        // are recorded as deferred and seeded once the user upgrades to Pro.
-        const firstSeedLang = SEED_SETS[0].lang;
+        // Free installs seed only the user's chosen/legacy first language; the
+        // remaining seed sets are recorded as deferred and seeded once the
+        // user upgrades to Pro. During pending onboarding (no choice yet) ALL
+        // seeds are deferred so the onboarding picker decides the language.
+        const freeLangKey = getAccountPrefsSnapshot().selectedFreeLang;
+        const firstSeedLang =
+          freeLangKey && !onboardingPending
+            ? (SEED_SETS.find((s) => (PACK_LANG[s.lang] ?? s.lang).toLowerCase() === freeLangKey.toLowerCase())
+                ?.lang ?? SEED_SETS[0].lang)
+            : SEED_SETS[0].lang;
+        const deferAll = onboardingPending;
         // Only advance the version marker when every pack-language seed was
         // actually hydrated; if any fetch failed (offline), keep the marker
         // behind so the merge retries next launch instead of trapping cards
@@ -215,7 +259,7 @@ export function useLists() {
             // New install: pull the full A1 word pack when the language has one.
             // A Free user gets their first language only — any other new
             // language is recorded as deferred for a future upgrade.
-            if (!pro && set.lang !== firstSeedLang) {
+            if (!pro && (deferAll || set.lang !== firstSeedLang)) {
               deferred.push(set.id);
               continue;
             }
@@ -316,8 +360,9 @@ export function useLists() {
     void (async () => {
       try {
         const r = await seedDeferredSeeds(Date.now());
-        if (getSettingsSnapshot().hiddenLangs.length > 0) {
-          updateSettings({ hiddenLangs: [] });
+        // Un-hide languages in THIS account's prefs (guests: global record).
+        if (getAccountPrefsSnapshot().hiddenLangs.length > 0) {
+          updateAccountPrefs({ hiddenLangs: [] });
         }
         if (r.seeded > 0) setSets(await getAllSets());
       } catch {
@@ -342,6 +387,17 @@ export function useLists() {
       document.removeEventListener('visibilitychange', sync);
       window.removeEventListener('focus', sync);
     };
+  }, []);
+
+  // Onboarding / free-language changes seed sets outside this hook (they write
+  // through IndexedDB so they work before the library mounts). Any mounted
+  // library re-reads on that signal so the new seed card appears instantly.
+  useEffect(() => {
+    const reload = () => {
+      void getAllSets().then((list) => setSets(list));
+    };
+    window.addEventListener('audiorepeat:data-changed', reload);
+    return () => window.removeEventListener('audiorepeat:data-changed', reload);
   }, []);
 
   const saveSet = useCallback(async (set: VocabSet): Promise<VocabSet> => {
@@ -385,15 +441,18 @@ export function useLists() {
   // `allSets` is the unfiltered list, used by backup export so hidden sets are
   // never lost when moving devices.
   const visibleSets = useMemo(() => {
-    if (settings.hiddenLangs.length === 0) return sets;
-    const hidden = new Set(settings.hiddenLangs.map(langLimitKey));
+    const hiddenLangs = accountPrefs.hiddenLangs;
+    if (hiddenLangs.length === 0) return sets;
+    const hidden = new Set(hiddenLangs.map(langLimitKey));
     return sets.filter((s) => !hidden.has(langLimitKey(s.lang)));
-  }, [sets, settings.hiddenLangs]);
+  }, [sets, accountPrefs.hiddenLangs]);
 
   return {
     sets: visibleSets,
     allSets: sets,
     settings,
+    /** The Free plan's included language for THIS session (account-scoped). */
+    freeLangKey: accountPrefs.selectedFreeLang,
     loading,
     saveSet,
     removeSet,

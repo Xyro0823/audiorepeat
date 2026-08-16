@@ -139,6 +139,52 @@ describe('canUseLang — BCP-47 normalization', () => {
   });
 });
 
+describe('canUseLang — explicit selectedFreeLang (post-onboarding Free)', () => {
+  const mn = [setOf('mn')];
+
+  it('allows exactly the selected language (normalized key)', () => {
+    expect(canUseLang(false, mn, 'mn', 'mn')).toBe(true);
+    expect(canUseLang(false, mn, 'mn', 'es')).toBe(false);
+  });
+
+  it('locks every other language for Free', () => {
+    expect(canUseLang(false, mn, 'es-ES', 'mn')).toBe(false);
+    expect(canUseLang(false, mn, 'es', 'mn')).toBe(false);
+    expect(canUseLang(false, mn, 'fr-FR', 'mn')).toBe(false);
+  });
+
+  it('overrides the legacy visible-sets inference (exactly one language)', () => {
+    // Even a legacy multi-language library is restricted once a choice exists.
+    const legacy = [setOf('es-ES'), setOf('fr-FR')];
+    expect(canUseLang(false, legacy, 'es-ES', 'es')).toBe(true);
+    expect(canUseLang(false, legacy, 'fr-FR', 'es')).toBe(false);
+  });
+
+  it('a hidden previous language stays locked after a switch', () => {
+    // User switched free language from es to mn: mn usable, es locked.
+    const withHidden = [setOf('es-ES'), setOf('mn')];
+    expect(canUseLang(false, withHidden, 'mn', 'mn')).toBe(true);
+    expect(canUseLang(false, withHidden, 'es-ES', 'mn')).toBe(false);
+  });
+
+  it('Pro ignores the Free-language restriction entirely', () => {
+    expect(canUseLang(true, [], 'es-ES', 'mn')).toBe(true);
+    expect(canUseLang(true, mn, 'es', 'mn')).toBe(true);
+    expect(canUseLang(true, mn, 'ja-JP', 'mn')).toBe(true);
+  });
+
+  it('Lifetime ignores the restriction too', () => {
+    expect(canUseLang(true, [], 'es', 'mn')).toBe(true);
+    expect(canUseLang(true, [], 'zh-CN', 'mn')).toBe(true);
+  });
+
+  it('downgrade back to Free restores the selected-language gating', () => {
+    // After a Pro → Free downgrade the selection is remembered: mn only.
+    expect(canUseLang(false, mn, 'mn', 'mn')).toBe(true);
+    expect(canUseLang(false, mn, 'de-DE', 'mn')).toBe(false);
+  });
+});
+
 describe('canUseLang — hidden-language (downgrade) scenario', () => {
   // A downgraded Free user's visible sets contain ONLY the kept language —
   // useLists already filters hiddenLangs before canUseLang is ever called, so

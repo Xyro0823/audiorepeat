@@ -10,6 +10,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import AuthGate from "@/components/auth/AuthGate";
+import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import SwRegister from "@/components/pwa/SwRegister";
 import ThemeManager from "@/components/settings/ThemeManager";
@@ -94,6 +95,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className="min-h-full flex flex-col">
         <AuthGate>{children}</AuthGate>
+        {/* First-time onboarding — self-gates per account; covers every route
+            including the public landing page (a fresh account signs up there). */}
+        <OnboardingFlow />
         <ThemeManager />
         <SwRegister />
         <InstallPrompt />

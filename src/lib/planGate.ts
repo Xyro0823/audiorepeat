@@ -6,11 +6,15 @@ import type { VocabSet } from '@/types/app';
  * used by the editor, Browse library, topic packs and (via useLists) every
  * surface that renders sets. Do NOT build a second gating system.
  *
- * The rule mirrors StarterLibraryModal.canAddLang exactly:
+ * The rule:
  *   - Pro/Lifetime (pro = true) → any language.
- *   - Free → only languages the user already has VISIBLE sets in
- *     (settings.hiddenLangs already filters visibility), i.e. the single
- *     active language. Creating NEW content in any other language is blocked.
+ *   - Free with an explicit selected language (settings.selectedFreeLang,
+ *     normalized pack key) → exactly that one language; everything else is
+ *     Pro-locked. This is the post-onboarding behavior.
+ *   - Free with NO selection yet (legacy users) → the historical rule: only
+ *     languages the user already has VISIBLE sets in (settings.hiddenLangs
+ *     already filters visibility). A user with no visible sets at all falls
+ *     back to DEFAULT_ALLOWED_LANG so they are never fully locked out.
  */
 
 /** Fallback "allowed" language when a Free user owns no visible sets at all
@@ -34,10 +38,21 @@ export function visibleLangKeys(sets: VocabSet[]): Set<string> {
   return keys;
 }
 
-/** True when the user may create/edit sets in `code` under the current plan. */
-export function canUseLang(pro: boolean, sets: VocabSet[], code: string): boolean {
+/**
+ * True when the user may create/edit sets in `code` under the current plan.
+ * `selectedFreeLang` is the user's explicit Free-language choice (normalized
+ * pack key, from settings.selectedFreeLang) — when present it overrides the
+ * legacy visible-sets inference so the Free plan is exactly one language.
+ */
+export function canUseLang(
+  pro: boolean,
+  sets: VocabSet[],
+  code: string,
+  selectedFreeLang?: string | null,
+): boolean {
   if (pro) return true;
   const key = langLimitKey(code);
+  if (selectedFreeLang) return key === langLimitKey(selectedFreeLang);
   const owned = visibleLangKeys(sets);
   if (owned.size === 0) return key === langLimitKey(DEFAULT_ALLOWED_LANG);
   return owned.has(key);

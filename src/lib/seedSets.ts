@@ -1,8 +1,51 @@
-import type { VocabSet } from '@/types/app';
+import type { VocabSet, VocabWord } from '@/types/app';
+import { PACK_LANG } from '@/lib/starterSets';
+import { loadWordBank } from '@/lib/vocab/wordBanks';
 
 // Expanded starter sets (20-25 words each) generated from the A1/A2 travel-
 // essentials template, hand-checked per language. Replaces the original 5-word
 // demo sets so every dashboard card carries a real vocabulary list.
+
+/**
+ * Pull the full A1 word pack for a seed set's language when one exists, so the
+ * home-screen card reflects the real dataset (200+ words) instead of the small
+ * curated demo array.
+ *
+ * `hydrated` is false when the language HAS a pack but it could not be loaded
+ * (offline / fetch error). In that case the curated words are used as a
+ * fallback — the caller decides whether to mark hydration incomplete so a
+ * later launch can retry.
+ */
+export async function hydrateSeedWords(set: VocabSet): Promise<{ words: VocabWord[]; hydrated: boolean }> {
+  const pack = PACK_LANG[set.lang];
+  if (!pack) return { words: set.words, hydrated: true }; // nothing to hydrate
+  try {
+    const bank = await loadWordBank(pack, 'A1');
+    if (bank && bank.words.length > 0) {
+      return {
+        words: bank.words.map(([target, translation], i) => ({
+          id: `pk-${pack}-a1-${i}`,
+          target,
+          translation,
+        })),
+        hydrated: true,
+      };
+    }
+  } catch {
+    /* offline / pack unavailable: fall back below */
+  }
+  return { words: set.words, hydrated: false };
+}
+
+/**
+ * The starter set for a normalized pack-level language key (e.g. "es" → the
+ * Spanish seed, "mn" → the Mongolian seed), or null when the language has no
+ * seed content. Seedable languages are exactly those with a seed set.
+ */
+export function seedSetForLang(langKey: string): VocabSet | null {
+  const key = langKey.toLowerCase();
+  return SEED_SETS.find((s) => (PACK_LANG[s.lang] ?? s.lang).toLowerCase() === key) ?? null;
+}
 
 export const SEED_SETS: VocabSet[] = [
   {

@@ -10,6 +10,7 @@
  * only — and the auth screen shows setup instructions.
  */
 import { getAuthMode } from '@/lib/firebase/config';
+import { isNewlyCreatedAccount, markOnboardingPending } from '@/lib/onboarding';
 import type { AuthResult, AuthState } from '@/types/auth';
 
 const MODE = getAuthMode();
@@ -118,7 +119,15 @@ export async function hydrateAuth(): Promise<void> {
     // Stays 'loading' until the first callback resolves the session.
     onFirebaseAuthChange(auth, (fbUser) => {
       if (fbUser) {
-        setState({ status: 'signed-in', user: firebaseUserToAuthUser(fbUser) });
+        const user = firebaseUserToAuthUser(fbUser);
+        // A brand-new account (creationTime ≈ now) must see onboarding. This
+        // check runs SYNCHRONOUSLY with the auth-state flip that mounts the
+        // app, so the dashboard's account-prefs activation can never race the
+        // pending marker and wrongly adopt another session's hiddenLangs.
+        if (isNewlyCreatedAccount(user.createdAt, Date.now())) {
+          markOnboardingPending(user.id);
+        }
+        setState({ status: 'signed-in', user });
         // Server entitlement is authoritative — mirror it into local settings
         // so gating uses the real plan (no-op when not configured).
         void syncPlanFromServer();
@@ -155,7 +164,13 @@ export async function signup(
     const auth = getFirebaseAuth();
     if (!auth) return { ok: false, error: UNCONFIGURED_ERROR };
     const user = await createEmailAccount(auth, clean, password, displayName);
-    setState({ status: 'signed-in', user: firebaseUserToAuthUser(user) });
+    const mapped = firebaseUserToAuthUser(user);
+    // Write the pending marker BEFORE flipping the auth state, so the first
+    // mount of the app (triggered by this state change) always sees it.
+    // (The Firebase auth listener also marks brand-new accounts synchronously,
+    // covering mounts triggered by the listener itself.)
+    markOnboardingPending(user.uid);
+    setState({ status: 'signed-in', user: mapped });
     return { ok: true };
   } catch (err) {
     const { describeFirebaseError } = await loadClient();
@@ -190,7 +205,14 @@ export async function signInWithGoogle(): Promise<AuthResult> {
     const auth = getFirebaseAuth();
     if (!auth) return { ok: false, error: UNCONFIGURED_ERROR };
     const user = await signInWithGoogle(auth);
-    setState({ status: 'signed-in', user: firebaseUserToAuthUser(user) });
+    const mapped = firebaseUserToAuthUser(user);
+    // Google doesn't say whether the account is new; a creationTime very close
+    // to now means it was just created, so it should see onboarding. Written
+    // before the state flip (and again synchronously by the auth listener).
+    if (isNewlyCreatedAccount(mapped.createdAt, Date.now())) {
+      markOnboardingPending(user.uid);
+    }
+    setState({ status: 'signed-in', user: mapped });
     return { ok: true };
   } catch (err) {
     const { describeFirebaseError } = await loadClient();

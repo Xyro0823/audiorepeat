@@ -7,6 +7,8 @@ import DowngradeModal from '@/components/checkout/DowngradeModal';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { useAuth } from '@/hooks/useAuth';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
+import { clearAccountPrefs } from '@/lib/accountPrefs';
+import { clearOnboardingState } from '@/lib/onboarding';
 import { isProPlan, PLAN_BADGE, planDetail } from '@/lib/plans';
 import { getSettingsSnapshot, subscribeSettings } from '@/lib/settingsStore';
 
@@ -86,6 +88,11 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
     try {
       window.localStorage.removeItem(statsStorageKey(user!.id));
       window.localStorage.removeItem(usernameStorageKey(user!.id));
+      // Per-uid entitlement + onboarding state (free language, hidden langs,
+      // pending/completed onboarding) — never left behind for a future
+      // account on this device.
+      clearAccountPrefs(user!.id);
+      clearOnboardingState(user!.id);
       const prefix = `audiorepeat-challenge-best-v1:${user!.id}:`;
       for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
         const key = window.localStorage.key(i);

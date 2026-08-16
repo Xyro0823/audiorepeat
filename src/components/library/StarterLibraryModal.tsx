@@ -20,6 +20,9 @@ interface Props {
   sets: VocabSet[];
   /** Pro gate: the Free plan is limited to 1 active language. */
   pro: boolean;
+  /** The Free plan's included language (normalized key) — allows imports in
+   *  it even before its starter set has landed. Ignored for Pro. */
+  freeLangKey?: string | null;
   onClose: () => void;
   onImport: (set: VocabSet) => void | Promise<void>;
 }
@@ -67,7 +70,7 @@ function importedLevelKeys(sets: VocabSet[]): Set<string> {
   return keys;
 }
 
-export default function StarterLibraryModal({ sets, pro, onClose, onImport }: Props) {
+export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, onImport }: Props) {
   const [tab, setTab] = useState<'cefr' | 'topics'>('cefr');
   const [manifest, setManifest] = useState<WordBankManifest | null>(null);
   const [lang, setLang] = useState<string | null>(null);
@@ -93,8 +96,8 @@ export default function StarterLibraryModal({ sets, pro, onClose, onImport }: Pr
     return langs;
   }, [sets]);
   const canAddLang = useCallback(
-    (packCode: string) => pro || ownedLangs.has(packCode),
-    [pro, ownedLangs],
+    (packCode: string) => pro || ownedLangs.has(packCode) || freeLangKey === packCode,
+    [pro, ownedLangs, freeLangKey],
   );
 
   // Escape to close

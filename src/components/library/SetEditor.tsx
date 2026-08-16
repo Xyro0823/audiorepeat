@@ -14,6 +14,9 @@ interface Props {
   /** Free-plan language gate (lib/planGate). Pro/Lifetime → all languages;
    *  Free → only the single active language. Re-checked at save time. */
   canUseLang: (code: string) => boolean;
+  /** Default target language for a NEW set (e.g. the Free plan's chosen
+   *  language) — avoids opening the editor on a language the user can't use. */
+  defaultLang?: string;
   onClose: () => void;
   onSave: (set: VocabSet) => void | Promise<void>;
 }
@@ -25,9 +28,9 @@ function newWord(): VocabWord {
 const inputClass =
   'w-full rounded-xl border border-white/10 bg-night-800/80 px-4 py-2.5 text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60';
 
-export default function SetEditor({ set, canUseLang, onClose, onSave }: Props) {
+export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSave }: Props) {
   const [name, setName] = useState(set?.name ?? '');
-  const [lang, setLang] = useState(set?.lang ?? 'es-ES');
+  const [lang, setLang] = useState(set?.lang ?? defaultLang ?? 'es-ES');
   const [nativeLang, setNativeLang] = useState(set?.nativeLang ?? 'en-US');
   const [words, setWords] = useState<VocabWord[]>(set ? set.words.map((w) => ({ ...w })) : [newWord()]);
   const [cefr, setCefr] = useState<CefrLevel | undefined>(set?.cefr);

@@ -13,6 +13,7 @@ import { formatDuration } from '@/lib/format';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit } from '@/lib/tts/speechSynthesisEngine';
+import { seedCodeForLangKey } from '@/lib/freeLang';
 import { isProPlan } from '@/lib/plans';
 import { canUseLang as planGateCanUseLang } from '@/lib/planGate';
 import { CEFR_META } from '@/lib/starterSets';
@@ -34,6 +35,8 @@ import AiInsightsCard from '@/components/dashboard/AiInsightsCard';
 import FreePlanNotice from '@/components/dashboard/FreePlanNotice';
 import MetricCards from '@/components/dashboard/MetricCards';
 import WelcomeHero from '@/components/dashboard/WelcomeHero';
+import FreeLanguageBar from '@/components/onboarding/FreeLanguageBar';
+import ChangeFreeLanguageModal from '@/components/onboarding/ChangeFreeLanguageModal';
 
 function Logo() {
   return (
@@ -456,7 +459,7 @@ function PortraitCard({
 type ImportMsg = { kind: 'ok' | 'err'; text: string } | null;
 
 export default function SetLibrary() {
-  const { sets, loading, settings, saveSet, removeSet } = useLists();
+  const { sets, allSets, loading, settings, saveSet, removeSet, freeLangKey } = useLists();
   const { wordsToday, msToday, streak, week, recordWords } = usePracticeStats();
   const { recents, favorites, toggleFavorite } = useLibraryMeta();
   const router = useRouter();
@@ -474,6 +477,11 @@ export default function SetLibrary() {
   const [searchQuery, setSearchQuery] = useState('');
   const [cefrFilter, setCefrFilter] = useState<CefrLevel | 'all'>('all');
   const [langFilter, setLangFilter] = useState<string>('all');
+  const [changingLang, setChangingLang] = useState(false);
+
+  // Pro gate: the 1-Minute speed challenge is a paid feature. Free users are
+  // routed to the upgrade flow instead of the challenge modal.
+  const pro = isProPlan(settings.plan);
 
   const flash = useCallback((msg: ImportMsg) => {
     setImportMsg(msg);
@@ -508,8 +516,14 @@ export default function SetLibrary() {
     }
   };
 
-  // Default subtitle language: the language the user studies most, else Spanish.
+  // Default subtitle language: the Free plan's included language first (its
+  // representative BCP-47 tag), else the language the user studies most, else
+  // Spanish (legacy default). Pro users keep the most-studied heuristic.
   const defaultSubtitleLang = useMemo(() => {
+    if (!pro && freeLangKey) {
+      const code = seedCodeForLangKey(freeLangKey);
+      if (code) return code;
+    }
     const counts = new Map<string, number>();
     for (const s of sets) counts.set(s.lang, (counts.get(s.lang) ?? 0) + 1);
     let best = 'es-ES';
@@ -521,7 +535,7 @@ export default function SetLibrary() {
       }
     }
     return best;
-  }, [sets]);
+  }, [sets, pro, freeLangKey]);
 
   // The hero's "Browse Library" button dispatches this event to open the
   // starter library modal (the hero lives above this component).
@@ -718,17 +732,18 @@ export default function SetLibrary() {
     router.push(`/player?id=${set.id}`);
   };
 
-  // Pro gate: the 1-Minute speed challenge is a paid feature. Free users are
-  // routed to the upgrade flow instead of the challenge modal.
-  const pro = isProPlan(settings.plan);
+  // The Free plan's included language (normalized key, account-scoped) — null
+  // until chosen (onboarding) or inferred (legacy migration). Pro/Lifetime
+  // ignore it. Provided by useLists so guests read the global settings record
+  // and signed-in users read their own uid record.
 
-  // Free-plan language gate for the + New Set editor: a Free user may only
-  // create/edit sets in languages they already have visible sets in (the
-  // single active language; settings.hiddenLangs already filters visibility).
-  // Pro/Lifetime users can use any language. Shared logic: lib/planGate.
+  // Free-plan language gate for the + New Set editor / subtitle import: with a
+  // selected language, exactly that one is allowed; legacy Free users keep
+  // their visible languages. Pro/Lifetime can use any. Shared logic:
+  // lib/planGate (single enforcement point — never bypass UI locks alone).
   const canUseLang = useCallback(
-    (code: string) => planGateCanUseLang(pro, sets, code),
-    [pro, sets],
+    (code: string) => planGateCanUseLang(pro, sets, code, freeLangKey),
+    [pro, sets, freeLangKey],
   );
 
   const openChallenge = (set: VocabSet) => {
@@ -798,6 +813,8 @@ export default function SetLibrary() {
         streak={streak}
         onStart={featured ? () => playSet(featured) : undefined}
       />
+
+      <FreeLanguageBar langKey={freeLangKey} pro={pro} onChange={() => setChangingLang(true)} />
 
       <FreePlanNotice sets={sets} pro={pro} />
 
@@ -1120,6 +1137,7 @@ export default function SetLibrary() {
         <SetEditor
           set={editing === 'new' ? null : editing}
           canUseLang={canUseLang}
+          defaultLang={freeLangKey ? (seedCodeForLangKey(freeLangKey) ?? undefined) : undefined}
           onClose={() => setEditing(null)}
           onSave={async (set) => {
             const saved = await saveSet(set);
@@ -1154,10 +1172,20 @@ export default function SetLibrary() {
         />
       )}
 
+      {changingLang && (
+        <ChangeFreeLanguageModal
+          currentKey={freeLangKey}
+          allSets={allSets}
+          saveSet={saveSet}
+          onClose={() => setChangingLang(false)}
+        />
+      )}
+
       {browse && (
         <StarterLibraryModal
           sets={sets}
           pro={pro}
+          freeLangKey={freeLangKey}
           onClose={() => setBrowse(false)}
           onImport={async (set) => {
             try {

@@ -51,8 +51,29 @@ export interface AppSettings extends LoopSettings {
    * Languages hidden by a Free-plan downgrade (normalized codes, e.g. "es").
    * Sets in these languages are filtered from the UI but NOT deleted — they
    * return automatically when the user upgrades again.
+   *
+   * Storage: for SIGNED-IN users these two entitlement fields actually live in
+   * a per-uid record (lib/accountPrefs — localStorage
+   * `audiorepeat-account-prefs:<uid>`), so one account's choice can never
+   * leak to another account on the same device. The fields here are the GUEST
+   * / legacy fallback (the device-global settings record): guests keep the
+   * pre-account behavior exactly, and a signed-in uid's first activation
+   * one-time adopts the global hiddenLangs (skipped for pending onboarding).
    */
   hiddenLangs: string[];
+  /**
+   * The Free user's chosen included language, stored as the normalized
+   * pack-level key (same convention as hiddenLangs / planGate.langLimitKey,
+   * e.g. "es", "mn"). null = not chosen yet — the legacy fallback rule in
+   * planGate.canUseLang applies until the user (or migration) picks one.
+   * Pro/Lifetime users are unaffected by this value.
+   *
+   * Storage: same account-scoping as hiddenLangs — per-uid record for
+   * signed-in users (lib/accountPrefs), global settings record for guests.
+   * Never shipped to production before this feature, so no production value
+   * ever needs migrating.
+   */
+  selectedFreeLang: string | null;
   cachedAudio: boolean; // prefer pre-generated cached audio (offline) when available
   /** Show contextual emoji hints on word cards. */
   showHints: boolean;
@@ -76,6 +97,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   planBilling: 'annual',
   planSource: null,
   hiddenLangs: [],
+  selectedFreeLang: null,
   cachedAudio: false,
   showHints: true,
   theme: 'neon',

@@ -1,0 +1,388 @@
+'use client';
+
+import { useCallback, useState, useSyncExternalStore } from 'react';
+import { useRouter } from 'next/navigation';
+import { flagFor } from '@/components/LanguageBadge';
+import { useAuth } from '@/hooks/useAuth';
+import { buildSeedSetForLang, hideAllExcept, seedCodeForLangKey } from '@/lib/freeLang';
+import { seedSetForLang } from '@/lib/seedSets';
+import { findLanguage } from '@/lib/languages';
+import {
+  ONBOARDING_GOALS,
+  ONBOARDING_LEVELS,
+  completeOnboarding,
+  getOnboardingPendingVersion,
+  readOnboardingRecord,
+  readOnboardingPending,
+  saveOnboardingRecord,
+  shouldShowOnboarding,
+  subscribeOnboardingPending,
+  type GoalId,
+  type OnboardingRecord,
+} from '@/lib/onboarding';
+import { getSettingsSnapshot, subscribeSettings } from '@/lib/settingsStore';
+import { updateAccountPrefs } from '@/lib/accountPrefs';
+import { isProPlan } from '@/lib/plans';
+import { getAllSets, putSet } from '@/lib/db/indexedDb';
+import type { CefrLevel } from '@/types/app';
+import FreeLanguagePicker from './FreeLanguagePicker';
+
+type Step = 1 | 2 | 3 | 4;
+
+const STEP_TITLES: Record<Step, string> = {
+  1: 'Choose language',
+  2: 'Choose starting level',
+  3: 'Choose learning goal',
+  4: "You're all set",
+};
+
+/**
+ * First-time onboarding: language → level → goal → ready. Mounted at the app
+ * level (layout) so it appears over ANY route for a fresh account.
+ *
+ * State is scoped per account in localStorage (lib/onboarding): the pending
+ * marker is set the moment the account is created (auth store), the flow saves
+ * a partial record after every step so a refresh resumes mid-flow, and
+ * completion writes a versioned record that permanently suppresses it. Existing
+ * accounts (no pending marker) never see it, and switching accounts re-mounts
+ * this component (keyed by uid) so no other user's state leaks in.
+ *
+ * On "Start practicing": the chosen language's starter set is seeded
+ * idempotently (never overwriting an existing set — a no-op for Pro installs,
+ * which already seeded everything) and the user lands in the player.
+ */
+export default function OnboardingFlow() {
+  const { status, user } = useAuth();
+  // Only signed-in accounts onboard (guests keep the old experience).
+  if (status !== 'signed-in' || !user) return null;
+  return <OnboardingFlowInner key={user.id} uid={user.id} />;
+}
+
+function OnboardingFlowInner({ uid }: { uid: string }) {
+  const router = useRouter();
+  // Plan-aware: Pro/Lifetime accounts see an unrestricted language step (no
+  // locks) and still record a preferred language. Settings hydrate asynchron
+  // (entitlement sync / IndexedDB), so the picker upgrades in place if needed.
+  const settings = useSyncExternalStore(subscribeSettings, getSettingsSnapshot, getSettingsSnapshot);
+  const pro = isProPlan(settings.plan);
+  // Visibility is DERIVED from the per-uid pending marker + completion record
+  // (not local state): the marker can land a beat after the auth listener
+  // mounts this flow on signup, and completion clears it — both cases re-read
+  // via the observable pending-version store, so a brand-new account always
+  // sees onboarding and an existing account never does.
+  useSyncExternalStore(subscribeOnboardingPending, getOnboardingPendingVersion, getOnboardingPendingVersion);
+  const record = readOnboardingRecord(uid);
+  const visible = shouldShowOnboarding(readOnboardingPending(uid), record);
+
+  const [step, setStep] = useState<Step>(() =>
+    record?.lang && record.level && record.goal ? 4 : record?.lang && record.level ? 3 : record?.lang ? 2 : 1,
+  );
+  const [lang, setLang] = useState<string | null>(record?.lang ?? null);
+  const [level, setLevel] = useState<CefrLevel | null>(record?.level ?? null);
+  const [goal, setGoal] = useState<GoalId | null>(record?.goal ?? null);
+  const [finishing, setFinishing] = useState(false);
+
+  const save = useCallback(
+    (patch: OnboardingRecord) => saveOnboardingRecord(uid, patch),
+    [uid],
+  );
+
+  const pickLang = useCallback(
+    (key: string) => {
+      setLang(key);
+      save({ lang: key });
+      setStep(2);
+    },
+    [save],
+  );
+
+  const pickLevel = useCallback(
+    (l: CefrLevel) => {
+      setLevel(l);
+      save({ level: l });
+      setStep(3);
+    },
+    [save],
+  );
+
+  const pickGoal = useCallback(
+    (g: GoalId) => {
+      setGoal(g);
+      save({ goal: g });
+      setStep(4);
+    },
+    [save],
+  );
+
+  const finish = useCallback(async () => {
+    if (!lang || !level || !goal || finishing) return;
+    setFinishing(true);
+    try {
+      // Seed the chosen language's starter content, idempotently: never touch
+      // a set that already exists (would erase mastery marks), and never seed
+      // the old Spanish default merely because it used to be the default.
+      const existing = await getAllSets();
+      const seed = seedSetForLang(lang);
+      if (seed && !existing.some((s) => s.id === seed.id)) {
+        const built = await buildSeedSetForLang(lang);
+        if (built) await putSet(built);
+      }
+      // Persist the choice through the ACCOUNT-scoped prefs store (normalized
+      // pack key — planGate.canUseLang enforces it for Free; harmless for Pro).
+      // Onboarding only runs for signed-in accounts, so this always writes the
+      // uid's own record — never another account's, and never the guest's
+      // global settings. For Free, every OTHER owned language (e.g. device-
+      // level sets inherited from an earlier guest session) is hidden — never
+      // deleted — so the library matches the one-language plan. Pro keeps
+      // everything visible.
+      const proNow = isProPlan(getSettingsSnapshot().plan);
+      updateAccountPrefs(
+        proNow
+          ? { selectedFreeLang: lang }
+          : { selectedFreeLang: lang, hiddenLangs: hideAllExcept(existing, lang) },
+      );
+      // Completing clears the pending marker (and bumps the observable store),
+      // which hides the overlay automatically — no local state flip needed.
+      completeOnboarding(uid, { lang, level, goal });
+      // Notify any mounted library so it picks up the new seed immediately.
+      window.dispatchEvent(new Event('audiorepeat:data-changed'));
+      router.push(seed ? `/player?id=${seed.id}` : '/dashboard');
+    } finally {
+      setFinishing(false);
+    }
+  }, [lang, level, goal, finishing, uid, router]);
+
+  if (!visible) return null;
+
+  const langLabel = lang ? findLanguage(seedCodeForLangKey(lang) ?? lang)?.label ?? lang : null;
+  const levelLabel = level ? ONBOARDING_LEVELS.find((o) => o.level === level)?.label : null;
+  const goalLabel = goal ? ONBOARDING_GOALS.find((o) => o.id === goal)?.label : null;
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex overflow-y-auto bg-night-950/95 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Welcome to Evoq"
+    >
+      {/* Ambient glows */}
+      <div className="pointer-events-none absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-neon-cyan/15 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 right-1/4 h-72 w-72 rounded-full bg-neon-violet/15 blur-3xl" />
+
+      <div className="glass animate-fade-up m-auto w-full max-w-lg rounded-3xl p-6 sm:p-8 shadow-[0_0_60px_rgba(34,228,255,0.12)]">
+        {/* Step indicator */}
+        <div className="flex items-center gap-2">
+          {([1, 2, 3, 4] as const).map((s) => (
+            <span
+              key={s}
+              className={`h-1.5 flex-1 rounded-full transition ${
+                s <= step ? 'bg-gradient-to-r from-neon-cyan to-neon-violet' : 'bg-white/10'
+              }`}
+              aria-hidden
+            />
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+          Step {step} of 4 · {STEP_TITLES[step]}
+        </p>
+
+        <div className="mt-5">
+          {step === 1 && <FreeLanguagePicker pro={pro} initialKey={lang} onContinue={pickLang} />}
+
+          {step === 2 && (
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-white">Choose your starting level</h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+                We&apos;ll seed your library with words that fit — you can change it anytime.
+              </p>
+              <div className="mt-5 space-y-2" role="radiogroup" aria-label="Starting level">
+                {ONBOARDING_LEVELS.map((o) => {
+                  const active = level === o.level;
+                  return (
+                    <button
+                      key={o.level}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => pickLevel(o.level)}
+                      className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition active:scale-[0.99] ${
+                        active
+                          ? 'border-neon-cyan/60 bg-neon-cyan/10 ring-1 ring-neon-cyan/50'
+                          : 'border-white/10 bg-night-800/60 hover:border-white/25'
+                      }`}
+                    >
+                      <span
+                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
+                          active ? 'bg-neon-cyan/20 text-neon-cyan' : 'bg-white/5 text-slate-300'
+                        }`}
+                      >
+                        {o.level}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-semibold text-white">{o.label}</span>
+                        <span className="block text-[11px] text-slate-500">{o.description}</span>
+                      </span>
+                      <span
+                        className={`ml-auto flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
+                          active ? 'border-neon-cyan bg-neon-cyan' : 'border-white/20'
+                        }`}
+                        aria-hidden
+                      >
+                        {active && (
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="h-3 w-3 text-night-950"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="m5 13 4 4L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-6 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
+                >
+                  ← Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => level && setStep(3)}
+                  disabled={!level}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-3 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div>
+              <h2 className="text-xl font-bold tracking-tight text-white">What brings you here?</h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+                Pick a learning goal — we&apos;ll use it to tailor your practice.
+              </p>
+              <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Learning goal">
+                {ONBOARDING_GOALS.map((o) => {
+                  const active = goal === o.id;
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      onClick={() => pickGoal(o.id)}
+                      className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left transition active:scale-[0.99] ${
+                        active
+                          ? 'border-neon-violet/60 bg-neon-violet/10 ring-1 ring-neon-violet/50'
+                          : 'border-white/10 bg-night-800/60 hover:border-white/25'
+                      }`}
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-sm font-semibold text-white">{o.label}</span>
+                        <span className="block text-[11px] text-slate-500">{o.description}</span>
+                      </span>
+                      <span
+                        className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
+                          active ? 'border-neon-violet bg-neon-violet' : 'border-white/20'
+                        }`}
+                        aria-hidden
+                      >
+                        {active && (
+                          <svg
+                            viewBox="0 0 24 24"
+                            className="h-3 w-3 text-night-950"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="m5 13 4 4L19 7" />
+                          </svg>
+                        )}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-6 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
+                >
+                  ← Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goal && setStep(4)}
+                  disabled={!goal}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-3 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Continue
+                </button>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="text-center">
+              <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-[#141433] to-night-950 text-3xl shadow-[0_0_30px_rgba(34,228,255,0.25)]">
+                <span aria-hidden>{lang ? flagFor(seedCodeForLangKey(lang) ?? lang) ?? '🌐' : '🌐'}</span>
+              </span>
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">You&apos;re all set!</h2>
+              <p className="mt-1.5 text-sm text-slate-400">Here&apos;s your practice plan:</p>
+
+              <dl className="mx-auto mt-5 max-w-sm space-y-2.5 text-left">
+                {[
+                  { label: 'Language', value: langLabel },
+                  { label: 'Starting level', value: levelLabel },
+                  { label: 'Goal', value: goalLabel },
+                ].map((row) => (
+                  <div
+                    key={row.label}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-night-900/50 px-4 py-2.5"
+                  >
+                    <dt className="text-xs uppercase tracking-wider text-slate-500">{row.label}</dt>
+                    <dd className="text-sm font-semibold text-white">{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
+
+              <button
+                type="button"
+                onClick={() => void finish()}
+                disabled={finishing}
+                className="mt-7 w-full rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-3.5 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {finishing ? (
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-night-950/30 border-t-night-950 align-middle" />
+                ) : (
+                  'Start practicing'
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep(3)}
+                className="mt-3 w-full rounded-xl border border-white/10 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
+              >
+                ← Back
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
