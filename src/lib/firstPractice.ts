@@ -110,6 +110,17 @@ export function recommendFirstPractice(
 }
 
 /**
+ * The canonical set id a recommendation points at (topic-/bank-full-/seed-
+ * card conventions). Used by analytics and by findRecommendedSet's fallback
+ * id, so reporting and idempotency can never drift from the recommendation.
+ */
+export function recommendationIdOf(rec: FirstPracticeRecommendation): string {
+  if (rec.type === 'topic') return `topic-${rec.topicId}-${rec.lang}`;
+  if (rec.type === 'cefr') return `bank-full-${rec.lang}-${rec.level}`;
+  return seedSetForLang(rec.lang)?.id ?? '';
+}
+
+/**
  * An existing set that already covers this recommendation (idempotency): a
  * hydrated seed card for the same pack+level, a full-level bank card, or the
  * deterministic topic card. Start must reuse it instead of duplicating.

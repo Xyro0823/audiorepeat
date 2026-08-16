@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { flagFor } from '@/components/LanguageBadge';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,8 +8,10 @@ import {
   buildRecommendedSet,
   findRecommendedSet,
   recommendFirstPractice,
+  recommendationIdOf,
   type FirstPracticeRecommendation,
 } from '@/lib/firstPractice';
+import { fireOnboardingEvent } from '@/lib/analytics/client';
 import { buildSeedSetForLang, hideAllExcept, seedCodeForLangKey } from '@/lib/freeLang';
 import { seedSetForLang } from '@/lib/seedSets';
 import { findLanguage } from '@/lib/languages';
@@ -128,6 +130,29 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
       ? recommendFirstPractice({ lang, level, goal, availableBanks: null, availableTopics: null })
       : null);
 
+  // ready_viewed fires once per arrival at the Ready step — never on rerenders
+  // (ref guard) and never on a refresh that RESUMES straight onto Ready
+  // (mountedAtReady), so the funnel isn't inflated by reloads.
+  const mountedAtReady = useRef(step === 4);
+  const readyFiredRef = useRef(false);
+
+  useEffect(() => {
+    if (step !== 4) {
+      readyFiredRef.current = false;
+      return;
+    }
+    if (mountedAtReady.current) return;
+    if (!recommendation || readyFiredRef.current) return;
+    readyFiredRef.current = true;
+    fireOnboardingEvent('onboarding_ready_viewed', {
+      language: lang ?? '',
+      level: level ?? 'A1',
+      goal: goal ?? 'general',
+      recommendationType: recommendation.type,
+      recommendationId: recommendationIdOf(recommendation),
+    });
+  }, [step, recommendation, lang, level, goal]);
+
   const save = useCallback(
     (patch: OnboardingRecord) => saveOnboardingRecord(uid, patch),
     [uid],
@@ -138,6 +163,8 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
       setLang(key);
       save({ lang: key });
       setStep(2);
+      // User-action events — one per click, never inflated by rerenders.
+      fireOnboardingEvent('onboarding_language_selected', { language: key });
     },
     [save],
   );
@@ -147,8 +174,11 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
       setLevel(l);
       save({ level: l });
       setStep(3);
+      if (lang) {
+        fireOnboardingEvent('onboarding_level_selected', { language: lang, level: l });
+      }
     },
-    [save],
+    [save, lang],
   );
 
   const pickGoal = useCallback(
@@ -156,8 +186,11 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
       setGoal(g);
       save({ goal: g });
       setStep(4);
+      if (lang && level) {
+        fireOnboardingEvent('onboarding_goal_selected', { language: lang, level, goal: g });
+      }
     },
-    [save],
+    [save, lang, level],
   );
 
   const finish = useCallback(
@@ -180,14 +213,13 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
         // Recommended first session: reuse an existing equivalent set when one
         // already exists (never duplicate), otherwise build it from the bank or
         // topic data. Any failure falls back to the starter seed — the start
-        // action never dead-ends.
+        // action never dead-ends. The recommendation is deterministic and
+        // computed once so the analytics events always match what was opened.
         let openId: string | null = null;
+        const rec =
+          shownRecommendation ??
+          recommendFirstPractice({ lang, level, goal, availableBanks: null, availableTopics: null });
         if (start) {
-          // The guard above guarantees lang/level/goal are set, so the fallback
-          // recommendation is always non-null here.
-          const rec =
-            shownRecommendation ??
-            recommendFirstPractice({ lang, level, goal, availableBanks: null, availableTopics: null });
           if (rec.type !== 'seed') {
             const reuse = findRecommendedSet(current, rec);
             if (reuse) {
@@ -204,6 +236,32 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
           // to the starter seed. "Go to dashboard" (start=false) skips all of
           // this and lands on the dashboard.
           openId ??= seed?.id ?? null;
+          fireOnboardingEvent('onboarding_recommended_practice_started', {
+            language: lang,
+            level,
+            goal,
+            recommendationType: rec.type,
+            recommendationId: recommendationIdOf(rec),
+          });
+          fireOnboardingEvent('onboarding_completed', {
+            language: lang,
+            level,
+            goal,
+            completionAction: 'practice',
+          });
+        } else {
+          fireOnboardingEvent('onboarding_dashboard_skipped', {
+            language: lang,
+            level,
+            goal,
+            recommendationType: rec.type,
+          });
+          fireOnboardingEvent('onboarding_completed', {
+            language: lang,
+            level,
+            goal,
+            completionAction: 'dashboard',
+          });
         }
 
         // Persist the choice through the ACCOUNT-scoped prefs store (normalized

@@ -1,5 +1,6 @@
 import { CEFR_LEVELS } from '@/types/app';
 import type { CefrLevel } from '@/types/app';
+import { fireOnboardingEventOnce } from '@/lib/analytics/client';
 
 /**
  * First-time onboarding (language → level → goal → ready).
@@ -123,6 +124,12 @@ export function markOnboardingPending(uid: string): void {
     /* storage unavailable — onboarding just won't auto-show */
   }
   bumpPendingVersion();
+  // Analytics: "onboarding started" is anchored to the marker write — the
+  // exact moment a brand-new account enters onboarding. The marker is written
+  // once per account (at signup; never on reload/resume), so this can't be
+  // inflated by rerenders or refreshes. The uid-keyed dedupe covers the
+  // signup + auth-listener double-write for the same account.
+  fireOnboardingEventOnce(`started:${uid}`, 'onboarding_started', {});
 }
 
 export function clearOnboardingPending(uid: string): void {

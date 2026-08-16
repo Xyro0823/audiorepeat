@@ -277,6 +277,9 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
               <Link role="menuitem" href="/admin/diagnostics" className={itemClass} onClick={close}>
                 <span aria-hidden>🩺</span> Language Diagnostics
               </Link>
+              <Link role="menuitem" href="/admin/analytics" className={itemClass} onClick={close}>
+                <span aria-hidden>📈</span> Onboarding Analytics
+              </Link>
             </>
           )}
 
