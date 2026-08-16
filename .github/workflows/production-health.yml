@@ -1,20 +1,33 @@
 name: production-health
 
-# Post-deploy smoke check against the deployed Production site. Runs after
-# every push to main; the script's --wait-deploy flag polls the live homepage
-# (bounded: 4-minute ceiling) so it does not race the asynchronous Vercel
-# deployment. Code correctness is covered by the existing CI workflow — this
-# job only verifies that Production actually serves the expected responses.
+# Post-deploy smoke check against the deployed Production site. Runs:
+#   - after every push to main (the --wait-deploy flag polls the live homepage,
+#     bounded at 4 minutes, so it does not race the async Vercel deployment)
+#   - on a schedule (every 6 hours, UTC) to catch degradation between deploys
+#   - manually via workflow_dispatch from the Actions UI
 #
-# The check is unauthenticated and read-only: it asserts public pages/data
-# are reachable and that admin/payment APIs reject anonymous calls. It never
-# signs in, writes data, or sends real webhook/checkout payloads.
+# Scheduled/manual runs reuse the exact same bounded wait — simpler, and the
+# ceiling keeps every run finite. Code correctness is covered by the existing
+# CI workflow; this job only verifies that Production serves the expected
+# responses. The check is unauthenticated and read-only: it asserts public
+# pages/data are reachable and that admin/payment APIs reject anonymous calls.
+# It never signs in, writes data, or sends real webhook/checkout payloads.
 on:
   push:
     branches: [main]
+  schedule:
+    # Every 6 hours at minute 0: 00:00 / 06:00 / 12:00 / 18:00 UTC.
+    - cron: '0 0,6,12,18 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+# Read-only smoke checks are idempotent, so a newer run supersedes an older
+# one on the same ref instead of queuing duplicates.
+concurrency:
+  group: production-health-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   health:
