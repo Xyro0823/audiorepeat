@@ -211,8 +211,9 @@ export default function AdminEntitlements() {
 
   if (status === 'loading') {
     return (
-      <main className="flex flex-1 items-center justify-center">
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-5 py-10">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
+        <AdminBackNav />
       </main>
     );
   }
@@ -234,8 +235,9 @@ export default function AdminEntitlements() {
 
   if (adminState === 'checking') {
     return (
-      <main className="flex flex-1 items-center justify-center">
+      <main className="flex flex-1 flex-col items-center justify-center gap-4 px-5 py-10">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
+        <AdminBackNav />
       </main>
     );
   }
