@@ -44,7 +44,7 @@ export default function NewSetButton({ onNew, onImport }: Props) {
         aria-haspopup="menu"
         aria-expanded={open}
         title="Create a new set or import one"
-        className="btn-primary flex h-9 items-center gap-1 rounded-lg px-4 text-[13px] font-semibold text-white"
+        className="btn-primary-toolbar flex h-10 items-center gap-1 rounded-lg px-4 text-[13px] font-semibold text-white"
       >
         <span className="text-base leading-none">+</span> New
         <svg
@@ -65,7 +65,7 @@ export default function NewSetButton({ onNew, onImport }: Props) {
         <div
           role="menu"
           aria-label="New set"
-          className="glass animate-fade-up absolute right-0 top-full z-[100] mt-2 w-48 rounded-2xl p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+          className="dropdown-panel animate-fade-up absolute right-0 top-full z-[100] mt-2 w-48 rounded-2xl p-1.5"
         >
           <button role="menuitem" className={itemClass} onClick={() => { close(); onNew(); }}>
             <span aria-hidden>✏️</span> New set
