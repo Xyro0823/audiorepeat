@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import AuthScreen from './AuthScreen';
 import DowngradeModal from '@/components/checkout/DowngradeModal';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
@@ -59,6 +59,11 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [menuError, setMenuError] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  // Flip/clamp state — keeps the open menu inside the viewport: opens upward
+  // when there's no room below (e.g. the dashboard hero pushes the header to
+  // the fold) and clamps horizontally so it never hangs off an edge.
+  const [pos, setPos] = useState<{ up: boolean; left: number; maxH: number } | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -76,6 +81,36 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
+
+  // Runs before paint, so the panel never flashes in the wrong spot. Height is
+  // capped to the space available in the open direction so short screens keep
+  // the whole menu reachable via its own scrollbar.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const menu = menuRef.current;
+    const btn = rootRef.current?.querySelector<HTMLElement>('button[aria-haspopup]');
+    if (!menu || !btn) return;
+    const b = btn.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const spaceBelow = vh - b.bottom;
+    const spaceAbove = b.top;
+    const up = spaceBelow < 320 && spaceAbove >= 200;
+    const maxH = Math.max(180, Math.floor((up ? spaceAbove : spaceBelow) - 8));
+    // Keep the panel inside the viewport horizontally. Preserve the current
+    // right-aligned feel when it fits; clamp only when it would hang off.
+    // `left` is applied in the root div's coordinate space (it is the
+    // containing block), so offset by its viewport position.
+    const rootRect = rootRef.current?.getBoundingClientRect();
+    if (!rootRect) return;
+    const w = menu.offsetWidth;
+    const rightAlignedLeft = Math.round(b.right - w);
+    const viewportLeft =
+      rightAlignedLeft >= 8 && rightAlignedLeft <= vw - 8
+        ? rightAlignedLeft
+        : Math.min(Math.max(Math.round(b.left), 8), Math.max(8, vw - w - 8));
+    setPos({ up, left: viewportLeft - rootRect.left, maxH });
+  }, [open]);
 
   if (status === 'loading') return null;
 
@@ -174,9 +209,13 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
 
       {open && (
         <div
+          ref={menuRef}
           role="menu"
           aria-label="Account & tools"
-          className="glass animate-fade-up absolute right-0 top-full z-[100] mt-2 w-60 rounded-2xl p-2 shadow-[0_20px_60px_rgba(3,2,12,0.7)]"
+          className={`dropdown-panel animate-fade-up absolute right-0 z-[100] w-60 overflow-y-auto overscroll-contain rounded-2xl p-2 ${
+            pos?.up ? 'bottom-full mb-2' : 'top-full mt-2'
+          }`}
+          style={pos ? { maxHeight: pos.maxH, left: pos.left, right: 'auto' } : undefined}
         >
           {signedIn && (
             <>
