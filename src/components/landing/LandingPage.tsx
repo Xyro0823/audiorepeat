@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { useAuth } from "@/hooks/useAuth";
-import { useLanguageCount } from "@/hooks/useLanguageCount";
+import { SUPPORTED_LANGUAGE_COUNT } from "@/lib/freeLang";
 import { landingAuthAction } from "@/lib/adminNav";
 import { PLAN_ORDER, PLANS } from "@/lib/plans";
 import NewsletterForm from "./NewsletterForm";
@@ -268,7 +268,7 @@ export default function LandingPage() {
   const { status } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
   const landingAction = landingAuthAction(status);
-  const langCount = useLanguageCount();
+  const langCount = SUPPORTED_LANGUAGE_COUNT;
   const heroRef = useRef<HTMLDivElement | null>(null);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);

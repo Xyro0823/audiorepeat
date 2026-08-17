@@ -3,13 +3,13 @@
 import { useEffect, useRef } from "react";
 import { ArrowUpRight } from "lucide-react";
 import Hls from "hls.js";
-import { useLanguageCount } from "@/hooks/useLanguageCount";
+import { SUPPORTED_LANGUAGE_COUNT } from "@/lib/freeLang";
 
 const MUX_SRC = "https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8";
 
 const Hero = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const langCount = useLanguageCount();
+  const langCount = SUPPORTED_LANGUAGE_COUNT;
 
   useEffect(() => {
     const video = videoRef.current;

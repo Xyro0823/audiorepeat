@@ -53,6 +53,20 @@ export const FREE_LANG_OPTIONS: readonly FreeLangOption[] = (() => {
   return options;
 })();
 
+/**
+ * Canonical user-facing "supported languages" count. Use this — and only
+ * this — wherever customer-facing copy states how many languages the product
+ * supports:
+ *
+ *   - NOT LANGUAGES.length (src/lib/languages.ts): that is the BCP-47 TTS
+ *     voice-matching catalog (~254 entries incl. regional variants like two
+ *     dozen Arabic dialects) and must stay a voice source, not a product
+ *     count.
+ *   - NOT the word-bank manifest size: only 13 languages ship full A1–C2
+ *     packs, while the app can seed content for all 29 supported languages.
+ */
+export const SUPPORTED_LANGUAGE_COUNT = FREE_LANG_OPTIONS.length;
+
 export interface FreeLangResolution {
   /** The language to record as selected, or null to keep legacy behavior. */
   key: string | null;

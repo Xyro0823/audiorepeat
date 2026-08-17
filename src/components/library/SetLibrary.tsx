@@ -10,10 +10,10 @@ import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useLists } from '@/hooks/useLists';
 import { useLibraryMeta } from '@/hooks/useLibraryMeta';
 import { formatDuration } from '@/lib/format';
-import { findLanguage, LANGUAGES } from '@/lib/languages';
+import { findLanguage } from '@/lib/languages';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit } from '@/lib/tts/speechSynthesisEngine';
-import { seedCodeForLangKey } from '@/lib/freeLang';
+import { FREE_LANG_OPTIONS, seedCodeForLangKey } from '@/lib/freeLang';
 import { isProPlan } from '@/lib/plans';
 import { canUseLang as planGateCanUseLang } from '@/lib/planGate';
 import { CEFR_META } from '@/lib/starterSets';
@@ -40,8 +40,8 @@ import ChangeFreeLanguageModal from '@/components/onboarding/ChangeFreeLanguageM
 
 function Logo() {
   return (
-    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04]">
-      <svg viewBox="0 0 24 24" className="h-4 w-4 text-neon-violet" fill="currentColor">
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.05]">
+      <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-neon-violet" fill="currentColor">
         <path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z" />
       </svg>
     </div>
@@ -758,18 +758,20 @@ export default function SetLibrary() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-7xl flex-1 px-5 pb-20 pt-8">
-      {/* Sleek floating toolbar — z-50 + the fade-up transform lift its
+    <main className="mx-auto w-full max-w-7xl flex-1 px-5 pb-20 pt-5">
+      {/* Floating navigation dock — z-50 + the fade-up transform lift its
           stacking context above the hero banner so dropdown popovers always
-          render on top. The container is kept intentionally light (subtle
-          border + blur, no heavy fill) so the controls read as one row and
-          the + New CTA owns the visual weight. */}
-      <header className="animate-fade-up relative z-50 mb-6 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] px-3 py-2.5 backdrop-blur-xl sm:mb-8 sm:gap-x-4 sm:gap-y-3 sm:px-4 sm:py-3">
+          render on top. The .nav-dock surface is a restrained translucent
+          panel (subtle border + blur + soft shadow) that bridges the hero and
+          the dashboard grid; the controls stay quiet so + New owns the
+          visual weight. Width matches the dashboard container so the dock's
+          edges align with the content grid below. */}
+      <header className="animate-fade-up nav-dock relative z-50 mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[20px] px-3 py-2.5 sm:mb-6 sm:gap-x-4 sm:px-5 sm:py-3">
         <Logo />
-        <div className="mr-auto">
-          <h1 className="text-[15px] font-semibold tracking-tight text-white">AudioRepeat</h1>
-          <p className="hidden text-[11px] text-slate-500 sm:block">
-            {LANGUAGES.length} languages · hands-free drilling
+        <div className="mr-auto min-w-0">
+          <h1 className="text-[15px] font-semibold leading-tight tracking-tight text-white">AudioRepeat</h1>
+          <p className="hidden text-[11px] leading-snug text-slate-500 sm:block">
+            {FREE_LANG_OPTIONS.length} languages · hands-free practice
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

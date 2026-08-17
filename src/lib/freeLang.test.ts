@@ -5,8 +5,12 @@ import {
   hideAllExcept,
   resolveFreeLanguage,
   seedCodeForLangKey,
+  SUPPORTED_LANGUAGE_COUNT,
 } from '@/lib/freeLang';
 import { seedSetForLang } from '@/lib/seedSets';
+import { LANGUAGES } from '@/lib/languages';
+import { PLANS } from '@/lib/plans';
+import vocabManifest from '../../public/data/vocab/manifest.json';
 import type { VocabSet } from '@/types/app';
 
 /** Minimal set stub — only `lang` matters here. */
@@ -57,6 +61,63 @@ describe('FREE_LANG_OPTIONS', () => {
     const keys = FREE_LANG_OPTIONS.map((o) => o.key);
     expect(keys.length).toBe(29);
     expect(new Set(keys).size).toBe(29);
+  });
+
+  it('is the count the dashboard dock must display — not the raw TTS catalog', () => {
+    // Regression: the signed-in dashboard header previously rendered
+    // `LANGUAGES.length`, the BCP-47 TTS catalog of every official language
+    // plus regional variants (~254 entries, e.g. two dozen Arabic dialects).
+    // The user-facing supported-language count is FREE_LANG_OPTIONS (29).
+    expect(FREE_LANG_OPTIONS.length).toBe(29);
+    expect(LANGUAGES.length).toBeGreaterThan(FREE_LANG_OPTIONS.length);
+    // Every supported option still resolves to a real catalog entry for its
+    // friendly label (mirrors findLanguage: exact code, else base tag) — the
+    // two sources stay linked, not disjoint.
+    for (const o of FREE_LANG_OPTIONS) {
+      const base = o.code.split('-')[0];
+      expect(
+        LANGUAGES.some(
+          (l) => l.code.toLowerCase() === o.code.toLowerCase() || l.code.toLowerCase() === base,
+        ),
+        `label source for ${o.code}`,
+      ).toBe(true);
+    }
+  });
+});
+
+describe('SUPPORTED_LANGUAGE_COUNT — canonical customer-facing count', () => {
+  it('is exactly the FREE_LANG_OPTIONS product set (29)', () => {
+    expect(SUPPORTED_LANGUAGE_COUNT).toBe(FREE_LANG_OPTIONS.length);
+    expect(SUPPORTED_LANGUAGE_COUNT).toBe(29);
+  });
+
+  it('is never the raw BCP-47 TTS voice catalog size', () => {
+    // Regression: the dock once rendered LANGUAGES.length (~254 entries
+    // incl. regional variants). The voice catalog is a TTS source, not a
+    // product count — it must always be strictly larger.
+    expect(LANGUAGES.length).toBeGreaterThan(SUPPORTED_LANGUAGE_COUNT);
+    expect(LANGUAGES.length).not.toBe(SUPPORTED_LANGUAGE_COUNT);
+  });
+
+  it('is not the word-bank manifest size (13 full-pack languages)', () => {
+    // The manifest only advertises languages with full A1–C2 packs; the app
+    // can seed content for all 29. Marketing copy must show the product
+    // count, not the smaller bank subset.
+    const bankLangs = Object.keys(vocabManifest);
+    expect(bankLangs.length).toBeLessThan(SUPPORTED_LANGUAGE_COUNT);
+    expect(bankLangs.length).toBe(13);
+    // ...but every full-pack language is a supported product language.
+    for (const lang of bankLangs) {
+      expect(
+        FREE_LANG_OPTIONS.some((o) => o.key === lang),
+        `full-pack language ${lang} must be supported`,
+      ).toBe(true);
+    }
+  });
+
+  it('is the count the Pro plan advertises on the landing page', () => {
+    const proFeatures = PLANS.pro.features(SUPPORTED_LANGUAGE_COUNT);
+    expect(proFeatures).toContain(`All ${SUPPORTED_LANGUAGE_COUNT} languages`);
   });
 });
 
