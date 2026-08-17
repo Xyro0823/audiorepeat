@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { hideAllExcept, buildSeedSetForLang } from '@/lib/freeLang';
+import { FREE_LANG_LIMIT } from '@/lib/plans';
 import { seedSetForLang } from '@/lib/seedSets';
 import { getAllSets } from '@/lib/db/indexedDb';
 import { updateAccountPrefs } from '@/lib/accountPrefs';
@@ -89,7 +90,9 @@ export default function ChangeFreeLanguageModal({ currentKey, allSets, saveSet, 
             initialKey={currentKey}
             onContinue={(key) => void confirm(key)}
             title="Choose your free language"
-            subtitle="Your Free plan includes 1 language. Pick the one you want to practice — switching hides your other sets (they're kept, never deleted)."
+            subtitle={`Your Free plan includes ${FREE_LANG_LIMIT} ${
+              FREE_LANG_LIMIT === 1 ? 'language' : 'languages'
+            }. Pick the one you want to practice — switching hides your other sets (they're kept, never deleted).`}
           />
         </div>
         {busy && <p className="mt-3 text-center text-xs text-slate-500">Setting up your language…</p>}

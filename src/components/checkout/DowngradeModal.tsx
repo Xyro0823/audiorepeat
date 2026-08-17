@@ -23,8 +23,9 @@ interface LangEntry {
 }
 
 /**
- * Downgrade-to-Free flow with language choice. Free includes 1 active
- * language; the user picks which one to keep and every other language is
+ * Downgrade-to-Free flow with language choice. Free includes one active
+ * language (FREE_LANG_LIMIT); the user picks which one to keep and every
+ * other language is
  * HIDDEN (not deleted — hidden sets return automatically on upgrade). This is
  * the explicit sign-off path for the "retroactive enforcement" caveat: unlike
  * a fresh install (which only seeds the first language), a downgrade has to
