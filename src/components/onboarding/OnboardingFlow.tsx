@@ -302,7 +302,7 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
       className="fixed inset-0 z-[100] flex overflow-y-auto bg-night-950/95 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Welcome to Evoq"
+      aria-label="Welcome to AudioRepeat"
     >
       {/* Ambient glows */}
       <div className="pointer-events-none absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-neon-cyan/15 blur-3xl" />

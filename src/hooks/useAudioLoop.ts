@@ -83,7 +83,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
   const statusRef = useRef<PlaybackStatus>('idle');
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const onWordChangeRef = useRef(onWordChange);
-  const mediaMetaRef = useRef({ album: 'Evoq', artist: '' });
+  const mediaMetaRef = useRef({ album: 'AudioRepeat', artist: '' });
   const onPlayRequestRef = useRef<() => void>(() => {});
   const schedulerRef = useRef<Scheduler>({ speakCurrent: () => {}, scheduleNext: () => {} });
 
@@ -94,7 +94,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
     onWordChangeRef.current = onWordChange;
   }, [onWordChange]);
   useEffect(() => {
-    mediaMetaRef.current = { album: album ?? 'Evoq', artist: artist ?? '' };
+    mediaMetaRef.current = { album: album ?? 'AudioRepeat', artist: artist ?? '' };
   }, [album, artist]);
   useEffect(() => {
     if (engine && engineRef.current !== engine) {

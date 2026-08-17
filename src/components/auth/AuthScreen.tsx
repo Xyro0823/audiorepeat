@@ -144,7 +144,7 @@ export default function AuthScreen({ mode = 'gate', onClose }: Props) {
       <div className="glass animate-fade-up m-auto w-full max-w-md rounded-3xl p-8 shadow-[0_0_60px_rgba(34,228,255,0.12)]">
         <div className="flex flex-col items-center text-center">
           <Logo size="lg" />
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-white">Evoq</h1>
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-white">AudioRepeat</h1>
           <p className="mt-1 text-sm text-slate-400">
             {mode === 'gate'
               ? 'Sign in to keep your streaks and progress, or start fresh as a guest.'

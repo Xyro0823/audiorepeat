@@ -155,7 +155,7 @@ export default function LeaderboardModal({ onClose }: Props) {
         </div>
 
         <p className="mt-4 text-[11px] leading-relaxed text-slate-600">
-          Evoq is offline-first with no server, so this board ranks your own daily
+          AudioRepeat is offline-first with no server, so this board ranks your own daily
           practice by language. The layout is ready for a friends/global feed if a backend is
           ever added.
         </p>

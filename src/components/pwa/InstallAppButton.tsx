@@ -63,7 +63,7 @@ export default function InstallAppButton() {
     <div className="relative">
       <button
         onClick={onClick}
-        title="Install Evoq as an app"
+        title="Install AudioRepeat as an app"
         aria-label="Install app"
         className="btn-clean flex h-9 items-center gap-1.5 rounded-lg px-3 text-xs font-medium text-slate-300"
       >
@@ -88,7 +88,7 @@ export default function InstallAppButton() {
           <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
             Tap <span className="font-semibold text-slate-200">Share</span> in Safari, then{' '}
             <span className="font-semibold text-slate-200">Add to Home Screen</span> to install
-            Evoq like an app.
+            AudioRepeat like an app.
           </p>
         </div>
       )}

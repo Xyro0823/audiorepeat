@@ -112,7 +112,7 @@ async function scheduleReminder(data) {
   const timestamp = Number(data.timestamp);
   if (!Number.isFinite(timestamp)) return;
   const title = typeof data.title === "string" ? data.title : "Time to practice!";
-  const body = typeof data.body === "string" ? data.body : "A quick Evoq session is waiting.";
+  const body = typeof data.body === "string" ? data.body : "A quick AudioRepeat session is waiting.";
   const tag = typeof data.tag === "string" ? data.tag : "daily-reminder";
 
   // Clear any previously scheduled fallback timer.

@@ -102,8 +102,9 @@ export default function CheckoutFlow({
               Choose your plan
             </h1>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-400">
-              Pick a tier to see the summary — payments launch soon, so nothing
-              charges today.
+              {paddleEnabled
+                ? 'Pick a tier to see the summary — you\u2019ll pay securely with Paddle on the next step.'
+                : 'Pick a tier to see the summary — payments launch soon, so nothing charges today.'}
             </p>
 
             {/* monthly / annual toggle (only affects Pro pricing) */}
@@ -262,8 +263,10 @@ export default function CheckoutFlow({
                 <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
                   You&apos;ve selected the <span className="font-semibold text-white">{plan.name}</span>{' '}
                   plan (${price}
-                  {note}). We need an account to attach it to once payments launch — or keep
-                  using everything free right now.
+                  {note}).{' '}
+                  {paddleEnabled
+                    ? 'We need an account to attach your purchase to — or continue with free access.'
+                    : 'We need an account to attach it to once payments launch — or keep using everything free right now.'}
                 </p>
                 <div className="mt-6 flex flex-col gap-2.5">
                   <button

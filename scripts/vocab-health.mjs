@@ -32,7 +32,7 @@ const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
  */
 export function renderSummary(report, opts = {}) {
   const L = [];
-  L.push(`Evoq vocabulary health: ${report.status.toUpperCase()}`);
+  L.push(`AudioRepeat vocabulary health: ${report.status.toUpperCase()}`);
   L.push('');
   L.push(`Packs: ${report.counts.packLanguages} languages | ${report.counts.bankFiles} bank files | ${report.counts.totalVocabPairs.toLocaleString()} vocab pairs`);
   L.push(`Topics: ${report.counts.topics} topics | ${report.counts.topicLanguages} languages | ${report.counts.totalTopicPairs.toLocaleString()} topic pairs`);

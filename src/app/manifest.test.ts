@@ -2,16 +2,16 @@ import { describe, expect, it } from 'vitest';
 import manifest from './manifest';
 
 describe('PWA manifest branding', () => {
-  it('exposes Evoq as the app name and short name', () => {
+  it('exposes AudioRepeat as the app name and short name', () => {
     const m = manifest();
-    expect(m.name).toContain('Evoq');
-    expect(m.short_name).toBe('Evoq');
+    expect(m.name).toContain('AudioRepeat');
+    expect(m.short_name).toBe('AudioRepeat');
   });
 
-  it('does not expose the legacy AudioRepeat brand', () => {
+  it('does not expose the legacy Evoq brand', () => {
     const m = manifest();
-    expect(m.name).not.toContain('AudioRepeat');
-    expect(m.short_name).not.toContain('AudioRepeat');
+    expect(m.name).not.toContain('Evoq');
+    expect(m.short_name).not.toContain('Evoq');
   });
 
   it('keeps the install surface intact', () => {
