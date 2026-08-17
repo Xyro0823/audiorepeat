@@ -8,6 +8,8 @@
  * (Stripe IDs etc.) is intentionally NOT in this file.
  */
 
+import { SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
+
 export type PlanId = 'basic' | 'pro' | 'lifetime';
 
 export const PLAN_ORDER: PlanId[] = ['basic', 'pro', 'lifetime'];
@@ -23,6 +25,16 @@ export function isProPlan(plan: PlanId): boolean {
 
 /** Number of active languages included with the Free plan. */
 export const FREE_LANG_LIMIT = 1;
+
+/**
+ * Languages a Free-plan user unlocks by upgrading to Pro/Lifetime — the
+ * entitlement gap between the Free plan's single active language and the
+ * full supported-language catalog. This is a plan entitlement, derived from
+ * canonical constants, never from how many seeded sets/cards happen to exist
+ * locally (a local install may carry cards for languages the plan still
+ * gates).
+ */
+export const LANGUAGES_UNLOCKED_BY_PRO = SUPPORTED_LANGUAGE_COUNT - FREE_LANG_LIMIT;
 
 /** Short badge text + full label for surfacing the plan in the UI. */
 export const PLAN_BADGE: Record<PlanId, { short: string; label: string }> = {

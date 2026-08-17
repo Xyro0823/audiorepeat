@@ -820,7 +820,7 @@ export default function SetLibrary() {
 
       <FreeLanguageBar langKey={freeLangKey} pro={pro} onChange={() => setChangingLang(true)} />
 
-      <FreePlanNotice sets={sets} pro={pro} />
+      <FreePlanNotice pro={pro} />
 
       <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[300px_minmax(0,1fr)]">
         {/* ------------------------------------------------------------ */}

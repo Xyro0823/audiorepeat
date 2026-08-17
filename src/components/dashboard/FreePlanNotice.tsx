@@ -1,25 +1,27 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo, useState } from 'react';
-import { SEED_SETS } from '@/lib/seedSets';
-import type { VocabSet } from '@/types/app';
+import { useState } from 'react';
+import { FREE_LANG_LIMIT, LANGUAGES_UNLOCKED_BY_PRO } from '@/lib/plans';
+import { SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
 
 const DISMISS_KEY = 'audiorepeat-free-plan-notice-dismissed';
 
 interface Props {
-  sets: VocabSet[];
   /** Pro gate — hidden entirely for Pro/Lifetime users. */
   pro: boolean;
 }
 
 /**
  * Small, dismissible upgrade notice for the Free plan's 1-language limit.
- * Only shows when the user's library is actually missing seeded languages
- * (i.e. a fresh Free install) — existing installs that already have every
- * language see nothing. The link opens the /checkout upgrade flow.
+ *
+ * The count is an entitlement, not a card census: upgrading from Free
+ * (FREE_LANG_LIMIT active language) to Pro unlocks every supported language
+ * (SUPPORTED_LANGUAGE_COUNT), so it is always derived from those canonical
+ * constants — never from how many seeded sets/cards happen to exist locally.
+ * Hidden entirely for Pro/Lifetime users.
  */
-export default function FreePlanNotice({ sets, pro }: Props) {
+export default function FreePlanNotice({ pro }: Props) {
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
@@ -29,12 +31,8 @@ export default function FreePlanNotice({ sets, pro }: Props) {
     }
   });
 
-  const missing = useMemo(() => {
-    if (pro) return 0;
-    const owned = new Set(sets.map((s) => s.lang));
-    return SEED_SETS.filter((s) => !owned.has(s.lang)).length;
-  }, [sets, pro]);
-  const totalLangs = useMemo(() => new Set(SEED_SETS.map((s) => s.lang)).size, []);
+  const missing = pro ? 0 : LANGUAGES_UNLOCKED_BY_PRO;
+  const totalLangs = SUPPORTED_LANGUAGE_COUNT;
 
   if (dismissed || missing === 0) return null;
 
@@ -44,7 +42,8 @@ export default function FreePlanNotice({ sets, pro }: Props) {
         <span className="mr-1.5" aria-hidden>
           ⭐
         </span>
-        Your <span className="font-semibold text-neon-amber">Free</span> plan includes 1 language —{' '}
+        Your <span className="font-semibold text-neon-amber">Free</span> plan includes {FREE_LANG_LIMIT}{' '}
+        {FREE_LANG_LIMIT === 1 ? 'language' : 'languages'} —{' '}
         {missing === 1 ? '1 more language is' : `${missing} more languages are`} ready to unlock.
         <span className="text-slate-500"> {totalLangs} total.</span>
       </p>
