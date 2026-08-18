@@ -16,10 +16,12 @@ interface Props {
  */
 export default function WelcomeHero({ wordsToday, msToday, streak, onStart }: Props) {
   return (
-    <section className="relative z-10 overflow-hidden rounded-3xl border border-violet-400/15 bg-gradient-to-br from-indigo-950/70 via-zinc-900 to-black/95 px-6 py-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_50px_rgba(0,0,0,0.35)] md:px-10">
-      {/* Ambient violet/blue glows — harmonized with the hero palette */}
-      <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-indigo-600/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-violet-500/15 blur-3xl" />
+    <section className="relative z-10 overflow-hidden rounded-3xl border border-violet-400/10 bg-gradient-to-br from-indigo-950/60 via-zinc-900 to-black/95 px-6 py-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_20px_50px_rgba(0,0,0,0.35)] md:px-10">
+      {/* Ambient violet/blue glows — harmonized with the hero palette but kept
+          ~25–30% below the hero's saturation so the CTA stays the strongest
+          blue element and the card never reads as bright purple. */}
+      <div className="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-indigo-600/18 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -left-20 h-72 w-72 rounded-full bg-violet-500/10 blur-3xl" />
 
       <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="max-w-xl">

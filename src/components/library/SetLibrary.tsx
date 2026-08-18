@@ -760,12 +760,14 @@ export default function SetLibrary() {
   return (
     <main className="relative mx-auto w-full max-w-7xl flex-1 px-5 pb-20 pt-3">
       {/* Ambient violet/blue glow — carries the hero palette into the dashboard
-          background behind the dock and welcome card, tying the two sections
-          into one visual system. Pure decoration: pointer-events-none, z-0, and
-          painted behind the z-10/z-50 surfaces. */}
+          background behind the dock and welcome card. The radial's peak sits
+          BELOW the top edge (at 50% 32%) so it fades in gradually instead of
+          drawing a thin bright seam on the hero boundary; low alpha keeps it a
+          soft atmosphere, not a divider. Pure decoration: pointer-events-none,
+          z-0, painted behind the z-10/z-50 surfaces. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-64 bg-[radial-gradient(720px_240px_at_50%_0%,rgba(124,58,237,0.13),transparent_70%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-56 bg-[radial-gradient(820px_280px_at_50%_32%,rgba(124,58,237,0.09),transparent_72%)]"
       />
       {/* Floating navigation dock — z-50 + the fade-up transform lift its
           stacking context above the hero banner so dropdown popovers always
