@@ -760,14 +760,15 @@ export default function SetLibrary() {
   return (
     <main className="relative mx-auto w-full max-w-7xl flex-1 px-5 pb-20 pt-3">
       {/* Ambient violet/blue glow — carries the hero palette into the dashboard
-          background behind the dock and welcome card. The radial's peak sits
-          BELOW the top edge (at 50% 32%) so it fades in gradually instead of
-          drawing a thin bright seam on the hero boundary; low alpha keeps it a
-          soft atmosphere, not a divider. Pure decoration: pointer-events-none,
-          z-0, painted behind the z-10/z-50 surfaces. */}
+          background behind the dock and welcome card. The radial's peak sits a
+          short way BELOW the top edge (at 50% 24%) so it fades in gradually —
+          no seam line, no hotspot — while still reaching up high enough to
+          fill the space behind the dock and keep it visually attached to the
+          hero. Low alpha keeps it a soft atmosphere. Pure decoration:
+          pointer-events-none, z-0, painted behind the z-10/z-50 surfaces. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-56 bg-[radial-gradient(820px_280px_at_50%_32%,rgba(124,58,237,0.09),transparent_72%)]"
+        className="pointer-events-none absolute inset-x-0 top-0 z-0 h-48 bg-[radial-gradient(820px_240px_at_50%_20%,rgba(124,58,237,0.08),transparent_70%)]"
       />
       {/* Floating navigation dock — z-50 + the fade-up transform lift its
           stacking context above the hero banner so dropdown popovers always
@@ -776,7 +777,7 @@ export default function SetLibrary() {
           the dashboard grid; the controls stay quiet so + New owns the
           visual weight. Width matches the dashboard container so the dock's
           edges align with the content grid below. */}
-      <header className="animate-fade-up nav-dock relative z-50 mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[20px] px-3 py-2.5 sm:mb-6 sm:gap-x-4 sm:px-5 sm:py-3">
+      <header className="animate-fade-up nav-dock relative z-50 mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[20px] px-3 py-2 sm:mb-6 sm:gap-x-4 sm:px-4 sm:py-2.5">
         <Logo />
         <div className="mr-auto min-w-0">
           <h1 className="text-[15px] font-semibold leading-tight tracking-tight text-white">AudioRepeat</h1>

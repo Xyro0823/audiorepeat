@@ -269,11 +269,11 @@ body {
 
   /* Liquid glass — strong blur + glowing gradient border via mask trick. */
   .liquid-glass-strong {
-    background: rgba(255, 255, 255, 0.01);
+    background: rgba(0, 0, 0, 0.3);
     background-blend-mode: luminosity;
     backdrop-filter: blur(50px);
     -webkit-backdrop-filter: blur(50px);
-    border: none;
+    border: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow:
       4px 4px 4px rgba(0, 0, 0, 0.05),
       inset 0 1px 1px rgba(255, 255, 255, 0.15);

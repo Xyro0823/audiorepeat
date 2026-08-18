@@ -37,7 +37,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative py-32 px-6 md:px-16 lg:px-24 text-center overflow-hidden">
+    <section className="relative py-24 px-6 md:px-16 lg:px-24 text-center overflow-hidden">
       {/* Background HLS Video */}
       <video
         ref={videoRef}
@@ -57,11 +57,12 @@ const Hero = () => {
       <div
         className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(760px_360px_at_50%_62%,rgba(0,0,0,0.3),transparent_70%)]"
       />
-      {/* Bottom fade — blends the video into the page below (tightened so the
-          hero and dashboard feel continuous rather than two stacked blocks). */}
+      {/* Bottom fade — blends the video into the page below. Kept short so
+          the artwork's glow ends close to the dock instead of leaving a long
+          empty black band. */}
       <div
         className="absolute bottom-0 left-0 right-0 z-[1] pointer-events-none"
-        style={{ height: '100px', background: 'linear-gradient(to top, black, transparent)' }}
+        style={{ height: '64px', background: 'linear-gradient(to top, black, transparent)' }}
       />
 
       {/* Content */}
@@ -75,7 +76,7 @@ const Hero = () => {
         <div className="flex items-center justify-center gap-6">
           <button
             onClick={scrollToLibrary}
-            className="liquid-glass-strong rounded-full px-6 py-3 text-sm font-medium text-white flex items-center gap-2 hover:bg-white/10 transition-all font-body"
+            className="liquid-glass-strong rounded-full px-6 py-3 text-sm font-medium text-white flex items-center gap-2 hover:bg-white/10 transition-all font-body [text-shadow:0_1px_8px_rgba(0,0,0,0.6)]"
           >
             Start Learning
             <ArrowUpRight className="h-5 w-5" />
