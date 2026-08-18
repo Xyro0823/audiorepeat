@@ -53,10 +53,15 @@ const Hero = () => {
         className="absolute top-0 left-0 right-0 z-[1] pointer-events-none"
         style={{ height: '200px', background: 'linear-gradient(to bottom, black, transparent)' }}
       />
-      {/* Bottom fade — blends the video into the vocabulary grid below */}
+      {/* Center veil — keeps the subtitle readable over the bright ribbon. */}
+      <div
+        className="absolute inset-0 z-[1] pointer-events-none bg-[radial-gradient(760px_360px_at_50%_62%,rgba(0,0,0,0.3),transparent_70%)]"
+      />
+      {/* Bottom fade — blends the video into the page below (tightened so the
+          hero and dashboard feel continuous rather than two stacked blocks). */}
       <div
         className="absolute bottom-0 left-0 right-0 z-[1] pointer-events-none"
-        style={{ height: '200px', background: 'linear-gradient(to top, black, transparent)' }}
+        style={{ height: '100px', background: 'linear-gradient(to top, black, transparent)' }}
       />
 
       {/* Content */}
@@ -64,7 +69,7 @@ const Hero = () => {
         <h2 className="text-5xl md:text-6xl lg:text-7xl font-heading italic text-white tracking-tight leading-[0.85] max-w-3xl mx-auto mb-4">
           Master languages, hands-free.
         </h2>
-        <p className="text-white/60 font-body font-light text-sm md:text-base max-w-xl mx-auto mb-8">
+        <p className="text-white/80 font-body font-light text-sm md:text-base max-w-xl mx-auto mb-8 [text-shadow:0_1px_10px_rgba(0,0,0,0.65)]">
           Loop, repeat, and retain vocabulary seamlessly with AI-powered audio drilling in {langCount} languages. No pressure, just intuitive learning.
         </p>
         <div className="flex items-center justify-center gap-6">
