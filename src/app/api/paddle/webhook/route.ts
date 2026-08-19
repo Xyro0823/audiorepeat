@@ -101,6 +101,7 @@ export async function POST(request: Request) {
           store,
           event.data as unknown as PaddleTransactionLike,
           PRICES,
+          event.occurredAt ? Date.parse(event.occurredAt) : undefined,
         );
         break;
       // Subscription lifecycle — active/trialing grants Pro, everything else

@@ -3,7 +3,7 @@ import { createCheckoutTransaction, isPaddleConfigured, type Billing } from '@/l
 import { isAdminConfigured, verifyIdToken } from '@/lib/firebase/admin';
 import { NO_STORE_HEADERS } from '@/lib/http';
 import { isPlanId } from '@/lib/plans';
-import { checkoutRateLimiter } from '@/lib/analytics/rateLimit';
+import { consumeDistributedRateLimit } from '@/lib/distributedRateLimit';
 
 export const runtime = 'nodejs';
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   if (!uid) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: NO_STORE_HEADERS });
   }
-  if (checkoutRateLimiter.consume(uid) === 'limited') {
+  if (await consumeDistributedRateLimit({ key: `checkout:${uid}`, limit: 10, windowMs: 10 * 60_000 }) === 'limited') {
     return NextResponse.json(
       { error: 'rate-limited', message: 'Too many checkout attempts. Please try again later.' },
       { status: 429, headers: { ...NO_STORE_HEADERS, 'Retry-After': '600' } },

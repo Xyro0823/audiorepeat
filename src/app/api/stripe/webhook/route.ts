@@ -68,6 +68,7 @@ export async function POST(request: Request) {
   }
 
   const store = createEntitlementStore();
+  const occurredAtMs = Number.isFinite(event.created) ? event.created * 1000 : undefined;
 
   // Idempotency: already-processed events are acknowledged and skipped.
   if (await store.isEventProcessed(event.id)) {
@@ -79,16 +80,16 @@ export async function POST(request: Request) {
 
   switch (event.type) {
     case 'checkout.session.completed':
-      await handleCheckoutSessionCompleted(store, event.data.object as unknown as CheckoutSessionLike);
+      await handleCheckoutSessionCompleted(store, event.data.object as unknown as CheckoutSessionLike, occurredAtMs);
       break;
     case 'customer.subscription.updated':
-      await handleSubscriptionUpdated(store, event.data.object as unknown as SubscriptionLike);
+      await handleSubscriptionUpdated(store, event.data.object as unknown as SubscriptionLike, occurredAtMs);
       break;
     case 'customer.subscription.deleted':
-      await handleSubscriptionDeleted(store, event.data.object as unknown as SubscriptionLike);
+      await handleSubscriptionDeleted(store, event.data.object as unknown as SubscriptionLike, occurredAtMs);
       break;
     case 'invoice.payment_failed':
-      await handleInvoicePaymentFailed(store, event.data.object as unknown as InvoiceLike);
+      await handleInvoicePaymentFailed(store, event.data.object as unknown as InvoiceLike, occurredAtMs);
       break;
     default:
       // Unrelated event types are acknowledged and ignored (never mark them

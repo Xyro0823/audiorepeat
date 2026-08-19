@@ -48,7 +48,9 @@ function getAdminApp(): App {
  */
 export async function verifyIdToken(idToken: string): Promise<string | null> {
   try {
-    const decoded = await getAuth(getAdminApp()).verifyIdToken(idToken);
+    // Sensitive server routes must reject disabled/deleted users and sessions
+    // whose refresh tokens were revoked, not merely validate the JWT signature.
+    const decoded = await getAuth(getAdminApp()).verifyIdToken(idToken, true);
     return decoded.uid;
   } catch {
     return null;
@@ -146,6 +148,7 @@ export function createEntitlementStore(options?: { events?: 'stripe' | 'paddle' 
         manual: (data.manual as ManualEntitlement | null | undefined) ?? null,
         updatedAt: data.updatedAt ?? null,
         paddleEventAt: typeof data.paddleEventAt === 'number' ? data.paddleEventAt : null,
+        stripeEventAt: typeof data.stripeEventAt === 'number' ? data.stripeEventAt : null,
       };
     },
 
@@ -193,6 +196,22 @@ export function createEntitlementStore(options?: { events?: 'stripe' | 'paddle' 
         const previous = snap.data()?.paddleEventAt;
         if (typeof previous === 'number' && previous >= occurredAtMs) return false;
         tx.set(ref, { ...patch, paddleEventAt: occurredAtMs, updatedAt: Timestamp.now() }, { merge: true });
+        return true;
+      });
+    },
+
+    async putProviderEntitlementIfNewer(uid, patch, provider, occurredAtMs) {
+      const ref = db.doc(`${ENTITLEMENTS_COLLECTION}/${uid}`);
+      const field = provider === 'stripe' ? 'stripeEventAt' : 'paddleEventAt';
+      return db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        const previous = snap.data()?.[field];
+        if (typeof previous === 'number' && previous >= occurredAtMs) return false;
+        tx.set(
+          ref,
+          { ...patch, [field]: occurredAtMs, updatedAt: Timestamp.now() },
+          { merge: true },
+        );
         return true;
       });
     },

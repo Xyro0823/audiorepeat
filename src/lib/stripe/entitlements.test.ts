@@ -160,6 +160,25 @@ describe('checkout.session.completed handler', () => {
     expect((await store.getEntitlement('user-2'))?.plan).toBe('lifetime');
   });
 
+  it('never lets later Pro subscription events downgrade provider Lifetime', async () => {
+    const store = new FakeStore();
+    await handleCheckoutSessionCompleted(store, lifetimeSession());
+    await handleCheckoutSessionCompleted(
+      store,
+      proSession({ metadata: { uid: 'user-2', planId: 'pro', billing: 'annual' } }),
+    );
+    await handleSubscriptionUpdated(
+      store,
+      activeSubscription({ metadata: { uid: 'user-2' } }),
+    );
+    await handleSubscriptionDeleted(
+      store,
+      activeSubscription({ status: 'canceled', metadata: { uid: 'user-2' } }),
+    );
+    expect((await store.getEntitlement('user-2'))?.plan).toBe('lifetime');
+    expect((await store.getEntitlement('user-2'))?.billing).toBe('lifetime');
+  });
+
   it('is idempotent when applied twice (same session → same record)', async () => {
     const store = new FakeStore();
     await handleCheckoutSessionCompleted(store, proSession());

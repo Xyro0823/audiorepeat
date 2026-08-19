@@ -50,6 +50,19 @@ function createInMemoryStore() {
     async markEventProcessed(eventId: string) {
       events.add(eventId);
     },
+    async putProviderEntitlementIfNewer(
+      uid: string,
+      patch: Partial<EntitlementRecord>,
+      provider: 'stripe' | 'paddle',
+      occurredAtMs: number,
+    ) {
+      const current = records.get(uid);
+      const field = provider === 'stripe' ? 'stripeEventAt' : 'paddleEventAt';
+      const previous = current?.[field];
+      if (typeof previous === 'number' && previous >= occurredAtMs) return false;
+      await store.putEntitlement(uid, { ...patch, [field]: occurredAtMs });
+      return true;
+    },
   };
   return store;
 }
@@ -86,8 +99,8 @@ import { POST } from '@/app/api/paddle/webhook/route';
 
 const SECRET = 'pdl_test_webhook_secret';
 
-function eventPayload(eventType: string, data: unknown, eventId = `evt_${eventType}`) {
-  return JSON.stringify({ eventId, eventType, data });
+function eventPayload(eventType: string, data: unknown, eventId = `evt_${eventType}`, occurredAt?: string) {
+  return JSON.stringify({ eventId, eventType, occurredAt, data });
 }
 
 function webhookRequest(body: string, signature?: string): Request {
@@ -243,6 +256,14 @@ describe('POST /api/paddle/webhook — entitlement events', () => {
     );
     expect(res.status).toBe(200);
     expect(await h.store.getEntitlement('user-9')).toBeNull();
+  });
+
+  it('does not let an older transaction re-grant after a newer cancellation', async () => {
+    await POST(webhookRequest(eventPayload('transaction.completed', completedProTransaction(), 'evt_initial', '2026-01-01T00:00:00Z'), 'sig'));
+    await POST(webhookRequest(eventPayload('subscription.canceled', subscription('canceled'), 'evt_cancel', '2026-01-03T00:00:00Z'), 'sig'));
+    await POST(webhookRequest(eventPayload('transaction.completed', completedProTransaction(), 'evt_stale', '2026-01-02T00:00:00Z'), 'sig'));
+    expect((await h.store.getEntitlement('user-1'))?.plan).toBe('basic');
+    expect((await h.store.getEntitlement('user-1'))?.status).toBe('canceled');
   });
 
   it('Lifetime cannot be downgraded by a later subscription cancel', async () => {

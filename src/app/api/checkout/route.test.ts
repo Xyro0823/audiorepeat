@@ -4,7 +4,8 @@ const h = vi.hoisted(() => {
   const verifyIdToken = vi.fn();
   const createCheckoutTransaction = vi.fn();
   const isPaddleConfigured = vi.fn(() => true);
-  return { verifyIdToken, createCheckoutTransaction, isPaddleConfigured };
+  const consumeDistributedRateLimit = vi.fn();
+  return { verifyIdToken, createCheckoutTransaction, isPaddleConfigured, consumeDistributedRateLimit };
 });
 
 vi.mock('@/lib/firebase/admin', () => ({
@@ -15,6 +16,10 @@ vi.mock('@/lib/firebase/admin', () => ({
 vi.mock('@/lib/paddle/server', () => ({
   isPaddleConfigured: h.isPaddleConfigured,
   createCheckoutTransaction: h.createCheckoutTransaction,
+}));
+
+vi.mock('@/lib/distributedRateLimit', () => ({
+  consumeDistributedRateLimit: h.consumeDistributedRateLimit,
 }));
 
 import { POST } from '@/app/api/checkout/route';
@@ -38,6 +43,8 @@ beforeEach(() => {
     transactionId: 'txn_test_123',
     checkoutUrl: 'https://checkout.paddle.com/checkout/txn_test_123',
   });
+  h.consumeDistributedRateLimit.mockReset();
+  h.consumeDistributedRateLimit.mockResolvedValue('allowed');
 });
 
 describe('POST /api/checkout — authentication', () => {
@@ -162,6 +169,10 @@ describe('POST /api/checkout — caching', () => {
 describe('POST /api/checkout — abuse protection', () => {
   it('rate-limits repeated transaction creation per verified uid', async () => {
     h.verifyIdToken.mockResolvedValue('rate-limit-user');
+    let consumed = 0;
+    h.consumeDistributedRateLimit.mockImplementation(async () =>
+      ++consumed <= 10 ? 'allowed' : 'limited',
+    );
     for (let i = 0; i < 10; i += 1) {
       expect((await POST(checkoutRequest({ planId: 'pro', billing: 'annual' }, 'tok'))).status).toBe(200);
     }

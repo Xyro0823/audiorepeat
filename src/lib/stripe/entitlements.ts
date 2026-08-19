@@ -72,6 +72,8 @@ export interface EntitlementRecord {
   updatedAt: unknown;
   /** Latest applied Paddle subscription event time (Unix ms). */
   paddleEventAt?: number | null;
+  /** Latest applied Stripe entitlement event time (Unix ms). */
+  stripeEventAt?: number | null;
 }
 
 /** Persistence boundary — implemented by the Firestore store in admin.ts. */
@@ -91,6 +93,12 @@ export interface EntitlementStore {
   putPaddleEntitlementIfNewer?(
     uid: string,
     patch: Partial<EntitlementRecord>,
+    occurredAtMs: number,
+  ): Promise<boolean>;
+  putProviderEntitlementIfNewer?(
+    uid: string,
+    patch: Partial<EntitlementRecord>,
+    provider: 'stripe' | 'paddle',
     occurredAtMs: number,
   ): Promise<boolean>;
 }
@@ -422,41 +430,62 @@ export function toPublicEntitlement(rec: EntitlementRecord | null): PublicEntitl
 export async function handleCheckoutSessionCompleted(
   store: EntitlementStore,
   session: CheckoutSessionLike,
+  occurredAtMs?: number,
 ): Promise<void> {
   const patch = computeCheckoutSessionEntitlement(session);
   if (!patch) return; // not a paid purchase for a known user
-  await store.putEntitlement(patch.uid, patch);
+  const current = await store.getEntitlement(patch.uid);
+  if (patch.plan !== 'lifetime' && (current?.plan === 'lifetime' || current?.billing === 'lifetime')) return;
+  if (patch.plan !== 'lifetime' && occurredAtMs !== undefined && store.putProviderEntitlementIfNewer) {
+    await store.putProviderEntitlementIfNewer(patch.uid, patch, 'stripe', occurredAtMs);
+  } else {
+    await store.putEntitlement(patch.uid, patch);
+  }
 }
 
 export async function handleSubscriptionUpdated(
   store: EntitlementStore,
   sub: SubscriptionLike,
+  occurredAtMs?: number,
 ): Promise<void> {
   const uid = sub.metadata?.uid ?? (await store.findUidBySubscription(sub.id));
   if (!uid) return; // unknown subscription — nothing to update
   const patch = computeSubscriptionEntitlement(sub);
-  await store.putEntitlement(uid, patch);
+  const current = await store.getEntitlement(uid);
+  const next = current?.plan === 'lifetime' || current?.billing === 'lifetime'
+    ? { ...patch, plan: 'lifetime' as const, billing: 'lifetime' as const }
+    : patch;
+  if (occurredAtMs !== undefined && store.putProviderEntitlementIfNewer) await store.putProviderEntitlementIfNewer(uid, next, 'stripe', occurredAtMs);
+  else await store.putEntitlement(uid, next);
 }
 
 export async function handleSubscriptionDeleted(
   store: EntitlementStore,
   sub: SubscriptionLike,
+  occurredAtMs?: number,
 ): Promise<void> {
   const uid = sub.metadata?.uid ?? (await store.findUidBySubscription(sub.id));
   if (!uid) return;
   const patch = computeSubscriptionDeleted(sub);
-  await store.putEntitlement(uid, patch);
+  const current = await store.getEntitlement(uid);
+  if (current?.plan === 'lifetime' || current?.billing === 'lifetime') return;
+  if (occurredAtMs !== undefined && store.putProviderEntitlementIfNewer) await store.putProviderEntitlementIfNewer(uid, patch, 'stripe', occurredAtMs);
+  else await store.putEntitlement(uid, patch);
 }
 
 export async function handleInvoicePaymentFailed(
   store: EntitlementStore,
   invoice: InvoiceLike,
+  occurredAtMs?: number,
 ): Promise<void> {
   const patch = computeInvoicePaymentFailed(invoice);
   if (!patch) return;
   const uid = await store.findUidBySubscription(patch.stripeSubscriptionId as string);
   if (!uid) return;
-  await store.putEntitlement(uid, patch);
+  const current = await store.getEntitlement(uid);
+  if (current?.plan === 'lifetime' || current?.billing === 'lifetime') return;
+  if (occurredAtMs !== undefined && store.putProviderEntitlementIfNewer) await store.putProviderEntitlementIfNewer(uid, patch, 'stripe', occurredAtMs);
+  else await store.putEntitlement(uid, patch);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -569,6 +598,7 @@ export async function handlePaddleTransactionCompleted(
   store: EntitlementStore,
   txn: PaddleTransactionLike,
   prices: PaddlePriceResolver,
+  occurredAtMs?: number,
 ): Promise<void> {
   const patch = computePaddleTransactionEntitlement(txn, prices);
   if (!patch) return;
@@ -577,7 +607,12 @@ export async function handlePaddleTransactionCompleted(
   // redundant purchase for an existing Lifetime owner changes nothing).
   if (current?.plan === 'lifetime' || current?.billing === 'lifetime') return;
   // Preserve the manual grant (if any) — a purchase never erases a gift.
-  await store.putEntitlement(patch.uid, { ...patch, manual: current?.manual ?? null });
+  const next = { ...patch, manual: current?.manual ?? null };
+  if (patch.plan !== 'lifetime' && occurredAtMs !== undefined && store.putProviderEntitlementIfNewer) {
+    await store.putProviderEntitlementIfNewer(patch.uid, next, 'paddle', occurredAtMs);
+  } else {
+    await store.putEntitlement(patch.uid, next);
+  }
 }
 
 /**
@@ -601,7 +636,9 @@ export async function handlePaddleSubscriptionEvent(
   const patch = computePaddleSubscriptionEntitlement(sub, prices);
   const current = await store.getEntitlement(uid);
   const write = async (next: Partial<EntitlementRecord>) => {
-    if (occurredAtMs !== undefined && Number.isFinite(occurredAtMs) && store.putPaddleEntitlementIfNewer) {
+    if (occurredAtMs !== undefined && Number.isFinite(occurredAtMs) && store.putProviderEntitlementIfNewer) {
+      await store.putProviderEntitlementIfNewer(uid, next, 'paddle', occurredAtMs);
+    } else if (occurredAtMs !== undefined && Number.isFinite(occurredAtMs) && store.putPaddleEntitlementIfNewer) {
       await store.putPaddleEntitlementIfNewer(uid, next, occurredAtMs);
     } else {
       await store.putEntitlement(uid, next);

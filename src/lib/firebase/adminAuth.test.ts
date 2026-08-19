@@ -89,5 +89,6 @@ describe('verifyAdminRequest', () => {
     h.verifyIdToken.mockResolvedValue({ uid: 'admin-1' } as never);
     const result = await verifyAdminRequest(adminRequest('admin-token'));
     expect(result).toEqual({ ok: true, adminUid: 'admin-1' });
+    expect(h.verifyIdToken).toHaveBeenCalledWith('admin-token', true);
   });
 });

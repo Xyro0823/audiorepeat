@@ -40,13 +40,29 @@ export async function DELETE(request: Request) {
       db.collection('plan_interest').where('userId', '==', uid).get(),
       db.collection('plan_purchases').where('userId', '==', uid).get(),
     ]);
+    const newsletterRef = user.email
+      ? db.doc(`newsletter_subscribers/${user.email.trim().toLowerCase()}`)
+      : null;
+    const newsletter = newsletterRef ? await newsletterRef.get() : null;
+    const snapshots = [entitlement, ...interest.docs, ...purchases.docs, ...(newsletter ? [newsletter] : [])]
+      .filter((snapshot) => snapshot.exists !== false && snapshot.data())
+      .map((snapshot) => ({ ref: snapshot.ref ?? entitlementRef, data: snapshot.data() }));
     const batch = db.batch();
     batch.delete(entitlementRef);
     for (const doc of interest.docs) batch.delete(doc.ref);
     for (const doc of purchases.docs) batch.delete(doc.ref);
-    if (user.email) batch.delete(db.doc(`newsletter_subscribers/${user.email.trim().toLowerCase()}`));
+    if (newsletterRef) batch.delete(newsletterRef);
     await batch.commit();
-    await auth.deleteUser(uid);
+    try {
+      await auth.deleteUser(uid);
+    } catch (error) {
+      // Cross-service operations cannot share one transaction. Compensate if
+      // Auth deletion fails so the still-existing account keeps its records.
+      const rollback = db.batch();
+      for (const snapshot of snapshots) rollback.set(snapshot.ref, snapshot.data);
+      await rollback.commit();
+      throw error;
+    }
     return NextResponse.json({ deleted: true }, { headers: NO_STORE_HEADERS });
   } catch (error) {
     console.error('[account-delete] failed', error instanceof Error ? error.message : 'unknown');

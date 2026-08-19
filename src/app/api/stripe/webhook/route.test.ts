@@ -44,6 +44,19 @@ function createInMemoryStore() {
     async markEventProcessed(eventId: string) {
       events.add(eventId);
     },
+    async putProviderEntitlementIfNewer(
+      uid: string,
+      patch: Partial<EntitlementRecord>,
+      provider: 'stripe' | 'paddle',
+      occurredAtMs: number,
+    ) {
+      const current = records.get(uid);
+      const field = provider === 'stripe' ? 'stripeEventAt' : 'paddleEventAt';
+      const previous = current?.[field];
+      if (typeof previous === 'number' && previous >= occurredAtMs) return false;
+      await store.putEntitlement(uid, { ...patch, [field]: occurredAtMs });
+      return true;
+    },
   };
   return store;
 }
@@ -68,8 +81,9 @@ import { POST } from '@/app/api/stripe/webhook/route';
 
 const SECRET = 'whsec_test_secret';
 
-function eventPayload(type: string, object: unknown, id = `evt_${type}`) {
-  return JSON.stringify({ id, type, data: { object } });
+let eventCreated = 100;
+function eventPayload(type: string, object: unknown, id = `evt_${type}`, created = eventCreated++) {
+  return JSON.stringify({ id, type, created, data: { object } });
 }
 
 function webhookRequest(body: string, signature?: string): Request {
@@ -83,6 +97,7 @@ function webhookRequest(body: string, signature?: string): Request {
 }
 
 beforeEach(() => {
+  eventCreated = 100;
   h.store.reset();
   h.constructEvent.mockReset();
   // Default: verify the signature and parse the payload as the event.
@@ -175,6 +190,20 @@ describe('POST /api/stripe/webhook', () => {
     );
     expect(res.status).toBe(200);
     expect((await h.store.getEntitlement('user-1'))?.plan).toBe('basic');
+  });
+
+  it('does not let an older active event re-grant after a newer cancellation', async () => {
+    const session = {
+      id: 'cs_order', mode: 'subscription', payment_status: 'paid', customer: 'cus_1',
+      subscription: 'sub_order', metadata: { uid: 'user-order', planId: 'pro', billing: 'annual' },
+    };
+    await POST(webhookRequest(eventPayload('checkout.session.completed', session, 'evt_initial', 100), 'sig'));
+    const canceled = { id: 'sub_order', status: 'canceled', metadata: { uid: 'user-order' } };
+    await POST(webhookRequest(eventPayload('customer.subscription.deleted', canceled, 'evt_cancel', 300), 'sig'));
+    const staleActive = { ...canceled, status: 'active' };
+    await POST(webhookRequest(eventPayload('customer.subscription.updated', staleActive, 'evt_stale', 200), 'sig'));
+    expect((await h.store.getEntitlement('user-order'))?.plan).toBe('basic');
+    expect((await h.store.getEntitlement('user-order'))?.status).toBe('canceled');
   });
 
   it('does not grant anything on invoice.payment_failed', async () => {

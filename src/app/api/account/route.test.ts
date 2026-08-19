@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const h = vi.hoisted(() => ({
   verifyIdToken: vi.fn(), getUser: vi.fn(), deleteUser: vi.fn(), commit: vi.fn(),
-  entitlementGet: vi.fn(), queryGet: vi.fn(), batchDelete: vi.fn(),
+  entitlementGet: vi.fn(), queryGet: vi.fn(), batchDelete: vi.fn(), batchSet: vi.fn(),
 }));
 
 vi.mock('@/lib/firebase/admin', () => ({
@@ -12,7 +12,7 @@ vi.mock('@/lib/firebase/admin', () => ({
   getAdminDb: () => ({
     doc: (path: string) => ({ path, get: h.entitlementGet }),
     collection: () => ({ where: () => ({ get: h.queryGet }) }),
-    batch: () => ({ delete: h.batchDelete, commit: h.commit }),
+    batch: () => ({ delete: h.batchDelete, set: h.batchSet, commit: h.commit }),
   }),
 }));
 
@@ -29,7 +29,7 @@ beforeEach(() => {
   h.queryGet.mockResolvedValue({ docs: [] });
   h.commit.mockResolvedValue(undefined);
   h.deleteUser.mockResolvedValue(undefined);
-  h.entitlementGet.mockResolvedValue({ data: () => ({ status: 'canceled' }) });
+  h.entitlementGet.mockResolvedValue({ exists: true, data: () => ({ status: 'canceled' }) });
 });
 
 describe('DELETE /api/account', () => {
@@ -51,5 +51,13 @@ describe('DELETE /api/account', () => {
     expect(h.commit).toHaveBeenCalledTimes(1);
     expect(h.deleteUser).toHaveBeenCalledWith('uid-1');
     expect(h.commit.mock.invocationCallOrder[0]).toBeLessThan(h.deleteUser.mock.invocationCallOrder[0]);
+  });
+
+  it('restores deleted records if Firebase Auth deletion fails', async () => {
+    h.deleteUser.mockRejectedValue(new Error('auth backend unavailable'));
+    const response = await DELETE(request('token'));
+    expect(response.status).toBe(500);
+    expect(h.commit).toHaveBeenCalledTimes(2);
+    expect(h.batchSet).toHaveBeenCalled();
   });
 });
