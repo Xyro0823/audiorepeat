@@ -54,23 +54,77 @@ function devWarn(...args: unknown[]): void {
 }
 
 /**
- * Best voice for a language: exact BCP-47 match first, then base-language
- * prefix match (e.g. "es-ES" -> "es-MX"), preferring offline (localService)
- * voices. Returns undefined when no voice matches even by prefix — the caller
- * must surface that instead of letting the browser pick a wrong-language default.
+ * Maximum time (ms) to wait for browser voices to load before declaring
+ * them "available" (possibly empty).
+ */
+const VOICE_LOAD_TIMEOUT_MS = 1500;
+
+/** Extract the base language subtag (before the first hyphen), lowercased.
+ * "es-ES" → "es", "fil" → "fil", "en" → "en". */
+const base = (lang: string) => lang.split('-')[0].toLowerCase();
+
+/**
+ * Known-safe locale fallbacks for product languages whose bare BCP-47 tag may
+ * not appear in any installed voice list. All keys are stored lowercase.
+ * Each entry is a list of voice BCP-47 tags (lowercase) that are known to
+ * produce correct speech for that language.
+ */
+const LOCALE_FALLBACKS: Record<string, string[]> = {
+  mn: ['mn-mn'],
+  'nb-no': ['nb-no', 'no-no', 'no'],
+};
+
+/**
+ * Best voice for a language: exact BCP-47 match first, then same-base-language
+ * match using exact base-subtag comparison ("es-ES" → "es-MX" but never
+ * "fi" → "fil-PH"), preferring offline (localService) voices.
+ *
+ * Returns undefined when no voice matches — the caller must surface that
+ * instead of letting the browser pick a wrong-language default.
  */
 export function pickVoiceForLang(
   voices: TTSEngineVoice[],
   lang: string,
 ): TTSEngineVoice | undefined {
   const target = lang.toLowerCase();
-  const prefix = target.split('-')[0];
+  const targetBase = base(target);
+
+  // Try a single matching pass against a voice list, returning the first match.
+  const matchIn = (pool: TTSEngineVoice[]): TTSEngineVoice | undefined => {
+    // 1. Exact BCP-47 match
+    const exact = pool.find((v) => v.lang.toLowerCase() === target);
+    if (exact) return exact;
+    // 2. Same base-subtag: voice base === target base (e.g. es-ES → es-MX)
+    const sameBase = pool.find((v) => base(v.lang) === targetBase);
+    if (sameBase) return sameBase;
+    return undefined;
+  };
+
+  // Prefer matching local (offline) voice first, then matching online voice.
+  // Never skip online voices entirely just because local voices exist — only
+  // skip them if a local voice already matches the requested language.
   const local = voices.filter((v) => v.localService);
-  const pool = local.length > 0 ? local : voices;
-  return (
-    pool.find((v) => v.lang.toLowerCase() === target) ??
-    pool.find((v) => v.lang.toLowerCase().startsWith(prefix))
-  );
+  const localMatch = matchIn(local);
+  if (localMatch) return localMatch;
+
+  const onlineMatch = matchIn(voices.filter((v) => !v.localService));
+  if (onlineMatch) return onlineMatch;
+
+  // Known-safe locale fallback (checks local first, then online)
+  const fallbacks = LOCALE_FALLBACKS[target];
+  if (fallbacks) {
+    for (const fb of fallbacks) {
+      const fbLower = fb.toLowerCase();
+      const fbExact = (v: TTSEngineVoice) => v.lang.toLowerCase() === fbLower;
+      const fbBase = (v: TTSEngineVoice) => base(v.lang) === base(fbLower);
+      const fbLocal = local.find((v) => fbExact(v) || fbBase(v));
+      if (fbLocal) return fbLocal;
+      const fbOnline = voices.find((v) => !v.localService && (fbExact(v) || fbBase(v)));
+      if (fbOnline) return fbOnline;
+    }
+  }
+
+  return undefined;
 }
 
 /**
@@ -128,28 +182,49 @@ export class SpeechSynthesisEngine implements TTSEngine {
     return this.ensureVoicesLoaded();
   }
 
-  /** Resolve once voices are populated, or after a short timeout as a fallback. */
+  /** Resolve once voices are populated, or after a short timeout as a fallback.
+   *  Settles exactly once — cleans up the listener and timer after settling. */
   private ensureVoicesLoaded(): Promise<TTSEngineVoice[]> {
     return new Promise((resolve) => {
       if (!this.synth) {
         resolve([]);
         return;
       }
+      let settled = false;
+      let timer: number | null = null;
+      let listener: (() => void) | null = null;
+
+      const settle = (voices: TTSEngineVoice[]) => {
+        if (settled) return;
+        settled = true;
+        if (timer !== null) { clearTimeout(timer); timer = null; }
+        if (listener !== null) {
+          this.synth?.removeEventListener('voiceschanged', listener);
+          listener = null;
+        }
+        resolve(voices);
+      };
+
       const read = () => {
         const v = this.synth?.getVoices();
         if (v && v.length > 0) {
           this.voices = v.map(toVoice);
-          resolve(this.voices);
+          settle(this.voices);
           return true;
         }
         return false;
       };
+
       if (read()) return;
+
       // voiceschanged may fire before or after the listener is attached
-      this.synth.addEventListener('voiceschanged', () => read(), { once: true });
-      window.setTimeout(() => {
-        if (this.voices.length === 0) read();
-      }, 300);
+      listener = () => read();
+      this.synth.addEventListener('voiceschanged', listener, { once: true });
+      timer = window.setTimeout(() => {
+        // If registry is still empty, settle with empty — never leave hanging.
+        if (!settled) read();
+        if (!settled) settle([]);
+      }, VOICE_LOAD_TIMEOUT_MS);
     });
   }
 

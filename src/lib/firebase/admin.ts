@@ -145,6 +145,7 @@ export function createEntitlementStore(options?: { events?: 'stripe' | 'paddle' 
         currentPeriodEnd: data.currentPeriodEnd ?? null,
         manual: (data.manual as ManualEntitlement | null | undefined) ?? null,
         updatedAt: data.updatedAt ?? null,
+        paddleEventAt: typeof data.paddleEventAt === 'number' ? data.paddleEventAt : null,
       };
     },
 
@@ -183,6 +184,17 @@ export function createEntitlementStore(options?: { events?: 'stripe' | 'paddle' 
       await db
         .doc(`${eventsCollection}/${eventId}`)
         .set({ eventId, processedAt: Timestamp.now() });
+    },
+
+    async putPaddleEntitlementIfNewer(uid, patch, occurredAtMs) {
+      const ref = db.doc(`${ENTITLEMENTS_COLLECTION}/${uid}`);
+      return db.runTransaction(async (tx) => {
+        const snap = await tx.get(ref);
+        const previous = snap.data()?.paddleEventAt;
+        if (typeof previous === 'number' && previous >= occurredAtMs) return false;
+        tx.set(ref, { ...patch, paddleEventAt: occurredAtMs, updatedAt: Timestamp.now() }, { merge: true });
+        return true;
+      });
     },
   };
 }

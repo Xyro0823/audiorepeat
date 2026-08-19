@@ -10,7 +10,9 @@ import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import DowngradeModal from '@/components/checkout/DowngradeModal';
 import { buildBackup, downloadBackup, parseBackup, type BackupData } from '@/lib/sets/backup';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
-import { isProPlan, PLAN_BADGE, planDetail } from '@/lib/plans';
+import { isProPlan, FREE_LANG_LIMIT, PLAN_BADGE, planDetail } from '@/lib/plans';
+import { FREE_LANG_OPTIONS, SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
+import { findLanguage } from '@/lib/languages';
 import type { ThemeName } from '@/types/app';
 import { DEFAULT_SETTINGS } from '@/types/app';
 import VoicePicker from '@/components/player/VoicePicker';
@@ -39,7 +41,7 @@ const THEMES: { id: ThemeName; label: string; desc: string; swatches: string[] }
   },
 ];
 
-type Tab = 'playback' | 'appearance' | 'data' | 'reminders';
+type Tab = 'language' | 'playback' | 'appearance' | 'data' | 'reminders';
 
 function Toggle({
   checked,
@@ -81,19 +83,19 @@ interface Props {
 }
 
 export default function SettingsModal({ onClose }: Props) {
-  const { allSets, sets, settings, loading, saveSettings, replaceSettings, clearSets, saveSet } =
+  const { allSets, sets, settings, loading, saveSettings, restoreBackup: restoreBackupData, saveSet } =
     useLists();
   const [showDowngrade, setShowDowngrade] = useState(false);
   const { days } = usePracticeStats();
   // Stats/username live per account (guests use the shared legacy keys).
   const { user, mode } = useAuth();
-  const [tab, setTab] = useState<Tab>('playback');
+  const [tab, setTab] = useState<Tab>('language');
   const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
   const [pendingImport, setPendingImport] = useState<BackupData | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
-  const { voices, loading: voicesLoading } = useSpeechVoices();
+  const { voices, loading: voicesLoading, hasVoice } = useSpeechVoices();
 
   // Target language for the voice pickers: the most-studied language, else en-US.
   const targetLang = useMemo(() => {
@@ -240,13 +242,10 @@ export default function SettingsModal({ onClose }: Props) {
   const restoreBackup = useCallback(async () => {
     if (!pendingImport) return;
     try {
-      if (pendingImport.settings) {
-        replaceSettings({ ...DEFAULT_SETTINGS, ...pendingImport.settings });
-      }
-      await clearSets();
-      // saveSet (not raw putSet) keeps in-memory state consistent with the DB
-      // even if the reload below is blocked.
-      for (const s of pendingImport.sets ?? []) await saveSet(s);
+      const nextSettings = { ...DEFAULT_SETTINGS, ...(pendingImport.settings ?? {}) };
+      // Sets + settings commit in one IndexedDB transaction. A failed write
+      // aborts without deleting the user's existing library.
+      await restoreBackupData(nextSettings, pendingImport.sets ?? []);
       if (pendingImport.days) {
         window.localStorage.setItem(statsStorageKey(user?.id), JSON.stringify(pendingImport.days));
       }
@@ -260,7 +259,7 @@ export default function SettingsModal({ onClose }: Props) {
     } catch {
       flash('err', 'Restore failed — reload the app and check your data.');
     }
-  }, [pendingImport, replaceSettings, clearSets, saveSet, user, flash]);
+  }, [pendingImport, restoreBackupData, user, flash]);
 
   const clearCachedAudio = useCallback(async () => {
     let cleared = 0;
@@ -328,8 +327,9 @@ export default function SettingsModal({ onClose }: Props) {
 
         {/* Tabs */}
         <div className="mb-5 flex flex-wrap gap-1.5 rounded-2xl border border-white/10 bg-night-900/60 p-1.5">
-          {(
+          {          (
             [
+              { id: 'language', label: '🌐 Language' },
               { id: 'playback', label: '🎛️ Playback' },
               { id: 'appearance', label: '🎨 Appearance' },
               { id: 'data', label: '💾 Data' },
@@ -351,6 +351,101 @@ export default function SettingsModal({ onClose }: Props) {
           ))}
         </div>
 
+        {/* ---------------- Language ---------------- */}
+        {tab === 'language' && (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
+              <p className="text-sm font-semibold text-white">Practice language</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                {isProPlan(settings.plan)
+                  ? `Pro plan — you can create sets in all ${SUPPORTED_LANGUAGE_COUNT} supported languages.`
+                  : `Free plan includes ${FREE_LANG_LIMIT} active language. Upgrade to access all ${SUPPORTED_LANGUAGE_COUNT}.`}
+              </p>
+
+              {isProPlan(settings.plan) ? (
+                <div className="mt-3">
+                  <label className="block">
+                    <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                      Default new-set language
+                    </span>
+                    <select
+                      value={settings.defaultNewSetLang ?? ''}
+                      onChange={(e) => {
+                        saveSettings({ defaultNewSetLang: e.target.value || null });
+                      }}
+                      className="w-full appearance-none rounded-xl border border-white/10 bg-night-800/80 px-4 py-2.5 pr-10 text-sm text-white outline-none transition focus:border-neon-cyan/60"
+                    >
+                      <option value="">Auto — language of the set</option>
+                      {FREE_LANG_OPTIONS.map((o) => (
+                        <option key={o.code} value={o.code}>
+                          {o.label}{o.hasFullPack ? ' · full CEFR pack' : ''}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <p className="mt-1.5 text-[11px] text-slate-500">
+                    Sets you create will default to this language. You can always change it per set.
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-3 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-white">
+                      {FREE_LANG_OPTIONS.find((o) => o.key === settings.selectedFreeLang)?.label ??
+                        findLanguage(settings.selectedFreeLang ?? '')?.label ??
+                        settings.selectedFreeLang ??
+                        'Not selected yet'}
+                    </span>
+                    <span className="rounded-full border border-neon-cyan/40 bg-neon-cyan/10 px-2 py-0.5 text-[10px] font-semibold text-neon-cyan">
+                      Current
+                    </span>
+                  </div>
+                  <Link
+                    href="/checkout?plan=pro"
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-neon-cyan/40 hover:text-white"
+                  >
+                    ⭐ Upgrade to unlock all {SUPPORTED_LANGUAGE_COUNT} languages
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
+              <p className="text-sm font-semibold text-white">Voice availability</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                AudioRepeat uses your device’s built-in speech synthesis. Languages with installed
+                voices speak automatically; others fall back to your browser’s default.
+              </p>
+              {voicesLoading ? (
+                <p className="mt-2 text-[11px] text-slate-400">Loading voices…</p>
+              ) : (
+                <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                  {FREE_LANG_OPTIONS.map((o) => {
+                    const has = hasVoice(o.code);
+                    return (
+                      <div
+                        key={o.key}
+                        className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] ${
+                          has
+                            ? 'border-neon-green/30 bg-neon-green/5 text-neon-green'
+                            : 'border-white/10 bg-night-800/40 text-slate-500'
+                        }`}
+                      >
+                        <span className={`h-1.5 w-1.5 rounded-full ${has ? 'bg-neon-green' : 'bg-slate-600'}`} />
+                        <span className="truncate">{o.label.split('(')[0].trim()}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <p className="mt-2 text-[11px] text-slate-500">
+                Green = compatible voice installed on this device.
+                Gray = browser will use a default fallback.
+              </p>
+            </div>
+          </div>
+        )}
+
         {msg && (
           <div
             className={`animate-fade-up mb-4 rounded-xl border px-4 py-2.5 text-sm ${
@@ -363,7 +458,7 @@ export default function SettingsModal({ onClose }: Props) {
           </div>
         )}
 
-        {/* ---------------- Playback ---------------- */}
+
         {tab === 'playback' && (
           <div className="space-y-5">
             <div>
@@ -511,44 +606,9 @@ export default function SettingsModal({ onClose }: Props) {
                 label="Example sentences"
                 hint="Show a word's example sentence when it has one"
               />
-              {isProPlan(settings.plan) ? (
-                <Toggle
-                  checked={settings.cachedAudio}
-                  onChange={(v) => saveSettings({ cachedAudio: v })}
-                  label="Prefer cached audio (offline playback)"
-                  hint="Uses pre-generated audio when available instead of live TTS"
-                />
-              ) : (
-                <a
-                  href="/checkout?plan=pro"
-                  className="flex w-full items-center gap-3 text-left"
-                  title="Offline audio packs are a Pro feature"
-                >
-                  <span className="flex h-6 w-11 shrink-0 items-center justify-center rounded-full bg-night-600">
-                    <svg
-                      viewBox="0 0 24 24"
-                      className="h-3.5 w-3.5 text-slate-500"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden
-                    >
-                      <rect x="4" y="11" width="16" height="10" rx="2" />
-                      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                    </svg>
-                  </span>
-                  <span>
-                    <span className="block text-sm text-slate-300">
-                      Prefer cached audio (offline playback)
-                    </span>
-                    <span className="block text-[11px] text-neon-amber">
-                      ⭐ Pro feature — tap to upgrade
-                    </span>
-                  </span>
-                </a>
-              )}
+              <p className="text-sm text-slate-400">
+                Offline speech generation is temporarily unavailable. Playback uses your device voice and never uploads vocabulary to a TTS proxy.
+              </p>
             </div>
           </div>
         )}
@@ -629,8 +689,7 @@ export default function SettingsModal({ onClose }: Props) {
             <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
               <p className="text-sm font-semibold text-white">Cache</p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                Pre-generated speech clips are stored in the browser cache so they play offline.
-                Clearing them frees space; clips regenerate on demand.
+                Older locally cached speech clips can be removed here. New clips are not generated while offline speech generation is disabled.
               </p>
               <button
                 onClick={() => void clearCachedAudio()}

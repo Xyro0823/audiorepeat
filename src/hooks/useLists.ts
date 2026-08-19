@@ -17,9 +17,10 @@ import { readOnboardingPending } from '@/lib/onboarding';
 import { isProPlan } from '@/lib/plans';
 import { hydrateSeedWords, SEED_SETS } from '@/lib/seedSets';
 import { PACK_LANG } from '@/lib/starterSets';
-import { clearAllSets as dbClearAllSets, deleteSet as dbDeleteSet, getAllSets, putSet } from '@/lib/db/indexedDb';
+import { clearAllSets as dbClearAllSets, deleteSet as dbDeleteSet, getAllSets, putSet, replaceBackupData } from '@/lib/db/indexedDb';
 import {
   getSettingsSnapshot,
+  adoptPersistedSettings,
   hydrateSettings,
   refreshSettings,
   replaceSettingsFull,
@@ -423,6 +424,12 @@ export function useLists() {
     replaceSettingsFull(next);
   }, []);
 
+  const restoreBackup = useCallback(async (nextSettings: AppSettings, nextSets: VocabSet[]) => {
+    await replaceBackupData(nextSettings, nextSets);
+    adoptPersistedSettings(nextSettings);
+    setSets([...nextSets].sort((a, b) => b.updatedAt - a.updatedAt));
+  }, []);
+
   /** Delete every set (backup restore / full reset). */
   const clearSets = useCallback(async () => {
     await dbClearAllSets();
@@ -458,6 +465,7 @@ export function useLists() {
     removeSet,
     saveSettings,
     replaceSettings,
+    restoreBackup,
     clearSets,
   };
 }

@@ -54,3 +54,13 @@ export async function putSettings(settings: AppSettings): Promise<void> {
   const db = await getDb();
   await db.put('settings', { key: 'global', value: settings });
 }
+
+/** Atomically replace the database-backed slices restored from a backup. */
+export async function replaceBackupData(settings: AppSettings, sets: VocabSet[]): Promise<void> {
+  const db = await getDb();
+  const tx = db.transaction(['sets', 'settings'], 'readwrite');
+  await tx.objectStore('sets').clear();
+  for (const set of sets) await tx.objectStore('sets').put(set);
+  await tx.objectStore('settings').put({ key: 'global', value: settings });
+  await tx.done;
+}

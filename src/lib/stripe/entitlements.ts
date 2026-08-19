@@ -70,6 +70,8 @@ export interface EntitlementRecord {
   manual?: ManualEntitlement | null;
   /** Server timestamp of the last write. */
   updatedAt: unknown;
+  /** Latest applied Paddle subscription event time (Unix ms). */
+  paddleEventAt?: number | null;
 }
 
 /** Persistence boundary — implemented by the Firestore store in admin.ts. */
@@ -86,6 +88,11 @@ export interface EntitlementStore {
   /** Idempotency markers for processed webhook events (collection chosen by the store). */
   isEventProcessed(eventId: string): Promise<boolean>;
   markEventProcessed(eventId: string): Promise<void>;
+  putPaddleEntitlementIfNewer?(
+    uid: string,
+    patch: Partial<EntitlementRecord>,
+    occurredAtMs: number,
+  ): Promise<boolean>;
 }
 
 /** Stripe subscription statuses that keep Pro entitlement active. */
@@ -520,7 +527,8 @@ export function computePaddleSubscriptionEntitlement(
   EntitlementRecord,
   'updatedAt' | 'uid' | 'stripeCustomerId' | 'stripeSubscriptionId' | 'stripePriceId'
 > {
-  const status = sub.status ?? 'active';
+  // Missing/unknown provider state must never grant paid access.
+  const status = sub.status ?? 'incomplete';
   const priceId = sub.items?.[0]?.price?.id ?? null;
   const currentPeriodEnd = sub.currentBillingPeriod?.endsAt
     ? Math.floor(Date.parse(sub.currentBillingPeriod.endsAt) / 1000)
@@ -582,6 +590,7 @@ export async function handlePaddleSubscriptionEvent(
   store: EntitlementStore,
   sub: PaddleSubscriptionLike,
   prices: PaddlePriceResolver,
+  occurredAtMs?: number,
 ): Promise<void> {
   const uid =
     (typeof sub.customData?.uid === 'string' && sub.customData.uid.length > 0
@@ -591,12 +600,19 @@ export async function handlePaddleSubscriptionEvent(
 
   const patch = computePaddleSubscriptionEntitlement(sub, prices);
   const current = await store.getEntitlement(uid);
+  const write = async (next: Partial<EntitlementRecord>) => {
+    if (occurredAtMs !== undefined && Number.isFinite(occurredAtMs) && store.putPaddleEntitlementIfNewer) {
+      await store.putPaddleEntitlementIfNewer(uid, next, occurredAtMs);
+    } else {
+      await store.putEntitlement(uid, next);
+    }
+  };
   if (current?.plan === 'lifetime' || current?.billing === 'lifetime') {
     // Lifetime is permanent — a subscription lifecycle event never downgrades
     // it. A would-be Pro grant keeps Lifetime (strongest wins) while still
     // refreshing the subscription state for history.
     if (patch.plan === 'pro') {
-      await store.putEntitlement(uid, {
+      await write({
         ...patch,
         uid,
         plan: 'lifetime',
@@ -613,5 +629,5 @@ export async function handlePaddleSubscriptionEvent(
   // manual grant keeps the effective plan — computeEffectiveEntitlement ranks
   // the manual grant above provider state at read time, so a cancellation or
   // payment failure can never revoke a gift.
-  await store.putEntitlement(uid, { ...patch, uid, manual: current?.manual ?? null });
+  await write({ ...patch, uid, manual: current?.manual ?? null });
 }

@@ -47,6 +47,9 @@ export async function hydrateSettings(): Promise<void> {
     settings = {
       ...DEFAULT_SETTINGS,
       ...stored,
+      // Automatic audio generation is disabled until a first-party provider
+      // exists. Never carry the retired remote-prewarm preference forward.
+      cachedAudio: false,
       // targetGapMs now lives in the 1-5s range; clamp any legacy stored value
       // (old default was 600ms) so the slider never shows an out-of-range value.
       targetGapMs: Math.min(
@@ -78,6 +81,7 @@ export async function refreshSettings(): Promise<void> {
       settings = {
         ...DEFAULT_SETTINGS,
         ...stored,
+        cachedAudio: false,
         targetGapMs: Math.min(
           5000,
           Math.max(1000, stored?.targetGapMs ?? DEFAULT_SETTINGS.targetGapMs),
@@ -117,4 +121,10 @@ export function replaceSettingsFull(next: AppSettings): void {
   settings = next;
   emit();
   persist();
+}
+
+/** Adopt settings already committed by an atomic backup restore. */
+export function adoptPersistedSettings(next: AppSettings): void {
+  settings = next;
+  emit();
 }

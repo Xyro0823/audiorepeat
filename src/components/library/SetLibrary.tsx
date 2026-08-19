@@ -14,6 +14,7 @@ import { findLanguage } from '@/lib/languages';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit } from '@/lib/tts/speechSynthesisEngine';
 import { FREE_LANG_OPTIONS, seedCodeForLangKey } from '@/lib/freeLang';
+import { resolveDefaultNewSetLang } from '@/lib/sets/defaults';
 import { isProPlan } from '@/lib/plans';
 import { canUseLang as planGateCanUseLang } from '@/lib/planGate';
 import { CEFR_META } from '@/lib/starterSets';
@@ -1152,7 +1153,7 @@ export default function SetLibrary() {
         <SetEditor
           set={editing === 'new' ? null : editing}
           canUseLang={canUseLang}
-          defaultLang={freeLangKey ? (seedCodeForLangKey(freeLangKey) ?? undefined) : undefined}
+          defaultLang={resolveDefaultNewSetLang(pro, settings.defaultNewSetLang, freeLangKey)}
           onClose={() => setEditing(null)}
           onSave={async (set) => {
             const saved = await saveSet(set);

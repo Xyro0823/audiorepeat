@@ -105,3 +105,10 @@ export class InMemoryRateLimiter {
 
 /** Singleton used by the API route (one per server instance / isolate). */
 export const analyticsRateLimiter = new InMemoryRateLimiter();
+
+/** Checkout creation is expensive and can create provider-side objects. */
+export const checkoutRateLimiter = new InMemoryRateLimiter({
+  limit: 10,
+  windowMs: 10 * 60_000,
+  maxKeys: 5000,
+});

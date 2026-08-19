@@ -120,12 +120,19 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
 
   const handleDelete = async () => {
     setMenuError(null);
+    // Attempt server-side deletion FIRST. Only clear local data if the
+    // account was actually removed — otherwise a requires-recent-login
+    // failure would destroy local data while leaving the account active.
+    const res = await deleteAccount();
+    if (!res.ok) {
+      setMenuError(res.error);
+      setConfirmDelete(false);
+      return;
+    }
+    // Account deleted — now safe to clean up local data.
     try {
       window.localStorage.removeItem(statsStorageKey(user!.id));
       window.localStorage.removeItem(usernameStorageKey(user!.id));
-      // Per-uid entitlement + onboarding state (free language, hidden langs,
-      // pending/completed onboarding) — never left behind for a future
-      // account on this device.
       clearAccountPrefs(user!.id);
       clearOnboardingState(user!.id);
       const prefix = `audiorepeat-challenge-best-v1:${user!.id}:`;
@@ -134,13 +141,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
         if (key && key.startsWith(prefix)) window.localStorage.removeItem(key);
       }
     } catch {
-      /* ignore */
-    }
-    const res = await deleteAccount();
-    if (!res.ok) {
-      setMenuError(res.error);
-      setConfirmDelete(false);
-      return;
+      /* ignore — account already removed */
     }
     setOpen(false);
     setConfirmDelete(false);

@@ -14,7 +14,7 @@ interface Props {
   onChange: (patch: Partial<AppSettings>) => void;
   customMode: boolean; // editing per-set overrides vs the global settings
   onToggleCustom: (on: boolean) => void;
-  /** Pro gate: offline audio (cachedAudio) is a paid feature. */
+  /** Retained for call-site compatibility while offline generation is disabled. */
   pro: boolean;
   /** Selected sleep-timer duration in minutes, or null when off (transient, not persisted). */
   sleepMinutes: number | null;
@@ -70,7 +70,6 @@ export default function SettingsPanel({
   onChange,
   customMode,
   onToggleCustom,
-  pro,
   sleepMinutes,
   sleepRemaining,
   onSleepChange,
@@ -222,43 +221,9 @@ export default function SettingsPanel({
               onChange={(v) => onChange({ loop: v })}
               label="Loop the whole list"
             />
-            {pro ? (
-              <Toggle
-                checked={settings.cachedAudio}
-                onChange={(v) => onChange({ cachedAudio: v })}
-                label="Prefer cached audio (offline playback)"
-              />
-            ) : (
-              <a
-                href="/checkout?plan=pro"
-                className="flex items-center gap-3 text-left"
-                title="Offline audio packs are a Pro feature"
-              >
-                <span className="flex h-6 w-11 shrink-0 items-center justify-center rounded-full bg-night-600">
-                  <svg
-                    viewBox="0 0 24 24"
-                    className="h-3.5 w-3.5 text-slate-500"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    aria-hidden
-                  >
-                    <rect x="4" y="11" width="16" height="10" rx="2" />
-                    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
-                  </svg>
-                </span>
-                <span>
-                  <span className="block text-sm text-slate-300">
-                    Prefer cached audio (offline playback)
-                  </span>
-                  <span className="block text-[11px] text-neon-amber">
-                    ⭐ Pro feature — tap to upgrade
-                  </span>
-                </span>
-              </a>
-            )}
+            <p className="text-sm text-slate-500">
+              Offline speech generation is temporarily unavailable; device speech is used instead.
+            </p>
             <Toggle
               checked={settings.showHints}
               onChange={(v) => onChange({ showHints: v })}

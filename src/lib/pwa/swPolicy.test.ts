@@ -50,7 +50,7 @@ describe('PWA service worker — admin surfaces are never cached', () => {
     const precacheIndex = sw.indexOf('data.type === "PRECACHE"');
     expect(precacheIndex).toBeGreaterThan(-1);
     const filterSection = sw.slice(precacheIndex, precacheIndex + 1200);
-    expect(filterSection).toContain('isNetworkOnly(url)');
+    expect(filterSection).toContain('isPrecacheUrlAllowed(u, self.location.origin)');
   });
 
   it('never serves the offline shell fallback for admin navigations', () => {
@@ -116,5 +116,28 @@ describe('PWA service worker — payment surfaces are never cached', () => {
     expect(navIndex).toBeGreaterThan(-1);
     const fallbackSection = sw.slice(navIndex, sw.indexOf('});', navIndex));
     expect(fallbackSection).not.toMatch(/checkout/);
+  });
+});
+
+describe('PWA service worker — precache URL protocol boundary', () => {
+  const networkSrc = sw.match(/function isNetworkOnly\(url\) \{[\s\S]*?\n\}/)?.[0];
+  const allowedSrc = sw.match(/function isPrecacheUrlAllowed\(value, origin\) \{[\s\S]*?\n\}/)?.[0];
+  expect(networkSrc).toBeDefined();
+  expect(allowedSrc).toBeDefined();
+  const allowed = new Function(`${networkSrc}; ${allowedSrc}; return isPrecacheUrlAllowed;`)() as (
+    value: string,
+    origin: string,
+  ) => boolean;
+
+  it('allows same-origin production HTTPS and localhost HTTP', () => {
+    expect(allowed('/data/vocab/manifest.json', 'https://audiorepeat.app')).toBe(true);
+    expect(allowed('http://localhost:3000/data/test.json', 'http://localhost:3000')).toBe(true);
+  });
+
+  it('rejects cross-origin, privileged, and non-http schemes', () => {
+    expect(allowed('https://evil.example/data.json', 'https://audiorepeat.app')).toBe(false);
+    expect(allowed('/api/checkout', 'https://audiorepeat.app')).toBe(false);
+    expect(allowed('javascript:alert(1)', 'https://audiorepeat.app')).toBe(false);
+    expect(allowed('data:text/plain,secret', 'https://audiorepeat.app')).toBe(false);
   });
 });

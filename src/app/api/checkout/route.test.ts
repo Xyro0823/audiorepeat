@@ -158,3 +158,16 @@ describe('POST /api/checkout — caching', () => {
     expect(unconfigured.headers.get('Cache-Control')).toBe('no-store');
   });
 });
+
+describe('POST /api/checkout — abuse protection', () => {
+  it('rate-limits repeated transaction creation per verified uid', async () => {
+    h.verifyIdToken.mockResolvedValue('rate-limit-user');
+    for (let i = 0; i < 10; i += 1) {
+      expect((await POST(checkoutRequest({ planId: 'pro', billing: 'annual' }, 'tok'))).status).toBe(200);
+    }
+    const limited = await POST(checkoutRequest({ planId: 'pro', billing: 'annual' }, 'tok'));
+    expect(limited.status).toBe(429);
+    expect(limited.headers.get('Retry-After')).toBe('600');
+    expect(h.createCheckoutTransaction).toHaveBeenCalledTimes(10);
+  });
+});

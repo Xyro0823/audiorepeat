@@ -11,6 +11,7 @@
  */
 import { getAuthMode } from '@/lib/firebase/config';
 import { isNewlyCreatedAccount, markOnboardingPending } from '@/lib/onboarding';
+import { updateSettings } from '@/lib/settingsStore';
 import type { AuthResult, AuthState } from '@/types/auth';
 
 const MODE = getAuthMode();
@@ -58,13 +59,25 @@ async function loadClient(): Promise<typeof import('@/lib/firebase/client')> {
   return import('@/lib/firebase/client');
 }
 
+/** Entitlements are account-scoped server state, never device-global state. */
+export function resetLocalEntitlement(): void {
+  updateSettings({ plan: 'basic', planBilling: 'annual', planSource: null });
+}
+
+function enterSignedInState(user: NonNullable<AuthState['user']>): void {
+  // Fail closed before any asynchronous server lookup. This also prevents a
+  // late response for User A from appearing during User B's session.
+  resetLocalEntitlement();
+  setState({ status: 'signed-in', user });
+}
+
 /**
  * Mirror the server-side entitlement (the source of truth) into local
  * settings so the Free/Pro gating reflects the real plan. Best-effort and
  * non-blocking: when the server layer isn't configured or the fetch fails,
  * local settings stay as they are (guests-only fallback keeps working).
  */
-async function syncPlanFromServer(): Promise<void> {
+async function syncPlanFromServer(expectedUid: string): Promise<void> {
   try {
     const { getFirebaseIdToken } = await loadClient();
     const token = await getFirebaseIdToken();
@@ -72,7 +85,7 @@ async function syncPlanFromServer(): Promise<void> {
     const res = await fetch('/api/entitlement', {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) return; // 503 = server entitlement not configured — keep local state
+    if (!res.ok) return; // already reset to Free: entitlement lookup is fail-closed
     const data = (await res.json()) as {
       plan?: string;
       billing?: string | null;
@@ -80,7 +93,7 @@ async function syncPlanFromServer(): Promise<void> {
     };
     const plan = data.plan;
     if (plan !== 'basic' && plan !== 'pro' && plan !== 'lifetime') return;
-    const { updateSettings } = await import('@/lib/settingsStore');
+    if (state.status !== 'signed-in' || state.user?.id !== expectedUid) return;
     updateSettings({
       plan,
       planBilling: plan === 'lifetime' ? 'annual' : data.billing === 'monthly' ? 'monthly' : 'annual',
@@ -106,6 +119,7 @@ export async function hydrateAuth(): Promise<void> {
   if (hydrated) return;
   hydrated = true;
   if (MODE === 'unconfigured') {
+    resetLocalEntitlement();
     setState({ status: 'guest', user: null });
     return;
   }
@@ -113,6 +127,7 @@ export async function hydrateAuth(): Promise<void> {
     const { getFirebaseAuth, onFirebaseAuthChange, firebaseUserToAuthUser } = await loadClient();
     const auth = getFirebaseAuth();
     if (!auth) {
+      resetLocalEntitlement();
       setState({ status: 'guest', user: null });
       return;
     }
@@ -127,19 +142,19 @@ export async function hydrateAuth(): Promise<void> {
         if (isNewlyCreatedAccount(user.createdAt, Date.now())) {
           markOnboardingPending(user.id);
         }
-        setState({ status: 'signed-in', user });
+        enterSignedInState(user);
         // Server entitlement is authoritative — mirror it into local settings
         // so gating uses the real plan (no-op when not configured).
-        void syncPlanFromServer();
+        void syncPlanFromServer(user.id);
       } else {
         // Signed out. An explicit `logout()` already moved to 'signed-out'
         // (login screen); anything else (fresh visit) becomes a guest.
-        setStateFn((prev) =>
-          prev.status === 'signed-out' ? prev : { status: 'guest', user: null },
-        );
+        resetLocalEntitlement();
+        setStateFn((prev) => prev.status === 'signed-out' ? prev : { status: 'guest', user: null });
       }
     });
   } catch {
+    resetLocalEntitlement();
     setState({ status: 'guest', user: null });
   }
 }
@@ -170,7 +185,7 @@ export async function signup(
     // (The Firebase auth listener also marks brand-new accounts synchronously,
     // covering mounts triggered by the listener itself.)
     markOnboardingPending(user.uid);
-    setState({ status: 'signed-in', user: mapped });
+    enterSignedInState(mapped);
     return { ok: true };
   } catch (err) {
     const { describeFirebaseError } = await loadClient();
@@ -189,7 +204,7 @@ export async function login(email: string, password: string): Promise<AuthResult
     const auth = getFirebaseAuth();
     if (!auth) return { ok: false, error: UNCONFIGURED_ERROR };
     const user = await signInEmailPassword(auth, clean, password);
-    setState({ status: 'signed-in', user: firebaseUserToAuthUser(user) });
+    enterSignedInState(firebaseUserToAuthUser(user));
     return { ok: true };
   } catch (err) {
     const { describeFirebaseError } = await loadClient();
@@ -212,7 +227,7 @@ export async function signInWithGoogle(): Promise<AuthResult> {
     if (isNewlyCreatedAccount(mapped.createdAt, Date.now())) {
       markOnboardingPending(user.uid);
     }
-    setState({ status: 'signed-in', user: mapped });
+    enterSignedInState(mapped);
     return { ok: true };
   } catch (err) {
     const { describeFirebaseError } = await loadClient();
@@ -227,6 +242,9 @@ export function logout(): void {
     .catch(() => {
       /* sign-out failure is non-critical */
     });
+  // Reset entitlement to Free so the signed-out/guest session never inherits
+  // another user's cached Pro plan from the global settings store.
+  resetLocalEntitlement();
   setState({ status: 'signed-out', user: null });
 }
 
@@ -238,17 +256,31 @@ export function continueAsGuest(): void {
     .catch(() => {
       /* non-critical */
     });
+  // Reset entitlement to Free so the guest session never inherits a signed-in
+  // user's cached Pro plan from the global settings store.
+  resetLocalEntitlement();
   setState({ status: 'guest', user: null });
 }
 
 /** Permanently delete the active Firebase account (scoped keys are cleaned by the caller). */
 export async function deleteAccount(): Promise<AuthResult> {
   try {
+    const token = await getAuthIdToken();
+    if (!token) return { ok: false, error: 'Please sign in again before deleting your account.' };
+    const response = await fetch('/api/account', {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) {
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+      return { ok: false, error: data?.error ?? 'Could not delete your account.' };
+    }
     const { getFirebaseAuth } = await loadClient();
     const current = getFirebaseAuth()?.currentUser;
-    if (current) {
-      await current.delete();
-    }
+    // The server deletes Firebase Auth last; this local call is only a safe
+    // compatibility no-op when the SDK has not observed that deletion yet.
+    if (current) await current.reload().catch(() => {});
+    resetLocalEntitlement();
     setState({ status: 'guest', user: null });
     return { ok: true };
   } catch (err) {

@@ -69,6 +69,17 @@ class FakeStore implements EntitlementStore {
   async markEventProcessed(eventId: string): Promise<void> {
     this.events.add(eventId);
   }
+
+  async putPaddleEntitlementIfNewer(
+    uid: string,
+    patch: Partial<EntitlementRecord>,
+    occurredAtMs: number,
+  ): Promise<boolean> {
+    const current = this.records.get(uid);
+    if (typeof current?.paddleEventAt === 'number' && current.paddleEventAt >= occurredAtMs) return false;
+    await this.putEntitlement(uid, { ...patch, paddleEventAt: occurredAtMs });
+    return true;
+  }
 }
 
 function txn(overrides: Partial<PaddleTransactionLike> = {}): PaddleTransactionLike {
@@ -148,6 +159,11 @@ describe('computePaddleTransactionEntitlement', () => {
 });
 
 describe('computePaddleSubscriptionEntitlement', () => {
+  it('fails closed when Paddle omits subscription status', () => {
+    const rec = computePaddleSubscriptionEntitlement(sub({ status: undefined }), prices);
+    expect(rec.plan).toBe('basic');
+    expect(rec.status).toBe('incomplete');
+  });
   it('keeps Pro with refreshed period + price while active or trialing', () => {
     const rec = computePaddleSubscriptionEntitlement(sub(), prices);
     expect(rec).toMatchObject({
@@ -170,6 +186,17 @@ describe('computePaddleSubscriptionEntitlement', () => {
       // Historical id is preserved.
       expect(rec?.paddleSubscriptionId).toBe('sub_123');
     }
+  });
+});
+
+describe('Paddle subscription event ordering', () => {
+  it('does not let an older active event re-grant after a newer cancellation', async () => {
+    const store = new FakeStore();
+    await store.putEntitlement('user-1', { uid: 'user-1', plan: 'pro', status: 'active' });
+    await handlePaddleSubscriptionEvent(store, sub({ status: 'canceled' }), prices, 2000);
+    await handlePaddleSubscriptionEvent(store, sub({ status: 'active' }), prices, 1000);
+    expect((await store.getEntitlement('user-1'))?.plan).toBe('basic');
+    expect((await store.getEntitlement('user-1'))?.status).toBe('canceled');
   });
 });
 

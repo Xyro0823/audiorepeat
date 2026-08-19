@@ -69,12 +69,13 @@ export async function POST(request: Request) {
     );
   }
 
-  let event: { eventId: string; eventType: string; data: object };
+  let event: { eventId: string; eventType: string; occurredAt?: string; data: object };
   try {
     // Official verification: validates ts/h1 over the RAW body, then parses.
     event = (await getPaddle().webhooks.unmarshal(rawBody, webhookSecret, signature)) as {
       eventId: string;
       eventType: string;
+      occurredAt?: string;
       data: object;
     };
   } catch {
@@ -115,6 +116,7 @@ export async function POST(request: Request) {
           store,
           event.data as unknown as PaddleSubscriptionLike,
           PRICES,
+          event.occurredAt ? Date.parse(event.occurredAt) : undefined,
         );
         break;
       default:

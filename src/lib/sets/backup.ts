@@ -99,6 +99,9 @@ function sanitizeSettings(raw: unknown): AppSettings | undefined {
     out.reminderTime = s.reminderTime;
   if (typeof s.targetVoiceURI === 'string') out.targetVoiceURI = s.targetVoiceURI;
   if (typeof s.translationVoiceURI === 'string') out.translationVoiceURI = s.translationVoiceURI;
+  if (s.defaultNewSetLang === null || typeof s.defaultNewSetLang === 'string') {
+    out.defaultNewSetLang = s.defaultNewSetLang;
+  }
   return Object.keys(out).length > 0 ? (out as AppSettings) : undefined;
 }
 
@@ -139,10 +142,13 @@ export function parseBackup(text: string): BackupData | null {
     return null;
   }
   if (!isObject(data) || data.format !== FORMAT) return null;
+  // Read days from data.days (current format) with fallback to data.stats
+  // (legacy format) for backward compatibility.
+  const rawDays = data.days ?? data.stats;
   return {
     settings: sanitizeSettings(data.settings),
     sets: sanitizeSets(data.sets),
-    days: sanitizeDays(data.stats),
+    days: sanitizeDays(rawDays),
     username:
       typeof data.username === 'string' && data.username.trim()
         ? data.username.trim().slice(0, 24)

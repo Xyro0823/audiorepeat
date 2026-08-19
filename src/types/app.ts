@@ -74,6 +74,13 @@ export interface AppSettings extends LoopSettings {
    * ever needs migrating.
    */
   selectedFreeLang: string | null;
+  /**
+   * Pro/Lifetime only: preferred default BCP-47 language code for new sets
+   * (e.g. "es-ES", "mn"). null = auto (language of the set being created).
+   * Stored in global settings (not account-scoped) because it is a convenience
+   * preference, not an entitlement constraint.
+   */
+  defaultNewSetLang: string | null;
   cachedAudio: boolean; // prefer pre-generated cached audio (offline) when available
   /** Show contextual emoji hints on word cards. */
   showHints: boolean;
@@ -98,6 +105,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   planSource: null,
   hiddenLangs: [],
   selectedFreeLang: null,
+  defaultNewSetLang: null,
   cachedAudio: false,
   showHints: true,
   theme: 'neon',

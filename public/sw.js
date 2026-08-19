@@ -24,6 +24,19 @@ function isNetworkOnly(url) {
     url.pathname === "/api/stripe/webhook"
   );
 }
+
+function isPrecacheUrlAllowed(value, origin) {
+  try {
+    const url = new URL(value, origin);
+    return (
+      url.origin === origin &&
+      (url.protocol === "http:" || url.protocol === "https:") &&
+      !isNetworkOnly(url)
+    );
+  } catch {
+    return false;
+  }
+}
 const SHELL = [
   "/",
   "/player",
@@ -69,18 +82,7 @@ self.addEventListener("message", (event) => {
   const data = event.data;
   if (!data || typeof data !== "object") return;
   if (data.type === "PRECACHE" && Array.isArray(data.urls)) {
-    const urls = data.urls.filter((u) => {
-      try {
-        const url = new URL(u, self.location.origin);
-        return (
-          url.origin === self.location.origin &&
-          url.protocol === "http:" &&
-          !isNetworkOnly(url)
-        );
-      } catch {
-        return false;
-      }
-    });
+    const urls = data.urls.filter((u) => isPrecacheUrlAllowed(u, self.location.origin));
     if (urls.length === 0) return;
     // Cache each URL independently so a single 404 can't drop the whole batch.
     event.waitUntil(

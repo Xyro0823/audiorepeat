@@ -6,6 +6,7 @@ import LanguageLock from '@/components/library/LanguageLock';
 import { CEFR_META } from '@/lib/starterSets';
 import { CEFR_LEVELS } from '@/types/app';
 import type { CefrLevel, VocabSet, VocabWord } from '@/types/app';
+import { cleanEditorWords } from '@/lib/sets/editor';
 
 const REPEAT_OPTIONS = [1, 2, 3, 5];
 
@@ -35,6 +36,7 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
   const [words, setWords] = useState<VocabWord[]>(set ? set.words.map((w) => ({ ...w })) : [newWord()]);
   const [cefr, setCefr] = useState<CefrLevel | undefined>(set?.cefr);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -44,8 +46,7 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  const valid =
-    name.trim().length > 0 && words.some((w) => w.target.trim() && w.translation.trim());
+  const valid = name.trim().length > 0 && cleanEditorWords(words).length > 0;
 
   // Free-plan language gate: a Free user may only create/edit sets in their
   // single active language (the languages they have visible sets in). This
@@ -61,26 +62,28 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
   const submit = useCallback(async () => {
     if (!valid || saving) return;
     if (locked) return; // save-time gate — never create in a locked language
+    setSaveError(null);
     setSaving(true);
-    const clean = words
-      // Drop subtitle-import placeholders ('—') so they never reach the player.
-      .filter((w) => w.target.trim() && w.translation.trim() && w.translation.trim() !== '—')
-      .map((w) => ({
-        ...w,
-        target: w.target.trim(),
-        translation: w.translation.trim(),
-        example: w.example?.trim() || undefined,
-      }));
-    await onSave({
-      id: set?.id ?? crypto.randomUUID(),
-      name: name.trim(),
-      lang,
-      nativeLang,
-      words: clean,
-      cefr,
-      createdAt: set?.createdAt ?? Date.now(),
-      updatedAt: Date.now(),
-    });
+    try {
+      const clean = cleanEditorWords(words);
+      // Never save a set with zero valid words after cleaning.
+      if (clean.length === 0) return;
+      await onSave({
+        id: set?.id ?? crypto.randomUUID(),
+        name: name.trim(),
+        lang,
+        nativeLang,
+        words: clean,
+        cefr,
+        createdAt: set?.createdAt ?? Date.now(),
+        updatedAt: Date.now(),
+      });
+    } catch {
+      // Save failed — keep the editor open so the user can retry.
+      setSaveError('Could not save this set. Your changes are still here — please try again.');
+    } finally {
+      setSaving(false);
+    }
   }, [valid, saving, locked, name, lang, nativeLang, words, cefr, set, onSave]);
 
   const langHint = findLanguage(lang)?.label;
@@ -120,7 +123,7 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
           />
         </label>
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
               Target language
@@ -192,18 +195,18 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
           <div className="space-y-2">
             {words.map((w, i) => (
               <div key={w.id} className="rounded-xl border border-white/5 bg-night-900/40 p-2">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <input
                     value={w.target}
                     onChange={(e) => updateWord(i, { target: e.target.value })}
                     placeholder="Target (gracias)"
-                    className="w-1/3 min-w-0 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60"
+                    className="min-w-0 flex-1 basis-[120px] rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60"
                   />
                   <input
                     value={w.translation}
                     onChange={(e) => updateWord(i, { translation: e.target.value })}
                     placeholder="Translation (thank you)"
-                    className="w-1/3 min-w-0 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60"
+                    className="min-w-0 flex-1 basis-[120px] rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60"
                   />
                   <div className="flex items-center gap-1">
                     {REPEAT_OPTIONS.map((r) => (
@@ -246,6 +249,7 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
           </button>
         </div>
 
+        {saveError && <p role="alert" className="mt-4 text-sm text-neon-magenta">{saveError}</p>}
         <div className="mt-6 flex justify-end gap-3">
           <button
             onClick={onClose}
