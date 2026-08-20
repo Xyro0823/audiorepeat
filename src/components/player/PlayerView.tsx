@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ProfileDropdown from '@/components/auth/ProfileDropdown';
+import AuthScreen from '@/components/auth/AuthScreen';
 import StreakBadge from '@/components/StreakBadge';
 import { useAudioLoop } from '@/hooks/useAudioLoop';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,6 +15,7 @@ import { useLists } from '@/hooks/useLists';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
+import { shouldOfferCloudVoiceConsent } from '@/lib/tts/cloudVoiceConsent';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import { findLanguage } from '@/lib/languages';
@@ -64,6 +66,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const [snoozeUntil, setSnoozeUntil] = useState<number | null>(null);
   const [snoozeRemaining, setSnoozeRemaining] = useState<number | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [cloudAuthOpen, setCloudAuthOpen] = useState(false);
   // 1 = full volume; ramps to 0 over the last 15 seconds before the timer ends.
   const fadeVolume =
     sleepEndAt !== null && sleepRemaining !== null
@@ -153,6 +156,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const cloudAudioActive =
     cloudTtsReady && effective.cloudTts &&
     (effective.cachedAudio || isIOSWebKit() || targetNeedsCloud || translationNeedsCloud);
+  const cloudVoiceConsentNeeded = shouldOfferCloudVoiceConsent({
+    configured: cloudTtsReady,
+    enabled: effective.cloudTts,
+    voicesLoading,
+    targetNeedsCloud,
+    translationNeedsCloud,
+  });
   const upgradeToPro = useCallback(() => {
     void router.push('/checkout?plan=pro');
   }, [router]);
@@ -168,6 +178,19 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     },
     [set, customMode, saveSet, saveSettings],
   );
+
+  const enableCloudVoice = useCallback(() => {
+    changeSettings({ cloudTts: true });
+    setToast('Cloud voice enabled. Audio will be saved for faster replay.');
+  }, [changeSettings]);
+
+  const requestCloudVoice = useCallback(() => {
+    if (user) {
+      enableCloudVoice();
+      return;
+    }
+    setCloudAuthOpen(true);
+  }, [enableCloudVoice, user]);
 
   const toggleCustom = useCallback(
     (on: boolean) => {
@@ -336,9 +359,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   }, [seekToWord]);
   const resumePlayback = useCallback(() => {
     if (resumeIndex <= 0) return;
+    if (cloudVoiceConsentNeeded) {
+      setToast('Enable cloud voice below to hear this language clearly.');
+      return;
+    }
     setResumeWordId(null);
     playFromWord(resumeIndex);
-  }, [playFromWord, resumeIndex]);
+  }, [cloudVoiceConsentNeeded, playFromWord, resumeIndex]);
   const startFromBeginning = useCallback(() => {
     if (set) clearPlaybackPosition(user?.id, set.id);
     lastSavedPositionRef.current = null;
@@ -508,9 +535,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
 
   // Loop playback that honors the snooze window.
   const startPlayback = useCallback(() => {
+    if (cloudVoiceConsentNeeded) {
+      setToast('Enable cloud voice below to hear this language clearly.');
+      return;
+    }
     play();
     snoozeRestart();
-  }, [play, snoozeRestart]);
+  }, [cloudVoiceConsentNeeded, play, snoozeRestart]);
 
   // Stable handle for the lock-screen play request (forwarded into the audio
   // loop's media-session handler, which lives before this callback is defined).
@@ -552,6 +583,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       setQuizOn(false);
       quiz.stop();
     } else {
+      if (cloudVoiceConsentNeeded) {
+        setToast('Enable cloud voice below before starting the quiz.');
+        return;
+      }
       setQuizOn(true);
       if (dictationOn) {
         setDictationOn(false);
@@ -560,13 +595,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       stop(); // halt the loop so both engines never speak at once
       startQuiz();
     }
-  }, [quizOn, dictationOn, stop, quiz, dictation, startQuiz]);
+  }, [quizOn, dictationOn, cloudVoiceConsentNeeded, stop, quiz, dictation, startQuiz]);
 
   const toggleDictation = useCallback(() => {
     if (dictationOn) {
       setDictationOn(false);
       dictation.stop();
     } else {
+      if (cloudVoiceConsentNeeded) {
+        setToast('Enable cloud voice below before starting dictation.');
+        return;
+      }
       setDictationOn(true);
       if (quizOn) {
         setQuizOn(false);
@@ -575,7 +614,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       stop(); // halt the loop so only dictation speaks
       startDictation();
     }
-  }, [dictationOn, quizOn, stop, dictation, quiz, startDictation]);
+  }, [dictationOn, quizOn, cloudVoiceConsentNeeded, stop, dictation, quiz, startDictation]);
 
   // Count each quiz/dictation question as a word listened (keeps streak/stats honest).
   useEffect(() => {
@@ -980,6 +1019,40 @@ export default function PlayerView({ setId }: { setId: string | null }) {
                 </div>
               </div>
             )}
+            {cloudVoiceConsentNeeded && (
+              <section
+                aria-labelledby="cloud-voice-title"
+                className="mx-auto mb-7 w-full max-w-md rounded-2xl border border-neon-cyan/25 bg-neon-cyan/[0.07] p-4 text-left shadow-[0_14px_40px_rgba(0,0,0,0.18)] sm:p-5"
+              >
+                <div className="flex items-start gap-3.5">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neon-cyan/15 text-lg text-neon-cyan"
+                  >
+                    ☁
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 id="cloud-voice-title" className="text-sm font-bold text-white">
+                      Hear this language clearly
+                    </h2>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                      This device has no compatible voice. AudioRepeat can securely send only the
+                      word being spoken to Microsoft Azure, then save the audio on this device.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={requestCloudVoice}
+                      className="mt-3 min-h-11 w-full rounded-xl bg-neon-cyan px-4 text-sm font-bold text-night-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-night-950 active:scale-[0.98] sm:w-auto"
+                    >
+                      {user ? 'Enable cloud voice' : 'Sign in & enable cloud voice'}
+                    </button>
+                    <p className="mt-2 text-[11px] text-slate-500">
+                      You can turn it off anytime in Settings.
+                    </p>
+                  </div>
+                </div>
+              </section>
+            )}
             <WordCard
               word={currentWord}
               wordIndex={progress.wordIndex}
@@ -989,7 +1062,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               total={words.length}
               showHints={effective.showHints}
               showExamples={effective.showExamples}
-              noVoice={noVoiceForTarget}
+              noVoice={noVoiceForTarget && !cloudVoiceConsentNeeded}
               cloudVoice={cloudVoiceForTarget}
               canMark={pro}
               onMark={markWord}
@@ -1032,6 +1105,14 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         onSelect={selectWord}
         onClose={() => setNavigatorOpen(false)}
       />
+
+      {cloudAuthOpen && (
+        <AuthScreen
+          mode="overlay"
+          onSuccess={enableCloudVoice}
+          onClose={() => setCloudAuthOpen(false)}
+        />
+      )}
 
       <PlayerControls
         isPlaying={dictationOn ? dictation.active : quizOn ? quiz.active : isPlaying}

@@ -13,6 +13,8 @@ interface Props {
    */
   mode?: Mode;
   onClose?: () => void;
+  /** Called only after a successful account sign-in or sign-up. */
+  onSuccess?: () => void;
 }
 
 const inputClass =
@@ -59,7 +61,7 @@ function Logo({ size = 'md' }: { size?: 'md' | 'lg' }) {
   );
 }
 
-export default function AuthScreen({ mode = 'gate', onClose }: Props) {
+export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props) {
   const { signup, login, signInWithGoogle, continueAsGuest, mode: authMode } = useAuth();
   const configured = authMode === 'firebase';
 
@@ -82,8 +84,9 @@ export default function AuthScreen({ mode = 'gate', onClose }: Props) {
   }, [mode, onClose]);
 
   const done = useCallback(() => {
+    onSuccess?.();
     if (mode === 'overlay') onClose?.();
-  }, [mode, onClose]);
+  }, [mode, onClose, onSuccess]);
 
   const submit = useCallback(
     async (e: FormEvent) => {
