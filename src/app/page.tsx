@@ -1,5 +1,15 @@
 import LandingPage from "@/components/landing/LandingPage";
+import { faqStructuredData, serializeStructuredData, softwareApplicationStructuredData } from "@/lib/structuredData";
 
 export default function HomePage() {
-  return <LandingPage />;
+  const structuredData = [softwareApplicationStructuredData(), faqStructuredData()];
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeStructuredData(structuredData) }}
+      />
+      <LandingPage />
+    </>
+  );
 }

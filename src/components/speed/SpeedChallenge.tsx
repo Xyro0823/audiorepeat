@@ -6,7 +6,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { bestScoreStorageKey } from '@/lib/auth/scopes';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
+import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
 import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
+import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
 import PrewarmStatus from '@/components/player/PrewarmStatus';
 import type { TTSEngine } from '@/lib/tts/engine';
 import type { VocabSet } from '@/types/app';
@@ -68,6 +70,7 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
   const { settings } = useLists();
   // Personal-best records are scoped per account (guests keep the legacy key).
   const { user } = useAuth();
+  const cloudTtsReady = useCloudTtsStatus();
   const bestKey = set ? bestScoreStorageKey(user?.id, set.id) : '';
 
   // Same engine selection as the player: cached <audio> playback on iOS or
@@ -75,9 +78,12 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
   const engine = useMemo<TTSEngine>(
     () => {
       const synth = new SpeechSynthesisEngine();
+      if (settings.cloudTts && cloudTtsReady) {
+        return new CachedAudioEngine(new CloudTtsEngine(synth));
+      }
       return settings.cachedAudio || isIOSWebKit() ? new CachedAudioEngine(synth) : synth;
     },
-    [settings.cachedAudio],
+    [settings.cachedAudio, settings.cloudTts, cloudTtsReady],
   );
 
   // Warm the set's audio at launch (SetLibrary also fires at tap time; the
@@ -91,6 +97,7 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
   useEffect(() => {
     const s = set;
     if (!s || s.words.length === 0) return;
+    if (!settings.cloudTts || !cloudTtsReady) return;
     if (!settings.cachedAudio && !isIOSWebKit()) return;
     const overrides = s.settings ?? {};
     const targetVoiceURI = overrides.targetVoiceURI ?? settings.targetVoiceURI;
@@ -130,7 +137,7 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
       setPrewarmSummary(null);
       if (summaryTimer !== undefined) window.clearTimeout(summaryTimer);
     };
-  }, [set, settings.cachedAudio, settings.targetVoiceURI, settings.translationVoiceURI]);
+  }, [set, settings.cachedAudio, settings.cloudTts, settings.targetVoiceURI, settings.translationVoiceURI, cloudTtsReady]);
 
   const [phase, setPhase] = useState<'intro' | 'playing' | 'finished'>('intro');
   const phaseRef = useRef(phase);

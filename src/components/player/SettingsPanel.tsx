@@ -29,6 +29,7 @@ interface Props {
   prewarm?: { done: number; total: number } | null;
   /** Brief post-warm-up summary, or null. Auto-dismissed by the caller. */
   prewarmSummary?: string | null;
+  cloudTtsReady?: boolean;
 }
 
 function Toggle({
@@ -79,6 +80,7 @@ export default function SettingsPanel({
   nativeLang,
   prewarm = null,
   prewarmSummary = null,
+  cloudTtsReady = false,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [customMin, setCustomMin] = useState('');
@@ -222,7 +224,11 @@ export default function SettingsPanel({
               label="Loop the whole list"
             />
             <p className="text-sm text-slate-500">
-              Offline speech generation is temporarily unavailable; device speech is used instead.
+              {cloudTtsReady && settings.cloudTts
+                ? 'Missing device voices use secure cloud speech and are cached for offline replay.'
+                : cloudTtsReady
+                  ? 'Cloud speech is available but off. Enable it in Settings → Language.'
+                  : 'Cloud speech is not configured yet; device speech is used instead.'}
             </p>
             <Toggle
               checked={settings.showHints}

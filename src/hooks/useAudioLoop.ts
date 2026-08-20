@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { LoopSettings, LoopWord, PlaybackStatus } from '@/types/loop';
 import type { TTSEngine, TTSEngineVoice } from '@/lib/tts/engine';
 import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
+import { clampWordIndex, previousWordIndex } from '@/lib/playerNavigation';
 
 const DEFAULT_SETTINGS: LoopSettings = {
   repeats: 2,
@@ -363,8 +364,54 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
     if (statusRef.current === 'playing') schedulerRef.current.speakCurrent(tokenRef.current);
   }, [clearGapTimer, getEngine]);
 
+  const skipPrevious = useCallback(() => {
+    const list = wordsRef.current;
+    if (list.length === 0) return;
+    tokenRef.current += 1;
+    getEngine().stop();
+    clearGapTimer();
+    const c = cursorRef.current;
+    c.wordIndex = previousWordIndex(c.wordIndex, list.length);
+    c.repeatIndex = 0;
+    c.isTranslation = false;
+    setProgress({ ...c });
+    if (statusRef.current === 'playing') schedulerRef.current.speakCurrent(tokenRef.current);
+  }, [clearGapTimer, getEngine]);
+
+  const seekToWord = useCallback((requestedIndex: number) => {
+    const list = wordsRef.current;
+    if (list.length === 0) return;
+    tokenRef.current += 1;
+    getEngine().stop();
+    clearGapTimer();
+    const c = cursorRef.current;
+    c.wordIndex = clampWordIndex(requestedIndex, list.length);
+    c.repeatIndex = 0;
+    c.isTranslation = false;
+    setProgress({ ...c });
+    if (statusRef.current === 'playing') schedulerRef.current.speakCurrent(tokenRef.current);
+  }, [clearGapTimer, getEngine]);
+
+  const playFromWord = useCallback((requestedIndex: number) => {
+    const list = wordsRef.current;
+    if (typeof window === 'undefined' || list.length === 0) return;
+    tokenRef.current += 1;
+    getEngine().stop();
+    clearGapTimer();
+    cursorRef.current = {
+      wordIndex: clampWordIndex(requestedIndex, list.length),
+      repeatIndex: 0,
+      isTranslation: false,
+    };
+    statusRef.current = 'playing';
+    setStatus('playing');
+    setProgress({ ...cursorRef.current });
+    void requestWakeLock();
+    schedulerRef.current.speakCurrent(tokenRef.current);
+  }, [clearGapTimer, getEngine, requestWakeLock]);
+
   const replayWord = useCallback(() => {
-    // "previous track": re-hear the current word from its first repeat
+    // Re-hear the current word from its first repeat.
     const list = wordsRef.current;
     if (list.length === 0) return;
     tokenRef.current += 1;
@@ -394,11 +441,11 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
     set('pause', pause);
     set('stop', stop);
     set('nexttrack', skipNext);
-    set('previoustrack', replayWord);
+    set('previoustrack', skipPrevious);
     // Some hardware/Bluetooth skip buttons emit seek actions instead of track
     // actions — map them onto skip/replay for broader lock-screen support.
     set('seekforward', skipNext);
-    set('seekbackward', replayWord);
+    set('seekbackward', skipPrevious);
     return () => {
       set('play', null);
       set('pause', null);
@@ -408,7 +455,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
       set('seekforward', null);
       set('seekbackward', null);
     };
-  }, [play, pause, stop, skipNext, replayWord]);
+  }, [play, pause, stop, skipNext, skipPrevious]);
 
   // keep the cursor in bounds if the list is edited mid-playback
   useEffect(() => {
@@ -441,6 +488,9 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
     pause,
     stop,
     skipNext,
+    skipPrevious,
+    seekToWord,
+    playFromWord,
     replayWord,
     loadVoices,
     getVoices,

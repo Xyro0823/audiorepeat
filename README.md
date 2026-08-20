@@ -10,7 +10,7 @@ remote areas: works fully offline and as an installable PWA.
 ## Stack
 
 - Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4
-- Native Web Speech API (`speechSynthesis`) — zero-cost TTS
+- Native Web Speech API plus optional Azure Speech fallback (explicit opt-in)
 - IndexedDB (via `idb`) for vocab sets & settings; Cache API for pre-generated audio
 - Media Session API (lock-screen / bluetooth controls) + Screen Wake Lock
 - Hand-rolled service worker (offline shell) + typed PWA manifest
@@ -35,7 +35,7 @@ npm run icons      # regenerate PWA icons (public/icons/*.png)
 app/            layout, library (/), player (/player?id=…), manifest, SW
 components/     library (SetList, SetEditor) + player (Controls, WordCard, …)
 hooks/          useAudioLoop · useSpeechVoices · useLists (IndexedDB CRUD)
-lib/tts/        engine.ts (interface) · speechSynthesisEngine · cachedAudioEngine
+lib/tts/        device speech · authenticated Azure fallback · cached audio engine
 lib/audio/      Cache API helpers for pre-generated TTS audio
 lib/db/         IndexedDB schema + accessors
 scripts/        dependency-free PWA icon generator
@@ -48,15 +48,16 @@ read stale state), a monotonically increasing token invalidates in-flight
 speech on stop/pause/skip, and pause is cancel-based because Chromium's
 `speechSynthesis.pause()/resume()` is unreliable. All audio goes through the
 `TTSEngine` interface, so engines are swappable: Web Speech API by default,
-or the hybrid `CachedAudioEngine` (cached `<audio>` → speech fallback) when
-"Prefer cached audio" is enabled.
+or the hybrid `CachedAudioEngine` (cached `<audio>` → secure Azure speech →
+device speech fallback) when cloud voices are enabled.
 
 ## Offline / PWA notes
 
-- **Voices:** Chrome exposes online voices (`localService: false`). The voice
-  picker marks voices `offline`/`cloud`; `pickVoice()` prefers offline voices.
-  Fully offline speech needs local voices (Windows system voices, or Google
-  TTS offline packs on Android).
+- **Voices:** `pickVoice()` prefers installed device voices. A signed-in user
+  can explicitly enable Azure cloud voices; only the word being spoken is sent
+  through the authenticated same-origin API and the returned MP3 is cached for
+  later offline replay. `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` are
+  server-only deployment variables.
 - **Background audio:** `speechSynthesis` does not register with the Media
   Session API, and iOS stops it with the screen locked. Pre-generated audio
   played via `<audio>` (the cached engine) is the reliable hands-free path.
@@ -83,6 +84,4 @@ Paddle cutover is complete.
 
 ## Roadmap
 
-- Cloud TTS fallback (ElevenLabs / Google Cloud TTS) + "Download for offline"
-  that pre-generates audio into the Cache API
-- Unit tests for the audio loop scheduler
+- Unit tests for additional media-session edge cases

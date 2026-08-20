@@ -81,6 +81,8 @@ export interface AppSettings extends LoopSettings {
    * preference, not an entitlement constraint.
    */
   defaultNewSetLang: string | null;
+  /** Explicit consent to send spoken text to the server-side Azure TTS fallback. */
+  cloudTts: boolean;
   cachedAudio: boolean; // prefer pre-generated cached audio (offline) when available
   /** Show contextual emoji hints on word cards. */
   showHints: boolean;
@@ -106,6 +108,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   hiddenLangs: [],
   selectedFreeLang: null,
   defaultNewSetLang: null,
+  cloudTts: false,
   cachedAudio: false,
   showHints: true,
   theme: 'neon',

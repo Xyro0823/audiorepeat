@@ -16,6 +16,8 @@ interface Props {
   showExamples: boolean;
   /** True when no installed TTS voice can cover the target language. */
   noVoice?: boolean;
+  /** True when the server cloud voice covers a missing device voice. */
+  cloudVoice?: boolean;
   /** False hides the mastery (spaced-repetition) buttons behind a Pro link. */
   canMark?: boolean;
   onMark: (status: MasteryStatus | undefined) => void;
@@ -31,6 +33,7 @@ export default function WordCard({
   showHints,
   showExamples,
   noVoice = false,
+  cloudVoice = false,
   canMark = true,
   onMark,
 }: Props) {
@@ -114,6 +117,15 @@ export default function WordCard({
             <path d="m17 9 6 6" />
           </svg>
           No voice for this language
+        </span>
+      )}
+
+      {!isTranslation && cloudVoice && (
+        <span
+          title="No device voice is installed for this language, so AudioRepeat is using its secure cloud voice and saving the result for offline replay."
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 px-3 py-1 text-[11px] font-semibold text-neon-cyan"
+        >
+          <span aria-hidden>☁</span> Cloud voice · cached after first play
         </span>
       )}
 

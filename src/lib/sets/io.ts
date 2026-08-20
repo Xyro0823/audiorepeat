@@ -100,6 +100,7 @@ function sanitizeSettings(raw: unknown): Partial<AppSettings> | undefined {
   if (typeof s.translationGapMs === 'number' && s.translationGapMs >= 0 && s.translationGapMs <= 5000) out.translationGapMs = s.translationGapMs;
   if (typeof s.loop === 'boolean') out.loop = s.loop;
   if (typeof s.cachedAudio === 'boolean') out.cachedAudio = s.cachedAudio;
+  if (typeof s.cloudTts === 'boolean') out.cloudTts = s.cloudTts;
   if (typeof s.targetVoiceURI === 'string') out.targetVoiceURI = s.targetVoiceURI;
   if (typeof s.translationVoiceURI === 'string') out.translationVoiceURI = s.translationVoiceURI;
   return Object.keys(out).length > 0 ? out : undefined;

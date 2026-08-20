@@ -4,8 +4,8 @@ import Hero from "@/components/Hero";
 export default function DashboardPage() {
   return (
     <>
-      {/* Cinematic HLS video hero at the top of the practice dashboard. */}
-      <div id="hero" className="relative bg-black">
+      {/* Listening-first hero at the top of the practice dashboard. */}
+      <div id="hero" className="relative bg-[#05060a]">
         <Hero />
         {/* Soft theme-aware fade from the hero into the page background —
             replaces the hard black edge (night-950 is the page background in
@@ -14,7 +14,7 @@ export default function DashboardPage() {
             the hero's own bottom fade. */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-16 bg-gradient-to-b from-transparent to-night-950"
+          className="pointer-events-none absolute inset-x-0 bottom-0 z-[2] h-20 bg-gradient-to-b from-transparent to-night-950"
         />
       </div>
       <SetLibrary />

@@ -1,24 +1,23 @@
 
 
-/**
- * Cloud TTS pre-generation — currently DISABLED.
- *
- * Previous versions used Google Translate TTS through third-party CORS proxies
- * (allorigins, corsproxy.io, codetabs) to pre-generate audio blobs for offline
- * iOS lock-screen playback. These proxies send user vocabulary to third-party
- * servers without explicit consent, which conflicts with the Privacy Policy.
- *
- * All proxy sources have been removed. The prewarm infrastructure is retained
- * so that if a first-party/same-origin TTS provider is added in the future, it
- * can be plugged in without changing the cache key format or the player's
- * cached-audio engine.
- *
- * For now, every prewarm call is a no-op and the player falls back to device
- * speechSynthesis. There is no manual export/import path.
- *
- * Cache key format (lang|voice|text — see audioCacheKey) must remain stable
- * so old blobs don't go stale if/when a provider is added.
- */
+import { getAuthIdToken } from '@/lib/authStore';
+import { audioCacheKey, getCachedAudioBlob, putCachedAudioBlob } from '@/lib/audio/cache';
+
+/** Same-origin cloud speech. Azure credentials stay in the server route. */
+let configuredPromise: Promise<boolean> | null = null;
+
+export function cloudTtsConfigured(): Promise<boolean> {
+  if (!configuredPromise) {
+    configuredPromise = fetch('/api/tts', { cache: 'no-store' })
+      .then(async (response) => {
+        if (!response.ok) return false;
+        const body = (await response.json()) as { configured?: unknown };
+        return body.configured === true;
+      })
+      .catch(() => false);
+  }
+  return configuredPromise;
+}
 
 
 export interface PrewarmWord {
@@ -37,15 +36,117 @@ interface PrewarmOptions {
   onProgress?: (done: number, total: number, succeeded: number, failed: number) => void;
 }
 
-/**
- * No-op prewarm — returns immediately and reports zero work.
- * Network TTS prewarming is disabled to prevent uploading user vocabulary
- * to third-party servers without explicit informed consent.
- */
-export function prewarmSetAudio(_words: PrewarmWord[], opts: PrewarmOptions): () => void {
-  // Report zero work so the shared manager never leaves a run "active" forever.
-  opts.onProgress?.(0, 0, 0, 0);
-  return () => {};
+async function requestCloudAudio(
+  text: string,
+  lang: string,
+  token: string,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  const response = await fetch('/api/tts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ text, lang }),
+    signal,
+  });
+  if (!response.ok) throw new Error(`cloud-tts-${response.status}`);
+  const type = response.headers.get('content-type') ?? '';
+  if (!type.toLowerCase().startsWith('audio/')) throw new Error('cloud-tts-invalid-response');
+  const blob = await response.blob();
+  if (blob.size === 0 || blob.size > 2_000_000) throw new Error('cloud-tts-invalid-audio');
+  return blob;
+}
+
+/** Generate one item on demand and cache it for subsequent/offline playback. */
+export async function fetchCloudAudioBlob(
+  text: string,
+  lang: string,
+  signal?: AbortSignal,
+): Promise<Blob> {
+  const key = audioCacheKey(text, lang);
+  const cached = await getCachedAudioBlob(key);
+  if (cached) return cached;
+  const token = await getAuthIdToken();
+  if (!token) throw new Error('cloud-tts-unauthenticated');
+  const blob = await requestCloudAudio(text, lang, token, signal);
+  await putCachedAudioBlob(key, blob);
+  return blob;
+}
+
+export function prewarmSetAudio(words: PrewarmWord[], opts: PrewarmOptions): () => void {
+  const maxWords = Math.max(0, Math.min(opts.maxWords ?? 60, words.length));
+  const jobs = words.slice(0, maxWords).flatMap((word) => {
+    const pending: Array<{ text: string; lang: string }> = [];
+    if (!opts.targetVoiceURI) pending.push({ text: word.target, lang: opts.lang });
+    if (!opts.translationVoiceURI && opts.nativeLang) {
+      pending.push({ text: word.translation, lang: opts.nativeLang });
+    }
+    return pending;
+  });
+  const total = jobs.length;
+  if (total === 0) {
+    opts.onProgress?.(0, 0, 0, 0);
+    return () => {};
+  }
+
+  let cancelled = false;
+  let cursor = 0;
+  let done = 0;
+  let succeeded = 0;
+  let failed = 0;
+  const controllers = new Set<AbortController>();
+  const report = () => opts.onProgress?.(done, total, succeeded, failed);
+  report();
+
+  void Promise.all([cloudTtsConfigured(), getAuthIdToken()]).then(async ([configured, token]) => {
+    if (cancelled) return;
+    if (!configured || !token) {
+      done = total;
+      failed = total;
+      report();
+      return;
+    }
+    const worker = async () => {
+      while (!cancelled) {
+        const index = cursor;
+        cursor += 1;
+        if (index >= total) return;
+        const job = jobs[index];
+        const key = audioCacheKey(job.text, job.lang);
+        const controller = new AbortController();
+        controllers.add(controller);
+        try {
+          const cached = await getCachedAudioBlob(key);
+          if (!cached) {
+            const blob = await requestCloudAudio(job.text, job.lang, token, controller.signal);
+            await putCachedAudioBlob(key, blob);
+          }
+          if (!cancelled) succeeded += 1;
+        } catch {
+          if (!cancelled) failed += 1;
+        } finally {
+          controllers.delete(controller);
+          if (!cancelled) {
+            done += 1;
+            report();
+          }
+        }
+      }
+    };
+    const concurrency = Math.max(1, Math.min(opts.concurrency ?? 3, 6));
+    await Promise.all(Array.from({ length: Math.min(concurrency, total) }, () => worker()));
+  }).catch(() => {
+    if (!cancelled) {
+      done = total;
+      failed = total;
+      report();
+    }
+  });
+
+  return () => {
+    cancelled = true;
+    for (const controller of controllers) controller.abort();
+    controllers.clear();
+  };
 }
 
 /* ------------------------------------------------------------------ */

@@ -4,9 +4,13 @@ import Link from "next/link";
 import { useEffect, useRef, useState, type RefObject } from "react";
 import {
   ArrowUpRight,
+  Download,
+  Headphones,
   Languages,
   Mic,
   Repeat,
+  ShieldCheck,
+  Smartphone,
   WifiOff,
 } from "lucide-react";
 import AuthScreen from "@/components/auth/AuthScreen";
@@ -14,17 +18,22 @@ import { useAuth } from "@/hooks/useAuth";
 import { SUPPORTED_LANGUAGE_COUNT } from "@/lib/freeLang";
 import { landingAuthAction } from "@/lib/adminNav";
 import { PLAN_ORDER, PLANS } from "@/lib/plans";
+import { LEGAL_IDENTITY } from "@/lib/legalIdentity";
+import InstallAppButton from "@/components/pwa/InstallAppButton";
+import AudioDemo from "./AudioDemo";
+import { ANNUAL_SAVINGS_PERCENT, FAQ_ITEMS, HOW_IT_WORKS } from "./landingContent";
 import NewsletterForm from "./NewsletterForm";
-import Testimonials from "./Testimonials";
 
 /* ------------------------------------------------------------------ */
 /* Shared bits                                                        */
 /* ------------------------------------------------------------------ */
 
 const NAV_LINKS = [
+  { href: "#how-it-works", label: "How it works" },
+  { href: "#demo", label: "Demo" },
   { href: "#features", label: "Features" },
-  { href: "#languages", label: "Languages" },
   { href: "#pricing", label: "Pricing" },
+  { href: "#faq", label: "FAQ" },
 ];
 
 /** Cyan play-triangle logo mark. */
@@ -43,13 +52,13 @@ function LogoMark() {
   );
 }
 
-/** LIVE SESSION status pill — breathing, green dot, learner count. */
-function LivePill({ count = "1,240 learners listening now" }: { count?: string }) {
+/** Truthful product-status pill; never presents synthetic live-user counts. */
+function TrustPill() {
   return (
-    <span className="live-pill inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 backdrop-blur-xl">
-      <span aria-hidden className="h-2 w-2 animate-pulse rounded-full bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.9)]" />
-      <span className="text-[8px] font-bold uppercase tracking-[0.25em] text-green-400">Live Session</span>
-      <span className="text-xs text-white">{count}</span>
+    <span className="inline-flex flex-wrap items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-center backdrop-blur-xl">
+      <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" aria-hidden />
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">Privacy-first</span>
+      <span className="text-xs text-white">Uses voices available on your device</span>
     </span>
   );
 }
@@ -290,13 +299,6 @@ export default function LandingPage() {
     };
   });
 
-  const voices = [
-    { flag: "🇯🇵", name: "Yuki Tanaka", role: "NATIVE JAPANESE VOICE", grad: "from-cyan-500/45 via-sky-500/15 to-transparent" },
-    { flag: "🇫🇷", name: "Claire Dubois", role: "AUDIO CURATOR", grad: "from-sky-400/45 via-cyan-500/15 to-transparent" },
-    { flag: "🇸🇦", name: "Layla Haddad", role: "NATIVE ARABIC VOICE", grad: "from-blue-500/45 via-indigo-500/15 to-transparent" },
-    { flag: "🇪🇸", name: "Mateo Ruiz", role: "NATIVE SPANISH VOICE", grad: "from-cyan-400/45 via-blue-500/15 to-transparent" },
-  ];
-
   const features = [
     {
       icon: Repeat,
@@ -310,18 +312,24 @@ export default function LandingPage() {
     },
     {
       icon: Mic,
-      title: "AI Pronunciation Assistant",
-      text: "Neural TTS voices pronounce every word natively. Slow it down, loop it, shadow it back.",
+      title: "Pronunciation Practice",
+      text: "Use available speech voices to hear each word, slow it down, loop it and shadow it back.",
     },
     {
       icon: Languages,
-      title: "250+ Native Speaker Sets",
-      text: "Curated starter packs from A1 to C2 across the world's most-spoken languages.",
+      title: "Curated Vocabulary Packs",
+      text: "Ready-made starter packs from A1 to C2 across widely studied languages.",
     },
   ];
 
   return (
     <div id="landing" className="relative min-h-screen overflow-x-clip bg-[#0a0a0a] text-[#e8eaef]">
+      <a
+        href="#main-content"
+        className="fixed left-4 top-3 z-[60] -translate-y-20 rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-cyan-300"
+      >
+        Skip to main content
+      </a>
       {/* Ambient background: dot grid + cyan radials */}
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div className="bg-dots absolute inset-0" />
@@ -333,16 +341,16 @@ export default function LandingPage() {
       {/* Fixed top navbar */}
       <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-[#0a0a0a]/70 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6 lg:px-12">
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href="/" aria-label="AudioRepeat home" className="flex min-h-11 items-center gap-2.5 rounded-xl">
             <LogoMark />
             {/* Wordmark hidden on ultra-narrow screens so the logo mark +
                 Sign in + Start Practice always fit without overflow. */}
-            <span className="hidden text-lg font-extrabold tracking-tight text-white min-[400px]:inline">
+            <span className="hidden text-lg font-extrabold tracking-tight text-white sm:inline">
               Audio<span className="text-cyan-400">Repeat</span>
             </span>
           </Link>
 
-          <div className="hidden items-center gap-8 md:flex">
+          <div className="hidden items-center gap-5 lg:flex">
             {NAV_LINKS.map((l) => (
               <a
                 key={l.href}
@@ -361,7 +369,7 @@ export default function LandingPage() {
             {landingAction?.kind === 'link' ? (
               <Link
                 href={landingAction.href}
-                className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-white/10 active:scale-95"
+                className="inline-flex min-h-11 items-center rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-white/10 active:scale-95"
               >
                 {landingAction.label}
               </Link>
@@ -369,20 +377,22 @@ export default function LandingPage() {
               <button
                 type="button"
                 onClick={() => setShowAuth(true)}
-                className="rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-white/10 active:scale-95"
+                className="inline-flex min-h-11 items-center rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-white/10 active:scale-95"
               >
                 {landingAction.label}
               </button>
             ) : null}
             <Link
               href="/dashboard"
-              className="rounded-full bg-white px-5 py-2 text-[13px] font-semibold text-black shadow-[0_4px_20px_rgba(255,255,255,0.15)] transition hover:bg-slate-100 active:scale-95"
+              className="inline-flex min-h-11 items-center rounded-full bg-white px-5 py-2 text-[13px] font-semibold text-black shadow-[0_4px_20px_rgba(255,255,255,0.15)] transition hover:bg-slate-100 active:scale-95"
             >
               Start Practice
             </Link>
           </div>
         </div>
       </nav>
+
+      <main id="main-content">
 
       {/* ------------------------------------------------------------ */}
       {/* Hero — central neural node + satellites + SVG connections    */}
@@ -419,10 +429,10 @@ export default function LandingPage() {
 
               <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-300">
                 <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.9)]" />
-                AI-powered audio drilling
+                Hands-free audio drilling
               </p>
 
-              <h1 className="mx-auto mt-5 max-w-3xl font-extrabold leading-tight tracking-tight text-white text-3xl md:text-5xl lg:text-6xl">
+              <h1 className="mx-auto mt-5 max-w-3xl text-balance text-3xl font-extrabold leading-tight tracking-tight text-white md:text-5xl lg:text-6xl">
                 Master Any Language with{" "}
                 <span className="bg-gradient-to-r from-[#22d3ee] via-[#06b6d4] to-[#3b82f6] bg-clip-text text-transparent">
                   Hands-Free Audio Repeat
@@ -431,7 +441,7 @@ export default function LandingPage() {
 
               <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400 md:text-[15px]">
                 Loop, repeat and retain vocabulary while you commute, cook or wind down.
-                Neural audio, spaced repetition and {langCount} languages — no screen required.
+                Speech audio, spaced repetition and {langCount} languages — no screen required.
               </p>
 
               <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
@@ -455,9 +465,9 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* Live pill under the node */}
+            {/* Product transparency pill under the node */}
             <div className="mt-5 flex justify-center">
-              <LivePill />
+              <TrustPill />
             </div>
           </div>
 
@@ -472,6 +482,32 @@ export default function LandingPage() {
           </div>
         </div>
       </header>
+
+      {/* ------------------------------------------------------------ */}
+      {/* How it works                                                  */}
+      {/* ------------------------------------------------------------ */}
+      <section id="how-it-works" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-24 pt-28 lg:px-12">
+        <div className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">How it works</p>
+          <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+            From a word list to a listening habit
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
+            Get started in minutes. No complicated course setup and no need to stare at a screen.
+          </p>
+        </div>
+        <ol className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
+          {HOW_IT_WORKS.map((item) => (
+            <li key={item.step} className="glass-neural rounded-3xl p-6">
+              <span className="font-mono text-xs font-bold tracking-[0.2em] text-cyan-400">{item.step}</span>
+              <h3 className="mt-5 text-xl font-bold text-white">{item.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400">{item.text}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <AudioDemo />
 
       {/* ------------------------------------------------------------ */}
       {/* Features grid                                               */}
@@ -514,7 +550,7 @@ export default function LandingPage() {
             {langCount} languages. <span className="bg-gradient-to-r from-[#22d3ee] to-[#3b82f6] bg-clip-text text-transparent">One tap away.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
-            From Arabic to Zulu — native neural voices, real word packs, zero setup.
+            From Arabic to Zulu — device-compatible speech voices, real word packs, zero setup.
           </p>
           <div className="mx-auto mt-8 flex max-w-2xl flex-wrap items-center justify-center gap-2">
             {[
@@ -546,6 +582,34 @@ export default function LandingPage() {
       </section>
 
       {/* ------------------------------------------------------------ */}
+      {/* Installable app                                               */}
+      {/* ------------------------------------------------------------ */}
+      <section id="install" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-28 lg:px-12">
+        <div className="grid items-center gap-8 rounded-[2rem] border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-white/[0.035] to-blue-500/10 p-7 sm:p-9 lg:grid-cols-[1fr_auto] lg:p-12">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">Installable web app</p>
+            <h2 className="mt-3 text-balance text-3xl font-extrabold tracking-tight text-white md:text-4xl">
+              Keep AudioRepeat one tap away
+            </h2>
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-400">
+              Install from your browser for a full-screen home-screen experience. Downloaded vocabulary stays ready for supported offline practice—no app-store account required.
+            </p>
+            <ul className="mt-6 grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
+              <li className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-cyan-300" aria-hidden /> Home-screen access</li>
+              <li className="flex items-center gap-2"><Download className="h-4 w-4 text-cyan-300" aria-hidden /> Offline-ready sets</li>
+              <li className="flex items-center gap-2"><Headphones className="h-4 w-4 text-cyan-300" aria-hidden /> Hands-free playback</li>
+            </ul>
+          </div>
+          <div className="flex flex-col items-stretch gap-3 sm:items-start lg:items-end">
+            <InstallAppButton variant="landing" />
+            <Link href="/dashboard" className="text-center text-xs font-semibold text-slate-400 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white">
+              Open without installing
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------ */}
       {/* Pricing                                                      */}
       {/* ------------------------------------------------------------ */}
       <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-28 lg:px-12">
@@ -556,11 +620,12 @@ export default function LandingPage() {
           </h2>
 
           {/* monthly / annual toggle */}
-          <div className="mt-8 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1">
+          <div className="mt-8 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1" role="group" aria-label="Pro billing period">
             <button
               type="button"
+              aria-pressed={!annual}
               onClick={() => setAnnual(false)}
-              className={`rounded-full px-5 py-2 text-[13px] font-semibold transition-all ${
+              className={`rounded-full px-5 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
                 !annual ? "bg-white text-black shadow" : "text-slate-400 hover:text-white"
               }`}
             >
@@ -568,12 +633,13 @@ export default function LandingPage() {
             </button>
             <button
               type="button"
+              aria-pressed={annual}
               onClick={() => setAnnual(true)}
-              className={`rounded-full px-5 py-2 text-[13px] font-semibold transition-all ${
+              className={`rounded-full px-5 py-2 text-[13px] font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 ${
                 annual ? "bg-white text-black shadow" : "text-slate-400 hover:text-white"
               }`}
             >
-              Annual <span className="ml-1 text-[10px] font-bold text-emerald-400">−20%</span>
+              Annual <span className={`ml-1 text-[10px] font-bold ${annual ? "text-emerald-700" : "text-emerald-400"}`}>Save {ANNUAL_SAVINGS_PERCENT}%</span>
             </button>
           </div>
         </div>
@@ -628,50 +694,68 @@ export default function LandingPage() {
       </section>
 
       {/* ------------------------------------------------------------ */}
-      {/* Native voices                                                 */}
+      {/* Audio transparency                                            */}
       {/* ------------------------------------------------------------ */}
       <section className="mx-auto w-full max-w-6xl px-6 pb-28 lg:px-12">
         <div className="text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">The human layer</p>
-          <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-white md:text-5xl">
-            Voices you can trust
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">Clear about the audio</p>
+          <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+            Your device provides the voice
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
-            Native curators and voice artists behind every pack — real people,
-            real pronunciation, real culture.
+            AudioRepeat uses speech-synthesis voices available through your browser and operating system. It does not present generated voices as human recordings.
           </p>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
-          {voices.map((v) => (
-            <div key={v.name} className="glass-neural group flex gap-5 rounded-[2rem] p-5 hover:border-cyan-400/30">
-              <div className="relative aspect-[4/5] w-36 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br grayscale transition-all duration-700 group-hover:grayscale-0 md:w-40">
-                <div className={`absolute inset-0 bg-gradient-to-br ${v.grad}`} />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-6xl drop-shadow-lg">{v.flag}</span>
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              </div>
-              <div className="flex flex-col justify-center py-2">
-                <span className="text-[10px] font-thin uppercase tracking-[0.3em] text-cyan-400">
-                  {v.role}
-                </span>
-                <h3 className="mt-2 text-xl font-bold text-white">{v.name}</h3>
-                <p className="mt-2 text-[13px] leading-relaxed text-slate-400">
-                  {v.role.includes("VOICE")
-                    ? "Recorded thousands of clean, natural audio takes for hands-free learning."
-                    : "Hand-picks every word so your first hour feels like your hundredth."}
-                </p>
-              </div>
+        <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
+          {[
+            { icon: Headphones, title: "Installed voices first", text: "When a matching local voice is installed, AudioRepeat prefers it for reliable playback." },
+            { icon: Repeat, title: "You control the loop", text: "Adjust speed, repetition and ordering to fit the vocabulary you are practicing." },
+            { icon: ShieldCheck, title: "No fabricated speakers", text: "Names, portraits and testimonials are never used to imply recordings that do not exist." },
+          ].map((item) => (
+            <div key={item.title} className="glass-neural rounded-3xl p-6">
+              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300">
+                <item.icon className="h-5 w-5" aria-hidden />
+              </span>
+              <h3 className="mt-5 text-lg font-bold text-white">{item.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400">{item.text}</p>
             </div>
           ))}
         </div>
       </section>
 
       {/* ------------------------------------------------------------ */}
-      {/* Testimonials                                                  */}
+      {/* FAQ                                                           */}
       {/* ------------------------------------------------------------ */}
-      <Testimonials />
+      <section id="faq" className="mx-auto w-full max-w-4xl scroll-mt-28 px-6 pb-28 lg:px-12">
+        <div className="text-center">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">FAQ</p>
+          <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+            Know before you start
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
+            Straight answers about plans, voices, offline use and payments.
+          </p>
+        </div>
+        <div className="mt-10 space-y-3">
+          {FAQ_ITEMS.map((item) => (
+            <details key={item.question} className="group rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-1 open:border-cyan-400/25 open:bg-cyan-500/[0.055]">
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-left text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:text-base">
+                {item.question}
+                <span aria-hidden className="text-xl font-light text-cyan-300 transition-transform group-open:rotate-45">+</span>
+              </summary>
+              <p className="max-w-3xl pb-5 pr-8 text-sm leading-relaxed text-slate-400">{item.answer}</p>
+            </details>
+          ))}
+        </div>
+        <p className="mt-8 text-center text-sm text-slate-400">
+          Still need help?{" "}
+          <a href={`mailto:${LEGAL_IDENTITY.supportEmail}`} className="font-semibold text-cyan-300 underline decoration-cyan-300/40 underline-offset-4 hover:text-cyan-200">
+            Contact support
+          </a>
+        </p>
+      </section>
+      </main>
 
       {/* ------------------------------------------------------------ */}
       {/* Footer                                                       */}
@@ -696,13 +780,19 @@ export default function LandingPage() {
             <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">Product</h4>
             <ul className="mt-4 space-y-2.5">
               <li>
-                <a href="#features" className="text-[13px] text-slate-400 transition hover:text-white">Features</a>
+                <a href="#how-it-works" className="text-[13px] text-slate-400 transition hover:text-white">How It Works</a>
               </li>
               <li>
-                <a href="#languages" className="text-[13px] text-slate-400 transition hover:text-white">Languages</a>
+                <a href="#demo" className="text-[13px] text-slate-400 transition hover:text-white">Audio Demo</a>
               </li>
               <li>
                 <a href="#pricing" className="text-[13px] text-slate-400 transition hover:text-white">Pricing</a>
+              </li>
+              <li>
+                <a href="#faq" className="text-[13px] text-slate-400 transition hover:text-white">FAQ</a>
+              </li>
+              <li>
+                <a href={`mailto:${LEGAL_IDENTITY.supportEmail}`} className="text-[13px] text-slate-400 transition hover:text-white">Contact Support</a>
               </li>
             </ul>
           </div>
@@ -721,8 +811,8 @@ export default function LandingPage() {
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-6 py-7 sm:flex-row lg:px-12">
             <p className="text-xs text-slate-500">© 2026 AudioRepeat · Loop, repeat, retain.</p>
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
-              <a href="#features" className="transition hover:text-cyan-300">Features</a>
-              <a href="#languages" className="transition hover:text-cyan-300">Languages</a>
+              <a href="#demo" className="transition hover:text-cyan-300">Audio Demo</a>
+              <a href="#install" className="transition hover:text-cyan-300">Install</a>
               <Link href="/dashboard" className="transition hover:text-cyan-300">Practice</Link>
             </div>
           </div>
@@ -733,6 +823,8 @@ export default function LandingPage() {
               <Link href="/terms" className="text-xs text-slate-500 transition hover:text-cyan-300">Terms</Link>
               <span aria-hidden className="text-slate-700">·</span>
               <Link href="/refunds" className="text-xs text-slate-500 transition hover:text-cyan-300">Refund Policy</Link>
+              <span aria-hidden className="text-slate-700">·</span>
+              <a href={`mailto:${LEGAL_IDENTITY.supportEmail}`} className="text-xs text-slate-500 transition hover:text-cyan-300">Support</a>
             </div>
           </div>
         </div>

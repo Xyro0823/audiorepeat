@@ -14,6 +14,7 @@ import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import SwRegister from "@/components/pwa/SwRegister";
 import ThemeManager from "@/components/settings/ThemeManager";
+import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,13 +58,42 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "AudioRepeat",
+    default: "AudioRepeat — Hands-Free Language Practice",
     template: "%s · AudioRepeat",
   },
   description:
     "Offline-first, hands-free vocabulary looping for auditory language learners. Hear each word repeated in your target language, then its translation.",
   applicationName: "AudioRepeat",
+  alternates: {
+    canonical: "/",
+  },
+  keywords: [
+    "language learning",
+    "audio vocabulary",
+    "spaced repetition",
+    "offline language practice",
+    "hands-free learning",
+  ],
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "AudioRepeat",
+    title: "AudioRepeat — Hands-Free Language Practice",
+    description: "Loop, repeat and retain vocabulary with device speech voices, spaced repetition and offline-ready practice.",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "AudioRepeat hands-free language practice" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AudioRepeat — Hands-Free Language Practice",
+    description: "Loop, repeat and retain vocabulary with device speech voices, spaced repetition and offline-ready practice.",
+    images: ["/opengraph-image"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
   icons: {
     icon: "/icon.svg",
     apple: "/apple-touch-icon.png",

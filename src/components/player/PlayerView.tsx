@@ -6,20 +6,29 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ProfileDropdown from '@/components/auth/ProfileDropdown';
 import StreakBadge from '@/components/StreakBadge';
 import { useAudioLoop } from '@/hooks/useAudioLoop';
+import { useAuth } from '@/hooks/useAuth';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useQuizMode } from '@/hooks/useQuizMode';
 import { useDictationMode } from '@/hooks/useDictationMode';
 import { useLists } from '@/hooks/useLists';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
+import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import { findLanguage } from '@/lib/languages';
 import { FREE_LANG_LIMIT, isProPlan } from '@/lib/plans';
 import { formatCountdown } from '@/lib/format';
 import { recordSetPlayed } from '@/lib/libraryMeta';
+import {
+  clearPlaybackPosition,
+  readPlaybackPosition,
+  savePlaybackPosition,
+} from '@/lib/playbackPosition';
 import type { TTSEngine } from '@/lib/tts/engine';
 import type { AppSettings, MasteryStatus } from '@/types/app';
+import type { LoopWord } from '@/types/loop';
+import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
 import DictationCard from './DictationCard';
 import PlayerControls from './PlayerControls';
 import ProgressBar from './ProgressBar';
@@ -27,20 +36,26 @@ import QuizCard from './QuizCard';
 import SettingsButton from '@/components/settings/SettingsButton';
 import SettingsPanel from './SettingsPanel';
 import WordCard from './WordCard';
+import WordNavigator from './WordNavigator';
 
 type WordFilter = 'all' | 'learning' | 'hard';
 
 const SLEEP_FADE_MS = 15_000;
 const SNOOZE_MS = 30_000; // after the timer ends, Play within this window restarts it
+const LIBRARY_HREF = '/dashboard';
 
 export default function PlayerView({ setId }: { setId: string | null }) {
   const router = useRouter();
+  const { user } = useAuth();
   const { sets, loading, settings, saveSettings, saveSet } = useLists();
   const set = sets.find((s) => s.id === setId) ?? null;
 
   // Playlist filter: 'all' = every word, 'learning' = not yet mastered
   // (covers unmarked + review-needed), 'hard' = only words flagged for review.
   const [filter, setFilter] = useState<WordFilter>('all');
+  const [navigatorOpen, setNavigatorOpen] = useState(false);
+  const [resumeWordId, setResumeWordId] = useState<string | null>(null);
+  const lastSavedPositionRef = useRef<string | null>(null);
 
   // ---------- sleep timer (transient, not persisted) ----------
   const [sleepMinutes, setSleepMinutes] = useState<number | null>(null);
@@ -127,6 +142,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // paid features per the plan definitions (basic keeps the core audio loop).
   // Purchases land in settings.plan via the /checkout success flow.
   const pro = isProPlan(effective.plan);
+  const cloudTtsReady = useCloudTtsStatus();
+  const { voices, loading: voicesLoading, hasVoice } = useSpeechVoices();
+  const nativeLangForAudio =
+    set?.nativeLang ?? (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
+  const targetNeedsCloud = Boolean(set && !voicesLoading && !hasVoice(set.lang));
+  const translationNeedsCloud = Boolean(
+    set && !voicesLoading && !hasVoice(nativeLangForAudio),
+  );
+  const cloudAudioActive =
+    cloudTtsReady && effective.cloudTts &&
+    (effective.cachedAudio || isIOSWebKit() || targetNeedsCloud || translationNeedsCloud);
   const upgradeToPro = useCallback(() => {
     void router.push('/checkout?plan=pro');
   }, [router]);
@@ -157,9 +183,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // playback (fed by the prewarm below) is the only hands-free-safe path.
   // Cache misses fall back to speechSynthesis inside CachedAudioEngine.
   const engine = useMemo<TTSEngine | undefined>(() => {
-    if (!effective.cachedAudio && !isIOSWebKit()) return undefined;
-    return new CachedAudioEngine(new SpeechSynthesisEngine());
-  }, [effective.cachedAudio]);
+    const device = new SpeechSynthesisEngine();
+    if (cloudAudioActive) return new CachedAudioEngine(new CloudTtsEngine(device));
+    if (effective.cachedAudio || isIOSWebKit()) return new CachedAudioEngine(device);
+    return undefined;
+  }, [cloudAudioActive, effective.cachedAudio]);
 
   // Background pre-warm: generate + cache audio blobs ahead of the drill so
   // words play through <audio> (lock-screen safe). Runs on iOS by default and
@@ -189,7 +217,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   useEffect(() => {
     const s = setRef.current;
     if (!s || s.words.length === 0) return;
-    if (!effective.cachedAudio && !isIOSWebKit()) return;
+    if (!cloudTtsReady || !effective.cloudTts) return;
+    if (!effective.cachedAudio && !isIOSWebKit() && !targetNeedsCloud && !translationNeedsCloud) return;
     const nativeLang =
       s.nativeLang ?? (typeof navigator !== 'undefined' ? navigator.language : undefined);
     let revealed = false;
@@ -247,20 +276,75 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     effective.cachedAudio,
     effective.targetVoiceURI,
     effective.translationVoiceURI,
+    effective.cloudTts,
+    cloudTtsReady,
+    targetNeedsCloud,
+    translationNeedsCloud,
   ]);
 
-  const { progress, currentWord, isPlaying, play, pause, stop, skipNext, replayWord } =
+  useEffect(() => {
+    const activeSetId = set?.id;
+    const timer = window.setTimeout(() => {
+      const saved = activeSetId ? readPlaybackPosition(user?.id, activeSetId) : null;
+      lastSavedPositionRef.current = saved && activeSetId
+        ? `${activeSetId}:${saved.wordId}`
+        : null;
+      setResumeWordId(saved?.wordId ?? null);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [set?.id, user?.id]);
+
+  const recordPlaybackPosition = useCallback((word: LoopWord) => {
+    if (!set) return;
+    const identity = `${set.id}:${word.id}`;
+    if (lastSavedPositionRef.current === identity) return;
+    lastSavedPositionRef.current = identity;
+    savePlaybackPosition(user?.id, set.id, word.id);
+    setResumeWordId(null);
+  }, [set, user?.id]);
+
+  const {
+    progress,
+    currentWord,
+    isPlaying,
+    play,
+    pause,
+    stop,
+    skipNext,
+    skipPrevious,
+    seekToWord,
+    playFromWord,
+  } =
     useAudioLoop({
       words,
       settings: effective,
       engine,
       volume: fadeVolume,
+      onWordChange: recordPlaybackPosition,
       album: set?.name,
       artist: set ? (findLanguage(set.lang)?.label ?? set.lang) : undefined,
       // Lock-screen / hardware Play must honor the snooze window too — forward
       // to the snooze-aware start (defined below) through a stable ref.
       onPlayRequest: () => startPlaybackRef.current(),
     });
+
+  const resumeIndex = resumeWordId ? words.findIndex((word) => word.id === resumeWordId) : -1;
+  const resumeWord = resumeIndex > 0 ? words[resumeIndex] : null;
+  const selectWord = useCallback((wordIndex: number) => {
+    setResumeWordId(null);
+    seekToWord(wordIndex);
+  }, [seekToWord]);
+  const resumePlayback = useCallback(() => {
+    if (resumeIndex <= 0) return;
+    setResumeWordId(null);
+    playFromWord(resumeIndex);
+  }, [playFromWord, resumeIndex]);
+  const startFromBeginning = useCallback(() => {
+    if (set) clearPlaybackPosition(user?.id, set.id);
+    lastSavedPositionRef.current = null;
+    setResumeWordId(null);
+    seekToWord(0);
+  }, [seekToWord, set, user?.id]);
 
   // ---------- daily practice stats (streak, words, study time) ----------
   const { streak, recordWords, recordMs } = usePracticeStats();
@@ -515,13 +599,16 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     [set, currentWord, saveSet],
   );
 
-  const { voices, loading: voicesLoading, hasVoice } = useSpeechVoices(engine);
   // Surface silent / wrong-language words: true when the current target language
   // has no installed voice at all (the engine falls back to the browser default).
   const noVoiceForTarget =
-    !!currentWord && !voicesLoading && !hasVoice(currentWord.lang);
+    !!currentWord && !voicesLoading && !hasVoice(currentWord.lang) &&
+    (!cloudTtsReady || !effective.cloudTts);
+  const cloudVoiceForTarget =
+    !!currentWord && !voicesLoading && !hasVoice(currentWord.lang) &&
+    cloudTtsReady && effective.cloudTts;
 
-  // keyboard shortcuts: Space play/pause · ← replay word · → next · S stop
+  // keyboard shortcuts: Space play/pause · ← previous · → next · S stop
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -600,7 +687,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           break;
         case 'ArrowLeft':
           e.preventDefault();
-          replayWord();
+          skipPrevious();
           break;
         case 'ArrowRight':
           e.preventDefault();
@@ -616,7 +703,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [isPlaying, startPlayback, pause, startQuiz, stopPlayback, skipNext, replayWord, quizOn, quiz, dictationOn, dictation]);
+  }, [isPlaying, startPlayback, pause, startQuiz, stopPlayback, skipNext, skipPrevious, quizOn, quiz, dictationOn, dictation]);
 
   if (loading) {
     return (
@@ -633,7 +720,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         <p className="text-2xl font-semibold text-white">Set not found</p>
         <p className="text-sm text-slate-400">It may have been deleted.</p>
         <Link
-          href="/"
+          href={LIBRARY_HREF}
           className="mt-2 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110"
         >
           Back to library
@@ -653,7 +740,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       )}
       <header className="animate-fade-up relative z-50 flex items-center gap-2">
         <Link
-          href="/"
+          href={LIBRARY_HREF}
           className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
           aria-label="Back to library"
         >
@@ -866,6 +953,33 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           />
         ) : (
           <>
+            {resumeWord && !isPlaying && progress.wordIndex === 0 && (
+              <div className="mx-auto mb-7 flex w-full max-w-md flex-col gap-4 rounded-2xl border border-neon-cyan/20 bg-neon-cyan/5 p-4 text-left sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neon-cyan">Continue listening</p>
+                  <p className="mt-1 truncate text-sm font-semibold text-white">
+                    Word {resumeIndex + 1} · {resumeWord.target}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-slate-500">{resumeWord.translation}</p>
+                </div>
+                <div className="flex shrink-0 gap-2">
+                  <button
+                    type="button"
+                    onClick={startFromBeginning}
+                    className="min-h-11 rounded-xl border border-white/10 px-3 text-xs font-semibold text-slate-400 transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+                  >
+                    Start over
+                  </button>
+                  <button
+                    type="button"
+                    onClick={resumePlayback}
+                    className="min-h-11 rounded-xl bg-neon-cyan px-4 text-xs font-bold text-night-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-night-950"
+                  >
+                    ▶ Resume
+                  </button>
+                </div>
+              </div>
+            )}
             <WordCard
               word={currentWord}
               wordIndex={progress.wordIndex}
@@ -876,6 +990,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               showHints={effective.showHints}
               showExamples={effective.showExamples}
               noVoice={noVoiceForTarget}
+              cloudVoice={cloudVoiceForTarget}
               canMark={pro}
               onMark={markWord}
             />
@@ -885,6 +1000,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               isTranslation={progress.isTranslation}
               repeats={currentRepeats}
               total={words.length}
+              onSeek={selectWord}
+              onOpenNavigator={() => setNavigatorOpen(true)}
             />
           </>
         )}
@@ -905,6 +1022,15 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         nativeLang={set.nativeLang}
         prewarm={prewarm}
         prewarmSummary={prewarmSummary}
+        cloudTtsReady={cloudTtsReady}
+      />
+
+      <WordNavigator
+        open={navigatorOpen}
+        words={words}
+        currentIndex={progress.wordIndex}
+        onSelect={selectWord}
+        onClose={() => setNavigatorOpen(false)}
       />
 
       <PlayerControls
@@ -928,7 +1054,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         }
         onStop={stopPlayback}
         onSkipNext={dictationOn ? dictation.skip : quizOn ? quiz.skip : skipNext}
-        onReplay={dictationOn ? dictation.replay : quizOn ? quiz.replay : replayWord}
+        onBack={dictationOn ? dictation.replay : quizOn ? quiz.replay : skipPrevious}
+        backAction={dictationOn || quizOn ? 'replay' : 'previous'}
         speed={effective.speed}
         onSpeedChange={(speed) => changeSettings({ speed })}
         shuffle={shuffle}

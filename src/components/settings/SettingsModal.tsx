@@ -7,6 +7,7 @@ import { useLists } from '@/hooks/useLists';
 import { useAuth } from '@/hooks/useAuth';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
+import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
 import DowngradeModal from '@/components/checkout/DowngradeModal';
 import { buildBackup, downloadBackup, parseBackup, type BackupData } from '@/lib/sets/backup';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
@@ -96,6 +97,7 @@ export default function SettingsModal({ onClose }: Props) {
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const { voices, loading: voicesLoading, hasVoice } = useSpeechVoices();
+  const cloudTtsReady = useCloudTtsStatus();
 
   // Target language for the voice pickers: the most-studied language, else en-US.
   const targetLang = useMemo(() => {
@@ -413,25 +415,42 @@ export default function SettingsModal({ onClose }: Props) {
             <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
               <p className="text-sm font-semibold text-white">Voice availability</p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                AudioRepeat uses your device’s built-in speech synthesis. Languages with installed
-                voices speak automatically; others fall back to your browser’s default.
+                Device voices play instantly. When a voice is missing, secure cloud speech can
+                generate it once and save it for offline replay.
               </p>
+              {cloudTtsReady ? (
+                <div className="mt-3 rounded-xl border border-neon-cyan/20 bg-neon-cyan/5 p-3">
+                  <Toggle
+                    checked={settings.cloudTts}
+                    onChange={(cloudTts) => saveSettings({ cloudTts })}
+                    label="Use secure cloud voices"
+                    hint="Sends only the word being spoken to Microsoft Azure, then caches the audio on this device"
+                  />
+                </div>
+              ) : (
+                <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-slate-500">
+                  Cloud voices are not configured on this server yet.
+                </p>
+              )}
               {voicesLoading ? (
                 <p className="mt-2 text-[11px] text-slate-400">Loading voices…</p>
               ) : (
                 <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
                   {FREE_LANG_OPTIONS.map((o) => {
                     const has = hasVoice(o.code);
+                    const cloud = !has && cloudTtsReady;
                     return (
                       <div
                         key={o.key}
                         className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] ${
                           has
                             ? 'border-neon-green/30 bg-neon-green/5 text-neon-green'
+                            : cloud
+                              ? 'border-neon-cyan/25 bg-neon-cyan/5 text-neon-cyan'
                             : 'border-white/10 bg-night-800/40 text-slate-500'
                         }`}
                       >
-                        <span className={`h-1.5 w-1.5 rounded-full ${has ? 'bg-neon-green' : 'bg-slate-600'}`} />
+                        <span className={`h-1.5 w-1.5 rounded-full ${has ? 'bg-neon-green' : cloud ? 'bg-neon-cyan' : 'bg-slate-600'}`} />
                         <span className="truncate">{o.label.split('(')[0].trim()}</span>
                       </div>
                     );
@@ -439,8 +458,8 @@ export default function SettingsModal({ onClose }: Props) {
                 </div>
               )}
               <p className="mt-2 text-[11px] text-slate-500">
-                Green = compatible voice installed on this device.
-                Gray = browser will use a default fallback.
+                Green = installed on this device. Cyan = secure cloud voice with offline cache.
+                {!cloudTtsReady && ' Gray = cloud speech is not configured yet.'}
               </p>
             </div>
           </div>
@@ -607,7 +626,11 @@ export default function SettingsModal({ onClose }: Props) {
                 hint="Show a word's example sentence when it has one"
               />
               <p className="text-sm text-slate-400">
-                Offline speech generation is temporarily unavailable. Playback uses your device voice and never uploads vocabulary to a TTS proxy.
+                {cloudTtsReady
+                  ? settings.cloudTts
+                    ? 'Cloud speech is enabled for missing device voices. Generated audio is cached for offline replay.'
+                    : 'Cloud speech is available but off. Enable it in the Language tab to use missing voices.'
+                  : 'Cloud speech is not configured yet, so playback currently uses device voices.'}
               </p>
             </div>
           </div>

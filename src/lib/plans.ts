@@ -26,6 +26,18 @@ export function isProPlan(plan: PlanId): boolean {
 /** Number of active languages included with the Free plan. */
 export const FREE_LANG_LIMIT = 1;
 
+export const PRO_MONTHLY_PRICE = 4.99;
+export const PRO_ANNUAL_PRICE = 39.99;
+
+export function annualSavingsPercent(
+  monthlyPrice = PRO_MONTHLY_PRICE,
+  annualPrice = PRO_ANNUAL_PRICE,
+): number {
+  return Math.round((1 - annualPrice / (monthlyPrice * 12)) * 100);
+}
+
+export const ANNUAL_SAVINGS_PERCENT = annualSavingsPercent();
+
 /**
  * Languages a Free-plan user unlocks by upgrading to Pro/Lifetime — the
  * entitlement gap between the Free plan's single active language and the
@@ -57,7 +69,9 @@ export function planDetail(
   if (plan === 'lifetime') return 'Lifetime · one-time payment';
   if (plan === 'pro') {
     if (source === 'manual') return 'Pro · Gift access';
-    return billing === 'annual' ? 'Pro · $39.99/yr' : 'Pro · $4.99/mo';
+    return billing === 'annual'
+      ? `Pro · $${PRO_ANNUAL_PRICE}/yr`
+      : `Pro · $${PRO_MONTHLY_PRICE}/mo`;
   }
   return 'Free plan — upgrade anytime';
 }
@@ -91,11 +105,11 @@ export const PLANS: Record<PlanId, PlanDef> = {
     popular: true,
     priceFor: (annual) =>
       annual
-        ? { price: 39.99, note: '/year' }
-        : { price: 4.99, note: '/mo' },
+        ? { price: PRO_ANNUAL_PRICE, note: '/year' }
+        : { price: PRO_MONTHLY_PRICE, note: '/mo' },
     features: (langCount) => [
       `All ${langCount} languages`,
-      'AI pronunciation coach',
+      'Pronunciation practice tools',
       'Offline audio packs',
       'Spaced repetition + quiz mode',
       'Speed challenges & stats',

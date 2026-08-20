@@ -36,6 +36,7 @@ import AiInsightsCard from '@/components/dashboard/AiInsightsCard';
 import FreePlanNotice from '@/components/dashboard/FreePlanNotice';
 import MetricCards from '@/components/dashboard/MetricCards';
 import WelcomeHero from '@/components/dashboard/WelcomeHero';
+import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import FreeLanguageBar from '@/components/onboarding/FreeLanguageBar';
 import ChangeFreeLanguageModal from '@/components/onboarding/ChangeFreeLanguageModal';
 
@@ -151,7 +152,7 @@ function FeaturedCard({ set, bookmarked, onBookmark, onPlay }: FeaturedCardProps
             <span aria-hidden>★</span> Editor&apos;s Pick
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-neon-cyan/40 bg-neon-cyan/10 px-2.5 py-1 text-[11px] font-semibold text-neon-cyan">
-            <span aria-hidden>🎧</span> Native Speaker Audio
+            <span aria-hidden>🎧</span> Device Speech Audio
           </span>
         </div>
 
@@ -461,7 +462,7 @@ type ImportMsg = { kind: 'ok' | 'err'; text: string } | null;
 
 export default function SetLibrary() {
   const { sets, allSets, loading, settings, saveSet, removeSet, freeLangKey } = useLists();
-  const { wordsToday, msToday, streak, week, recordWords } = usePracticeStats();
+  const { wordsToday, msToday, streak, week, days, recordWords } = usePracticeStats();
   const { recents, favorites, toggleFavorite } = useLibraryMeta();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -674,6 +675,10 @@ export default function SetLibrary() {
     setLangFilter('all');
   }, []);
   const hasWeekActivity = week.some((d) => d.words > 0 || d.ms > 0);
+  const hasEverPracticed = useMemo(
+    () => Object.values(days).some((day) => day.w > 0 || day.ms > 0),
+    [days],
+  );
 
   // Dashboard metrics: mastery across the whole library + daily goal progress.
   const masteryStats = useMemo(() => {
@@ -709,6 +714,7 @@ export default function SetLibrary() {
   const warmIfNeeded = useCallback(
     (set: VocabSet) => {
       if (set.words.length === 0) return;
+      if (!settings.cloudTts) return;
       if (!settings.cachedAudio && !isIOSWebKit()) return;
       // Resolve per-set voice overrides exactly like the player's `effective`
       // settings so the dedupe key matches what PlayerView computes.
@@ -786,7 +792,7 @@ export default function SetLibrary() {
             {FREE_LANG_OPTIONS.length} languages · hands-free practice
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="nav-actions ml-auto flex w-full items-center justify-between gap-0.5 rounded-2xl p-1 sm:w-auto sm:justify-start">
           <SettingsButton />
           <StreakBadge streak={streak} />
           <InstallAppButton />
@@ -828,6 +834,18 @@ export default function SetLibrary() {
         msToday={msToday}
         streak={streak}
         onStart={featured ? () => playSet(featured) : undefined}
+      />
+
+      <GettingStartedChecklist
+        languageReady={Boolean(freeLangKey || settings.defaultNewSetLang || sets.length > 0)}
+        setReady={sets.length > 0}
+        practiceReady={hasEverPracticed}
+        canPlay={Boolean(featured)}
+        onChooseLanguage={() => setChangingLang(true)}
+        onBrowse={() => setBrowse(true)}
+        onPlay={() => {
+          if (featured) playSet(featured);
+        }}
       />
 
       <FreeLanguageBar langKey={freeLangKey} pro={pro} onChange={() => setChangingLang(true)} />

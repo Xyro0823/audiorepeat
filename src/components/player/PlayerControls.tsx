@@ -7,7 +7,8 @@ interface Props {
   onPlayPause: () => void;
   onStop: () => void;
   onSkipNext: () => void;
-  onReplay: () => void;
+  onBack: () => void;
+  backAction: 'previous' | 'replay';
   speed: number;
   onSpeedChange: (speed: number) => void;
   /** Randomize playback order. */
@@ -20,7 +21,8 @@ export default function PlayerControls({
   onPlayPause,
   onStop,
   onSkipNext,
-  onReplay,
+  onBack,
+  backAction,
   speed,
   onSpeedChange,
   shuffle,
@@ -37,22 +39,31 @@ export default function PlayerControls({
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-night-950/80 backdrop-blur-xl">
       <div className="mx-auto flex w-full max-w-3xl items-center justify-center gap-2.5 px-4 py-5 sm:gap-5">
         <button
-          onClick={onReplay}
-          aria-label="Replay current word"
-          title="Replay current word"
+          onClick={onBack}
+          aria-label={backAction === 'previous' ? 'Go to previous word' : 'Replay current word'}
+          title={backAction === 'previous' ? 'Previous word' : 'Replay current word'}
           className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition hover:border-neon-cyan/50 hover:text-neon-cyan active:scale-90"
         >
           <svg
             viewBox="0 0 24 24"
             className="h-6 w-6"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            fill={backAction === 'previous' ? 'currentColor' : 'none'}
+            stroke={backAction === 'replay' ? 'currentColor' : undefined}
+            strokeWidth={backAction === 'replay' ? '2' : undefined}
+            strokeLinecap={backAction === 'replay' ? 'round' : undefined}
+            strokeLinejoin={backAction === 'replay' ? 'round' : undefined}
           >
-            <path d="M3 12a9 9 0 1 0 3-6.7" />
-            <path d="M3 4v5h5" />
+            {backAction === 'previous' ? (
+              <>
+                <path d="M19 5.5v13a1 1 0 0 1-1.5.87l-10-6.5a1 1 0 0 1 0-1.74l10-6.5A1 1 0 0 1 19 5.5Z" />
+                <rect x="4.8" y="5" width="2.2" height="14" rx="1" />
+              </>
+            ) : (
+              <>
+                <path d="M3 12a9 9 0 1 0 3-6.7" />
+                <path d="M3 4v5h5" />
+              </>
+            )}
           </svg>
         </button>
 

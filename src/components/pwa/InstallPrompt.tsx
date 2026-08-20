@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { captureInstallEvent, clearInstallEvent, type InstallEvent } from "@/lib/installStore";
 
 const DISMISS_KEY = "audiorepeat-install-dismissed";
 
@@ -53,7 +54,12 @@ export default function InstallPrompt() {
     if (isStandalone()) return;
     dismissedRef.current = wasDismissed();
 
+    const onPrompt = (event: Event) => {
+      event.preventDefault();
+      captureInstallEvent(event as unknown as InstallEvent);
+    };
     const onInstalled = () => {
+      clearInstallEvent();
       setInstalled(true);
       setShowIosHint(false);
       try {
@@ -62,8 +68,10 @@ export default function InstallPrompt() {
         /* ignore */
       }
     };
+    window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
     return () => {
+      window.removeEventListener("beforeinstallprompt", onPrompt);
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);

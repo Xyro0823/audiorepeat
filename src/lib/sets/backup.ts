@@ -91,6 +91,7 @@ function sanitizeSettings(raw: unknown): AppSettings | undefined {
     out.translationGapMs = s.translationGapMs;
   if (typeof s.loop === 'boolean') out.loop = s.loop;
   if (typeof s.cachedAudio === 'boolean') out.cachedAudio = s.cachedAudio;
+  if (typeof s.cloudTts === 'boolean') out.cloudTts = s.cloudTts;
   if (typeof s.showHints === 'boolean') out.showHints = s.showHints;
   if (s.theme === 'neon' || s.theme === 'dark' || s.theme === 'light') out.theme = s.theme;
   if (typeof s.showExamples === 'boolean') out.showExamples = s.showExamples;

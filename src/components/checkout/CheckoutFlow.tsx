@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuthScreen from '@/components/auth/AuthScreen';
 import { useAuth } from '@/hooks/useAuth';
-import { isPlanId, PLAN_ORDER, PLANS, type PlanId } from '@/lib/plans';
+import { ANNUAL_SAVINGS_PERCENT, isPlanId, PLAN_ORDER, PLANS, type PlanId } from '@/lib/plans';
 import PaymentStep from './PaymentStep';
 
 function LogoMark() {
@@ -125,7 +125,7 @@ export default function CheckoutFlow({
                   annual ? 'bg-white text-black shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Annual <span className="ml-1 text-[10px] font-bold text-emerald-400">−20%</span>
+                Annual <span className="ml-1 text-[10px] font-bold text-emerald-400">Save {ANNUAL_SAVINGS_PERCENT}%</span>
               </button>
             </div>
           </div>

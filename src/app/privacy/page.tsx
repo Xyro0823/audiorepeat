@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalShell title="Privacy Policy" updated="August 17, 2026">
+    <LegalShell title="Privacy Policy" updated="August 20, 2026">
       <section>
         <h2 className="text-lg font-semibold text-white">Overview</h2>
         <p>
@@ -34,8 +34,8 @@ export default function PrivacyPage() {
             <strong className="text-white">Learning data on your device.</strong>{" "}
             Your vocabulary sets, progress, streaks, and settings are stored
             locally in your browser&apos;s storage (IndexedDB/localStorage) so
-            AudioRepeat works offline. This data lives on your device and is not
-            uploaded unless you share it yourself.
+            AudioRepeat works offline. This data stays on your device except for
+            the individual text sent for cloud speech when a device voice is unavailable.
           </li>
           <li>
             <strong className="text-white">Newsletter email.</strong> If you
@@ -54,6 +54,12 @@ export default function PrivacyPage() {
             experience (language, level, goal, and which practice option you
             chose). These events do not contain your email, name, or account
             identifier.
+          </li>
+          <li>
+            <strong className="text-white">Cloud speech text.</strong> When a
+            compatible device voice is unavailable, the word or phrase being played
+            is sent securely to Microsoft Azure Speech to generate audio. AudioRepeat
+            caches the returned audio on your device for later and offline playback.
           </li>
         </ul>
       </section>
@@ -81,6 +87,7 @@ export default function PrivacyPage() {
           <li>
             To understand and improve onboarding (aggregate analytics only).
           </li>
+          <li>To generate spoken audio when your device has no compatible voice.</li>
         </ul>
       </section>
 
@@ -103,6 +110,10 @@ export default function PrivacyPage() {
           <li>
             <strong className="text-white">Vercel</strong> — website hosting.
           </li>
+          <li>
+            <strong className="text-white">Microsoft Azure Speech</strong> —
+            text-to-speech generation when a compatible device voice is unavailable.
+          </li>
         </ul>
       </section>
 
@@ -114,7 +125,9 @@ export default function PrivacyPage() {
           analytics) are retained for as long as needed to operate the service
           and comply with legal obligations. Because analytics events contain no
           account identifier, individual analytics events cannot be linked back
-          to — or individually deleted for — a specific account.
+          to — or individually deleted for — a specific account. Cloud-generated
+          audio is stored in your browser cache and can be removed by clearing the
+          site&apos;s stored data.
         </p>
       </section>
 

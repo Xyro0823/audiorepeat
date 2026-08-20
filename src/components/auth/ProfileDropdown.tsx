@@ -154,7 +154,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
         aria-haspopup="menu"
         aria-expanded={open}
         title={signedIn ? `Signed in as ${user!.username}` : 'Account & tools'}
-        className="btn-toolbar-ghost flex h-10 items-center gap-2 rounded-lg px-2 pr-2.5 text-[13px] font-medium text-slate-300"
+        className="btn-toolbar-ghost flex h-11 items-center gap-2 rounded-xl px-2 pr-2.5 text-[13px] font-medium text-slate-300"
       >
         {signedIn ? (
           <span className="shrink-0 rounded-full bg-gradient-to-br from-neon-violet to-neon-cyan p-px">

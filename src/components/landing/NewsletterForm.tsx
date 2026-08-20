@@ -5,9 +5,8 @@ import { ArrowUpRight, Loader2 } from "lucide-react";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-/** Firestore can retry an aborted write stream for a long time; bound it so
- *  the form always settles into the retry-able error state instead of an
- *  endless spinner. Normal writes complete in well under a second. */
+/** Bound the request so the form always settles into a retryable error state
+ * instead of leaving the user on an endless spinner. */
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const t = window.setTimeout(() => reject(new Error("timeout")), ms);
@@ -21,8 +20,7 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 type Status = "idle" | "loading" | "success" | "error";
 
 /**
- * Landing-page newsletter signup. Submits to Firestore via a lazy import of
- * the firebase newsletter module (SDK only loads on first submit). Handles
+ * Landing-page newsletter signup. Submits through the protected server API. Handles
  * empty/invalid input, loading, success, and retry-able errors locally while
  * preserving what the user typed.
  */
@@ -50,10 +48,12 @@ export default function NewsletterForm() {
     setStatus("loading");
     setErrorMsg("");
     try {
-      // Lazy-load the Firebase module so the Firestore SDK stays out of the
-      // landing bundle until someone actually subscribes.
-      const { subscribeToNewsletter } = await import("@/lib/firebase/newsletter");
-      await withTimeout(subscribeToNewsletter(value), 15000);
+      const response = await withTimeout(fetch("/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: value }),
+      }), 15000);
+      if (!response.ok) throw new Error("subscribe-failed");
       setStatus("success");
     } catch {
       // Generic retry-able message; keep the typed email in the input.
@@ -64,7 +64,7 @@ export default function NewsletterForm() {
 
   if (status === "success") {
     return (
-      <div className="mt-4 flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5">
+      <div aria-live="polite" className="mt-4 flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5">
         <span className="text-sm font-medium text-emerald-300">✓</span>
         <span className="text-sm text-emerald-200">
           You&apos;re in — check your inbox soon.
@@ -84,9 +84,11 @@ export default function NewsletterForm() {
       >
         <input
           type="email"
+          name="email"
           required
           autoComplete="email"
-          placeholder="your@email.com"
+          spellCheck={false}
+          placeholder="you@example.com…"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={busy}

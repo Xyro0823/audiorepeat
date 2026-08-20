@@ -44,7 +44,7 @@ export default function NewSetButton({ onNew, onImport }: Props) {
         aria-haspopup="menu"
         aria-expanded={open}
         title="Create a new set or import one"
-        className="btn-primary-toolbar flex h-10 items-center gap-1 rounded-lg px-4 text-[13px] font-semibold text-white"
+        className="btn-primary-toolbar ml-1 flex h-11 items-center gap-1.5 rounded-xl px-4 text-[13px] font-semibold text-white"
       >
         <span className="text-base leading-none">+</span> New
         <svg
