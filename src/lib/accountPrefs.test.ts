@@ -47,6 +47,7 @@ import {
   ACCOUNT_PREFS_KEY_PREFIX,
   accountPrefsKey,
   activateAccountPrefs,
+  accountPrefsActivatedFor,
   EMPTY_ACCOUNT_PREFS,
   getAccountPrefsSnapshot,
   normalizeAccountPrefs,
@@ -245,5 +246,40 @@ describe('updateAccountPrefs routing + merging', () => {
     updateAccountPrefs({ selectedFreeLang: 'fr', hiddenLangs: ['mn', 'es'] });
     expect(readAccountPrefs('B')).toEqual({ selectedFreeLang: 'fr', hiddenLangs: ['mn', 'es'] });
     expect(readAccountPrefs('A')).toBeNull();
+  });
+});
+
+describe('guest prefs update the live store (language-switch regression)', () => {
+  it('mirrors a guest patch into the in-memory store so visibleSets reacts without a reload', () => {
+    mocks.auth.user = null;
+    activateAccountPrefs(null, asSettings(), {});
+    expect(getAccountPrefsSnapshot()).toEqual({ selectedFreeLang: null, hiddenLangs: [] });
+
+    updateAccountPrefs({ selectedFreeLang: 'mn', hiddenLangs: ['es'] });
+
+    // The store (what useLists/visibleSets/freeLangKey read) must be current…
+    expect(getAccountPrefsSnapshot()).toEqual({ selectedFreeLang: 'mn', hiddenLangs: ['es'] });
+    expect(accountPrefsActivatedFor(null)).toBe(true);
+    // …and the global settings record (the guest persistence) too.
+    expect(mocks.settings.selectedFreeLang).toBe('mn');
+    expect(mocks.settings.hiddenLangs).toEqual(['es']);
+  });
+
+  it('guest patches merge fields instead of resetting the untouched one', () => {
+    mocks.auth.user = null;
+    activateAccountPrefs(null, { ...asSettings(), selectedFreeLang: 'es' }, {});
+    updateAccountPrefs({ hiddenLangs: ['mn'] });
+    expect(getAccountPrefsSnapshot()).toEqual({ selectedFreeLang: 'es', hiddenLangs: ['mn'] });
+  });
+
+  it('guest updates never claim a signed-in uid (isolation preserved)', () => {
+    mocks.auth.user = { id: 'A' };
+    activateAccountPrefs('A', asSettings(), {});
+    updateAccountPrefs({ selectedFreeLang: 'fr' });
+    mocks.auth.user = null;
+    updateAccountPrefs({ selectedFreeLang: 'de', hiddenLangs: ['fr'] });
+    expect(accountPrefsActivatedFor('A')).toBe(false);
+    expect(accountPrefsActivatedFor(null)).toBe(true);
+    expect(readAccountPrefs('A')).toEqual({ selectedFreeLang: 'fr', hiddenLangs: [] });
   });
 });

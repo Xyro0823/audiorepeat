@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { pickVoiceForLang } from './speechSynthesisEngine';
+import { pickVoiceForLang, resolvePersistedVoice } from './speechSynthesisEngine';
 import type { TTSEngineVoice } from './engine';
 import { FREE_LANG_OPTIONS, SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
 
@@ -242,5 +242,133 @@ describe('source-of-truth guards', () => {
 
   it('FREE_LANG_OPTIONS is the canonical list of product languages', () => {
     expect(FREE_LANG_OPTIONS.length).toBe(29);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  Windows underscore locale normalization                            */
+/* ------------------------------------------------------------------ */
+
+describe('underscore locale normalization', () => {
+  it('matches a Windows-style "mn_MN" voice tag for target "mn"', () => {
+    const v = voice('mn_MN');
+    expect(pickVoiceForLang([v], 'mn')).toBe(v);
+  });
+
+  it('matches a Windows-style voice tag exactly (es-ES target → es_ES voice)', () => {
+    const v = voice('es_ES');
+    expect(pickVoiceForLang([v], 'es-ES')).toBe(v);
+  });
+
+  it('base-fallback normalizes underscores on both sides (ja → ja_JP)', () => {
+    const v = voice('ja_JP');
+    expect(pickVoiceForLang([v], 'ja')).toBe(v);
+  });
+
+  it('normalizes an underscore in the TARGET too (zh_CN → zh-CN voice)', () => {
+    const v = voice('zh-CN');
+    expect(pickVoiceForLang([v], 'zh_CN')).toBe(v);
+  });
+
+  it('Norwegian fallback still resolves through underscore voice tags (nb-NO → no_NO)', () => {
+    const v = voice('no_NO');
+    expect(pickVoiceForLang([v], 'nb-NO')).toBe(v);
+  });
+
+  it('underscore normalization never cross-matches unrelated languages', () => {
+    expect(pickVoiceForLang([voice('fi_FI')], 'fil')).toBeUndefined();
+    expect(pickVoiceForLang([voice('fil_PH')], 'fi')).toBeUndefined();
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  Persisted voice resolution (saved voiceURI safety)                 */
+/* ------------------------------------------------------------------ */
+
+describe('resolvePersistedVoice', () => {
+  it('honors a persisted voice that matches the language exactly', () => {
+    const v = voice('es-ES', 'SavedVoice');
+    expect(resolvePersistedVoice([v], 'es-ES', 'SavedVoice-es-ES')).toBe(v);
+  });
+
+  it('honors a persisted regional variant of the same language', () => {
+    const v = voice('es-MX', 'SavedVoice');
+    expect(resolvePersistedVoice([v], 'es-ES', 'SavedVoice-es-MX')).toBe(v);
+  });
+
+  it('rejects a persisted voice from an UNRELATED language', () => {
+    const v = voice('en-US', 'SavedEnglish');
+    expect(resolvePersistedVoice([v], 'es-ES', 'SavedEnglish-en-US')).toBeUndefined();
+  });
+
+  it('rejects fi↔fil cross-language persisted picks', () => {
+    const v = voice('fi-FI', 'SavedFinnish');
+    expect(resolvePersistedVoice([v], 'fil', 'SavedFinnish-fi-FI')).toBeUndefined();
+  });
+
+  it('returns undefined for a voice that is no longer installed', () => {
+    expect(resolvePersistedVoice([voice('es-ES')], 'es-ES', 'vanished-uri')).toBeUndefined();
+  });
+
+  it('returns undefined when no voiceURI was saved', () => {
+    const v = voice('es-ES');
+    expect(resolvePersistedVoice([v], 'es-ES', undefined)).toBeUndefined();
+  });
+
+  it('normalizes underscores when checking compatibility', () => {
+    const v = voice('mn_MN', 'SavedMongolian');
+    expect(resolvePersistedVoice([v], 'mn', 'SavedMongolian-mn_MN')).toBe(v);
+  });
+});
+
+/* ------------------------------------------------------------------ */
+/*  Full product sweep — all 29 languages against realistic registries */
+/* ------------------------------------------------------------------ */
+
+describe('all 29 product languages', () => {
+  it('resolve against a regional-voice registry (Windows-style underscore tags)', () => {
+    // Every product language has exactly one installed voice, tagged with a
+    // Windows-style regional tag ("mn_MN"), and one unrelated decoy.
+    const registry = FREE_LANG_OPTIONS.flatMap((o) => {
+      const regional = o.code.includes('-')
+        ? o.code.replace(/-/g, '_')
+        : `${o.code}_${o.code.toUpperCase()}`;
+      return [
+        voice(regional, `Voice-${o.key}`),
+        voice('xx-XX', `Decoy-${o.key}`),
+      ];
+    });
+    for (const opt of FREE_LANG_OPTIONS) {
+      const result = pickVoiceForLang(registry, opt.code);
+      expect(result, `no voice resolved for ${opt.code}`).toBeDefined();
+      expect(result!.name, `${opt.code} resolved the decoy`).toBe(`Voice-${opt.key}`);
+    }
+  });
+
+  it('resolve against a hyphen regional registry (macOS/Android style)', () => {
+    const registry = FREE_LANG_OPTIONS.map((o) =>
+      voice(o.code.includes('-') ? o.code : `${o.code}-${o.code.toUpperCase()}`, `V-${o.key}`),
+    );
+    for (const opt of FREE_LANG_OPTIONS) {
+      const result = pickVoiceForLang(registry, opt.code);
+      expect(result, `no voice resolved for ${opt.code}`).toBeDefined();
+      expect(result!.name).toBe(`V-${opt.key}`);
+    }
+  });
+
+  it('never resolve when only unrelated-language voices are installed', () => {
+    const unrelated = [voice('zz-ZA'), voice('xx-XX'), voice('qq_QQ')];
+    for (const opt of FREE_LANG_OPTIONS) {
+      expect(pickVoiceForLang(unrelated, opt.code), `${opt.code} matched an unrelated voice`)
+        .toBeUndefined();
+    }
+  });
+
+  it('resolve for every product language with an empty or still-loading registry', () => {
+    // The "loading voices" state: resolver must return undefined (not throw,
+    // not match a wrong voice) so the UI can show "Loading voices…".
+    for (const opt of FREE_LANG_OPTIONS) {
+      expect(pickVoiceForLang([], opt.code)).toBeUndefined();
+    }
   });
 });

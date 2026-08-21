@@ -16,6 +16,7 @@ let settings: AppSettings = DEFAULT_SETTINGS;
 let hydrated = false;
 let persistTimer: number | null = null;
 let refreshInFlight: Promise<void> | null = null;
+let hydrateInFlight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
 function emit(): void {
@@ -38,26 +39,37 @@ export function settingsHydrated(): boolean {
   return hydrated;
 }
 
-/** Load persisted settings once (idempotent across all hook instances). */
-export async function hydrateSettings(): Promise<void> {
-  if (hydrated) return;
-  hydrated = true;
-  try {
-    const stored = await getSettings();
-    settings = {
-      ...DEFAULT_SETTINGS,
-      ...stored,
-      // targetGapMs now lives in the 1-5s range; clamp any legacy stored value
-      // (old default was 600ms) so the slider never shows an out-of-range value.
-      targetGapMs: Math.min(
-        5000,
-        Math.max(1000, stored?.targetGapMs ?? DEFAULT_SETTINGS.targetGapMs),
-      ),
-    };
-  } catch {
-    settings = { ...DEFAULT_SETTINGS };
-  }
-  emit();
+/** Load persisted settings once (idempotent across all hook instances).
+ * Concurrent callers share the in-flight read: `hydrated` flips before the
+ * async IndexedDB read finishes, so a second useLists consumer mounting
+ * alongside the first must not proceed with DEFAULT_SETTINGS — it would
+ * activate the account-prefs store from defaults and visually lose the
+ * guest's free-language choice and hidden languages until a reload. */
+export function hydrateSettings(): Promise<void> {
+  if (hydrated) return Promise.resolve();
+  if (hydrateInFlight) return hydrateInFlight;
+  hydrateInFlight = (async () => {
+    try {
+      const stored = await getSettings();
+      settings = {
+        ...DEFAULT_SETTINGS,
+        ...stored,
+        // targetGapMs now lives in the 1-5s range; clamp any legacy stored value
+        // (old default was 600ms) so the slider never shows an out-of-range value.
+        targetGapMs: Math.min(
+          5000,
+          Math.max(1000, stored?.targetGapMs ?? DEFAULT_SETTINGS.targetGapMs),
+        ),
+      };
+    } catch {
+      settings = { ...DEFAULT_SETTINGS };
+    } finally {
+      hydrated = true;
+      hydrateInFlight = null;
+      emit();
+    }
+  })();
+  return hydrateInFlight;
 }
 
 /**

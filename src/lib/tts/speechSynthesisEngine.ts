@@ -59,9 +59,17 @@ function devWarn(...args: unknown[]): void {
  */
 const VOICE_LOAD_TIMEOUT_MS = 1500;
 
-/** Extract the base language subtag (before the first hyphen), lowercased.
- * "es-ES" → "es", "fil" → "fil", "en" → "en". */
-const base = (lang: string) => lang.split('-')[0].toLowerCase();
+/**
+ * Canonical locale form for matching: lowercase with Windows-style
+ * underscore separators converted to BCP-47 hyphens ("mn_MN" → "mn-mn").
+ * Windows/Edge report voice tags like "en_US"; without this normalization
+ * every comparison (exact and base) fails and the UI shows a false
+ * "No voice for this language" state.
+ */
+const norm = (lang: string) => lang.toLowerCase().replace(/_/g, '-');
+
+/** Extract the base language subtag (before the first hyphen), normalized. */
+const base = (lang: string) => norm(lang).split('-')[0];
 
 /**
  * Known-safe locale fallbacks for product languages whose bare BCP-47 tag may
@@ -74,10 +82,35 @@ const LOCALE_FALLBACKS: Record<string, string[]> = {
   'nb-no': ['nb-no', 'no-no', 'no'],
 };
 
+/** True when a voice's locale can serve the requested language without
+ * crossing into an unrelated language (exact or same base subtag). */
+function voiceMatchesLang(voice: TTSEngineVoice, lang: string): boolean {
+  const v = norm(voice.lang);
+  const target = norm(lang);
+  return v === target || base(v) === base(target);
+}
+
+/**
+ * Resolve a user-persisted voice choice safely. The saved voice is honored
+ * only when it is still installed AND compatible with the language being
+ * spoken; an incompatible or vanished pick falls back to automatic
+ * language matching instead of speaking the wrong language.
+ */
+export function resolvePersistedVoice(
+  voices: TTSEngineVoice[],
+  lang: string,
+  voiceURI: string | undefined,
+): TTSEngineVoice | undefined {
+  if (!voiceURI) return undefined;
+  const saved = voices.find((v) => v.uri === voiceURI);
+  return saved && voiceMatchesLang(saved, lang) ? saved : undefined;
+}
+
 /**
  * Best voice for a language: exact BCP-47 match first, then same-base-language
  * match using exact base-subtag comparison ("es-ES" → "es-MX" but never
- * "fi" → "fil-PH"), preferring offline (localService) voices.
+ * "fi" → "fil-PH"), preferring offline (localService) voices. Locale tags
+ * are normalized (case + "_" → "-") on both sides before comparing.
  *
  * Returns undefined when no voice matches — the caller must surface that
  * instead of letting the browser pick a wrong-language default.
@@ -86,13 +119,13 @@ export function pickVoiceForLang(
   voices: TTSEngineVoice[],
   lang: string,
 ): TTSEngineVoice | undefined {
-  const target = lang.toLowerCase();
+  const target = norm(lang);
   const targetBase = base(target);
 
   // Try a single matching pass against a voice list, returning the first match.
   const matchIn = (pool: TTSEngineVoice[]): TTSEngineVoice | undefined => {
-    // 1. Exact BCP-47 match
-    const exact = pool.find((v) => v.lang.toLowerCase() === target);
+    // 1. Exact BCP-47 match (after case + underscore normalization)
+    const exact = pool.find((v) => norm(v.lang) === target);
     if (exact) return exact;
     // 2. Same base-subtag: voice base === target base (e.g. es-ES → es-MX)
     const sameBase = pool.find((v) => base(v.lang) === targetBase);
@@ -114,9 +147,9 @@ export function pickVoiceForLang(
   const fallbacks = LOCALE_FALLBACKS[target];
   if (fallbacks) {
     for (const fb of fallbacks) {
-      const fbLower = fb.toLowerCase();
-      const fbExact = (v: TTSEngineVoice) => v.lang.toLowerCase() === fbLower;
-      const fbBase = (v: TTSEngineVoice) => base(v.lang) === base(fbLower);
+      const fbNorm = norm(fb);
+      const fbExact = (v: TTSEngineVoice) => norm(v.lang) === fbNorm;
+      const fbBase = (v: TTSEngineVoice) => base(v.lang) === base(fbNorm);
       const fbLocal = local.find((v) => fbExact(v) || fbBase(v));
       if (fbLocal) return fbLocal;
       const fbOnline = voices.find((v) => !v.localService && (fbExact(v) || fbBase(v)));
@@ -167,11 +200,16 @@ export class SpeechSynthesisEngine implements TTSEngine {
     if (fresh.length > 0) this.voices = fresh.map(toVoice);
     let list = this.voices;
     if (lang && list.length > 0) {
-      const exact = list.filter((v) => v.lang.toLowerCase() === lang.toLowerCase());
+      const target = norm(lang);
+      const exact = list.filter((v) => norm(v.lang) === target);
       if (exact.length) list = exact;
       else {
-        const prefix = lang.split('-')[0].toLowerCase();
-        const partial = list.filter((v) => v.lang.toLowerCase().startsWith(prefix));
+        // Base-subtag boundary ("es" matches "es-ES", never "esk"-style tags)
+        const prefix = base(target);
+        const partial = list.filter((v) => {
+          const vNorm = norm(v.lang);
+          return vNorm === prefix || vNorm.startsWith(prefix + '-');
+        });
         if (partial.length) list = partial;
       }
     }
@@ -264,11 +302,13 @@ export class SpeechSynthesisEngine implements TTSEngine {
     this.speakChunks(chunks, opts, token, voice);
   }
 
-  /** Resolve the voice: explicit voiceURI, else best language match (or none). */
+  /** Resolve the voice: a persisted choice that is still installed AND
+   * language-compatible, else the best automatic language match (or none). */
   private pickVoice(lang: string, voiceURI?: string): TTSEngineVoice | undefined {
     const fresh = (this.synth?.getVoices() ?? []).map(toVoice);
     if (fresh.length > 0) this.voices = fresh;
-    if (voiceURI) return fresh.find((v) => v.uri === voiceURI);
+    const persisted = resolvePersistedVoice(fresh.length > 0 ? fresh : this.voices, lang, voiceURI);
+    if (persisted) return persisted;
     return pickVoiceForLang(this.voices, lang);
   }
 

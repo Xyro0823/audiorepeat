@@ -19,6 +19,7 @@ import { scheduleDailyReminder, sendReminderTest } from '@/lib/reminders';
 import type { ThemeName } from '@/types/app';
 import { DEFAULT_SETTINGS } from '@/types/app';
 import VoicePicker from '@/components/player/VoicePicker';
+import ChangeFreeLanguageModal from '@/components/onboarding/ChangeFreeLanguageModal';
 
 const REPEAT_OPTIONS = [1, 2, 3, 5];
 const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5, 2];
@@ -86,9 +87,10 @@ interface Props {
 }
 
 export default function SettingsModal({ onClose }: Props) {
-  const { allSets, sets, settings, loading, saveSettings, restoreBackup: restoreBackupData, saveSet } =
+  const { allSets, sets, settings, loading, saveSettings, restoreBackup: restoreBackupData, saveSet, freeLangKey } =
     useLists();
   const [showDowngrade, setShowDowngrade] = useState(false);
+  const [changingLang, setChangingLang] = useState(false);
   const { days } = usePracticeStats();
   // Stats/username live per account (guests use the shared legacy keys).
   const { user, mode } = useAuth();
@@ -373,12 +375,25 @@ export default function SettingsModal({ onClose }: Props) {
                       Current
                     </span>
                   </div>
-                  <Link
-                    href="/checkout?plan=pro"
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-neon-cyan/40 hover:text-white"
-                  >
-                    ⭐ Upgrade to unlock all {SUPPORTED_LANGUAGE_COUNT} languages
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setChangingLang(true)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-neon-cyan/40 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+                    >
+                      Change language
+                    </button>
+                    <Link
+                      href="/checkout?plan=pro"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-neon-cyan/40 hover:text-white"
+                    >
+                      ⭐ Upgrade to unlock all {SUPPORTED_LANGUAGE_COUNT} languages
+                    </Link>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-slate-500">
+                    Switching hides your other languages — they come back if you upgrade. Nothing
+                    is ever deleted.
+                  </p>
                 </div>
               )}
             </div>
@@ -784,6 +799,17 @@ export default function SettingsModal({ onClose }: Props) {
 
       {/* Downgrade flow (z-120 keeps it above this modal's z-100 portal) */}
       {showDowngrade && <DowngradeModal onClose={() => setShowDowngrade(false)} />}
+
+      {/* Free-language switcher — the same entitlement-safe flow the
+          dashboard uses (seeds idempotently, hides instead of deleting). */}
+      {changingLang && (
+        <ChangeFreeLanguageModal
+          currentKey={freeLangKey}
+          allSets={allSets}
+          saveSet={saveSet}
+          onClose={() => setChangingLang(false)}
+        />
+      )}
 
       {/* Restore-confirmation overlay (kept above the modal content) */}
       {pendingImport && (

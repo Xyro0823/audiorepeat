@@ -163,6 +163,21 @@ export function activateAccountPrefs(
 export function updateAccountPrefs(patch: Partial<AccountPrefs>): void {
   const uid = getAuthSnapshot().user?.id ?? null;
   if (!uid) {
+    // Guests keep their prefs in the global settings record — but the
+    // in-memory prefs store must mirror the patch too: every live consumer
+    // (visible-set filtering, freeLangKey) reads the store, not the settings
+    // record, so skipping this leaves a stale library until a reload.
+    prefs = {
+      selectedFreeLang:
+        patch.selectedFreeLang !== undefined ? patch.selectedFreeLang : prefs.selectedFreeLang,
+      hiddenLangs: patch.hiddenLangs !== undefined ? patch.hiddenLangs : prefs.hiddenLangs,
+    };
+    // A guest write can only happen while signed out, so the store is now the
+    // guest's — re-target unconditionally (a previous uid's activation must
+    // never make consumers trust guest data as that account's prefs).
+    activeUid = null;
+    activated = true;
+    emit();
     updateSettings({
       ...(patch.selectedFreeLang !== undefined ? { selectedFreeLang: patch.selectedFreeLang } : {}),
       ...(patch.hiddenLangs !== undefined ? { hiddenLangs: patch.hiddenLangs } : {}),
