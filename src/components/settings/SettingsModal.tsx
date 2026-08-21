@@ -14,6 +14,8 @@ import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
 import { isProPlan, FREE_LANG_LIMIT, PLAN_BADGE, planDetail } from '@/lib/plans';
 import { FREE_LANG_OPTIONS, SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
 import { findLanguage } from '@/lib/languages';
+import { buildDueReviewQueue } from '@/lib/review/fsrs';
+import { scheduleDailyReminder, sendReminderTest } from '@/lib/reminders';
 import type { ThemeName } from '@/types/app';
 import { DEFAULT_SETTINGS } from '@/types/app';
 import VoicePicker from '@/components/player/VoicePicker';
@@ -98,6 +100,7 @@ export default function SettingsModal({ onClose }: Props) {
 
   const { voices, loading: voicesLoading, hasVoice } = useSpeechVoices();
   const cloudTtsReady = useCloudTtsStatus();
+  const reviewDueCount = useMemo(() => buildDueReviewQueue(sets).length, [sets]);
 
   // Target language for the voice pickers: the most-studied language, else en-US.
   const targetLang = useMemo(() => {
@@ -127,42 +130,12 @@ export default function SettingsModal({ onClose }: Props) {
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
-  // ---------- daily reminder (service worker + Notification Triggers) ----------
-  const postToSW = useCallback((data: unknown) => {
-    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
-    navigator.serviceWorker.ready
-      .then((reg) => reg.active?.postMessage(data))
-      .catch(() => {
-        /* no SW (dev mode) — ignore */
-      });
-  }, []);
-
-  const scheduleReminder = useCallback(
-    (enabled: boolean, time: string) => {
-      if (!enabled || !/^\d{2}:\d{2}$/.test(time)) {
-        postToSW({ type: 'CLEAR_REMINDER' });
-        return;
-      }
-      const [h, m] = time.split(':').map(Number);
-      const next = new Date();
-      next.setHours(h, m, 0, 0);
-      if (next.getTime() <= Date.now()) next.setDate(next.getDate() + 1);
-      postToSW({
-        type: 'SET_REMINDER',
-        timestamp: next.getTime(),
-        title: 'Time to practice! 🔁',
-        body: 'Keep your streak alive — a quick AudioRepeat session is waiting.',
-      });
-    },
-    [postToSW],
-  );
-
   // Keep the SW's schedule in sync with the persisted settings (also re-arms
   // the trigger after a SW update or browser restart).
   useEffect(() => {
     if (loading) return;
-    scheduleReminder(settings.reminderEnabled, settings.reminderTime);
-  }, [settings.reminderEnabled, settings.reminderTime, loading, scheduleReminder]);
+    void scheduleDailyReminder(settings.reminderEnabled, settings.reminderTime, reviewDueCount);
+  }, [settings.reminderEnabled, settings.reminderTime, loading, reviewDueCount]);
 
   const toggleReminder = useCallback(
     async (on: boolean) => {
@@ -184,7 +157,7 @@ export default function SettingsModal({ onClose }: Props) {
     [flash, saveSettings],
   );
 
-  const sendTest = useCallback(() => {
+  const sendTest = useCallback(async () => {
     if (typeof Notification === 'undefined') return;
     if (Notification.permission !== 'granted') {
       void toggleReminder(true);
@@ -196,16 +169,14 @@ export default function SettingsModal({ onClose }: Props) {
       flash('err', 'Reminders need the installed PWA (production build) — not available in dev.');
       return;
     }
-    // Fire ~1s from now — the SW shows it via a trigger (or immediately).
-    postToSW({
-      type: 'SET_REMINDER',
-      timestamp: Date.now() + 1000,
-      title: 'AudioRepeat reminder 🔁',
-      body: 'If you see this, daily reminders are armed and working.',
-      tag: 'reminder-test',
-    });
-    flash('ok', 'Test notification sent (check your notification center).');
-  }, [postToSW, toggleReminder, flash]);
+    const sent = await sendReminderTest(reviewDueCount);
+    flash(
+      sent ? 'ok' : 'err',
+      sent
+        ? 'Test notification sent (check your notification center).'
+        : 'Could not reach the installed app notification service.',
+    );
+  }, [toggleReminder, flash, reviewDueCount]);
 
   // ---------- data backup ----------
   const handleExport = useCallback(() => {

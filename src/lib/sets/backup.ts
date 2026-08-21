@@ -1,5 +1,5 @@
 import type { DayMap, DayStat } from '@/lib/practiceStats';
-import type { AppSettings, VocabSet } from '@/types/app';
+import type { AppSettings, ReviewSchedule, VocabSet } from '@/types/app';
 
 const FORMAT = 'audiorepeat-backup';
 const VERSION = 1;
@@ -42,6 +42,36 @@ function isObject(v: unknown): v is Record<string, unknown> {
   return !!v && typeof v === 'object';
 }
 
+function sanitizeReview(raw: unknown): ReviewSchedule | undefined {
+  if (!isObject(raw)) return undefined;
+  const finite = (key: string) => typeof raw[key] === 'number' && Number.isFinite(raw[key]);
+  if (
+    !finite('due') ||
+    !finite('stability') ||
+    !finite('difficulty') ||
+    !finite('elapsedDays') ||
+    !finite('scheduledDays') ||
+    !finite('learningSteps') ||
+    !finite('reps') ||
+    !finite('lapses') ||
+    ![0, 1, 2, 3].includes(raw.state as number)
+  ) {
+    return undefined;
+  }
+  return {
+    due: raw.due as number,
+    stability: raw.stability as number,
+    difficulty: raw.difficulty as number,
+    elapsedDays: raw.elapsedDays as number,
+    scheduledDays: raw.scheduledDays as number,
+    learningSteps: raw.learningSteps as number,
+    reps: raw.reps as number,
+    lapses: raw.lapses as number,
+    state: raw.state as ReviewSchedule['state'],
+    lastReview: finite('lastReview') ? (raw.lastReview as number) : undefined,
+  };
+}
+
 function sanitizeSets(raw: unknown): VocabSet[] | undefined {
   if (!Array.isArray(raw)) return undefined;
   const out: VocabSet[] = [];
@@ -68,6 +98,7 @@ function sanitizeSets(raw: unknown): VocabSet[] | undefined {
         repeats:
           typeof w.repeats === 'number' && w.repeats >= 1 ? Math.round(w.repeats) : undefined,
         mastery: w.mastery === 'mastered' || w.mastery === 'hard' ? w.mastery : undefined,
+        review: sanitizeReview(w.review),
         example: typeof w.example === 'string' && w.example.trim() ? w.example.trim() : undefined,
       })),
       settings: isObject(s.settings) ? (s.settings as Partial<AppSettings>) : undefined,

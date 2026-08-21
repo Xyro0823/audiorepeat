@@ -1,9 +1,9 @@
-import type { MasteryStatus, VocabSet } from '@/types/app';
+import type { AppSettings, VocabSet } from '@/types/app';
 import { parseSetJson } from './io';
 
 const VERSION = 1;
 
-type ShareWord = [string, string] | [string, string, { r?: number; m?: MasteryStatus }];
+type ShareWord = [string, string] | [string, string, { r?: number }];
 
 interface SharePayload {
   v: number;
@@ -16,7 +16,7 @@ interface SharePayload {
 }
 
 /**
- * Encode a set into a compact, URL-safe string for `/?set=<encoded>` links.
+ * Encode a set into a compact, URL-safe string for `/#set=<encoded>` links.
  * Words are packed as [target, translation, opts?] arrays and ids are dropped
  * entirely — the recipient's import always mints fresh ids anyway.
  */
@@ -28,18 +28,29 @@ export function encodeSetForUrl(set: VocabSet): string {
     x: set.nativeLang,
     w: set.words.map((word) => {
       const opts =
-        word.repeats !== undefined || word.mastery !== undefined
+        word.repeats !== undefined
           ? {
               ...(word.repeats !== undefined ? { r: word.repeats } : {}),
-              ...(word.mastery !== undefined ? { m: word.mastery } : {}),
             }
           : undefined;
       return (opts ? [word.target, word.translation, opts] : [word.target, word.translation]) as ShareWord;
     }),
   };
   if (set.cefr) payload.c = set.cefr;
-  if (set.settings) payload.s = set.settings;
+  const safeSettings = shareableSettings(set.settings);
+  if (safeSettings) payload.s = safeSettings;
   return toBase64Url(JSON.stringify(payload));
+}
+
+function shareableSettings(settings: Partial<AppSettings> | undefined): Partial<AppSettings> | undefined {
+  if (!settings) return undefined;
+  const safe: Partial<AppSettings> = {};
+  if (settings.repeats !== undefined) safe.repeats = settings.repeats;
+  if (settings.speed !== undefined) safe.speed = settings.speed;
+  if (settings.targetGapMs !== undefined) safe.targetGapMs = settings.targetGapMs;
+  if (settings.translationGapMs !== undefined) safe.translationGapMs = settings.translationGapMs;
+  if (settings.loop !== undefined) safe.loop = settings.loop;
+  return Object.keys(safe).length > 0 ? safe : undefined;
 }
 
 /** Decode a `/?set=` value back into a fresh VocabSet, or null if invalid. */
@@ -60,7 +71,7 @@ export function decodeSetFromUrl(encoded: string): VocabSet | null {
           target,
           translation,
           ...(opts?.r !== undefined ? { repeats: opts.r } : {}),
-          ...(opts?.m !== undefined ? { mastery: opts.m } : {}),
+          // Mastery and FSRS history are deliberately ignored, including in old links.
         };
       }),
     };
@@ -71,11 +82,12 @@ export function decodeSetFromUrl(encoded: string): VocabSet | null {
   }
 }
 
-/** Build the shareable URL for a set (absolute, e.g. https://…/?set=…). */
+/** Build the shareable URL for a set (absolute, fragment payload stays client-side). */
 export function shareUrlForSet(set: VocabSet): string {
   const base =
     typeof window !== 'undefined' ? window.location.origin : 'https://audiorepeat.app';
-  return `${base}/?set=${encodeSetForUrl(set)}`;
+  // Fragment payloads never reach the web server or its request logs.
+  return `${base}/dashboard#set=${encodeSetForUrl(set)}`;
 }
 
 // ---------- unicode-safe base64url ----------

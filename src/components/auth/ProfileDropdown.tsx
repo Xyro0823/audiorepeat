@@ -8,6 +8,8 @@ import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { useAuth } from '@/hooks/useAuth';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
 import { clearAccountPrefs } from '@/lib/accountPrefs';
+import { deleteSetDatabaseForOwner } from '@/lib/db/indexedDb';
+import { firstSessionGuideKey } from '@/lib/firstSessionGuide';
 import { clearOnboardingState } from '@/lib/onboarding';
 import { isProPlan, PLAN_BADGE, planDetail } from '@/lib/plans';
 import { getSettingsSnapshot, subscribeSettings } from '@/lib/settingsStore';
@@ -120,6 +122,12 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
 
   const handleDelete = async () => {
     setMenuError(null);
+    const deletedUid = user?.id;
+    if (!deletedUid) {
+      setMenuError('Please sign in again before deleting your account.');
+      setConfirmDelete(false);
+      return;
+    }
     // Attempt server-side deletion FIRST. Only clear local data if the
     // account was actually removed — otherwise a requires-recent-login
     // failure would destroy local data while leaving the account active.
@@ -129,13 +137,20 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
       setConfirmDelete(false);
       return;
     }
-    // Account deleted — now safe to clean up local data.
+    // Account deleted — now safe to clean up its owner-scoped IndexedDB.
     try {
-      window.localStorage.removeItem(statsStorageKey(user!.id));
-      window.localStorage.removeItem(usernameStorageKey(user!.id));
-      clearAccountPrefs(user!.id);
-      clearOnboardingState(user!.id);
-      const prefix = `audiorepeat-challenge-best-v1:${user!.id}:`;
+      await deleteSetDatabaseForOwner(deletedUid);
+    } catch {
+      /* ignore — account is already removed; browser storage may be blocked */
+    }
+    // Remove the remaining owner-scoped local state.
+    try {
+      window.localStorage.removeItem(statsStorageKey(deletedUid));
+      window.localStorage.removeItem(usernameStorageKey(deletedUid));
+      window.localStorage.removeItem(firstSessionGuideKey(deletedUid));
+      clearAccountPrefs(deletedUid);
+      clearOnboardingState(deletedUid);
+      const prefix = `audiorepeat-challenge-best-v1:${deletedUid}:`;
       for (let i = window.localStorage.length - 1; i >= 0; i -= 1) {
         const key = window.localStorage.key(i);
         if (key && key.startsWith(prefix)) window.localStorage.removeItem(key);
@@ -319,6 +334,9 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
               </Link>
               <Link role="menuitem" href="/admin/analytics" className={itemClass} onClick={close}>
                 <span aria-hidden>📈</span> Onboarding Analytics
+              </Link>
+              <Link role="menuitem" href="/admin/errors" className={itemClass} onClick={close}>
+                <span aria-hidden>🛡️</span> Error Diagnostics
               </Link>
             </>
           )}

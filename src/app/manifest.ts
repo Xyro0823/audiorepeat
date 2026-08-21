@@ -32,9 +32,9 @@ export default function manifest(): MetadataRoute.Manifest {
         description: "Create a new vocabulary set",
       },
       {
-        name: "Player",
-        url: "/player",
-        description: "Open the player",
+        name: "Review Today",
+        url: "/review",
+        description: "Practice words due for review",
       },
     ],
   };

@@ -18,7 +18,12 @@ import { resolveDefaultNewSetLang } from '@/lib/sets/defaults';
 import { isProPlan } from '@/lib/plans';
 import { canUseLang as planGateCanUseLang } from '@/lib/planGate';
 import { CEFR_META } from '@/lib/starterSets';
-import { decodeSetFromUrl, shareUrlForSet } from '@/lib/sets/share';
+import {
+  findDuplicateSharedSet,
+  previewSharedSetLink,
+  withoutSharedSetPayload,
+  type SharedSetPreview,
+} from '@/lib/sets/shareImport';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { CefrLevel, VocabSet } from '@/types/app';
 import CefrBadge from './CefrBadge';
@@ -26,6 +31,8 @@ import LeaderboardModal from './LeaderboardModal';
 import NewSetButton from './NewSetButton';
 import ProfileDropdown from '@/components/auth/ProfileDropdown';
 import SetEditor from './SetEditor';
+import ShareSetModal from './ShareSetModal';
+import ShareImportPreviewModal from './ShareImportPreviewModal';
 import SettingsButton from '@/components/settings/SettingsButton';
 import SpeedChallenge from '../speed/SpeedChallenge';
 import StarterLibraryModal from './StarterLibraryModal';
@@ -37,8 +44,11 @@ import FreePlanNotice from '@/components/dashboard/FreePlanNotice';
 import MetricCards from '@/components/dashboard/MetricCards';
 import WelcomeHero from '@/components/dashboard/WelcomeHero';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
+import ReviewTodayCard from '@/components/dashboard/ReviewTodayCard';
+import CloudSyncBadge from '@/components/dashboard/CloudSyncBadge';
 import FreeLanguageBar from '@/components/onboarding/FreeLanguageBar';
 import ChangeFreeLanguageModal from '@/components/onboarding/ChangeFreeLanguageModal';
+import { buildDueReviewQueue } from '@/lib/review/fsrs';
 
 function Logo() {
   return (
@@ -332,7 +342,7 @@ function PortraitCard({
         <div
           role="menu"
           aria-label={`Actions for ${set.name}`}
-          className="glass animate-fade-up absolute right-2.5 top-12 z-40 w-48 rounded-xl p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
+          className="dropdown-panel animate-fade-up absolute right-2.5 top-12 z-40 w-48 rounded-xl p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
         >
           <button
             role="menuitem"
@@ -417,7 +427,7 @@ function PortraitCard({
           <ProgressBar pct={pct} className="mt-1.5" />
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-3 grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2">
           <button
             onClick={onPlay}
             className="btn-primary flex h-9 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold text-white"
@@ -430,11 +440,11 @@ function PortraitCard({
           <button
             onClick={onChallenge}
             title={pro ? 'Quick 1-minute speed test' : 'Speed challenges are a Pro feature'}
-            className="btn-clean flex h-9 items-center justify-center gap-1.5 rounded-lg text-[13px] font-medium text-slate-300"
+            className="btn-clean flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-1.5 text-xs font-medium text-slate-300"
           >
             <svg
               viewBox="0 0 24 24"
-              className="h-3.5 w-3.5"
+              className="h-3.5 w-3.5 shrink-0"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -445,7 +455,7 @@ function PortraitCard({
               <circle cx="12" cy="13" r="8" />
               <path d="M12 9v4l2.5 2.5M9 2h6" />
             </svg>
-            Quick Test
+            {pro ? 'Quick Test' : 'Test'}
             {!pro && (
               <span className="rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
                 Pro
@@ -461,7 +471,7 @@ function PortraitCard({
 type ImportMsg = { kind: 'ok' | 'err'; text: string } | null;
 
 export default function SetLibrary() {
-  const { sets, allSets, loading, settings, saveSet, removeSet, freeLangKey } = useLists();
+  const { sets, allSets, loading, settings, saveSet, removeSet, saveSettings, freeLangKey } = useLists();
   const { wordsToday, msToday, streak, week, days, recordWords } = usePracticeStats();
   const { recents, favorites, toggleFavorite } = useLibraryMeta();
   const router = useRouter();
@@ -475,7 +485,8 @@ export default function SetLibrary() {
   );
   const [challengeSet, setChallengeSet] = useState<VocabSet | null>(null);
   const [importMsg, setImportMsg] = useState<ImportMsg>(null);
-  const [pendingImport, setPendingImport] = useState<VocabSet | null>(null);
+  const [pendingSharedSet, setPendingSharedSet] = useState<SharedSetPreview | null>(null);
+  const [shareSet, setShareSet] = useState<VocabSet | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [cefrFilter, setCefrFilter] = useState<CefrLevel | 'all'>('all');
   const [langFilter, setLangFilter] = useState<string>('all');
@@ -547,56 +558,23 @@ export default function SetLibrary() {
     return () => window.removeEventListener('audiorepeat:open-browse', onOpenBrowse);
   }, []);
 
-  // Handle a shared-deck link: /?set=<encoded>. Decoded once on mount, then
-  // imported as soon as the library has loaded (so duplicates can be spotted).
+  // Shared links are decoded without writing. The recipient sees a content
+  // preview and must explicitly confirm before a fresh copy is persisted.
   useEffect(() => {
-    try {
-      const encoded = new URLSearchParams(window.location.search).get('set');
-      if (!encoded) return;
-      const parsed = decodeSetFromUrl(encoded);
-      if (parsed) queueMicrotask(() => setPendingImport(parsed));
-      else
-        queueMicrotask(() =>
-          flash({ kind: 'err', text: 'That share link is invalid or corrupted.' }),
-        );
-      // Strip the param so a refresh doesn't re-import (and the URL stays clean).
-      window.history.replaceState(null, '', window.location.pathname);
-    } catch {
-      queueMicrotask(() => flash({ kind: 'err', text: 'Could not read that share link.' }));
+    const result = previewSharedSetLink(window.location.href);
+    if (result.status === 'ready') queueMicrotask(() => setPendingSharedSet(result.preview));
+    else if (result.status === 'invalid') {
+      queueMicrotask(() => flash({ kind: 'err', text: 'That share link is invalid or corrupted.' }));
+    }
+    if (result.status !== 'none') {
+      window.history.replaceState(null, '', withoutSharedSetPayload(window.location.href));
     }
   }, [flash]);
 
-  useEffect(() => {
-    if (loading || !pendingImport) return;
-    const duplicate = sets.some(
-      (s) => s.name === pendingImport.name && s.words.length === pendingImport.words.length,
-    );
-    if (duplicate) {
-      queueMicrotask(() =>
-        flash({ kind: 'ok', text: `"${pendingImport.name}" is already in your library.` }),
-      );
-    } else {
-      void saveSet(pendingImport).then(() =>
-        flash({
-          kind: 'ok',
-          text: `Imported "${pendingImport.name}" (${pendingImport.words.length} words).`,
-        }),
-      );
-    }
-    queueMicrotask(() => setPendingImport(null));
-  }, [loading, pendingImport, sets, saveSet, flash]);
-
-  const handleShare = async (set: VocabSet) => {
-    const url = shareUrlForSet(set);
-    try {
-      await navigator.clipboard.writeText(url);
-      flash({ kind: 'ok', text: 'Share link copied — anyone who opens it imports this set.' });
-    } catch {
-      // Clipboard API unavailable (e.g. non-secure context) — fall back to a prompt.
-      const ok = window.prompt('Copy this share link:', url);
-      flash(ok !== null ? { kind: 'ok', text: 'Share link ready to send.' } : { kind: 'err', text: 'Share cancelled.' });
-    }
-  };
+  const duplicateSharedSet = useMemo(
+    () => pendingSharedSet ? findDuplicateSharedSet(pendingSharedSet.set, sets) : null,
+    [pendingSharedSet, sets],
+  );
 
   // Recents resolved against the live library (deleted sets drop out).
   const recentSets = useMemo(
@@ -692,6 +670,7 @@ export default function SetLibrary() {
     }
     return { mastered, hard };
   }, [sets]);
+  const reviewDueCount = useMemo(() => buildDueReviewQueue(sets).length, [sets]);
   const accuracyPct =
     masteryStats.mastered + masteryStats.hard > 0
       ? Math.round((masteryStats.mastered / (masteryStats.mastered + masteryStats.hard)) * 100)
@@ -991,6 +970,14 @@ export default function SetLibrary() {
             streak={streak}
           />
 
+          <ReviewTodayCard
+            dueCount={reviewDueCount}
+            reminderEnabled={settings.reminderEnabled}
+            reminderTime={settings.reminderTime}
+            onStart={() => router.push('/review')}
+            onSettingsChange={saveSettings}
+          />
+
           {featured && (
             <FeaturedCard
               set={featured}
@@ -1027,12 +1014,15 @@ export default function SetLibrary() {
                       : `${sets.length} set${sets.length === 1 ? '' : 's'} · ${totalWords.toLocaleString()} words · ${langCount} language${langCount === 1 ? '' : 's'}`}
                 </p>
               </div>
-              <button
-                onClick={() => setBrowse(true)}
-                className="btn-clean flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium text-slate-300"
-              >
-                <span aria-hidden>＋</span> Browse library
-              </button>
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <CloudSyncBadge />
+                <button
+                  onClick={() => setBrowse(true)}
+                  className="btn-clean flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium text-slate-300"
+                >
+                  <span aria-hidden>＋</span> Browse library
+                </button>
+              </div>
             </div>
 
             {/* Search + filters — only affect the grid below */}
@@ -1157,7 +1147,7 @@ export default function SetLibrary() {
                     onChallenge={() => openChallenge(set)}
                     onEdit={() => setEditing(set)}
                     onExport={() => downloadSet(set)}
-                    onShare={() => void handleShare(set)}
+                    onShare={() => setShareSet(set)}
                     onDelete={() => void removeSet(set.id)}
                   />
                 ))}
@@ -1186,6 +1176,20 @@ export default function SetLibrary() {
           set={challengeSet}
           onClose={() => setChallengeSet(null)}
           onRecordWord={(n) => recordWords(n, challengeSet.lang)}
+        />
+      )}
+
+      {shareSet && <ShareSetModal set={shareSet} onClose={() => setShareSet(null)} />}
+
+      {pendingSharedSet && !loading && (
+        <ShareImportPreviewModal
+          preview={pendingSharedSet}
+          duplicate={duplicateSharedSet}
+          onClose={() => setPendingSharedSet(null)}
+          onConfirm={async (set) => {
+            await saveSet(set);
+            flash({ kind: 'ok', text: `Imported "${set.name}" (${set.words.length} words).` });
+          }}
         />
       )}
 

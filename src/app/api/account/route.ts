@@ -36,21 +36,36 @@ export async function DELETE(request: Request) {
 
     const auth = getAdminAuth();
     const user = await auth.getUser(uid);
-    const [interest, purchases] = await Promise.all([
+    const userDataRef = db.doc(`users/${uid}`);
+    const [interest, purchases, syncedSets, syncMeta, userData] = await Promise.all([
       db.collection('plan_interest').where('userId', '==', uid).get(),
       db.collection('plan_purchases').where('userId', '==', uid).get(),
+      db.collection(`users/${uid}/sets`).get(),
+      db.collection(`users/${uid}/sync`).get(),
+      userDataRef.get(),
     ]);
     const newsletterRef = user.email
       ? db.doc(`newsletter_subscribers/${user.email.trim().toLowerCase()}`)
       : null;
     const newsletter = newsletterRef ? await newsletterRef.get() : null;
-    const snapshots = [entitlement, ...interest.docs, ...purchases.docs, ...(newsletter ? [newsletter] : [])]
+    const snapshots = [
+      entitlement,
+      userData,
+      ...syncedSets.docs,
+      ...syncMeta.docs,
+      ...interest.docs,
+      ...purchases.docs,
+      ...(newsletter ? [newsletter] : []),
+    ]
       .filter((snapshot) => snapshot.exists !== false && snapshot.data())
       .map((snapshot) => ({ ref: snapshot.ref ?? entitlementRef, data: snapshot.data() }));
     const batch = db.batch();
     batch.delete(entitlementRef);
     for (const doc of interest.docs) batch.delete(doc.ref);
     for (const doc of purchases.docs) batch.delete(doc.ref);
+    for (const doc of syncedSets.docs) batch.delete(doc.ref);
+    for (const doc of syncMeta.docs) batch.delete(doc.ref);
+    batch.delete(userDataRef);
     if (newsletterRef) batch.delete(newsletterRef);
     await batch.commit();
     try {

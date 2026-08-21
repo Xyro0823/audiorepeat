@@ -74,6 +74,8 @@ describe('PWA service worker — admin surfaces are never cached', () => {
     expect(isNetworkOnly({ pathname: '/admin/diagnostics' })).toBe(true);
     expect(isNetworkOnly({ pathname: '/admin/diagnostics/' })).toBe(true);
     expect(isNetworkOnly({ pathname: '/api/admin/diagnostics/languages' })).toBe(true);
+    expect(isNetworkOnly({ pathname: '/admin/errors' })).toBe(true);
+    expect(isNetworkOnly({ pathname: '/api/admin/diagnostics/errors' })).toBe(true);
     // Normal safe routes stay outside the guard.
     expect(isNetworkOnly({ pathname: '/' })).toBe(false);
     expect(isNetworkOnly({ pathname: '/player' })).toBe(false);
@@ -139,5 +141,21 @@ describe('PWA service worker — precache URL protocol boundary', () => {
     expect(allowed('/api/checkout', 'https://audiorepeat.app')).toBe(false);
     expect(allowed('javascript:alert(1)', 'https://audiorepeat.app')).toBe(false);
     expect(allowed('data:text/plain,secret', 'https://audiorepeat.app')).toBe(false);
+  });
+});
+
+describe('PWA service worker — Review Today reminders', () => {
+  it('keeps the review session available in the offline shell', () => {
+    const shellMatch = sw.match(/const SHELL = \[([\s\S]*?)\];/);
+    expect(shellMatch).not.toBeNull();
+    expect(shellMatch![1]).toContain('"/review"');
+  });
+
+  it('opens Review Today when a reminder is tapped', () => {
+    const clickIndex = sw.indexOf('self.addEventListener("notificationclick"');
+    const clickSection = sw.slice(clickIndex, sw.indexOf('self.addEventListener("fetch"'));
+    expect(clickIndex).toBeGreaterThan(-1);
+    expect(clickSection).toContain('client.navigate("/review")');
+    expect(clickSection).toContain('clients.openWindow("/review")');
   });
 });

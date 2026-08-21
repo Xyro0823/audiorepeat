@@ -7,6 +7,20 @@ export type CefrLevel = (typeof CEFR_LEVELS)[number];
 /** Spaced-repetition status for a single word; absent = still learning. */
 export type MasteryStatus = 'mastered' | 'hard';
 
+/** Serializable subset of an FSRS card, stored alongside a vocabulary word. */
+export interface ReviewSchedule {
+  due: number;
+  stability: number;
+  difficulty: number;
+  elapsedDays: number;
+  scheduledDays: number;
+  learningSteps: number;
+  reps: number;
+  lapses: number;
+  state: 0 | 1 | 2 | 3;
+  lastReview?: number;
+}
+
 /** App-wide color scheme. */
 export type ThemeName = 'neon' | 'dark' | 'light';
 
@@ -17,6 +31,8 @@ export interface VocabWord {
   repeats?: number; // per-word override; falls back to settings.repeats
   /** 'mastered' = known, 'hard' = review needed; undefined = learning. */
   mastery?: MasteryStatus;
+  /** FSRS memory state. Absent for words that have never been reviewed. */
+  review?: ReviewSchedule;
   /** Optional example sentence shown on the word card when enabled in settings. */
   example?: string;
 }

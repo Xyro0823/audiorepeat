@@ -11,7 +11,9 @@ vi.mock('@/lib/firebase/admin', () => ({
   getAdminAuth: () => ({ getUser: h.getUser, deleteUser: h.deleteUser }),
   getAdminDb: () => ({
     doc: (path: string) => ({ path, get: h.entitlementGet }),
-    collection: () => ({ where: () => ({ get: h.queryGet }) }),
+    collection: (path: string) => path.startsWith('users/')
+      ? { get: h.queryGet }
+      : { where: () => ({ get: h.queryGet }) },
     batch: () => ({ delete: h.batchDelete, set: h.batchSet, commit: h.commit }),
   }),
 }));

@@ -1,0 +1,270 @@
+'use client';
+
+import Link from 'next/link';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import AuthScreen from '@/components/auth/AuthScreen';
+import { useAuth } from '@/hooks/useAuth';
+import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
+import { useLists } from '@/hooks/useLists';
+import { usePracticeStats } from '@/hooks/usePracticeStats';
+import { useSpeechVoices } from '@/hooks/useSpeechVoices';
+import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
+import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
+import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
+import {
+  applyReviewRating,
+  buildDueReviewQueue,
+  estimatedReviewMinutes,
+  type DueReviewItem,
+  type ReviewRating,
+} from '@/lib/review/fsrs';
+
+const SESSION_LIMIT = 30;
+
+export default function ReviewSession() {
+  const { sets, loading, settings, saveSettings, saveSet } = useLists();
+  const { user } = useAuth();
+  const { recordWords } = usePracticeStats();
+  const { loading: voicesLoading, hasVoice } = useSpeechVoices();
+  const cloudReady = useCloudTtsStatus();
+  const [queue, setQueue] = useState<DueReviewItem[] | null>(null);
+  const [initialTotal, setInitialTotal] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  const [speaking, setSpeaking] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [completed, setCompleted] = useState(0);
+  const [cloudAuthOpen, setCloudAuthOpen] = useState(false);
+  const [sessionError, setSessionError] = useState<string | null>(null);
+  const startedRef = useRef(false);
+
+  useEffect(() => {
+    if (loading || startedRef.current) return;
+    startedRef.current = true;
+    const session = buildDueReviewQueue(sets, new Date(), SESSION_LIMIT);
+    setQueue(session);
+    setInitialTotal(session.length);
+  }, [loading, sets]);
+
+  const deviceEngine = useMemo(() => new SpeechSynthesisEngine(), []);
+  const cloudEngine = useMemo(
+    () => new CachedAudioEngine(new CloudTtsEngine(deviceEngine)),
+    [deviceEngine],
+  );
+  useEffect(() => () => {
+    deviceEngine.stop();
+    cloudEngine.stop();
+  }, [cloudEngine, deviceEngine]);
+
+  const current = queue?.[0] ?? null;
+  const currentNeedsCloud = Boolean(
+    current &&
+      !voicesLoading &&
+      (!hasVoice(current.lang) || !hasVoice(current.nativeLang)) &&
+      cloudReady,
+  );
+  const cloudConsentNeeded = currentNeedsCloud && !settings.cloudTts;
+
+  const speak = useCallback(
+    (text: string, lang: string, voiceURI?: string) => {
+      const useCloud = settings.cloudTts && cloudReady && !hasVoice(lang);
+      const engine = useCloud ? cloudEngine : deviceEngine;
+      setSpeaking(true);
+      engine.speak({
+        text,
+        lang,
+        rate: settings.speed,
+        voiceURI: useCloud ? undefined : voiceURI,
+        onEnd: () => setSpeaking(false),
+        onError: () => setSpeaking(false),
+      });
+    },
+    [cloudEngine, cloudReady, deviceEngine, hasVoice, settings.cloudTts, settings.speed],
+  );
+
+  const speakTarget = useCallback(() => {
+    if (!current || cloudConsentNeeded) return;
+    speak(current.word.target, current.lang, settings.targetVoiceURI);
+  }, [cloudConsentNeeded, current, settings.targetVoiceURI, speak]);
+
+  const revealAnswer = useCallback(() => {
+    if (!current) return;
+    setRevealed(true);
+    speak(current.word.translation, current.nativeLang, settings.translationVoiceURI);
+  }, [current, settings.translationVoiceURI, speak]);
+
+  const rate = useCallback(async (rating: ReviewRating) => {
+    if (!current || saving) return;
+    setSaving(true);
+    setSessionError(null);
+    try {
+      const source = sets.find((set) => set.id === current.setId);
+      if (!source) throw new Error('source-set-missing');
+      const reviewed = applyReviewRating(current.word, rating);
+      await saveSet({
+        ...source,
+        words: source.words.map((word) => (word.id === current.word.id ? reviewed : word)),
+      });
+      recordWords(1, current.lang);
+      deviceEngine.stop();
+      cloudEngine.stop();
+      setSpeaking(false);
+      setRevealed(false);
+      setCompleted((count) => count + 1);
+      setQueue((items) => items?.slice(1) ?? []);
+    } catch {
+      setSessionError('Could not save this review. Try the rating again.');
+    } finally {
+      setSaving(false);
+    }
+  }, [cloudEngine, current, deviceEngine, recordWords, saveSet, saving, sets]);
+
+  const enableCloudVoice = useCallback(() => {
+    saveSettings({ cloudTts: true });
+  }, [saveSettings]);
+
+  if (loading || queue === null) {
+    return (
+      <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-5">
+        <div className="h-10 w-10 animate-spin rounded-full border-2 border-neon-violet/30 border-t-neon-violet" />
+      </main>
+    );
+  }
+
+  if (!current) {
+    return (
+      <main className="mx-auto flex min-h-[75vh] w-full max-w-xl flex-col items-center justify-center px-5 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full border border-neon-green/25 bg-neon-green/10 text-4xl">✓</div>
+        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-neon-green">
+          {completed > 0 ? 'Session complete' : 'Review Today'}
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
+          {completed > 0 ? `${completed} words strengthened` : 'Nothing due right now'}
+        </h1>
+        <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
+          {completed > 0
+            ? 'FSRS has scheduled each word for the moment you are most likely to need it again.'
+            : 'Mark difficult words as Review while listening. Known words will rotate into this queue over time.'}
+        </p>
+        <Link
+          href="/dashboard#review-today"
+          className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl bg-neon-violet px-5 text-sm font-bold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-violet"
+        >
+          Back to dashboard
+        </Link>
+      </main>
+    );
+  }
+
+  const progress = initialTotal > 0 ? Math.round((completed / initialTotal) * 100) : 0;
+
+  return (
+    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-5 pb-12 pt-6">
+      <header className="flex items-center gap-3">
+        <Link
+          href="/dashboard#review-today"
+          className="rounded-lg px-2 py-2 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-violet"
+        >
+          ← Dashboard
+        </Link>
+        <span className="text-slate-700">/</span>
+        <h1 className="text-sm font-semibold text-white">Review Today</h1>
+        <span className="ml-auto text-xs tabular-nums text-slate-500">
+          {completed + 1} / {initialTotal}
+        </span>
+      </header>
+
+      <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+        <div
+          className="h-full rounded-full bg-neon-violet transition-[width] duration-500"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
+      <section className="flex flex-1 flex-col items-center justify-center py-10 text-center">
+        <div className="mb-7 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+          <span className="rounded-full border border-white/10 px-2.5 py-1 text-slate-400">
+            {current.setName}
+          </span>
+          <span>about {estimatedReviewMinutes(queue.length)} min left</span>
+        </div>
+
+        <p className="text-5xl font-bold tracking-tight text-neon-cyan sm:text-6xl">
+          {current.word.target}
+        </p>
+
+        <button
+          type="button"
+          onClick={speakTarget}
+          disabled={speaking || cloudConsentNeeded}
+          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 px-4 text-sm font-semibold text-neon-cyan transition hover:bg-neon-cyan/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <span aria-hidden>{speaking ? '◼' : '▶'}</span>
+          {speaking ? 'Speaking…' : 'Hear word'}
+        </button>
+
+        {cloudConsentNeeded ? (
+          <div className="mt-7 w-full max-w-md rounded-2xl border border-neon-cyan/25 bg-neon-cyan/[0.07] p-4 text-left">
+            <p className="text-sm font-bold text-white">Cloud voice needed</p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-400">
+              This device has no voice for this language. Only the word being spoken is sent to Microsoft Azure.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                if (user) enableCloudVoice();
+                else setCloudAuthOpen(true);
+              }}
+              className="mt-3 min-h-11 w-full rounded-xl bg-neon-cyan px-4 text-sm font-bold text-night-950 transition hover:brightness-110 sm:w-auto"
+            >
+              {user ? 'Enable cloud voice' : 'Sign in & enable cloud voice'}
+            </button>
+          </div>
+        ) : !revealed ? (
+          <button
+            type="button"
+            onClick={revealAnswer}
+            className="mt-10 min-h-12 rounded-xl bg-white px-6 text-sm font-bold text-night-950 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-night-950 active:scale-[0.98]"
+          >
+            Show answer
+          </button>
+        ) : (
+          <div className="mt-9 w-full max-w-xl animate-fade-up">
+            <p className="text-2xl font-semibold text-neon-violet">{current.word.translation}</p>
+            <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              How well did you remember?
+            </p>
+            <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
+              {([
+                { rating: 'again', label: 'Again', hint: '< 1 day', tone: 'border-neon-magenta/35 text-neon-magenta hover:bg-neon-magenta/10' },
+                { rating: 'hard', label: 'Review', hint: 'Sooner', tone: 'border-neon-amber/35 text-neon-amber hover:bg-neon-amber/10' },
+                { rating: 'good', label: 'Known', hint: 'Later', tone: 'border-neon-green/35 text-neon-green hover:bg-neon-green/10' },
+              ] as const).map((choice) => (
+                <button
+                  key={choice.rating}
+                  type="button"
+                  disabled={saving}
+                  onClick={() => void rate(choice.rating)}
+                  className={`min-h-16 rounded-xl border px-2 py-2 text-sm font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current disabled:opacity-50 ${choice.tone}`}
+                >
+                  <span className="block">{choice.label}</span>
+                  <span className="mt-0.5 block text-[10px] font-medium opacity-60">{choice.hint}</span>
+                </button>
+              ))}
+            </div>
+            {sessionError && (
+              <p className="mt-3 text-sm text-neon-magenta" role="alert">{sessionError}</p>
+            )}
+          </div>
+        )}
+      </section>
+
+      {cloudAuthOpen && (
+        <AuthScreen
+          mode="overlay"
+          onSuccess={enableCloudVoice}
+          onClose={() => setCloudAuthOpen(false)}
+        />
+      )}
+    </main>
+  );
+}

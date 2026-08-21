@@ -31,11 +31,13 @@ export default function PrivacyPage() {
             entitlement and keep your data separate from other users.
           </li>
           <li>
-            <strong className="text-white">Learning data on your device.</strong>{" "}
-            Your vocabulary sets, progress, streaks, and settings are stored
-            locally in your browser&apos;s storage (IndexedDB/localStorage) so
-            AudioRepeat works offline. This data stays on your device except for
-            the individual text sent for cloud speech when a device voice is unavailable.
+            <strong className="text-white">Learning and sync data.</strong>{" "}
+            Vocabulary sets, progress, streaks, and settings are stored locally
+            in your browser&apos;s storage (IndexedDB/localStorage) so AudioRepeat
+            works offline. If you sign in, your vocabulary sets and their
+            Known/Review/FSRS progress are transmitted over encrypted HTTPS and
+            stored in Firebase so they can sync across your devices. Guest
+            libraries remain device-only.
           </li>
           <li>
             <strong className="text-white">Newsletter email.</strong> If you
@@ -56,6 +58,15 @@ export default function PrivacyPage() {
             identifier.
           </li>
           <li>
+            <strong className="text-white">Error diagnostics.</strong> When the
+            app has an unexpected technical error, we store only fixed categories
+            such as the affected product area, standard error class, app release,
+            connectivity state, and a non-identifying fingerprint. The diagnostic
+            record never contains the error message, stack trace, page URL,
+            vocabulary content, email, account identifier, IP address, token, or
+            browser fingerprint.
+          </li>
+          <li>
             <strong className="text-white">Cloud speech text.</strong> When a
             compatible device voice is unavailable, the word or phrase being played
             is sent securely to Microsoft Azure Speech to generate audio. AudioRepeat
@@ -72,7 +83,8 @@ export default function PrivacyPage() {
           We do not collect card details, and we do not use advertising
           trackers, cookies for ad targeting, or fingerprinting. Our onboarding
           analytics intentionally stores no account identifier, email, or other
-          personally identifying value.
+          personally identifying value. Error diagnostics follow the same
+          non-identifying design and never include user-created learning content.
         </p>
       </section>
 
@@ -82,11 +94,13 @@ export default function PrivacyPage() {
         </h2>
         <ul className="list-disc space-y-2 pl-5">
           <li>To operate your account and provide the service you signed up for.</li>
+          <li>To sync a signed-in library and learning progress across devices.</li>
           <li>To process payments through Paddle and grant the correct plan.</li>
           <li>To send the newsletter only to people who subscribed to it.</li>
           <li>
             To understand and improve onboarding (aggregate analytics only).
           </li>
+          <li>To find and fix unexpected app errors using sanitized diagnostics.</li>
           <li>To generate spoken audio when your device has no compatible voice.</li>
         </ul>
       </section>
@@ -101,7 +115,7 @@ export default function PrivacyPage() {
         <ul className="list-disc space-y-2 pl-5">
           <li>
             <strong className="text-white">Firebase</strong> (Google) —
-            authentication and data storage.
+            authentication, entitlements, and signed-in library sync storage.
           </li>
           <li>
             <strong className="text-white">Paddle</strong> — payment
@@ -120,14 +134,17 @@ export default function PrivacyPage() {
       <section>
         <h2 className="text-lg font-semibold text-white">Storage and retention</h2>
         <p>
-          Learning data is kept on your device. Server-side records (account
+          Guest learning data is kept on the device. Signed-in libraries and
+          learning progress are also retained in Firebase for cross-device sync
+          until the account is deleted. Other server-side records (account
           information, entitlements, newsletter subscriptions, aggregate
           analytics) are retained for as long as needed to operate the service
-          and comply with legal obligations. Because analytics events contain no
-          account identifier, individual analytics events cannot be linked back
+          and comply with legal obligations. Sanitized error diagnostics are
+          assigned a 30-day expiry time. Because analytics and diagnostic events
+          contain no account identifier, individual events cannot be linked back
           to — or individually deleted for — a specific account. Cloud-generated
-          audio is stored in your browser cache and can be removed by clearing the
-          site&apos;s stored data.
+          audio is stored in your browser cache and can be removed by clearing
+          the site&apos;s stored data.
         </p>
       </section>
 
@@ -139,7 +156,8 @@ export default function PrivacyPage() {
           <li>
             <strong className="text-white">Delete your account.</strong> You can
             delete your account from the app (Settings → Delete account). This
-            removes your account and related server-side records.
+            removes your account, synced vocabulary/progress, and related
+            account-linked server-side records.
           </li>
           <li>
             <strong className="text-white">Local data.</strong> Your device

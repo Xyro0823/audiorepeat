@@ -1,7 +1,7 @@
 /* Evoq service worker — offline app shell + audio caching.
  * Registered only in production builds (see src/components/pwa/SwRegister.tsx).
  */
-const CACHE = "audiorepeat-v2";
+const CACHE = "audiorepeat-v3";
 
 /* Privileged and payment-sensitive surfaces must ALWAYS come from the live
  * server: admin pages/APIs, checkout pages, the checkout API and the payment
@@ -40,6 +40,7 @@ function isPrecacheUrlAllowed(value, origin) {
 const SHELL = [
   "/",
   "/player",
+  "/review",
   "/manifest.webmanifest",
   "/apple-touch-icon.png",
   "/icon.svg",
@@ -172,9 +173,12 @@ self.addEventListener("notificationclick", (event) => {
       .matchAll({ type: "window", includeUncontrolled: true })
       .then((list) => {
         for (const client of list) {
+          if ("navigate" in client) {
+            return client.navigate("/review").then(() => client.focus());
+          }
           if ("focus" in client) return client.focus();
         }
-        return clients.openWindow("/");
+        return clients.openWindow("/review");
       }),
   );
 });

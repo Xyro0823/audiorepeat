@@ -11,6 +11,7 @@
  */
 import { getAuthMode } from '@/lib/firebase/config';
 import { isNewlyCreatedAccount, markOnboardingPending } from '@/lib/onboarding';
+import { activateSetOwner } from '@/lib/db/indexedDb';
 import { updateSettings } from '@/lib/settingsStore';
 import type { AuthResult, AuthState } from '@/types/auth';
 
@@ -68,6 +69,7 @@ function enterSignedInState(user: NonNullable<AuthState['user']>): void {
   // Fail closed before any asynchronous server lookup. This also prevents a
   // late response for User A from appearing during User B's session.
   resetLocalEntitlement();
+  activateSetOwner(user.id);
   setState({ status: 'signed-in', user });
 }
 
@@ -127,6 +129,7 @@ export async function hydrateAuth(): Promise<void> {
     const { getFirebaseAuth, onFirebaseAuthChange, firebaseUserToAuthUser } = await loadClient();
     const auth = getFirebaseAuth();
     if (!auth) {
+      activateSetOwner(null);
       resetLocalEntitlement();
       setState({ status: 'guest', user: null });
       return;
@@ -150,10 +153,12 @@ export async function hydrateAuth(): Promise<void> {
         // Signed out. An explicit `logout()` already moved to 'signed-out'
         // (login screen); anything else (fresh visit) becomes a guest.
         resetLocalEntitlement();
+        activateSetOwner(null);
         setStateFn((prev) => prev.status === 'signed-out' ? prev : { status: 'guest', user: null });
       }
     });
   } catch {
+    activateSetOwner(null);
     resetLocalEntitlement();
     setState({ status: 'guest', user: null });
   }
@@ -245,6 +250,7 @@ export function logout(): void {
   // Reset entitlement to Free so the signed-out/guest session never inherits
   // another user's cached Pro plan from the global settings store.
   resetLocalEntitlement();
+  activateSetOwner(null);
   setState({ status: 'signed-out', user: null });
 }
 
@@ -259,6 +265,7 @@ export function continueAsGuest(): void {
   // Reset entitlement to Free so the guest session never inherits a signed-in
   // user's cached Pro plan from the global settings store.
   resetLocalEntitlement();
+  activateSetOwner(null);
   setState({ status: 'guest', user: null });
 }
 
@@ -281,6 +288,7 @@ export async function deleteAccount(): Promise<AuthResult> {
     // compatibility no-op when the SDK has not observed that deletion yet.
     if (current) await current.reload().catch(() => {});
     resetLocalEntitlement();
+    activateSetOwner(null);
     setState({ status: 'guest', user: null });
     return { ok: true };
   } catch (err) {

@@ -19,6 +19,7 @@ import { shouldOfferCloudVoiceConsent } from '@/lib/tts/cloudVoiceConsent';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import { findLanguage } from '@/lib/languages';
+import { applyMasteryStatus } from '@/lib/review/fsrs';
 import { FREE_LANG_LIMIT, isProPlan } from '@/lib/plans';
 import { formatCountdown } from '@/lib/format';
 import { recordSetPlayed } from '@/lib/libraryMeta';
@@ -631,7 +632,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       void saveSet({
         ...set,
         words: set.words.map((w) =>
-          w.id === currentWord.id ? { ...w, mastery: status } : w,
+          w.id === currentWord.id ? applyMasteryStatus(w, status) : w,
         ),
       });
     },

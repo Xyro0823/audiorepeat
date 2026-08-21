@@ -19,5 +19,8 @@ describe('PWA manifest branding', () => {
     expect(m.start_url).toBe('/');
     expect(m.display).toBe('standalone');
     expect(m.icons?.length ?? 0).toBeGreaterThanOrEqual(3);
+    expect(m.shortcuts).toContainEqual(
+      expect.objectContaining({ name: 'Review Today', url: '/review' }),
+    );
   });
 });

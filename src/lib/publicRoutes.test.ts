@@ -13,11 +13,13 @@ describe('public routes — Paddle website review', () => {
     for (const path of [
       '/dashboard',
       '/player',
+      '/review',
       '/checkout',
       '/stats',
       '/admin/entitlements',
       '/admin/diagnostics',
       '/admin/analytics',
+      '/admin/errors',
     ]) {
       expect(isPublicPath(path)).toBe(false);
     }

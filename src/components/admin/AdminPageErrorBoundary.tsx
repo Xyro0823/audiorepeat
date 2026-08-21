@@ -1,6 +1,7 @@
 'use client';
 
 import { Component, type ReactNode } from 'react';
+import { reportClientError } from '@/lib/errorMonitoring/client';
 
 interface Props {
   children: ReactNode;
@@ -23,8 +24,8 @@ export default class AdminPageErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error): void {
-    // Keep the server-side error visible to the operator (no user data here).
-    console.error('[admin] page render error', error);
+    // Send only the fixed privacy-safe classification (never message/stack).
+    reportClientError(error, 'admin-boundary');
   }
 
   render() {

@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { isPublicPath } from '@/lib/publicRoutes';
+import FirstSessionGuide from '@/components/onboarding/FirstSessionGuide';
 import AuthScreen from './AuthScreen';
 
 function Splash() {
@@ -29,7 +30,7 @@ function Splash() {
  * protected, and pages never mount (no audio, no effects) until auth resolves.
  */
 export default function AuthGate({ children }: { children: React.ReactNode }) {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const pathname = usePathname();
 
   // The marketing landing page (root /) and the public legal pages are open —
@@ -39,5 +40,13 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (status === 'loading') return <Splash />;
   if (status === 'signed-out') return <AuthScreen mode="gate" />;
+  if (status === 'signed-in' && user) {
+    return (
+      <>
+        {children}
+        <FirstSessionGuide key={user.id} uid={user.id} />
+      </>
+    );
+  }
   return <>{children}</>;
 }

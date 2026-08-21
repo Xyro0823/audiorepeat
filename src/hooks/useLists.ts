@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import type { AppSettings, VocabSet } from '@/types/app';
-import { getAuthSnapshot } from '@/lib/authStore';
+import { getAuthSnapshot, subscribeAuth } from '@/lib/authStore';
 import {
   accountPrefsActivatedFor,
   activateAccountPrefs,
@@ -17,7 +17,17 @@ import { readOnboardingPending } from '@/lib/onboarding';
 import { isProPlan } from '@/lib/plans';
 import { hydrateSeedWords, SEED_SETS } from '@/lib/seedSets';
 import { PACK_LANG } from '@/lib/starterSets';
-import { clearAllSets as dbClearAllSets, deleteSet as dbDeleteSet, getAllSets, putSet, replaceBackupData } from '@/lib/db/indexedDb';
+import {
+  activateSetOwner,
+  clearAllSets as dbClearAllSets,
+  deleteSet as dbDeleteSet,
+  getAllSets,
+  getDeletedSetIds,
+  migrateLegacySetsToOwner,
+  putSet,
+  replaceBackupData,
+} from '@/lib/db/indexedDb';
+import { scheduleLibrarySync, syncLibraryNow } from '@/lib/sync/client';
 import {
   getSettingsSnapshot,
   adoptPersistedSettings,
@@ -93,10 +103,25 @@ function matchesCuratedSeed(existing: VocabSet, curated: VocabSet): boolean {
 // deferred list remembers what was held back.
 const DEFERRED_SEED_KEY = 'audiorepeat-deferred-seed-ids';
 
-function readDeferredSeedIds(): string[] {
+function scopedKey(key: string, uid: string | null): string {
+  return uid ? `${key}:${uid}` : key;
+}
+
+function adoptLegacyStorageKey(key: string, uid: string): void {
+  try {
+    const target = scopedKey(key, uid);
+    if (window.localStorage.getItem(target) !== null) return;
+    const legacy = window.localStorage.getItem(key);
+    if (legacy !== null) window.localStorage.setItem(target, legacy);
+  } catch {
+    /* localStorage unavailable — IndexedDB data is still safely migrated */
+  }
+}
+
+function readDeferredSeedIds(uid: string | null): string[] {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = window.localStorage.getItem(DEFERRED_SEED_KEY);
+    const raw = window.localStorage.getItem(scopedKey(DEFERRED_SEED_KEY, uid));
     if (raw) {
       const parsed = JSON.parse(raw) as unknown;
       if (Array.isArray(parsed)) return parsed.filter((x): x is string => typeof x === 'string');
@@ -107,17 +132,17 @@ function readDeferredSeedIds(): string[] {
   return [];
 }
 
-function writeDeferredSeedIds(ids: string[]): void {
+function writeDeferredSeedIds(uid: string | null, ids: string[]): void {
   try {
-    window.localStorage.setItem(DEFERRED_SEED_KEY, JSON.stringify(ids));
+    window.localStorage.setItem(scopedKey(DEFERRED_SEED_KEY, uid), JSON.stringify(ids));
   } catch {
     /* storage unavailable — upgrade seeding just won't be deferred */
   }
 }
 
-function removeDeferredSeedIds(): void {
+function removeDeferredSeedIds(uid: string | null): void {
   try {
-    window.localStorage.removeItem(DEFERRED_SEED_KEY);
+    window.localStorage.removeItem(scopedKey(DEFERRED_SEED_KEY, uid));
   } catch {
     /* ignore */
   }
@@ -129,10 +154,13 @@ function removeDeferredSeedIds(): void {
  * main merge seeds new installs. The deferred list is cleared only when every
  * seed succeeded; failed ids stay behind for a retry on the next launch.
  */
-async function seedDeferredSeeds(now: number): Promise<{ seeded: number; failed: number }> {
-  const deferred = readDeferredSeedIds();
+async function seedDeferredSeeds(now: number, uid: string | null): Promise<{ seeded: number; failed: number }> {
+  const deferred = readDeferredSeedIds(uid);
   if (deferred.length === 0) return { seeded: 0, failed: 0 };
-  const existingIds = new Set((await getAllSets()).map((s) => s.id));
+  const existingIds = new Set([
+    ...(await getAllSets()).map((s) => s.id),
+    ...(await getDeletedSetIds()),
+  ]);
   const failed: string[] = [];
   let seeded = 0;
   for (const id of deferred) {
@@ -157,8 +185,8 @@ async function seedDeferredSeeds(now: number): Promise<{ seeded: number; failed:
       failed.push(id);
     }
   }
-  if (failed.length === 0) removeDeferredSeedIds();
-  else writeDeferredSeedIds(failed);
+  if (failed.length === 0) removeDeferredSeedIds(uid);
+  else writeDeferredSeedIds(uid, failed);
   return { seeded, failed: failed.length };
 }
 
@@ -186,11 +214,23 @@ export function useLists() {
   useEffect(() => {
     let alive = true;
     (async () => {
+      const uid = getAuthSnapshot().user?.id ?? null;
+      activateSetOwner(uid);
+      if (uid && await migrateLegacySetsToOwner(uid)) {
+        adoptLegacyStorageKey(SEED_VERSION_KEY, uid);
+        adoptLegacyStorageKey(DEFERRED_SEED_KEY, uid);
+      }
       let list = await getAllSets();
+      // Offline-first: an existing local library renders immediately while a
+      // signed-in account checks for remote changes in the background.
+      if (uid && list.length > 0 && alive) {
+        setSets(list);
+        setLoading(false);
+      }
+      if (uid) list = await syncLibraryNow();
       // Hydrate the shared settings store FIRST so the seed merge below can
       // honor the purchased plan: Free seeds only one language, Pro seeds all.
       await hydrateSettings();
-      const uid = getAuthSnapshot().user?.id ?? null;
       const onboardingPendingMarker = uid ? readOnboardingPending(uid) : false;
       // Point the account-prefs store at this session. Signed-in users read
       // (and, on first activation, one-time adopt the legacy global
@@ -232,12 +272,12 @@ export function useLists() {
       const now = Date.now();
       let seedVersion = 0;
       try {
-        seedVersion = Number(window.localStorage.getItem(SEED_VERSION_KEY) ?? 0) || 0;
+        seedVersion = Number(window.localStorage.getItem(scopedKey(SEED_VERSION_KEY, uid)) ?? 0) || 0;
       } catch {
         seedVersion = 0; // storage unavailable: merge will retry harmlessly
       }
       if (seedVersion < SEED_VERSION) {
-        const knownIds = new Set(list.map((s) => s.id));
+        const knownIds = new Set([...list.map((s) => s.id), ...(await getDeletedSetIds())]);
         const deferred: string[] = [];
         // Free installs seed only the user's chosen/legacy first language; the
         // remaining seed sets are recorded as deferred and seeded once the
@@ -317,12 +357,12 @@ export function useLists() {
         if (deferred.length > 0) {
           // Persist (merging with anything deferred by an earlier run) so the
           // deferred languages are seeded the moment the plan becomes Pro.
-          writeDeferredSeedIds([...new Set([...readDeferredSeedIds(), ...deferred])]);
+          writeDeferredSeedIds(uid, [...new Set([...readDeferredSeedIds(uid), ...deferred])]);
         }
         list = await getAllSets();
         if (hydrationComplete) {
           try {
-            window.localStorage.setItem(SEED_VERSION_KEY, String(SEED_VERSION));
+            window.localStorage.setItem(scopedKey(SEED_VERSION_KEY, uid), String(SEED_VERSION));
           } catch {
             /* ignore */
           }
@@ -331,13 +371,14 @@ export function useLists() {
       // Upgrade path: a Free install deferred the other languages — seed them
       // now that the plan is Pro. No-op for Pro installs (nothing deferred).
       if (pro) {
-        const r = await seedDeferredSeeds(now);
+        const r = await seedDeferredSeeds(now, uid);
         if (r.seeded > 0) list = await getAllSets();
       }
       if (alive) {
         setSets(list);
         setLoading(false);
       }
+      if (uid) scheduleLibrarySync(100);
     })().catch((err) => {
       console.error('[useLists] hydration failed', err);
       if (alive) setLoading(false);
@@ -345,6 +386,54 @@ export function useLists() {
     return () => {
       alive = false;
     };
+  }, []);
+
+  // The hydration effect above runs exactly once, so a sign-in, logout, or
+  // account switch that happens AFTER mount (auth dialog on an already
+  // rendered dashboard) must switch the visible library itself. Without this
+  // the previous owner's cards stay on screen, and a fresh sign-in on a new
+  // device shows an empty library until a tab refocus happens to re-sync.
+  const seenOwnerRef = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    const switchOwner = (next: string | null) => {
+      activateSetOwner(next);
+      void (async () => {
+        if (next) {
+          try {
+            await migrateLegacySetsToOwner(next);
+          } catch {
+            /* the localStorage claim marker prevents a double migration */
+          }
+        }
+        setSets(await getAllSets());
+        setLoading(false);
+        if (!next) return;
+        if (!accountPrefsActivatedFor(next)) {
+          activateAccountPrefs(next, getSettingsSnapshot(), {
+            skipAdoption: !!readOnboardingPending(next),
+          });
+        }
+        try {
+          setSets(await syncLibraryNow());
+        } catch {
+          /* offline: the local owner-scoped library is already visible */
+        }
+      })();
+    };
+    const onAuthChange = () => {
+      const next = getAuthSnapshot().user?.id ?? null;
+      if (seenOwnerRef.current === undefined) {
+        // First observation: the mount effect owns the initial hydration.
+        seenOwnerRef.current = next;
+        return;
+      }
+      if (next === seenOwnerRef.current) return;
+      seenOwnerRef.current = next;
+      switchOwner(next);
+    };
+    const unsubscribe = subscribeAuth(onAuthChange);
+    onAuthChange();
+    return unsubscribe;
   }, []);
 
   // When the plan flips to Pro in-place (a successful checkout, or restoring
@@ -360,12 +449,16 @@ export function useLists() {
     if (!upgraded) return;
     void (async () => {
       try {
-        const r = await seedDeferredSeeds(Date.now());
+        const uid = getAuthSnapshot().user?.id ?? null;
+        const r = await seedDeferredSeeds(Date.now(), uid);
         // Un-hide languages in THIS account's prefs (guests: global record).
         if (getAccountPrefsSnapshot().hiddenLangs.length > 0) {
           updateAccountPrefs({ hiddenLangs: [] });
         }
-        if (r.seeded > 0) setSets(await getAllSets());
+        if (r.seeded > 0) {
+          setSets(await getAllSets());
+          scheduleLibrarySync();
+        }
       } catch {
         /* failed ids stay deferred — retried on the next launch */
       }
@@ -381,6 +474,9 @@ export function useLists() {
     const sync = () => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
       void refreshSettings();
+      if (getAuthSnapshot().user) {
+        void syncLibraryNow().then((list) => setSets(list));
+      }
     };
     document.addEventListener('visibilitychange', sync);
     window.addEventListener('focus', sync);
@@ -396,9 +492,22 @@ export function useLists() {
   useEffect(() => {
     const reload = () => {
       void getAllSets().then((list) => setSets(list));
+      scheduleLibrarySync();
     };
     window.addEventListener('audiorepeat:data-changed', reload);
     return () => window.removeEventListener('audiorepeat:data-changed', reload);
+  }, []);
+
+  // A finished cloud sync may have merged remote changes into IndexedDB
+  // (badge retry, scheduled push, owner switch). Re-read them into the
+  // visible library. Deliberately does NOT schedule another sync — the sync
+  // that emitted this event just finished, so re-syncing would loop.
+  useEffect(() => {
+    const reload = () => {
+      void getAllSets().then((list) => setSets(list));
+    };
+    window.addEventListener('audiorepeat:library-synced', reload);
+    return () => window.removeEventListener('audiorepeat:library-synced', reload);
   }, []);
 
   const saveSet = useCallback(async (set: VocabSet): Promise<VocabSet> => {
@@ -411,12 +520,14 @@ export function useLists() {
       else copy.unshift(next);
       return copy;
     });
+    scheduleLibrarySync();
     return next;
   }, []);
 
   const removeSet = useCallback(async (id: string) => {
     await dbDeleteSet(id);
     setSets((prev) => prev.filter((s) => s.id !== id));
+    scheduleLibrarySync();
   }, []);
 
   /** Full settings replace (backup restore) — not a merge like saveSettings. */
@@ -428,12 +539,14 @@ export function useLists() {
     await replaceBackupData(nextSettings, nextSets);
     adoptPersistedSettings(nextSettings);
     setSets([...nextSets].sort((a, b) => b.updatedAt - a.updatedAt));
+    scheduleLibrarySync(100);
   }, []);
 
   /** Delete every set (backup restore / full reset). */
   const clearSets = useCallback(async () => {
     await dbClearAllSets();
     setSets([]);
+    scheduleLibrarySync(100);
   }, []);
 
   // Debounced persistence: state updates are instant; IndexedDB writes coalesce
