@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('server-only', () => ({}));
+
 const h = vi.hoisted(() => ({
   configured: true,
   adminConfigured: true,
@@ -21,6 +23,7 @@ vi.mock('@/lib/tts/azureTts.server', () => ({
 }));
 
 import { GET, POST } from './route';
+import { resetTtsReplayCacheForTests } from '@/lib/tts/ttsReplayCache.server';
 
 function request(body: unknown, token?: string, headers?: Record<string, string>): Request {
   return new Request('https://app.example/api/tts', {
@@ -37,6 +40,7 @@ function request(body: unknown, token?: string, headers?: Record<string, string>
 beforeEach(() => {
   h.configured = true;
   h.adminConfigured = true;
+  resetTtsReplayCacheForTests();
   // Route-level tests exercise input validation / rate limits with an
   // entitled (active Pro) user; the entitlement gate itself has its own
   // dedicated coverage in route.gate.test.ts.
@@ -85,13 +89,44 @@ describe('/api/tts', () => {
     expect(h.synthesize).toHaveBeenCalledWith('Сайн байна уу', 'mn-MN');
   });
 
-  it('rate-limits by verified uid before using the paid provider', async () => {
+  it('rate-limits bursts by verified uid before using the paid provider', async () => {
     h.consume.mockResolvedValue('limited');
     const response = await POST(request({ text: 'hello', lang: 'en-US' }, 'token'));
     expect(response.status).toBe(429);
-    expect(response.headers.get('Retry-After')).toBe('600');
-    expect(h.consume).toHaveBeenCalledWith(expect.objectContaining({ key: 'tts:uid-1' }));
+    expect(response.headers.get('Retry-After')).toBe('60');
+    expect(h.consume).toHaveBeenCalledTimes(1);
+    expect(h.consume).toHaveBeenCalledWith(expect.objectContaining({ key: 'tts-burst:uid-1' }));
     expect(h.synthesize).not.toHaveBeenCalled();
+  });
+
+  it('enforces a per-user daily synthesis ceiling', async () => {
+    h.consume.mockImplementation(async (args: { key: string }) =>
+      args.key.startsWith('tts-day:') ? 'limited' : 'allowed',
+    );
+    const response = await POST(request({ text: 'hello', lang: 'en-US' }, 'token'));
+    expect(response.status).toBe(429);
+    expect(await response.json()).toMatchObject({ error: 'rate-limited', scope: 'daily' });
+    expect(response.headers.get('Retry-After')).toBe('86400');
+    expect(h.consume).toHaveBeenCalledWith(expect.objectContaining({ key: 'tts-day:uid-1' }));
+    expect(h.synthesize).not.toHaveBeenCalled();
+  });
+
+  it('serves identical replayed requests from cache without re-paying Azure', async () => {
+    const first = await POST(request({ text: 'hola', lang: 'es-ES' }, 'token'));
+    expect(first.status).toBe(200);
+    const second = await POST(request({ text: 'hola', lang: 'es-ES' }, 'token'));
+    expect(second.status).toBe(200);
+    expect(second.headers.get('Content-Type')).toBe('audio/mpeg');
+    expect(second.headers.get('X-AudioRepeat-Voice')).toBe('mn-MN-YesuiNeural');
+    expect(h.synthesize).toHaveBeenCalledTimes(1);
+    // Cache hits bypass the limiters entirely — replays must not burn quota.
+    h.consume.mockClear();
+    const third = await POST(request({ text: 'hola', lang: 'es-ES' }, 'token'));
+    expect(third.status).toBe(200);
+    expect(h.consume).not.toHaveBeenCalled();
+    // A different text is a different key and synthesizes again.
+    await POST(request({ text: 'adiós', lang: 'es-ES' }, 'token'));
+    expect(h.synthesize).toHaveBeenCalledTimes(2);
   });
 
   it('fails closed when Azure or server authentication is unconfigured', async () => {

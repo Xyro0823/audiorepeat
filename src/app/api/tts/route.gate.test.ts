@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { EntitlementRecord } from '@/lib/stripe/entitlements';
 
+vi.mock('server-only', () => ({}));
+
 const h = vi.hoisted(() => {
   const verifyIdToken = vi.fn();
   const getEntitlement = vi.fn();

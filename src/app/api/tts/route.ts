@@ -5,11 +5,31 @@ import { NO_STORE_HEADERS } from '@/lib/http';
 import { planHasFeature } from '@/lib/plans';
 import { computeEffectiveEntitlement } from '@/lib/stripe/entitlements';
 import { isAzureTtsConfigured, synthesizeAzureSpeech } from '@/lib/tts/azureTts.server';
+import {
+  getCachedTtsAudio,
+  storeTtsAudio,
+  ttsReplayKey,
+} from '@/lib/tts/ttsReplayCache.server';
 
 export const runtime = 'nodejs';
 const LANG_RE = /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i;
 const MAX_TEXT_LENGTH = 300;
 const MAX_BODY_BYTES = 4096;
+
+/**
+ * Cost/abuse tiers for the paid synthesis provider (both via the shared
+ * Firestore fixed-window limiter):
+ *  - burst: 150 / 60s per uid. Legit load never approaches this — prewarm
+ *    runs ≤6 parallel workers (~2 req/s) and playback is one word at a time —
+ *    while a script hammering the endpoint is stopped within seconds.
+ *  - daily: 1000 / 24h per uid. Far above heavy real use (audio caches on the
+ *    device after first synthesis; realistic engaged usage is a few hundred),
+ *    yet caps worst-case Azure spend at ~1000 × 300 chars / user / day.
+ */
+const TTS_BURST_LIMIT = 150;
+const TTS_BURST_WINDOW_MS = 60_000;
+const TTS_DAILY_LIMIT = 1000;
+const TTS_DAILY_WINDOW_MS = 24 * 60 * 60_000;
 
 function bearerToken(request: Request): string | null {
   const auth = request.headers.get('authorization');
@@ -67,18 +87,51 @@ export async function POST(request: Request) {
   if (!text || text.length > MAX_TEXT_LENGTH || !LANG_RE.test(lang)) {
     return NextResponse.json({ error: 'invalid-input' }, { status: 400, headers: NO_STORE_HEADERS });
   }
+  // Identical requests within a short window are served from the instance-local
+  // replay cache: retries and duplicate jobs must not re-pay Azure (or burn
+  // rate-limit budget) for byte-identical audio. Entitlement was already
+  // verified above, so a cache hit never leaks audio to a non-entitled caller.
+  const replayKey = ttsReplayKey(uid, lang, text);
+  const cached = getCachedTtsAudio(replayKey);
+  if (cached) {
+    return new Response(cached.audio, {
+      headers: {
+        ...NO_STORE_HEADERS,
+        'Content-Type': 'audio/mpeg',
+        'X-AudioRepeat-Voice': cached.voice,
+      },
+    });
+  }
   if (
-    await consumeDistributedRateLimit({ key: `tts:${uid}`, limit: 180, windowMs: 10 * 60_000 }) ===
+    await consumeDistributedRateLimit({
+      key: `tts-burst:${uid}`,
+      limit: TTS_BURST_LIMIT,
+      windowMs: TTS_BURST_WINDOW_MS,
+    }) ===
     'limited'
   ) {
     return NextResponse.json(
-      { error: 'rate-limited' },
-      { status: 429, headers: { ...NO_STORE_HEADERS, 'Retry-After': '600' } },
+      { error: 'rate-limited', scope: 'burst' },
+      { status: 429, headers: { ...NO_STORE_HEADERS, 'Retry-After': String(TTS_BURST_WINDOW_MS / 1000) } },
+    );
+  }
+  if (
+    await consumeDistributedRateLimit({
+      key: `tts-day:${uid}`,
+      limit: TTS_DAILY_LIMIT,
+      windowMs: TTS_DAILY_WINDOW_MS,
+    }) ===
+    'limited'
+  ) {
+    return NextResponse.json(
+      { error: 'rate-limited', scope: 'daily' },
+      { status: 429, headers: { ...NO_STORE_HEADERS, 'Retry-After': String(TTS_DAILY_WINDOW_MS / 1000) } },
     );
   }
 
   try {
     const result = await synthesizeAzureSpeech(text, lang);
+    storeTtsAudio(replayKey, result.audio, result.voice);
     return new Response(result.audio, {
       headers: {
         ...NO_STORE_HEADERS,
