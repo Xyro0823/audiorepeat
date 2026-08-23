@@ -16,11 +16,28 @@ describe('PWA manifest branding', () => {
 
   it('keeps the install surface intact', () => {
     const m = manifest();
-    expect(m.start_url).toBe('/');
     expect(m.display).toBe('standalone');
     expect(m.icons?.length ?? 0).toBeGreaterThanOrEqual(3);
     expect(m.shortcuts).toContainEqual(
       expect.objectContaining({ name: 'Review Today', url: '/review' }),
+    );
+  });
+
+  it('opens the installed app on the practice dashboard, not marketing', () => {
+    const m = manifest();
+    // Core learning must be reachable from the very first offline launch.
+    expect(m.start_url).toBe('/dashboard');
+    expect(m.scope).toBe('/');
+  });
+
+  it('keeps app shortcuts inside the app shell', () => {
+    const m = manifest();
+    for (const shortcut of m.shortcuts ?? []) {
+      expect(shortcut.url.startsWith('/')).toBe(true);
+      expect(shortcut.url.startsWith('/?')).toBe(false);
+    }
+    expect(m.shortcuts).toContainEqual(
+      expect.objectContaining({ name: 'New set', url: '/dashboard?new=1' }),
     );
   });
 });

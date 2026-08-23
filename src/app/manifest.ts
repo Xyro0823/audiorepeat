@@ -8,7 +8,10 @@ export default function manifest(): MetadataRoute.Manifest {
       "Offline-first, hands-free vocabulary looping for auditory language learners.",
     id: "/",
     scope: "/",
-    start_url: "/",
+    // The installed app opens the signed-in practice dashboard (library +
+    // player), not the marketing landing page. Signed-out users get the auth
+    // screen there instead — still the app, never the marketing site.
+    start_url: "/dashboard",
     display: "standalone",
     orientation: "portrait",
     lang: "en",
@@ -28,7 +31,8 @@ export default function manifest(): MetadataRoute.Manifest {
     shortcuts: [
       {
         name: "New set",
-        url: "/?new=1",
+        // Inside the app (the library lives on /dashboard) — never marketing.
+        url: "/dashboard?new=1",
         description: "Create a new vocabulary set",
       },
       {

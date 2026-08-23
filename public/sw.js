@@ -1,7 +1,12 @@
 /* Evoq service worker — offline app shell + audio caching.
  * Registered only in production builds (see src/components/pwa/SwRegister.tsx).
  */
-const CACHE = "audiorepeat-v3";
+const CACHE = "audiorepeat-v4";
+/* Runtime-cached navigations live in their own bounded cache so FIFO trimming
+ * can never evict precached app-shell entries. Bumped to -v4 alongside the
+ * navigation-strategy fix; activate() removes older versions. */
+const NAV_CACHE = "audiorepeat-nav-v1";
+const NAV_CACHE_MAX = 40;
 
 /* Privileged and payment-sensitive surfaces must ALWAYS come from the live
  * server: admin pages/APIs, checkout pages, the checkout API and the payment
@@ -37,8 +42,10 @@ function isPrecacheUrlAllowed(value, origin) {
     return false;
   }
 }
+
 const SHELL = [
   "/",
+  "/dashboard",
   "/player",
   "/review",
   "/manifest.webmanifest",
@@ -69,7 +76,10 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((k) => k !== CACHE && k !== "tts-audio") // keep pre-generated TTS blobs
+            .filter(
+              (k) =>
+                k !== CACHE && k !== NAV_CACHE && k !== "tts-audio", // keep pre-generated TTS blobs
+            )
             .map((k) => caches.delete(k)),
         ),
       )
@@ -183,6 +193,15 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
+// Runtime navigation cache stays bounded: FIFO eviction of the oldest pages.
+async function trimNavCache(cache) {
+  const keys = await cache.keys();
+  if (keys.length <= NAV_CACHE_MAX) return;
+  await Promise.all(
+    keys.slice(0, keys.length - NAV_CACHE_MAX).map((stale) => cache.delete(stale)),
+  );
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   if (request.method !== "GET") return;
@@ -243,8 +262,37 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Navigations → network first, fall back to the cached shell when offline
+  // Navigations → network first (online freshness is never stale), while
+  // successful same-origin page responses are runtime-cached so every route
+  // the user has visited reopens offline. When offline, serve the exact
+  // cached page for that URL first (precached shell or last-seen copy), then
+  // the cached signed-in app (/dashboard), then the landing page — so an
+  // offline launch opens the learning app, not marketing. Privileged
+  // network-only surfaces never reach this branch: the guard above already
+  // routed them straight to the network.
   if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match("/")));
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response.ok && response.type === "basic") {
+            const copy = response.clone();
+            event.waitUntil(
+              caches.open(NAV_CACHE).then((cache) =>
+                cache.put(request, copy).then(() => trimNavCache(cache)),
+              ),
+            );
+          }
+          return response;
+        })
+        .catch(() =>
+          caches.match(request).then(
+            (cached) =>
+              cached ||
+              caches.match("/dashboard").then(
+                (dashboard) => dashboard || caches.match("/")
+              )
+          ),
+        ),
+    );
   }
 });

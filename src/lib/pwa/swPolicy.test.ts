@@ -98,6 +98,69 @@ describe('PWA service worker — admin surfaces are never cached', () => {
   });
 });
 
+describe('PWA service worker — offline navigation reliability', () => {
+  const shellMatch = sw.match(/const SHELL = \[([\s\S]*?)\];/);
+
+  it('precaches the signed-in dashboard alongside the other shells', () => {
+    expect(shellMatch).not.toBeNull();
+    expect(shellMatch![1]).toContain('"/dashboard"');
+    // Marketing stays available for signed-out visitors but is never the
+    // primary offline fallback.
+    expect(shellMatch![1]).toContain('"/"');
+  });
+
+  it('runtime-caches successful navigations so visited routes reopen offline', () => {
+    const navIndex = sw.indexOf('request.mode === "navigate"');
+    const navSection = sw.slice(navIndex, sw.indexOf('});', navIndex));
+    expect(navSection).toContain('caches.open(NAV_CACHE)');
+    expect(navSection).toContain('cache.put(request, copy)');
+    expect(navSection).toContain('trimNavCache');
+    // Only successful same-origin responses may be cached.
+    expect(navSection).toMatch(/response\.ok && response\.type === "basic"/);
+  });
+
+  it('bounds the runtime navigation cache so it cannot grow unbounded', () => {
+    expect(sw).toContain('const NAV_CACHE_MAX =');
+    const trimSrc = sw.match(/async function trimNavCache\(cache\) \{[\s\S]*?\n\}/)?.[0];
+    expect(trimSrc).toBeDefined();
+    expect(trimSrc).toContain('cache.delete');
+    expect(trimSrc).toMatch(/NAV_CACHE_MAX/);
+  });
+
+  it('falls back offline to the exact page, then the app dashboard, then landing', () => {
+    const navIndex = sw.indexOf('request.mode === "navigate"');
+    const navSection = sw.slice(navIndex, sw.indexOf('});', navIndex));
+    // Order matters: exact URL → /dashboard → "/" as a last resort.
+    const exactIndex = navSection.indexOf('caches.match(request)');
+    const dashboardIndex = navSection.indexOf('caches.match("/dashboard")');
+    const landingIndex = navSection.indexOf('caches.match("/")');
+    for (const index of [exactIndex, dashboardIndex, landingIndex]) {
+      expect(index).toBeGreaterThan(-1);
+    }
+    expect(exactIndex).toBeLessThan(dashboardIndex);
+    expect(dashboardIndex).toBeLessThan(landingIndex);
+  });
+
+  it('keeps the runtime navigation cache across activations', () => {
+    const activateIndex = sw.indexOf('self.addEventListener("activate"');
+    const activateSection = sw.slice(activateIndex, sw.indexOf('self.addEventListener("message"'));
+    expect(activateSection).toContain('k !== NAV_CACHE');
+    // Version bump: old caches are cleaned up on activation.
+    expect(sw).toMatch(/const CACHE = "audiorepeat-v\d+"/);
+  });
+
+  it('never lets runtime caching capture API or privileged responses', () => {
+    const navSection = sw.slice(
+      sw.indexOf('request.mode === "navigate"'),
+      sw.indexOf('});', sw.indexOf('request.mode === "navigate"')),
+    );
+    // The runtime-cache write lives only in the navigate branch; /api/* and
+    // network-only URLs never reach it.
+    expect(navSection).not.toContain('/api/');
+    expect(navSection).not.toContain('isNetworkOnly(url) === false');
+  });
+});
+
 describe('PWA service worker — payment surfaces are never cached', () => {
   it('covers checkout pages and payment endpoints in the network-only guard', () => {
     expect(sw).toContain('url.pathname === "/checkout"');
