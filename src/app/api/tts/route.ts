@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { consumeDistributedRateLimit } from '@/lib/distributedRateLimit';
-import { isAdminConfigured, verifyIdToken } from '@/lib/firebase/admin';
+import { createEntitlementStore, isAdminConfigured, verifyIdToken } from '@/lib/firebase/admin';
 import { NO_STORE_HEADERS } from '@/lib/http';
+import { planHasFeature } from '@/lib/plans';
+import { computeEffectiveEntitlement } from '@/lib/stripe/entitlements';
 import { isAzureTtsConfigured, synthesizeAzureSpeech } from '@/lib/tts/azureTts.server';
 
 export const runtime = 'nodejs';
@@ -37,6 +39,18 @@ export async function POST(request: Request) {
   const uid = token ? await verifyIdToken(token) : null;
   if (!uid) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: NO_STORE_HEADERS });
+  }
+  // Cloud voices + offline audio packs are Pro entitlements. The check reads
+  // the server-side entitlement record (webhooks/admin grants write it) — a
+  // client toggling local settings can never unlock synthesis. Fail closed:
+  // no record / expired grant / canceled subscription → Free → rejected.
+  const entitlement = await createEntitlementStore().getEntitlement(uid);
+  const effective = computeEffectiveEntitlement(entitlement, Math.floor(Date.now() / 1000));
+  if (!planHasFeature(effective.plan, 'offlineAudio')) {
+    return NextResponse.json(
+      { error: 'pro-required', feature: 'offlineAudio' },
+      { status: 403, headers: NO_STORE_HEADERS },
+    );
   }
   const rawBody = await request.text().catch(() => '');
   if (rawBody.length > MAX_BODY_BYTES) {

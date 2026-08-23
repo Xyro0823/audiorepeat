@@ -17,8 +17,16 @@ describe('PlayerView cloud voice consent', () => {
   });
 
   it('blocks ordinary playback until the missing-voice consent is handled', () => {
-    expect(source).toMatch(
-      /const startPlayback = useCallback\(\(\) => \{\s+if \(cloudVoiceConsentNeeded\)/,
+    const startPlayback = source.match(
+      /const startPlayback = useCallback\(\(\) => \{[\s\S]*?\n  \}, \[[^\]]*\]\);/,
+    )?.[0];
+    expect(startPlayback).toBeDefined();
+    // Within the start guard: the Free daily cap comes first, then the
+    // cloud-voice consent block — both must stop play() before it runs.
+    expect(startPlayback).toMatch(/if \(dailyLimitReached\)/);
+    expect(startPlayback).toMatch(/if \(cloudVoiceConsentNeeded\)/);
+    expect(startPlayback!.indexOf('cloudVoiceConsentNeeded')).toBeLessThan(
+      startPlayback!.indexOf('play();'),
     );
   });
 });

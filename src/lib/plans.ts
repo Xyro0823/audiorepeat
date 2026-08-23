@@ -23,8 +23,60 @@ export function isProPlan(plan: PlanId): boolean {
   return plan === 'pro' || plan === 'lifetime';
 }
 
+/* ------------------------------------------------------------------------ */
+/* Feature entitlement matrix — the ONE canonical gate                       */
+/* ------------------------------------------------------------------------ */
+
+/**
+ * Machine-readable feature entitlements. Every Free/Pro gate (client UI,
+ * client engines, server API routes) must go through `planHasFeature` —
+ * never a scattered `plan === 'pro'` check. The marketing feature lists in
+ * `PLANS` below describe these same entitlements in human copy.
+ */
+export type FeatureKey =
+  | 'allLanguages'
+  | 'fsrsReview'
+  | 'quiz'
+  | 'speedChallenge'
+  | 'stats'
+  | 'offlineAudio';
+
+const PRO_FEATURES: FeatureKey[] = [
+  'allLanguages',
+  'fsrsReview',
+  'quiz',
+  'speedChallenge',
+  'stats',
+  'offlineAudio',
+];
+
+/** Feature entitlements per plan: Free gets none, Pro/Lifetime get all. */
+export const PLAN_FEATURES: Record<PlanId, FeatureKey[]> = {
+  basic: [],
+  pro: PRO_FEATURES,
+  lifetime: PRO_FEATURES,
+};
+
+/** The single entitlement predicate used by every gate in the app. */
+export function planHasFeature(plan: PlanId, feature: FeatureKey): boolean {
+  return PLAN_FEATURES[plan].includes(feature);
+}
+
+/**
+ * True when the Free plan's daily word allowance is exhausted and practice
+ * must stop for the rest of the local day. Pro/Lifetime are never limited.
+ * The counter itself lives in practice stats (`wordsToday`); the day rolls
+ * over at local midnight via `dayKey`.
+ */
+export function freeDailyLimitReached(plan: PlanId, wordsToday: number): boolean {
+  return !isProPlan(plan) && wordsToday >= FREE_DAILY_WORD_LIMIT;
+}
+
 /** Number of active languages included with the Free plan. */
 export const FREE_LANG_LIMIT = 1;
+
+/** Words per day included with the Free plan (Pro/Lifetime are unlimited). */
+export const FREE_DAILY_WORD_LIMIT = 300;
 
 export const PRO_MONTHLY_PRICE = 4.99;
 export const PRO_ANNUAL_PRICE = 39.99;
@@ -95,7 +147,11 @@ export const PLANS: Record<PlanId, PlanDef> = {
     cta: 'Start free',
     popular: false,
     priceFor: () => ({ price: 0, note: 'forever free' }),
-    features: () => [`${FREE_LANG_LIMIT} active language${FREE_LANG_LIMIT === 1 ? '' : 's'}`, 'Standard TTS audio', '300 words / day'],
+    features: () => [
+      `${FREE_LANG_LIMIT} active language${FREE_LANG_LIMIT === 1 ? '' : 's'}`,
+      'Standard TTS audio',
+      `${FREE_DAILY_WORD_LIMIT} words / day`,
+    ],
   },
   pro: {
     id: 'pro',

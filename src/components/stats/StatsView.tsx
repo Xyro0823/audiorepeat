@@ -1,14 +1,22 @@
 'use client';
 
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import ActivityHeatmap, {
   HEATMAP_LEVEL_CLASSES,
   heatmapCellTitle,
   heatmapLevel,
 } from '@/components/ActivityHeatmap';
+import ProFeatureLock from '@/components/common/ProFeatureLock';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { formatDuration } from '@/lib/format';
+import { planHasFeature } from '@/lib/plans';
+import {
+  getSettingsSnapshot,
+  hydrateSettings,
+  settingsHydrated,
+  subscribeSettings,
+} from '@/lib/settingsStore';
 import ProfileDropdown from '@/components/auth/ProfileDropdown';
 import SettingsButton from '@/components/settings/SettingsButton';
 import { lastNDays, totals, weeklyBuckets } from '@/lib/practiceStats';
@@ -27,12 +35,31 @@ function Tile({ label, value, sub }: { label: string; value: string; sub: string
 
 export default function StatsView() {
   const { days, week, wordsToday, msToday, streak, loaded } = usePracticeStats();
+  // Plan entitlement for the gate. This page doesn't mount useLists, so drive
+  // the shared settings store directly (hydration is idempotent and shared).
+  const settings = useSyncExternalStore(subscribeSettings, getSettingsSnapshot, getSettingsSnapshot);
+  useEffect(() => {
+    void hydrateSettings();
+  }, []);
+  const canStats = planHasFeature(settings.plan, 'stats');
   const month = useMemo(() => lastNDays(days, 30), [days]);
   const all = useMemo(() => totals(days), [days]);
   const weeks = useMemo(() => weeklyBuckets(days, 8), [days]);
 
   const monthMax = Math.max(0, ...month.map((d) => d.words));
   const weekMax = Math.max(0, ...weeks.map((w) => w.words));
+
+  // Free plan: stats are a Pro feature — render the lock instead of the
+  // numbers. Held back until local state has hydrated so a Pro user's
+  // hydrating plan never flashes the lock on direct navigation.
+  if (loaded && settingsHydrated() && !canStats) {
+    return (
+      <ProFeatureLock
+        title="Practice stats"
+        description="Streaks, heatmaps and word history are part of Pro. Keep listening and dictation practice on the Free plan."
+      />
+    );
+  }
 
   return (
     <main className="mx-auto w-full max-w-4xl flex-1 px-5 pb-20 pt-8">

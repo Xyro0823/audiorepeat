@@ -15,7 +15,7 @@ import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit } from '@/lib/tts/speechSynthesisEngine';
 import { FREE_LANG_OPTIONS, seedCodeForLangKey } from '@/lib/freeLang';
 import { resolveDefaultNewSetLang } from '@/lib/sets/defaults';
-import { isProPlan } from '@/lib/plans';
+import { planHasFeature } from '@/lib/plans';
 import { canUseLang as planGateCanUseLang } from '@/lib/planGate';
 import { CEFR_META } from '@/lib/starterSets';
 import {
@@ -239,7 +239,7 @@ function FeaturedCard({ set, bookmarked, onBookmark, onPlay }: FeaturedCardProps
 interface PortraitCardProps {
   set: VocabSet;
   index: number;
-  pro: boolean;
+  canChallenge: boolean;
   onPlay: () => void;
   onChallenge: () => void;
   onEdit: () => void;
@@ -251,7 +251,7 @@ interface PortraitCardProps {
 function PortraitCard({
   set,
   index,
-  pro,
+  canChallenge,
   onPlay,
   onChallenge,
   onEdit,
@@ -350,7 +350,7 @@ function PortraitCard({
             onClick={run(onChallenge)}
           >
             <span aria-hidden>⚡</span> 1-Min challenge
-            {!pro && (
+            {!canChallenge && (
               <span className="ml-auto rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
                 Pro
               </span>
@@ -439,7 +439,7 @@ function PortraitCard({
           </button>
           <button
             onClick={onChallenge}
-            title={pro ? 'Quick 1-minute speed test' : 'Speed challenges are a Pro feature'}
+            title={canChallenge ? 'Quick 1-minute speed test' : 'Speed challenges are a Pro feature'}
             className="btn-clean flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-1.5 text-xs font-medium text-slate-300"
           >
             <svg
@@ -455,8 +455,8 @@ function PortraitCard({
               <circle cx="12" cy="13" r="8" />
               <path d="M12 9v4l2.5 2.5M9 2h6" />
             </svg>
-            {pro ? 'Quick Test' : 'Test'}
-            {!pro && (
+            {canChallenge ? 'Quick Test' : 'Test'}
+            {!canChallenge && (
               <span className="rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
                 Pro
               </span>
@@ -492,9 +492,14 @@ export default function SetLibrary() {
   const [langFilter, setLangFilter] = useState<string>('all');
   const [changingLang, setChangingLang] = useState(false);
 
-  // Pro gate: the 1-Minute speed challenge is a paid feature. Free users are
-  // routed to the upgrade flow instead of the challenge modal.
-  const pro = isProPlan(settings.plan);
+  // Feature entitlements — all gates flow through the canonical matrix in
+  // src/lib/plans.ts. The 1-Min speed challenge, FSRS review entry and
+  // cloud/offline audio are Pro features; the language gate keeps using
+  // planGate.canUseLang (fed by the allLanguages entitlement below).
+  const canUseAllLangs = planHasFeature(settings.plan, 'allLanguages');
+  const canSpeed = planHasFeature(settings.plan, 'speedChallenge');
+  const canReview = planHasFeature(settings.plan, 'fsrsReview');
+  const canCloudAudio = planHasFeature(settings.plan, 'offlineAudio');
 
   const flash = useCallback((msg: ImportMsg) => {
     setImportMsg(msg);
@@ -533,7 +538,7 @@ export default function SetLibrary() {
   // representative BCP-47 tag), else the language the user studies most, else
   // Spanish (legacy default). Pro users keep the most-studied heuristic.
   const defaultSubtitleLang = useMemo(() => {
-    if (!pro && freeLangKey) {
+    if (!canUseAllLangs && freeLangKey) {
       const code = seedCodeForLangKey(freeLangKey);
       if (code) return code;
     }
@@ -548,7 +553,7 @@ export default function SetLibrary() {
       }
     }
     return best;
-  }, [sets, pro, freeLangKey]);
+  }, [sets, canUseAllLangs, freeLangKey]);
 
   // The hero's "Browse Library" button dispatches this event to open the
   // starter library modal (the hero lives above this component).
@@ -693,7 +698,9 @@ export default function SetLibrary() {
   const warmIfNeeded = useCallback(
     (set: VocabSet) => {
       if (set.words.length === 0) return;
-      if (!settings.cloudTts) return;
+      // Cloud audio is a Pro entitlement — Free never starts prewarm queues
+      // (the server rejects synthesis too).
+      if (!canCloudAudio || !settings.cloudTts) return;
       if (!settings.cachedAudio && !isIOSWebKit()) return;
       // Resolve per-set voice overrides exactly like the player's `effective`
       // settings so the dedupe key matches what PlayerView computes.
@@ -710,7 +717,7 @@ export default function SetLibrary() {
         translationVoiceURI,
       });
     },
-    [settings],
+    [settings, canCloudAudio],
   );
 
   const playSet = (set: VocabSet) => {
@@ -728,12 +735,12 @@ export default function SetLibrary() {
   // their visible languages. Pro/Lifetime can use any. Shared logic:
   // lib/planGate (single enforcement point — never bypass UI locks alone).
   const canUseLang = useCallback(
-    (code: string) => planGateCanUseLang(pro, sets, code, freeLangKey),
-    [pro, sets, freeLangKey],
+    (code: string) => planGateCanUseLang(canUseAllLangs, sets, code, freeLangKey),
+    [canUseAllLangs, sets, freeLangKey],
   );
 
   const openChallenge = (set: VocabSet) => {
-    if (!pro) {
+    if (!canSpeed) {
       void router.push('/checkout?plan=pro');
       return;
     }
@@ -827,9 +834,9 @@ export default function SetLibrary() {
         }}
       />
 
-      <FreeLanguageBar langKey={freeLangKey} pro={pro} onChange={() => setChangingLang(true)} />
+      <FreeLanguageBar langKey={freeLangKey} pro={canUseAllLangs} onChange={() => setChangingLang(true)} />
 
-      <FreePlanNotice pro={pro} />
+      <FreePlanNotice pro={canUseAllLangs} />
 
       <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[300px_minmax(0,1fr)]">
         {/* ------------------------------------------------------------ */}
@@ -974,7 +981,12 @@ export default function SetLibrary() {
             dueCount={reviewDueCount}
             reminderEnabled={settings.reminderEnabled}
             reminderTime={settings.reminderTime}
-            onStart={() => router.push('/review')}
+            onStart={() => {
+              // FSRS review is a Pro entitlement — Free goes to the upgrade
+              // flow (direct /review navigation hits the same gate).
+              if (canReview) void router.push('/review');
+              else void router.push('/checkout?plan=pro');
+            }}
             onSettingsChange={saveSettings}
           />
 
@@ -1142,7 +1154,7 @@ export default function SetLibrary() {
                     key={set.id}
                     set={set}
                     index={i}
-                    pro={pro}
+                    canChallenge={canSpeed}
                     onPlay={() => playSet(set)}
                     onChallenge={() => openChallenge(set)}
                     onEdit={() => setEditing(set)}
@@ -1161,7 +1173,7 @@ export default function SetLibrary() {
         <SetEditor
           set={editing === 'new' ? null : editing}
           canUseLang={canUseLang}
-          defaultLang={resolveDefaultNewSetLang(pro, settings.defaultNewSetLang, freeLangKey)}
+          defaultLang={resolveDefaultNewSetLang(canUseAllLangs, settings.defaultNewSetLang, freeLangKey)}
           onClose={() => setEditing(null)}
           onSave={async (set) => {
             const saved = await saveSet(set);
@@ -1222,7 +1234,7 @@ export default function SetLibrary() {
       {browse && (
         <StarterLibraryModal
           sets={sets}
-          pro={pro}
+          pro={canUseAllLangs}
           freeLangKey={freeLangKey}
           onClose={() => setBrowse(false)}
           onImport={async (set) => {

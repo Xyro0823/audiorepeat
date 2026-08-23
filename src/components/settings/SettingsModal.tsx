@@ -11,7 +11,7 @@ import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
 import DowngradeModal from '@/components/checkout/DowngradeModal';
 import { buildBackup, downloadBackup, parseBackup, type BackupData } from '@/lib/sets/backup';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
-import { isProPlan, FREE_LANG_LIMIT, PLAN_BADGE, planDetail } from '@/lib/plans';
+import { isProPlan, FREE_LANG_LIMIT, PLAN_BADGE, planDetail, planHasFeature } from '@/lib/plans';
 import { FREE_LANG_OPTIONS, SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
 import { findLanguage } from '@/lib/languages';
 import { buildDueReviewQueue } from '@/lib/review/fsrs';
@@ -405,14 +405,32 @@ export default function SettingsModal({ onClose }: Props) {
                 generate it once and save it for offline replay.
               </p>
               {cloudTtsReady ? (
-                <div className="mt-3 rounded-xl border border-neon-cyan/20 bg-neon-cyan/5 p-3">
-                  <Toggle
-                    checked={settings.cloudTts}
-                    onChange={(cloudTts) => saveSettings({ cloudTts })}
-                    label="Use secure cloud voices"
-                    hint="Sends only the word being spoken to Microsoft Azure, then caches the audio on this device"
-                  />
-                </div>
+                planHasFeature(settings.plan, 'offlineAudio') ? (
+                  <div className="mt-3 rounded-xl border border-neon-cyan/20 bg-neon-cyan/5 p-3">
+                    <Toggle
+                      checked={settings.cloudTts}
+                      onChange={(cloudTts) => saveSettings({ cloudTts })}
+                      label="Use secure cloud voices"
+                      hint="Sends only the word being spoken to Microsoft Azure, then caches the audio on this device"
+                    />
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-xl border border-neon-amber/25 bg-neon-amber/5 p-3">
+                    <p className="text-sm font-semibold text-white">
+                      ⭐ Cloud voices &amp; offline audio packs are part of Pro
+                    </p>
+                    <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+                      The Free plan uses the standard voices installed on this device. Pro can
+                      generate any missing voice in the cloud and cache it for offline replay.
+                    </p>
+                    <Link
+                      href="/checkout?plan=pro"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-neon-amber px-3.5 py-2 text-xs font-bold text-night-950 transition hover:brightness-110"
+                    >
+                      Upgrade to Pro
+                    </Link>
+                  </div>
+                )
               ) : (
                 <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-slate-500">
                   Cloud voices are not configured on this server yet.
@@ -613,9 +631,11 @@ export default function SettingsModal({ onClose }: Props) {
               />
               <p className="text-sm text-slate-400">
                 {cloudTtsReady
-                  ? settings.cloudTts
-                    ? 'Cloud speech is enabled for missing device voices. Generated audio is cached for offline replay.'
-                    : 'Cloud speech is available but off. Enable it in the Language tab to use missing voices.'
+                  ? planHasFeature(settings.plan, 'offlineAudio')
+                    ? settings.cloudTts
+                      ? 'Cloud speech is enabled for missing device voices. Generated audio is cached for offline replay.'
+                      : 'Cloud speech is available but off. Enable it in the Language tab to use missing voices.'
+                    : 'Cloud voices and offline audio packs are a Pro feature — the Free plan uses your device voices.'
                   : 'Cloud speech is not configured yet, so playback currently uses device voices.'}
               </p>
             </div>

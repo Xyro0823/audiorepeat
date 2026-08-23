@@ -15,12 +15,18 @@ import { useLists } from '@/hooks/useLists';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
+import { cloudAudioActiveFor } from '@/lib/tts/cloudAudioGate';
 import { shouldOfferCloudVoiceConsent } from '@/lib/tts/cloudVoiceConsent';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import { findLanguage } from '@/lib/languages';
 import { applyMasteryStatus } from '@/lib/review/fsrs';
-import { FREE_LANG_LIMIT, isProPlan } from '@/lib/plans';
+import {
+  FREE_DAILY_WORD_LIMIT,
+  FREE_LANG_LIMIT,
+  freeDailyLimitReached,
+  planHasFeature,
+} from '@/lib/plans';
 import { formatCountdown } from '@/lib/format';
 import { recordSetPlayed } from '@/lib/libraryMeta';
 import {
@@ -142,10 +148,15 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     [settings, set],
   );
 
-  // Pro gate: quiz mode, spaced-repetition filters/marks and offline audio are
-  // paid features per the plan definitions (basic keeps the core audio loop).
+  // Feature entitlements — every gate flows through the canonical matrix in
+  // src/lib/plans.ts (planHasFeature). Quiz, spaced-repetition marks/filters,
+  // cloud/offline audio and the daily word cap are plan features; the core
+  // listening loop, dictation and standard device voices stay Free.
   // Purchases land in settings.plan via the /checkout success flow.
-  const pro = isProPlan(effective.plan);
+  const canQuiz = planHasFeature(effective.plan, 'quiz');
+  const canReview = planHasFeature(effective.plan, 'fsrsReview');
+  const canUseAllLangs = planHasFeature(effective.plan, 'allLanguages');
+  const canCloudAudio = planHasFeature(effective.plan, 'offlineAudio');
   const cloudTtsReady = useCloudTtsStatus();
   const { voices, loading: voicesLoading, hasVoice } = useSpeechVoices();
   const nativeLangForAudio =
@@ -154,11 +165,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const translationNeedsCloud = Boolean(
     set && !voicesLoading && !hasVoice(nativeLangForAudio),
   );
-  const cloudAudioActive =
-    cloudTtsReady && effective.cloudTts &&
-    (effective.cachedAudio || isIOSWebKit() || targetNeedsCloud || translationNeedsCloud);
+  // Plan-gated cloud audio: user toggles alone can never turn this on for a
+  // Free plan, and /api/tts re-enforces the same entitlement server-side.
+  const cloudAudioActive = cloudAudioActiveFor({
+    plan: effective.plan,
+    cloudReady: cloudTtsReady,
+    cloudTts: effective.cloudTts,
+    cachedAudio: effective.cachedAudio || isIOSWebKit(),
+    deviceVoiceMissing: targetNeedsCloud || translationNeedsCloud,
+  });
   const cloudVoiceConsentNeeded = shouldOfferCloudVoiceConsent({
-    configured: cloudTtsReady,
+    configured: cloudTtsReady && canCloudAudio,
     enabled: effective.cloudTts,
     voicesLoading,
     targetNeedsCloud,
@@ -186,12 +203,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   }, [changeSettings]);
 
   const requestCloudVoice = useCallback(() => {
+    if (!canCloudAudio) {
+      // Free plan never gets cloud voices (the server rejects synthesis too).
+      upgradeToPro();
+      return;
+    }
     if (user) {
       enableCloudVoice();
       return;
     }
     setCloudAuthOpen(true);
-  }, [enableCloudVoice, user]);
+  }, [canCloudAudio, enableCloudVoice, upgradeToPro, user]);
 
   const toggleCustom = useCallback(
     (on: boolean) => {
@@ -241,7 +263,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   useEffect(() => {
     const s = setRef.current;
     if (!s || s.words.length === 0) return;
-    if (!cloudTtsReady || !effective.cloudTts) return;
+    if (!canCloudAudio || !cloudTtsReady || !effective.cloudTts) return;
     if (!effective.cachedAudio && !isIOSWebKit() && !targetNeedsCloud && !translationNeedsCloud) return;
     const nativeLang =
       s.nativeLang ?? (typeof navigator !== 'undefined' ? navigator.language : undefined);
@@ -297,6 +319,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     set?.words.length,
     set?.lang,
     set?.nativeLang,
+    canCloudAudio,
     effective.cachedAudio,
     effective.targetVoiceURI,
     effective.translationVoiceURI,
@@ -375,7 +398,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   }, [seekToWord, set, user?.id]);
 
   // ---------- daily practice stats (streak, words, study time) ----------
-  const { streak, recordWords, recordMs } = usePracticeStats();
+  const { streak, wordsToday, recordWords, recordMs } = usePracticeStats();
+  // Free entitlement: stop practice once the daily word allowance is used up.
+  // Pro/Lifetime are never limited; the counter resets at local midnight.
+  const dailyLimitReached = freeDailyLimitReached(effective.plan, wordsToday);
   const playingSinceRef = useRef<number | null>(null);
   const lastCountedWordRef = useRef<number | null>(null);
 
@@ -408,8 +434,14 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   }, [isPlaying, set]);
 
   // Words listened: count each new word that starts playing (not repeats).
+  // Free plan: once the daily allowance is exhausted, halt the loop — the
+  // banner below offers the upgrade path and practice resumes at midnight.
   useEffect(() => {
     if (!isPlaying) return;
+    if (dailyLimitReached) {
+      pause();
+      return;
+    }
     // play() always starts fresh at word 0 — reset so the first word of a new
     // session is counted even if it was the last word of the previous one.
     if (progress.wordIndex === 0) lastCountedWordRef.current = null;
@@ -417,7 +449,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       lastCountedWordRef.current = progress.wordIndex;
       recordWords(1, set?.lang);
     }
-  }, [isPlaying, progress.wordIndex, recordWords, set]);
+  }, [isPlaying, progress.wordIndex, recordWords, set, dailyLimitReached, pause]);
 
   // Flush remaining study time when leaving the player.
   useEffect(
@@ -452,8 +484,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
 
   // ---------- dictation & spelling practice ----------
   // Same relationship to the audio loop as quiz mode: exclusive with it and
-  // with quiz mode, driven by the shared TTS engine.
-  const [dictationOn, setDictationOn] = useState(false);
+  // with quiz mode, driven by the shared TTS engine. Dictation stays on the
+  // Free plan, so its words count against the daily allowance — when the cap
+  // is hit, `dictationOn` derives false and the limit banner takes over.
+  const [dictationWanted, setDictationWanted] = useState(false);
+  const dictationOn = dictationWanted && !dailyLimitReached;
   const dictation = useDictationMode({
     words,
     engine,
@@ -469,6 +504,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   useEffect(() => {
     dictationOnRef.current = dictationOn;
   }, [dictationOn]);
+  // Forced exit at the cap must also silence any in-flight dictation speech.
+  useEffect(() => {
+    if (dictationWanted && dailyLimitReached) dictation.stop();
+  }, [dictation, dictationWanted, dailyLimitReached]);
 
   const setSleepTimer = useCallback((minutes: number | null) => {
     // setting a new timer (or turning it off) always dismisses a pending snooze
@@ -536,13 +575,19 @@ export default function PlayerView({ setId }: { setId: string | null }) {
 
   // Loop playback that honors the snooze window.
   const startPlayback = useCallback(() => {
+    if (dailyLimitReached) {
+      setToast(
+        `Free plan includes ${FREE_DAILY_WORD_LIMIT} words a day — upgrade to Pro for unlimited practice.`,
+      );
+      return;
+    }
     if (cloudVoiceConsentNeeded) {
       setToast('Enable cloud voice below to hear this language clearly.');
       return;
     }
     play();
     snoozeRestart();
-  }, [cloudVoiceConsentNeeded, play, snoozeRestart]);
+  }, [dailyLimitReached, cloudVoiceConsentNeeded, play, snoozeRestart]);
 
   // Stable handle for the lock-screen play request (forwarded into the audio
   // loop's media-session handler, which lives before this callback is defined).
@@ -557,11 +602,18 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     snoozeRestart();
   }, [quiz, snoozeRestart]);
 
-  // Dictation start that honors the snooze window too.
+  // Dictation start that honors the snooze window (and the Free daily cap —
+  // dictation is a Free feature, so its words count against the allowance).
   const startDictation = useCallback(() => {
+    if (dailyLimitReached) {
+      setToast(
+        `Free plan includes ${FREE_DAILY_WORD_LIMIT} words a day — upgrade to Pro for unlimited practice.`,
+      );
+      return;
+    }
     dictation.start();
     snoozeRestart();
-  }, [dictation, snoozeRestart]);
+  }, [dailyLimitReached, dictation, snoozeRestart]);
 
   // User-triggered stop: halts playback AND cancels the sleep timer (a manual
   // stop means "done for now", so the timer must not fire a stale toast later).
@@ -580,6 +632,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   }, [toast]);
 
   const toggleQuiz = useCallback(() => {
+    if (!canQuiz) return; // entitlement guard — the button routes Free to checkout
     if (quizOn) {
       setQuizOn(false);
       quiz.stop();
@@ -590,24 +643,24 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       }
       setQuizOn(true);
       if (dictationOn) {
-        setDictationOn(false);
+        setDictationWanted(false);
         dictation.stop();
       }
       stop(); // halt the loop so both engines never speak at once
       startQuiz();
     }
-  }, [quizOn, dictationOn, cloudVoiceConsentNeeded, stop, quiz, dictation, startQuiz]);
+  }, [canQuiz, quizOn, dictationOn, cloudVoiceConsentNeeded, stop, quiz, dictation, startQuiz]);
 
   const toggleDictation = useCallback(() => {
     if (dictationOn) {
-      setDictationOn(false);
+      setDictationWanted(false);
       dictation.stop();
     } else {
       if (cloudVoiceConsentNeeded) {
         setToast('Enable cloud voice below before starting dictation.');
         return;
       }
-      setDictationOn(true);
+      setDictationWanted(true);
       if (quizOn) {
         setQuizOn(false);
         quiz.stop();
@@ -621,6 +674,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   useEffect(() => {
     if (quizOn && quiz.question) recordWords(1, set?.lang);
   }, [quizOn, quiz.question, recordWords, set]);
+  // Dictation words count toward the Free daily allowance; `dictationOn`
+  // derives false once the cap is hit, so recording stops with practice.
   useEffect(() => {
     if (dictationOn && dictation.item) recordWords(1, set?.lang);
   }, [dictationOn, dictation.item, recordWords, set]);
@@ -643,10 +698,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // has no installed voice at all (the engine falls back to the browser default).
   const noVoiceForTarget =
     !!currentWord && !voicesLoading && !hasVoice(currentWord.lang) &&
-    (!cloudTtsReady || !effective.cloudTts);
+    (!canCloudAudio || !cloudTtsReady || !effective.cloudTts);
   const cloudVoiceForTarget =
     !!currentWord && !voicesLoading && !hasVoice(currentWord.lang) &&
-    cloudTtsReady && effective.cloudTts;
+    canCloudAudio && cloudTtsReady && effective.cloudTts;
 
   // keyboard shortcuts: Space play/pause · ← previous · → next · S stop
   useEffect(() => {
@@ -807,7 +862,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         {(
           [
             { key: 'all', label: 'All', count: set.words.length },
-            ...(pro
+            ...(canReview
               ? ([
                   { key: 'learning', label: 'Learning', count: learningCount },
                   { key: 'hard', label: 'Review', count: hardCount },
@@ -833,7 +888,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             {filter === 'hard' ? 'only words marked for review' : 'only words not yet mastered'}
           </span>
         )}
-        {!pro && (
+        {!canReview && (
           <button
             onClick={upgradeToPro}
             title="Spaced-repetition filters are a Pro feature"
@@ -842,7 +897,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             <span aria-hidden>⭐</span> Review · Pro
           </button>
         )}
-        {!pro && (
+        {!canUseAllLangs && (
           <button
             onClick={upgradeToPro}
             title={`The Free plan includes ${FREE_LANG_LIMIT} active language${FREE_LANG_LIMIT === 1 ? '' : 's'} — upgrade to unlock all languages`}
@@ -855,13 +910,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         <span className="mx-1 hidden h-5 w-px bg-white/10 sm:block" />
 
         <button
-          onClick={pro ? toggleQuiz : upgradeToPro}
+          onClick={canQuiz ? toggleQuiz : upgradeToPro}
           disabled={words.length === 0}
-          aria-pressed={pro ? quizOn : false}
+          aria-pressed={canQuiz ? quizOn : false}
           title={
             words.length === 0
               ? 'No words to quiz on with this filter'
-              : pro
+              : canQuiz
                 ? 'Hear a word, then pick its translation from four choices'
                 : 'Quiz mode is a Pro feature'
           }
@@ -884,7 +939,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             <path d="M9.5 8.5 15 12l-5.5 3.5v-7Z" />
           </svg>
           Quiz
-          {!pro && (
+          {!canQuiz && (
             <span className="ml-1.5 rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
               Pro
             </span>
@@ -993,6 +1048,37 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           />
         ) : (
           <>
+            {dailyLimitReached && (
+              <section
+                aria-labelledby="daily-limit-title"
+                className="mx-auto mb-7 w-full max-w-md rounded-2xl border border-neon-amber/30 bg-neon-amber/[0.07] p-4 text-left shadow-[0_14px_40px_rgba(0,0,0,0.18)] sm:p-5"
+              >
+                <div className="flex items-start gap-3.5">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neon-amber/15 text-lg text-neon-amber"
+                  >
+                    ⭐
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 id="daily-limit-title" className="text-sm font-bold text-white">
+                      Daily Free limit reached
+                    </h2>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                      The Free plan includes {FREE_DAILY_WORD_LIMIT} words a day. Your allowance
+                      resets at midnight — or practice without limits with Pro.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={upgradeToPro}
+                      className="mt-3 min-h-11 w-full rounded-xl bg-neon-amber px-4 text-sm font-bold text-night-950 transition hover:brightness-110 active:scale-[0.98] sm:w-auto"
+                    >
+                      Upgrade to Pro
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
             {resumeWord && !isPlaying && progress.wordIndex === 0 && (
               <div className="mx-auto mb-7 flex w-full max-w-md flex-col gap-4 rounded-2xl border border-neon-cyan/20 bg-neon-cyan/5 p-4 text-left sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
@@ -1065,7 +1151,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               showExamples={effective.showExamples}
               noVoice={noVoiceForTarget && !cloudVoiceConsentNeeded}
               cloudVoice={cloudVoiceForTarget}
-              canMark={pro}
+              canMark={canReview}
               onMark={markWord}
             />
             <ProgressBar
@@ -1086,7 +1172,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         onChange={changeSettings}
         customMode={customMode}
         onToggleCustom={toggleCustom}
-        pro={pro}
+        pro={canReview}
         sleepMinutes={sleepMinutes}
         sleepRemaining={sleepRemaining}
         onSleepChange={setSleepTimer}

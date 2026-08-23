@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import AuthScreen from '@/components/auth/AuthScreen';
 import { useAuth } from '@/hooks/useAuth';
 import { ANNUAL_SAVINGS_PERCENT, isPlanId, PLAN_ORDER, PLANS, type PlanId } from '@/lib/plans';
+import { SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
 import PaymentStep from './PaymentStep';
 
 function LogoMark() {
@@ -184,7 +185,7 @@ export default function CheckoutFlow({
                     <span className="pb-1.5 text-xs text-slate-500">{pNote}</span>
                   </span>
                   <span className="mt-7 space-y-3">
-                    {p.features(0).map((f) => (
+                    {p.features(SUPPORTED_LANGUAGE_COUNT).map((f) => (
                       <span key={f} className="flex items-start gap-2.5 text-sm text-slate-300">
                         <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-cyan-500/15">
                           <svg

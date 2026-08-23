@@ -6,11 +6,13 @@ const h = vi.hoisted(() => ({
   verifyIdToken: vi.fn(),
   consume: vi.fn(),
   synthesize: vi.fn(),
+  entitlement: null as unknown,
 }));
 
 vi.mock('@/lib/firebase/admin', () => ({
   isAdminConfigured: () => h.adminConfigured,
   verifyIdToken: h.verifyIdToken,
+  createEntitlementStore: () => ({ getEntitlement: async () => h.entitlement }),
 }));
 vi.mock('@/lib/distributedRateLimit', () => ({ consumeDistributedRateLimit: h.consume }));
 vi.mock('@/lib/tts/azureTts.server', () => ({
@@ -35,6 +37,16 @@ function request(body: unknown, token?: string, headers?: Record<string, string>
 beforeEach(() => {
   h.configured = true;
   h.adminConfigured = true;
+  // Route-level tests exercise input validation / rate limits with an
+  // entitled (active Pro) user; the entitlement gate itself has its own
+  // dedicated coverage in route.gate.test.ts.
+  h.entitlement = {
+    uid: 'uid-1',
+    plan: 'pro',
+    billing: 'monthly',
+    status: 'active',
+    currentPeriodEnd: null,
+  };
   h.verifyIdToken.mockReset().mockResolvedValue('uid-1');
   h.consume.mockReset().mockResolvedValue('allowed');
   h.synthesize.mockReset().mockResolvedValue({

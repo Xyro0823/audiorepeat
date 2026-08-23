@@ -298,6 +298,11 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
           </button>
           <Link role="menuitem" href="/stats" className={itemClass} onClick={close}>
             <span aria-hidden>📊</span> Stats
+            {!pro && (
+              <span className="ml-auto rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
+                Pro
+              </span>
+            )}
           </Link>
           <button
             role="menuitem"

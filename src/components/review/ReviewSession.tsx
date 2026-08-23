@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AuthScreen from '@/components/auth/AuthScreen';
+import ProFeatureLock from '@/components/common/ProFeatureLock';
 import { useAuth } from '@/hooks/useAuth';
 import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
 import { useLists } from '@/hooks/useLists';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
+import { planHasFeature } from '@/lib/plans';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
 import { SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
@@ -27,6 +29,10 @@ export default function ReviewSession() {
   const { recordWords } = usePracticeStats();
   const { loading: voicesLoading, hasVoice } = useSpeechVoices();
   const cloudReady = useCloudTtsStatus();
+  // FSRS review is a Pro entitlement — direct URL navigation lands on the
+  // lock screen instead of the feature (entry buttons gate the same way).
+  const canReview = planHasFeature(settings.plan, 'fsrsReview');
+  const canCloudAudio = planHasFeature(settings.plan, 'offlineAudio');
   const [queue, setQueue] = useState<DueReviewItem[] | null>(null);
   const [initialTotal, setInitialTotal] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -38,12 +44,12 @@ export default function ReviewSession() {
   const startedRef = useRef(false);
 
   useEffect(() => {
-    if (loading || startedRef.current) return;
+    if (loading || !canReview || startedRef.current) return;
     startedRef.current = true;
     const session = buildDueReviewQueue(sets, new Date(), SESSION_LIMIT);
     setQueue(session);
     setInitialTotal(session.length);
-  }, [loading, sets]);
+  }, [loading, canReview, sets]);
 
   const deviceEngine = useMemo(() => new SpeechSynthesisEngine(), []);
   const cloudEngine = useMemo(
@@ -58,15 +64,16 @@ export default function ReviewSession() {
   const current = queue?.[0] ?? null;
   const currentNeedsCloud = Boolean(
     current &&
-      !voicesLoading &&
-      (!hasVoice(current.lang) || !hasVoice(current.nativeLang)) &&
-      cloudReady,
+    canCloudAudio &&
+    !voicesLoading &&
+    (!hasVoice(current.lang) || !hasVoice(current.nativeLang)) &&
+    cloudReady,
   );
   const cloudConsentNeeded = currentNeedsCloud && !settings.cloudTts;
 
   const speak = useCallback(
     (text: string, lang: string, voiceURI?: string) => {
-      const useCloud = settings.cloudTts && cloudReady && !hasVoice(lang);
+      const useCloud = canCloudAudio && settings.cloudTts && cloudReady && !hasVoice(lang);
       const engine = useCloud ? cloudEngine : deviceEngine;
       setSpeaking(true);
       engine.speak({
@@ -78,7 +85,7 @@ export default function ReviewSession() {
         onError: () => setSpeaking(false),
       });
     },
-    [cloudEngine, cloudReady, deviceEngine, hasVoice, settings.cloudTts, settings.speed],
+    [canCloudAudio, cloudEngine, cloudReady, deviceEngine, hasVoice, settings.cloudTts, settings.speed],
   );
 
   const speakTarget = useCallback(() => {
@@ -121,6 +128,18 @@ export default function ReviewSession() {
   const enableCloudVoice = useCallback(() => {
     saveSettings({ cloudTts: true });
   }, [saveSettings]);
+
+  // Free plan: FSRS review is Pro — render the lock instead of the feature
+  // (after the loading window so a Pro user's hydrating settings never flash
+  // the lock on direct navigation).
+  if (!canReview && !loading) {
+    return (
+      <ProFeatureLock
+        title="Spaced repetition review"
+        description="FSRS scheduling, review sessions and word mastery marks are part of Pro. Keep listening and dictation practice on the Free plan."
+      />
+    );
+  }
 
   if (loading || queue === null) {
     return (
