@@ -11,6 +11,7 @@ import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
 import DowngradeModal from '@/components/checkout/DowngradeModal';
 import { buildBackup, downloadBackup, parseBackup, type BackupData } from '@/lib/sets/backup';
 import { statsStorageKey, usernameStorageKey } from '@/lib/auth/scopes';
+import { requestProgressReplace } from '@/lib/sync/client';
 import { isProPlan, FREE_LANG_LIMIT, PLAN_BADGE, planDetail, planHasFeature } from '@/lib/plans';
 import { FREE_LANG_OPTIONS, SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
 import { findLanguage } from '@/lib/languages';
@@ -224,6 +225,9 @@ export default function SettingsModal({ onClose }: Props) {
       if (pendingImport.days) {
         window.localStorage.setItem(statsStorageKey(user?.id), JSON.stringify(pendingImport.days));
       }
+      // Restored stats must REPLACE remote history on the next sync, not
+      // max-merge with it (the old record is being intentionally overwritten).
+      requestProgressReplace();
       if (pendingImport.username && !user) {
         window.localStorage.setItem(usernameStorageKey(null), pendingImport.username);
       }
@@ -258,6 +262,12 @@ export default function SettingsModal({ onClose }: Props) {
   const resetProgress = useCallback(async () => {
     try {
       window.localStorage.removeItem(statsStorageKey(user?.id));
+      // Mark the reset so sync drops days at/before it on both devices
+      // instead of resurrecting them from the remote copy.
+      if (user?.id) {
+        window.localStorage.setItem(`audiorepeat-progress-reset-v1:${user.id}`, String(Date.now()));
+        requestProgressReplace();
+      }
       // Strip mastery marks so review/mastery state restarts cleanly.
       for (const s of sets) {
         if (s.words.some((w) => w.mastery)) {

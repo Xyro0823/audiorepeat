@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { computeStreak, dayKey, lastNDays, type DayMap } from '@/lib/practiceStats';
 import { useAuth } from '@/hooks/useAuth';
 import { statsStorageKey } from '@/lib/auth/scopes';
+import { scheduleLibrarySync } from '@/lib/sync/client';
 
 function loadDays(key: string): DayMap {
   if (typeof window === 'undefined') return {};
@@ -84,6 +85,22 @@ export function usePracticeStats() {
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
   }, [storageKey]);
+
+  // Learning progress rides the existing Cloud Sync: local writes schedule a
+  // (debounced) sync for signed-in users, and a successful sync that changed
+  // the stored record re-reads it here so remote devices' activity shows up
+  // without a reload. Guests never sync — their stats stay device-local.
+  const signedIn = Boolean(user);
+  useEffect(() => {
+    if (!loaded || !signedIn) return;
+    scheduleLibrarySync(3000);
+  }, [days, loaded, signedIn]);
+  useEffect(() => {
+    if (!loaded || !storageKey) return;
+    const reload = () => setDays(loadDays(storageKey));
+    window.addEventListener('audiorepeat:progress-synced', reload);
+    return () => window.removeEventListener('audiorepeat:progress-synced', reload);
+  }, [loaded, storageKey]);
 
   const recordWords = useCallback((n: number, lang?: string) => {
     if (!(n > 0)) return;

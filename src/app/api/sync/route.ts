@@ -14,6 +14,13 @@ import {
   sanitizeTombstone,
   transitionLibraryQuota,
 } from '@/lib/sync/librarySync';
+import {
+  mergeProgress,
+  replaceWithProgress,
+  sanitizeMergedProgress,
+  sanitizeProgressPayload,
+  type MergedProgress,
+} from '@/lib/sync/progress';
 
 export const runtime = 'nodejs';
 
@@ -55,6 +62,13 @@ export async function POST(request: Request) {
   if (!payload) {
     return NextResponse.json({ error: 'invalid-input' }, { status: 400, headers: NO_STORE_HEADERS });
   }
+  // Optional learning-progress snapshot riding the same round trip. Identity
+  // is the verified token uid — the client never names an account.
+  const progressInput = (raw as { progress?: unknown }).progress;
+  const progress = progressInput === undefined ? null : sanitizeProgressPayload(progressInput);
+  if (progressInput !== undefined && !progress) {
+    return NextResponse.json({ error: 'invalid-input' }, { status: 400, headers: NO_STORE_HEADERS });
+  }
   const allowed = await consumeDistributedRateLimit({
     key: `library-sync:${uid}`,
     limit: 60,
@@ -71,6 +85,7 @@ export async function POST(request: Request) {
     const db = getAdminDb();
     const collection = db.collection(`users/${uid}/sets`);
     const metaRef = db.doc(`users/${uid}/sync/library`);
+    let mergedProgress: MergedProgress | null = null;
     await db.runTransaction(async (tx) => {
       const metaSnap = await tx.get(metaRef);
       const incoming = [
@@ -139,6 +154,25 @@ export async function POST(request: Request) {
       ) throw new Error('library-sync-quota');
       for (const write of writes) tx.set(write.ref, write.data);
       tx.set(metaRef, { activeCount, wordCount, recordCount, updatedAt: Date.now() });
+
+      // Learning progress: transactional max-merge into the account's single
+      // progress doc. Schema/quota validation already happened in the
+      // sanitizer; prune + reset markers are applied inside the merge so a
+      // stats reset or restore cannot resurrect from stored history.
+      if (progress) {
+        const now = Date.now();
+        const progressRef = db.doc(`users/${uid}/sync/progress`);
+        const progressSnap = await tx.get(progressRef);
+        const stored = sanitizeMergedProgress(progressSnap.data()) ?? {
+          days: {},
+          bestScores: {},
+          resetAt: 0,
+        };
+        mergedProgress = progress.replace
+          ? replaceWithProgress(progress, now)
+          : mergeProgress(stored, { ...progress }, now);
+        tx.set(progressRef, { ...mergedProgress, syncedAt: now });
+      }
     });
 
     const snapshot = payload.since > 0
@@ -156,7 +190,15 @@ export async function POST(request: Request) {
         if (entry) tombstones.push(entry);
       }
     }
-    return NextResponse.json({ sets, tombstones, syncedAt: Date.now() }, { headers: NO_STORE_HEADERS });
+    return NextResponse.json(
+      {
+        sets,
+        tombstones,
+        syncedAt: Date.now(),
+        ...(mergedProgress ? { progress: mergedProgress } : {}),
+      },
+      { headers: NO_STORE_HEADERS },
+    );
   } catch (error) {
     if (error instanceof Error && error.message === 'library-sync-quota') {
       return NextResponse.json({ error: 'library-limit' }, { status: 413, headers: NO_STORE_HEADERS });
