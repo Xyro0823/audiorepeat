@@ -6,6 +6,7 @@ import { AlertTriangle, ArrowRight, BookOpenText, ShieldCheck, X } from 'lucide-
 import { flagFor } from '@/components/LanguageBadge';
 import { findLanguage } from '@/lib/languages';
 import type { SharedSetPreview } from '@/lib/sets/shareImport';
+import { useT } from '@/lib/i18n';
 import type { VocabSet } from '@/types/app';
 
 interface Props {
@@ -29,6 +30,7 @@ export default function ShareImportPreviewModal({
   onConfirm,
   onClose,
 }: Props) {
+  const t = useT();
   const mounted = useSyncExternalStore(subscribeHydration, () => true, () => false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const busyRef = useRef(false);
@@ -113,7 +115,7 @@ export default function ShareImportPreviewModal({
       if (activeRef.current) {
         busyRef.current = false;
         setBusy(false);
-        setError('This set could not be imported. Your library was not changed.');
+        setError(t('library.importPreview.importError'));
       }
     }
   };
@@ -149,20 +151,20 @@ export default function ShareImportPreviewModal({
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neon-cyan">
-              Shared set preview
+              {t('library.importPreview.eyebrow')}
             </p>
             <h2 id={titleId} className="mt-1 break-words text-xl font-bold leading-tight text-white">
               {preview.name}
             </h2>
             <p id={descriptionId} className="mt-1.5 text-sm leading-relaxed text-slate-400">
-              Check the set before adding a fresh copy to your library.
+              {t('library.importPreview.description')}
             </p>
           </div>
           <button
             type="button"
             onClick={requestClose}
             disabled={busy}
-            aria-label="Close import preview"
+            aria-label={t('library.importPreview.closeAria')}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/10 text-slate-400 transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan disabled:cursor-wait disabled:opacity-40"
           >
             <X className="h-5 w-5" aria-hidden />
@@ -170,12 +172,12 @@ export default function ShareImportPreviewModal({
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
-          <section aria-label="Set details" className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+          <section aria-label={t('library.importPreview.detailsAria')} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
             <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:gap-4">
               <div className="min-w-0 text-center sm:text-left">
                 <span className="text-2xl leading-none" aria-hidden>{flagFor(preview.targetLang) ?? '🌐'}</span>
                 <p className="mt-2 truncate text-sm font-semibold text-white" title={targetLabel}>{targetLabel}</p>
-                <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.14em] text-slate-500">Learn</p>
+                <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.14em] text-slate-500">{t('library.importPreview.learn')}</p>
               </div>
               <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-night-900 text-slate-400">
                 <ArrowRight className="h-4 w-4" aria-hidden />
@@ -183,17 +185,17 @@ export default function ShareImportPreviewModal({
               <div className="min-w-0 text-center sm:text-right">
                 <span className="text-2xl leading-none" aria-hidden>{flagFor(preview.nativeLang) ?? '🌐'}</span>
                 <p className="mt-2 truncate text-sm font-semibold text-white" title={nativeLabel}>{nativeLabel}</p>
-                <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.14em] text-slate-500">Translation</p>
+                <p className="mt-0.5 truncate text-[10px] uppercase tracking-[0.14em] text-slate-500">{t('library.importPreview.translation')}</p>
               </div>
             </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2 border-t border-white/10 pt-4 sm:justify-start">
               <span className="rounded-lg bg-neon-cyan/10 px-2.5 py-1 text-xs font-semibold tabular-nums text-neon-cyan">
-                {preview.wordCount.toLocaleString()} words
+                {t('library.wordsCount', { count: preview.wordCount })}
               </span>
               {preview.cefr && (
                 <span className="rounded-lg border border-white/10 px-2.5 py-1 text-xs font-semibold text-slate-300">
-                  {preview.cefr} level
+                  {t('library.importPreview.cefrLevel', { level: preview.cefr })}
                 </span>
               )}
             </div>
@@ -201,8 +203,8 @@ export default function ShareImportPreviewModal({
 
           <section aria-labelledby="sample-words-title" className="mt-5">
             <div className="flex items-end justify-between gap-3">
-              <h3 id="sample-words-title" className="text-sm font-semibold text-white">Sample words</h3>
-              <span className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Preview only</span>
+              <h3 id="sample-words-title" className="text-sm font-semibold text-white">{t('library.importPreview.sampleWords')}</h3>
+              <span className="text-[10px] uppercase tracking-[0.14em] text-slate-500">{t('library.importPreview.previewOnly')}</span>
             </div>
             <div className="mt-2 overflow-hidden rounded-2xl border border-white/10">
               {preview.samples.map((sample, index) => (
@@ -217,7 +219,7 @@ export default function ShareImportPreviewModal({
             </div>
             {preview.remainingWordCount > 0 && (
               <p className="mt-2 text-center text-xs text-slate-500">
-                + {preview.remainingWordCount.toLocaleString()} more word{preview.remainingWordCount === 1 ? '' : 's'}
+                {t('library.importPreview.moreWords', { count: preview.remainingWordCount.toLocaleString() })}
               </p>
             )}
           </section>
@@ -225,7 +227,7 @@ export default function ShareImportPreviewModal({
           <div className="mt-5 flex gap-3 rounded-2xl border border-neon-green/20 bg-neon-green/[0.06] p-3.5">
             <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-neon-green" aria-hidden />
             <p className="text-xs leading-relaxed text-slate-400">
-              Only the words and playback settings are included. The sender&apos;s Known, Review, and study history stay private.
+              {t('library.importPreview.privacyNote')}
             </p>
           </div>
 
@@ -233,9 +235,9 @@ export default function ShareImportPreviewModal({
             <div role="status" className="mt-4 flex gap-3 rounded-2xl border border-neon-amber/30 bg-neon-amber/[0.08] p-3.5">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-neon-amber" aria-hidden />
               <div>
-                <p className="text-sm font-semibold text-white">Already in your library</p>
+                <p className="text-sm font-semibold text-white">{t('library.importPreview.duplicateTitle')}</p>
                 <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                  “{duplicate.name}” has the same languages and word content, so no duplicate will be created.
+                  {t('library.importPreview.duplicateBody', { name: duplicate.name })}
                 </p>
               </div>
             </div>
@@ -255,7 +257,7 @@ export default function ShareImportPreviewModal({
             disabled={busy}
             className={`${duplicate ? 'col-span-2 sm:col-span-1' : ''} min-h-11 rounded-xl border border-white/10 px-5 text-sm font-semibold text-slate-300 transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan disabled:cursor-wait disabled:opacity-40`}
           >
-            {duplicate ? 'Close' : 'Cancel'}
+            {duplicate ? t('common.close') : t('common.cancel')}
           </button>
           {!duplicate && (
             <button
@@ -264,7 +266,7 @@ export default function ShareImportPreviewModal({
               disabled={busy}
               className="min-h-11 rounded-xl bg-neon-cyan px-5 text-sm font-bold text-night-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-night-900 active:scale-[0.98] disabled:cursor-wait disabled:opacity-60"
             >
-              {busy ? 'Importing…' : 'Import set'}
+              {busy ? t('library.importPreview.importing') : t('library.importPreview.importSet')}
             </button>
           )}
         </footer>

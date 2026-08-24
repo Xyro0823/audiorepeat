@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import type { AuthUser } from '@/types/auth';
 import type { PlanDef } from '@/lib/plans';
 import { checkoutSuccessUrl } from '@/lib/checkoutUrl';
+import { useT } from '@/lib/i18n';
 
 interface Props {
   plan: PlanDef;
@@ -91,6 +92,7 @@ export default function PaymentStep({
   onBack,
   onContinueFree,
 }: Props) {
+  const t = useT();
   const { price, note } = plan.priceFor(billing === 'annual');
   const [notify, setNotify] = useState<NotifyState>('idle');
   const [pay, setPay] = useState<PayState>('idle');
@@ -195,7 +197,7 @@ export default function PaymentStep({
   return (
     <div className="mx-auto w-full max-w-lg">
       <div className="glass animate-fade-up rounded-3xl p-6">
-        <h2 className="text-lg font-semibold tracking-tight text-white">Your plan</h2>
+        <h2 className="text-lg font-semibold tracking-tight text-white">{t('checkout.summary.title')}</h2>
 
         {/* Summary card */}
         <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
@@ -211,7 +213,7 @@ export default function PaymentStep({
               </p>
               {plan.id === 'pro' && (
                 <p className="mt-0.5 text-[11px] uppercase tracking-wider text-slate-500">
-                  {billing === 'annual' ? 'Annual billing' : 'Monthly billing'}
+                  {billing === 'annual' ? t('checkout.billing.line.annual') : t('checkout.billing.line.monthly')}
                 </p>
               )}
             </div>
@@ -253,7 +255,7 @@ export default function PaymentStep({
               {pay === 'starting' ? (
                 <>
                   <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" />
-                  Opening secure checkout…
+                  {t('checkout.pay.opening')}
                 </>
               ) : (
                 <>
@@ -265,19 +267,18 @@ export default function PaymentStep({
                   >
                     <path d="M12 1.5 3 6v5c0 5 3.9 9.4 9 11.5C17.1 20.4 21 16 21 11V6l-9-4.5ZM10.8 15.3 7 11.5l1.4-1.4 2.4 2.4 4.8-4.8 1.4 1.4-6.2 6.2Z" />
                   </svg>
-                  Pay securely with Paddle — ${price}
+                  {t('checkout.pay.amount', { price })}
                   <span className="text-xs font-medium opacity-80">{note}</span>
                 </>
               )}
             </button>
             {pay === 'error' && (
               <p className="mt-2 rounded-xl border border-neon-magenta/40 bg-neon-magenta/10 px-3 py-2 text-xs text-neon-magenta">
-                Couldn&apos;t start checkout — please try again. You won&apos;t be charged
-                unless you complete payment on Paddle&apos;s page.
+                {t('checkout.pay.error')}
               </p>
             )}
             <p className="mt-2.5 text-center text-[11px] text-slate-500">
-              🔒 Secure payment handled by Paddle — card details never touch AudioRepeat.
+              {t('checkout.pay.securityNote')}
             </p>
           </>
         ) : plan.id === 'basic' ? (
@@ -286,11 +287,10 @@ export default function PaymentStep({
           /* ---------------------------------------------------------- */
           <div className="mt-4 rounded-2xl border border-neon-green/30 bg-neon-green/10 p-4">
             <p className="text-sm font-semibold text-neon-green">
-              🎉 Basic is free — no payment needed
+              {t('checkout.basic.title')}
             </p>
             <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300">
-              Everything on the Basic plan is yours to use right now. Upgrade to Pro or
-              Lifetime whenever you&apos;re ready.
+              {t('checkout.basic.body')}
             </p>
           </div>
         ) : (
@@ -300,12 +300,10 @@ export default function PaymentStep({
           <>
             <div className="mt-4 rounded-2xl border border-neon-amber/30 bg-neon-amber/10 p-4">
               <p className="text-sm font-semibold text-neon-amber">
-                💳 Payment integration coming soon
+                {t('checkout.soon.title')}
               </p>
               <p className="mt-1.5 text-[13px] leading-relaxed text-slate-300">
-                AudioRepeat doesn&apos;t charge for anything yet. This screen is where checkout
-                will live once payments launch — you won&apos;t be billed today, and nothing here
-                processes a payment.
+                {t('checkout.soon.body')}
               </p>
             </div>
 
@@ -320,14 +318,14 @@ export default function PaymentStep({
                   {notify === 'saving' ? (
                     <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" />
                   ) : notify === 'done' ? (
-                    "✓ Thanks — we'll let you know when payments go live"
+                    t('checkout.notify.done')
                   ) : (
-                    'Notify me when payments launch'
+                    t('checkout.notify.idle')
                   )}
                 </button>
                 {notify === 'error' && (
                   <p className="mt-2 text-center text-xs text-neon-magenta">
-                    Couldn&apos;t save that right now — no problem, everything is free for the time being.
+                    {t('checkout.notify.error')}
                   </p>
                 )}
               </div>
@@ -341,14 +339,14 @@ export default function PaymentStep({
             onClick={onContinueFree}
             className="btn-clean flex h-11 flex-1 items-center justify-center rounded-xl px-5 text-sm font-medium text-slate-300"
           >
-            Continue with free access
+            {t('checkout.continueFree')}
           </button>
           <button
             type="button"
             onClick={onBack}
             className="btn-clean flex h-11 items-center justify-center rounded-xl px-5 text-sm font-medium text-slate-300"
           >
-            Change plan
+            {t('checkout.changePlan')}
           </button>
         </div>
       </div>

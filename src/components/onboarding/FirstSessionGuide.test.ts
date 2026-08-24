@@ -6,6 +6,15 @@ const source = readFileSync(
   join(process.cwd(), 'src/components/onboarding/FirstSessionGuide.tsx'),
   'utf8',
 );
+// The guide's copy lives in the i18n dictionaries; the component renders it
+// through translated keys. Assert the contract against both.
+const enDict = readFileSync(join(process.cwd(), 'src/lib/i18n/en/onboarding.ts'), 'utf8');
+
+function dictValue(key: string): string {
+  const match = enDict.match(new RegExp(`'${key}':\\s*'((?:[^'\\\\]|\\\\.)*)'`));
+  expect(match, `missing dictionary key ${key}`).not.toBeNull();
+  return match![1];
+}
 
 describe('FirstSessionGuide UI contract', () => {
   it('is a labelled, keyboard-dismissible non-modal guide', () => {
@@ -14,7 +23,8 @@ describe('FirstSessionGuide UI contract', () => {
     expect(source).toContain('aria-live="polite"');
     expect(source).toContain('aria-labelledby="first-session-guide-title"');
     expect(source).toContain("event.key === 'Escape'");
-    expect(source).toContain('aria-label="Skip first-session guide"');
+    expect(source).toContain("t('onboarding.guide.skipAria')");
+    expect(dictValue('onboarding.guide.skipAria')).toBe('Skip first-session guide');
   });
 
   it('keeps touch targets usable and has a narrow-screen layout', () => {
@@ -26,9 +36,9 @@ describe('FirstSessionGuide UI contract', () => {
   });
 
   it('teaches playback and review without repeating onboarding choices', () => {
-    expect(source).toContain('Let the loop do the work');
-    expect(source).toContain('Known');
-    expect(source).toContain('Review Today');
+    expect(dictValue('onboarding.guide.step1.title')).toBe('Let the loop do the work');
+    expect(dictValue('onboarding.guide.known')).toBe('Known');
+    expect(dictValue('onboarding.guide.reviewToday')).toBe('Review Today');
     expect(source).not.toContain('Choose language');
     expect(source).not.toContain('Choose starting level');
     expect(source).not.toContain('Choose learning goal');

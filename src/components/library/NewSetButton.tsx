@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '@/lib/i18n';
 
 interface Props {
   onNew: () => void;
@@ -15,6 +16,7 @@ const itemClass =
  * with a small menu, keeping the top bar to a single primary action.
  */
 export default function NewSetButton({ onNew, onImport }: Props) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -43,10 +45,10 @@ export default function NewSetButton({ onNew, onImport }: Props) {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        title="Create a new set or import one"
+        title={t('library.newSet.title')}
         className="btn-primary-toolbar ml-1 flex h-11 items-center gap-1.5 rounded-xl px-4 text-[13px] font-semibold text-white"
       >
-        <span className="text-base leading-none">+</span> New
+        <span className="text-base leading-none">+</span> {t('common.new')}
         <svg
           viewBox="0 0 24 24"
           className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
@@ -64,14 +66,14 @@ export default function NewSetButton({ onNew, onImport }: Props) {
       {open && (
         <div
           role="menu"
-          aria-label="New set"
+          aria-label={t('library.newSet.newSet')}
           className="dropdown-panel animate-fade-up absolute right-0 top-full z-[100] mt-2 w-48 rounded-2xl p-1.5"
         >
           <button role="menuitem" className={itemClass} onClick={() => { close(); onNew(); }}>
-            <span aria-hidden>✏️</span> New set
+            <span aria-hidden>✏️</span> {t('library.newSet.newSet')}
           </button>
           <button role="menuitem" className={itemClass} onClick={() => { close(); onImport(); }}>
-            <span aria-hidden>⬆</span> Import (JSON)
+            <span aria-hidden>⬆</span> {t('library.newSet.importJson')}
           </button>
         </div>
       )}

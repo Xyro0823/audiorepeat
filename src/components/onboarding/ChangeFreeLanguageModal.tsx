@@ -7,6 +7,7 @@ import { FREE_LANG_LIMIT } from '@/lib/plans';
 import { seedSetForLang } from '@/lib/seedSets';
 import { getAllSets } from '@/lib/db/indexedDb';
 import { updateAccountPrefs } from '@/lib/accountPrefs';
+import { useT } from '@/lib/i18n';
 import type { VocabSet } from '@/types/app';
 import FreeLanguagePicker from './FreeLanguagePicker';
 
@@ -27,6 +28,7 @@ interface Props {
  * upgrade restores them automatically. Enforcement stays in planGate.
  */
 export default function ChangeFreeLanguageModal({ currentKey, allSets, saveSet, onClose }: Props) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
 
   const confirm = useCallback(
@@ -67,35 +69,38 @@ export default function ChangeFreeLanguageModal({ currentKey, allSets, saveSet, 
       className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Change your free language"
+      aria-label={t('onboarding.changeLang.aria')}
     >
       <div className="glass animate-fade-up max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-3xl p-6 sm:p-8">
         <div className="mb-1 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">Change your free language</h2>
+          <h2 className="text-lg font-bold text-white">{t('onboarding.changeLang.title')}</h2>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('common.close')}
             className="rounded-lg px-2 py-1 text-slate-400 transition hover:bg-white/5 hover:text-white"
           >
             ✕
           </button>
         </div>
-        <p className="text-sm leading-relaxed text-slate-400">
-          Sets in your current language stay saved — they&apos;ll be hidden, not deleted, and come
-          back if you upgrade.
-        </p>
+        <p className="text-sm leading-relaxed text-slate-400">{t('onboarding.changeLang.body')}</p>
         <div className="mt-4">
           <FreeLanguagePicker
             pro={false}
             initialKey={currentKey}
             onContinue={(key) => void confirm(key)}
-            title="Choose your free language"
-            subtitle={`Your Free plan includes ${FREE_LANG_LIMIT} ${
-              FREE_LANG_LIMIT === 1 ? 'language' : 'languages'
-            }. Pick the one you want to practice — switching hides your other sets (they're kept, never deleted).`}
+            subtitle={t(
+              FREE_LANG_LIMIT === 1
+                ? 'onboarding.changeLang.pickerSubtitle.one'
+                : 'onboarding.changeLang.pickerSubtitle.other',
+              { limit: FREE_LANG_LIMIT },
+            )}
           />
         </div>
-        {busy && <p className="mt-3 text-center text-xs text-slate-500">Setting up your language…</p>}
+        {busy && (
+          <p className="mt-3 text-center text-xs text-slate-500">
+            {t('onboarding.changeLang.settingUp')}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 'use client';
 
+import { useT } from '@/lib/i18n';
+
 const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5];
 
 interface Props {
@@ -28,6 +30,7 @@ export default function PlayerControls({
   shuffle,
   onShuffleToggle,
 }: Props) {
+  const t = useT();
   const cycleSpeed = () => {
     // Snaps non-preset values (e.g. 1.3 from the fine-grained settings slider)
     // to the first preset on the next tap.
@@ -40,8 +43,8 @@ export default function PlayerControls({
       <div className="mx-auto flex w-full max-w-3xl items-center justify-center gap-2.5 px-4 py-5 sm:gap-5">
         <button
           onClick={onBack}
-          aria-label={backAction === 'previous' ? 'Go to previous word' : 'Replay current word'}
-          title={backAction === 'previous' ? 'Previous word' : 'Replay current word'}
+          aria-label={backAction === 'previous' ? t('player.controls.prevAria') : t('player.controls.replayAria')}
+          title={backAction === 'previous' ? t('player.controls.prevTitle') : t('player.controls.replayAria')}
           className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition hover:border-neon-cyan/50 hover:text-neon-cyan active:scale-90"
         >
           <svg
@@ -69,7 +72,7 @@ export default function PlayerControls({
 
         <button
           onClick={onPlayPause}
-          aria-label={isPlaying ? 'Pause' : 'Play'}
+          aria-label={isPlaying ? t('player.controls.pause') : t('player.controls.play')}
           className={`relative flex h-20 w-20 items-center justify-center rounded-full text-night-950 transition active:scale-90 ${
             isPlaying
               ? 'bg-gradient-to-br from-neon-cyan to-neon-violet'
@@ -101,8 +104,8 @@ export default function PlayerControls({
 
         <button
           onClick={onSkipNext}
-          aria-label="Skip to next word"
-          title="Skip to next word"
+          aria-label={t('player.controls.nextWord')}
+          title={t('player.controls.nextWord')}
           className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition hover:border-neon-cyan/50 hover:text-neon-cyan active:scale-90"
         >
           <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor">
@@ -113,8 +116,8 @@ export default function PlayerControls({
 
         <button
           onClick={onStop}
-          aria-label="Stop"
-          title="Stop"
+          aria-label={t('player.controls.stop')}
+          title={t('player.controls.stop')}
           className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition hover:border-neon-magenta/50 hover:text-neon-magenta active:scale-90"
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
@@ -124,8 +127,8 @@ export default function PlayerControls({
 
         <button
           onClick={cycleSpeed}
-          aria-label={`Playback speed ${speed}×`}
-          title="Playback speed — tap to change"
+          aria-label={t('player.controls.speedAria', { speed })}
+          title={t('player.controls.speedTitle')}
           className={`flex h-14 shrink-0 flex-col items-center justify-center gap-1 rounded-full border px-4 transition active:scale-90 ${
             speed !== 1
               ? 'border-neon-cyan/60 bg-neon-cyan/10 text-neon-cyan glow-cyan'
@@ -149,8 +152,8 @@ export default function PlayerControls({
         <button
           onClick={onShuffleToggle}
           aria-pressed={shuffle}
-          aria-label={shuffle ? 'Shuffle on — tap to turn off' : 'Shuffle off — tap to randomize the word order'}
-          title={shuffle ? 'Shuffle on — tap to turn off' : 'Shuffle off — tap to randomize the word order'}
+          aria-label={shuffle ? t('player.controls.shuffleOn') : t('player.controls.shuffleOff')}
+          title={shuffle ? t('player.controls.shuffleOn') : t('player.controls.shuffleOff')}
           className={`flex h-14 w-14 items-center justify-center rounded-full border transition active:scale-90 ${
             shuffle
               ? 'border-neon-violet/60 bg-neon-violet/10 text-neon-violet glow-cyan'

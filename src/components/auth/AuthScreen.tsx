@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { useT } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
 
 type Mode = 'gate' | 'overlay';
@@ -63,6 +64,7 @@ function Logo({ size = 'md' }: { size?: 'md' | 'lg' }) {
 
 export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props) {
   const { signup, login, signInWithGoogle, continueAsGuest, mode: authMode } = useAuth();
+  const t = useT();
   const configured = authMode === 'firebase';
 
   const [tab, setTab] = useState<'signin' | 'signup'>('signin');
@@ -93,7 +95,7 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
       e.preventDefault();
       if (busy || !configured) return;
       if (tab === 'signup' && password !== confirm) {
-        setError('Passwords do not match.');
+        setError(t('auth.error.passwordMismatch'));
         return;
       }
       setBusy(true);
@@ -109,7 +111,7 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
         done();
       }
     },
-    [busy, configured, tab, password, confirm, identifier, displayName, signup, login, done],
+    [busy, configured, tab, password, confirm, identifier, displayName, signup, login, done, t],
   );
 
   const google = useCallback(async () => {
@@ -138,7 +140,9 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
       className="fixed inset-0 z-[100] flex overflow-y-auto bg-night-950/95 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label={configured ? (tab === 'signup' ? 'Create account' : 'Sign in') : 'Sign in'}
+      aria-label={
+        configured ? (tab === 'signup' ? t('auth.tab.createAccount') : t('auth.tab.signIn')) : t('auth.tab.signIn')
+      }
     >
       {/* Ambient glows */}
       <div className="pointer-events-none absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-neon-cyan/15 blur-3xl" />
@@ -150,22 +154,20 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
           <h1 className="mt-4 text-2xl font-bold tracking-tight text-white">AudioRepeat</h1>
           <p className="mt-1 text-sm text-slate-400">
             {mode === 'gate'
-              ? 'Sign in to keep your streaks and progress, or start fresh as a guest.'
-              : 'Create an account to keep your own stats and streak.'}
+              ? t('auth.subtitle.gate')
+              : t('auth.subtitle.overlay')}
           </p>
         </div>
 
         {!configured ? (
           <div className="mt-6 rounded-2xl border border-neon-amber/30 bg-neon-amber/10 p-4 text-left">
-            <p className="text-sm font-semibold text-neon-amber">🔧 Firebase not configured</p>
+            <p className="text-sm font-semibold text-neon-amber">{t('auth.firebaseNotConfigured')}</p>
             <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
-              Sign-in uses Firebase Authentication. To enable it: copy{' '}
+              {t('auth.setup.intro')}{' '}
               <code className="rounded bg-night-800 px-1 py-0.5 text-[10px] text-neon-cyan">.env.example</code>{' '}
-              to{' '}
+              {t('auth.setup.mid')}{' '}
               <code className="rounded bg-night-800 px-1 py-0.5 text-[10px] text-neon-cyan">.env.local</code>
-              , paste your Firebase web app config (Firebase console → Project settings → Your
-              apps → SDK setup and configuration), then restart the dev server. Until then the
-              app runs in guest mode — no accounts, no sign-in.
+              {t('auth.setup.rest')}
             </p>
           </div>
         ) : (
@@ -176,12 +178,12 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
               className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-white/15 bg-white/[0.03] py-3 text-sm font-semibold text-white transition hover:border-white/30 hover:bg-white/[0.06] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
             >
               <GoogleGlyph />
-              {busy ? 'Working…' : 'Sign in with Google'}
+              {busy ? t('auth.google.busy') : t('auth.google.button')}
             </button>
             <div className="mt-4 flex items-center gap-3">
               <span className="h-px flex-1 bg-white/10" />
               <span className="text-[11px] uppercase tracking-wider text-slate-600">
-                or use email
+                {t('auth.orUseEmail')}
               </span>
               <span className="h-px flex-1 bg-white/10" />
             </div>
@@ -190,21 +192,21 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
             <div className="mt-4 flex gap-1.5 rounded-2xl border border-white/10 bg-night-900/60 p-1.5">
               {(
                 [
-                  { id: 'signin', label: 'Sign in' },
-                  { id: 'signup', label: 'Create account' },
+                  { id: 'signin', label: t('auth.tab.signIn') },
+                  { id: 'signup', label: t('auth.tab.createAccount') },
                 ] as const
-              ).map((t) => (
+              ).map((tabItem) => (
                 <button
-                  key={t.id}
-                  onClick={() => switchTab(t.id)}
-                  aria-pressed={tab === t.id}
+                  key={tabItem.id}
+                  onClick={() => switchTab(tabItem.id)}
+                  aria-pressed={tab === tabItem.id}
                   className={`flex-1 rounded-xl px-3 py-2 text-sm font-semibold transition active:scale-95 ${
-                    tab === t.id
+                    tab === tabItem.id
                       ? 'bg-gradient-to-r from-neon-cyan/20 to-neon-violet/20 text-white ring-1 ring-neon-cyan/40'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  {t.label}
+                  {tabItem.label}
                 </button>
               ))}
             </div>
@@ -213,34 +215,35 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
               {tab === 'signup' && (
                 <div>
                   <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
-                    Display name <span className="normal-case text-slate-600">(optional)</span>
+                    {t('auth.displayName.label')}{' '}
+                    <span className="normal-case text-slate-600">{t('auth.displayName.optional')}</span>
                   </label>
                   <input
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     autoComplete="name"
-                    placeholder="How your leaderboard shows you"
+                    placeholder={t('auth.displayName.placeholder')}
                     className={inputClass}
                   />
                 </div>
               )}
               <div>
                 <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
-                  Email
+                  {t('auth.email.label')}
                 </label>
                 <input
                   type="email"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   autoComplete="email"
-                  placeholder="you@example.com"
+                  placeholder={t('auth.email.placeholder')}
                   className={inputClass}
                   required
                 />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
-                  Password
+                  {t('auth.password.label')}
                 </label>
                 <div className="relative">
                   <input
@@ -248,14 +251,18 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete={tab === 'signup' ? 'new-password' : 'current-password'}
-                    placeholder={tab === 'signup' ? 'At least 6 characters' : 'Your password'}
+                    placeholder={
+                      tab === 'signup'
+                        ? t('auth.password.placeholder.signup')
+                        : t('auth.password.placeholder.signin')
+                    }
                     className={`${inputClass} pr-12`}
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPass((s) => !s)}
-                    aria-label={showPass ? 'Hide password' : 'Show password'}
+                    aria-label={showPass ? t('auth.password.hide') : t('auth.password.show')}
                     className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-2 py-1 text-xs text-slate-500 transition hover:text-white"
                   >
                     {showPass ? '🙈' : '👁'}
@@ -265,14 +272,14 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
               {tab === 'signup' && (
                 <div>
                   <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
-                    Confirm password
+                    {t('auth.confirmPassword.label')}
                   </label>
                   <input
                     type={showPass ? 'text' : 'password'}
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     autoComplete="new-password"
-                    placeholder="Repeat your password"
+                    placeholder={t('auth.confirmPassword.placeholder')}
                     className={inputClass}
                     required
                   />
@@ -293,9 +300,9 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
                 {busy ? (
                   <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-night-950/30 border-t-night-950 align-middle" />
                 ) : tab === 'signup' ? (
-                  'Create account'
+                  t('auth.tab.createAccount')
                 ) : (
-                  'Sign in'
+                  t('auth.tab.signIn')
                 )}
               </button>
             </form>
@@ -304,7 +311,7 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
 
         <div className="mt-5 flex items-center gap-3">
           <span className="h-px flex-1 bg-white/10" />
-          <span className="text-[11px] uppercase tracking-wider text-slate-600">or</span>
+          <span className="text-[11px] uppercase tracking-wider text-slate-600">{t('auth.or')}</span>
           <span className="h-px flex-1 bg-white/10" />
         </div>
 
@@ -313,20 +320,19 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
             onClick={continueAsGuest}
             className="mt-4 w-full rounded-xl border border-white/10 py-3 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white active:scale-[0.98]"
           >
-            Continue as guest
+            {t('auth.continueAsGuest')}
           </button>
         ) : (
           <button
             onClick={onClose}
             className="mt-4 w-full rounded-xl border border-white/10 py-3 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white active:scale-[0.98]"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
         )}
 
         <p className="mt-5 text-center text-[11px] leading-relaxed text-slate-600">
-          🔒 Firebase accounts sync your identity online — your vocabulary sets, streaks and stats
-          stay on this device. Sign-in needs an internet connection; listening works offline.
+          {t('auth.privacyNote')}
         </p>
       </div>
     </div>

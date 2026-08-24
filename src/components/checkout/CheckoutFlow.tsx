@@ -8,6 +8,7 @@ import AuthScreen from '@/components/auth/AuthScreen';
 import { useAuth } from '@/hooks/useAuth';
 import { ANNUAL_SAVINGS_PERCENT, isPlanId, PLAN_ORDER, PLANS, type PlanId } from '@/lib/plans';
 import { SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
+import { useT } from '@/lib/i18n';
 import PaymentStep from './PaymentStep';
 
 function LogoMark() {
@@ -29,6 +30,7 @@ export default function CheckoutFlow({
 }) {
   const router = useRouter();
   const { status, user, mode: authMode } = useAuth();
+  const t = useT();
   // Pre-select the plan from ?plan= when valid; otherwise default to the
   // popular Pro tier and let the user change it.
   const [selected, setSelected] = useState<PlanId>(isPlanId(initialPlan) ? initialPlan : 'pro');
@@ -80,7 +82,7 @@ export default function CheckoutFlow({
               href="/dashboard"
               className="rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-black transition hover:bg-slate-100 active:scale-95"
             >
-              Practice
+              {t('checkout.nav.practice')}
             </Link>
           </div>
         </div>
@@ -89,7 +91,7 @@ export default function CheckoutFlow({
       <div className="relative z-10 mx-auto w-full max-w-5xl px-5 py-12 lg:px-8">
         {canceled && (
           <div className="mx-auto mb-6 max-w-lg rounded-2xl border border-neon-amber/30 bg-neon-amber/10 px-4 py-3 text-center text-sm text-neon-amber">
-            Your checkout was canceled — nothing was charged.
+            {t('checkout.canceled')}
           </div>
         )}
 
@@ -97,15 +99,15 @@ export default function CheckoutFlow({
           <>
           <div className="text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">
-              Checkout
+              {t('checkout.kicker')}
             </p>
             <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-white md:text-4xl">
-              Choose your plan
+              {t('checkout.choosePlan')}
             </h1>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-slate-400">
               {paddleEnabled
-                ? 'Pick a tier to see the summary — you\u2019ll pay securely with Paddle on the next step.'
-                : 'Pick a tier to see the summary — payments launch soon, so nothing charges today.'}
+                ? t('checkout.subtitle.paddle')
+                : t('checkout.subtitle.soon')}
             </p>
 
             {/* monthly / annual toggle (only affects Pro pricing) */}
@@ -117,7 +119,7 @@ export default function CheckoutFlow({
                   !annual ? 'bg-white text-black shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Monthly
+                {t('checkout.billing.monthly')}
               </button>
               <button
                 type="button"
@@ -126,7 +128,10 @@ export default function CheckoutFlow({
                   annual ? 'bg-white text-black shadow' : 'text-slate-400 hover:text-white'
                 }`}
               >
-                Annual <span className="ml-1 text-[10px] font-bold text-emerald-400">Save {ANNUAL_SAVINGS_PERCENT}%</span>
+                {t('checkout.billing.annual')}{' '}
+                <span className="ml-1 text-[10px] font-bold text-emerald-400">
+                  {t('checkout.savePercent', { percent: ANNUAL_SAVINGS_PERCENT })}
+                </span>
               </button>
             </div>
           </div>
@@ -151,7 +156,7 @@ export default function CheckoutFlow({
                 >
                   {p.popular && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#06b6d4] to-[#3b82f6] px-4 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-[0_0_20px_rgba(6,182,212,0.5)]">
-                      Most Popular
+                      {t('checkout.mostPopular')}
                     </span>
                   )}
                   <span className="flex items-center justify-between">
@@ -216,13 +221,13 @@ export default function CheckoutFlow({
               onClick={() => setStep('payment')}
               className="btn-neural inline-flex h-12 items-center gap-2 rounded-full px-8 text-sm font-semibold text-white"
             >
-              Continue with {plan.name} — ${price}
+              {t('checkout.continueWith', { plan: plan.name, price })}
               <span className="text-xs font-medium opacity-80">{note}</span>
             </button>
             <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
               {paddleEnabled
-                ? 'Secure payments handled by Paddle'
-                : 'No charge today · payments coming soon'}
+                ? t('checkout.footer.secure')
+                : t('checkout.footer.soon')}
             </p>
           </div>
           </>
@@ -233,7 +238,7 @@ export default function CheckoutFlow({
               onClick={() => setStep('plan')}
               className="mb-6 inline-flex items-center gap-1.5 text-sm text-slate-400 transition hover:text-white"
             >
-              ← Back to plans
+              ← {t('checkout.backToPlans')}
             </button>
 
             {paymentReady ? (
@@ -259,15 +264,15 @@ export default function CheckoutFlow({
                   </svg>
                 </span>
                 <h2 className="mt-5 text-xl font-bold tracking-tight text-white">
-                  Sign in to continue checkout
+                  {t('checkout.signInGate.title')}
                 </h2>
                 <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
-                  You&apos;ve selected the <span className="font-semibold text-white">{plan.name}</span>{' '}
-                  plan (${price}
-                  {note}).{' '}
+                  {t('checkout.signInGate.selectedPrefix')}{' '}
+                  <span className="font-semibold text-white">{plan.name}</span>{' '}
+                  {t('checkout.signInGate.selectedSuffix', { price, note })}{' '}
                   {paddleEnabled
-                    ? 'We need an account to attach your purchase to — or continue with free access.'
-                    : 'We need an account to attach it to once payments launch — or keep using everything free right now.'}
+                    ? t('checkout.signInGate.needAccount')
+                    : t('checkout.signInGate.needAccountSoon')}
                 </p>
                 <div className="mt-6 flex flex-col gap-2.5">
                   <button
@@ -275,14 +280,14 @@ export default function CheckoutFlow({
                     onClick={() => setAuthOpen(true)}
                     className="btn-primary flex h-11 w-full items-center justify-center rounded-xl text-sm font-semibold text-white"
                   >
-                    Sign in / Create account
+                    {t('checkout.signInCta')}
                   </button>
                   <button
                     type="button"
                     onClick={() => router.push('/dashboard')}
                     className="btn-clean flex h-11 w-full items-center justify-center rounded-xl text-sm font-medium text-slate-300"
                   >
-                    Continue with free access
+                    {t('checkout.continueFree')}
                   </button>
                 </div>
               </div>

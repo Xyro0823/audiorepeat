@@ -1,5 +1,7 @@
 'use client';
 
+import { useT, type TKey } from '@/lib/i18n';
+
 interface Props {
   /** Listening accuracy: mastered ÷ (mastered + hard), 0–100. */
   accuracyPct: number;
@@ -17,26 +19,30 @@ const STREAK_TARGET = 30; // streak progress bar measures a 30-day habit
  * translucent track.
  */
 export default function MetricCards({ accuracyPct, masteredCount, streak }: Props) {
+  const t = useT();
   const streakPct = Math.min(100, Math.round((streak / STREAK_TARGET) * 100));
 
-  const cards = [
+  const cards: { id: string; labelKey: TKey; value: string; pct: number; hintKey: TKey }[] = [
     {
-      label: 'Listening Accuracy',
+      id: 'accuracy',
+      labelKey: 'dashboard.metric.accuracy.label',
       value: `${accuracyPct}%`,
       pct: accuracyPct,
-      hint: 'Mastered vs. review words',
+      hintKey: 'dashboard.metric.accuracy.hint',
     },
     {
-      label: 'Words Mastered',
+      id: 'mastered',
+      labelKey: 'dashboard.metric.mastered.label',
       value: masteredCount.toLocaleString(),
       pct: Math.min(100, masteredCount),
-      hint: 'Known across all sets',
+      hintKey: 'dashboard.metric.mastered.hint',
     },
     {
-      label: 'Study Streak',
-      value: `${streak} day${streak === 1 ? '' : 's'}`,
+      id: 'streak',
+      labelKey: 'dashboard.metric.streak.label',
+      value: t(streak === 1 ? 'dashboard.streakDays.one' : 'dashboard.streakDays.other', { count: streak }),
       pct: streakPct,
-      hint: `${STREAK_TARGET}-day habit target`,
+      hintKey: 'dashboard.metric.streak.hint',
     },
   ];
 
@@ -44,11 +50,11 @@ export default function MetricCards({ accuracyPct, masteredCount, streak }: Prop
     <div className="grid grid-cols-3 gap-2 sm:gap-3">
       {cards.map((c) => (
         <div
-          key={c.label}
+          key={c.id}
           className="rounded-2xl border border-white/10 bg-zinc-900/60 p-3 backdrop-blur-md sm:p-4"
         >
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
-            {c.label}
+            {t(c.labelKey)}
           </p>
           <p className="mt-1.5 text-lg font-bold tabular-nums tracking-tight text-white sm:text-2xl">
             {c.value}
@@ -59,7 +65,11 @@ export default function MetricCards({ accuracyPct, masteredCount, streak }: Prop
               style={{ width: `${Math.min(100, Math.max(0, c.pct))}%` }}
             />
           </div>
-          <p className="mt-1.5 text-[10px] leading-snug text-slate-500 sm:text-[11px]">{c.hint}</p>
+          <p className="mt-1.5 text-[10px] leading-snug text-slate-500 sm:text-[11px]">
+            {c.id === 'streak'
+              ? t(c.hintKey, { days: STREAK_TARGET })
+              : t(c.hintKey)}
+          </p>
         </div>
       ))}
     </div>

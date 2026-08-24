@@ -10,6 +10,7 @@ import {
   type WordBankWord,
 } from '@/lib/vocab/wordBanks';
 import type { VocabSet } from '@/types/app';
+import { useT, type TKey } from '@/lib/i18n';
 import VirtualList from './VirtualList';
 
 const ROW_HEIGHT = 44;
@@ -23,12 +24,14 @@ interface Props {
 }
 
 export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
+  const t = useT();
   const [manifest, setManifest] = useState<TopicManifest | null>(null);
   const [topic, setTopic] = useState<string | null>(null);
   const [lang, setLang] = useState<string | null>(null);
   const [bank, setBank] = useState<WordBankWord[] | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  /** Stored as a key so the message re-renders in the active locale. */
+  const [error, setError] = useState<TKey | null>(null);
   /** Shown when a Free user taps import for a language they don't own yet. */
   const [upgradePrompt, setUpgradePrompt] = useState(false);
 
@@ -39,7 +42,7 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
         if (alive) setManifest(m);
       })
       .catch(() => {
-        if (alive) setError('Topics are not available yet — try again online.');
+        if (alive) setError('library.topics.errorUnavailable');
       });
     return () => {
       alive = false;
@@ -62,7 +65,7 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
         setBank(data?.[lang] ?? []);
       } catch {
         if (!alive) return;
-        setError('Could not load this topic.');
+        setError('library.topics.errorLoad');
         setBank(null);
       } finally {
         if (alive) setLoading(false);
@@ -112,11 +115,11 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-4">
       {error && !manifest ? (
-        <div className="p-10 text-center text-sm text-neon-amber">{error}</div>
+        <div className="p-10 text-center text-sm text-neon-amber">{t(error)}</div>
       ) : !manifest ? (
         <div className="flex flex-col items-center gap-4 p-12">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
-          <p className="text-sm text-slate-500">Loading topics…</p>
+          <p className="text-sm text-slate-500">{t('library.topics.loadingTopics')}</p>
         </div>
       ) : (
         <>
@@ -148,7 +151,7 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
                         {meta.label}
                       </span>
                       <span className="block text-[11px] text-slate-500">
-                        {totalWords} words · {Object.keys(meta.langs).length} languages
+                        {t('library.topics.cardMeta', { words: totalWords, langs: Object.keys(meta.langs).length })}
                       </span>
                     </span>
                   </div>
@@ -161,7 +164,7 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
           {topic && (
             <>
               <p className="mb-2 mt-5 text-[11px] font-medium uppercase tracking-wider text-slate-500">
-                Pick a language
+                {t('library.pickLanguage')}
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {langs.map((l) => {
@@ -184,7 +187,7 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
                     >
                       {packLangLabel(l)}
                       {locked && (
-                        <span aria-hidden title="Pro feature" className="ml-1">
+                        <span aria-hidden title={t('library.proFeature')} className="ml-1">
                           🔒
                         </span>
                       )}
@@ -202,16 +205,17 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
             (loading ? (
               <div className="flex flex-col items-center gap-3 p-10">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
-                <p className="text-sm text-slate-500">Loading words…</p>
+                <p className="text-sm text-slate-500">{t('library.topics.loadingWords')}</p>
               </div>
             ) : error ? (
-              <div className="p-10 text-center text-sm text-neon-amber">{error}</div>
+              <div className="p-10 text-center text-sm text-neon-amber">{t(error)}</div>
             ) : (
               <div className="mt-5">
                 {upgradePrompt && <LanguageLock className="animate-fade-up mb-3" />}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-xs text-slate-500">
-                    <span className="font-semibold text-white">{bank?.length ?? 0}</span> words
+                    <span className="font-semibold text-white">{bank?.length ?? 0}</span>{' '}
+                    {t('common.words')}
                   </span>
                   <button
                     onClick={() => {
@@ -220,11 +224,11 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
                     disabled={!bank || bank.length === 0}
                     className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                   >
-                    ⬇ Import topic
+                    ⬇ {t('library.topics.importTopic')}
                   </button>
                 </div>
                 <div className="mt-3 text-[11px] uppercase tracking-wider text-slate-500">
-                  Preview
+                  {t('library.preview')}
                 </div>
                 {bank && bank.length > 0 ? (
                   <VirtualList
@@ -241,7 +245,7 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
                   />
                 ) : (
                   <div className="mt-2 rounded-2xl border border-white/10 p-8 text-center text-sm text-slate-400">
-                    No words available for this language yet.
+                    {t('library.topics.noWords')}
                   </div>
                 )}
               </div>

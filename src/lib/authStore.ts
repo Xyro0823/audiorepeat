@@ -11,6 +11,7 @@
  */
 import { getAuthMode } from '@/lib/firebase/config';
 import { isNewlyCreatedAccount, markOnboardingPending } from '@/lib/onboarding';
+import { t } from '@/lib/i18n';
 import {
   activateSetOwner,
   migrateLegacySettingsToOwner,
@@ -209,9 +210,6 @@ export async function hydrateAuth(): Promise<void> {
   }
 }
 
-const UNCONFIGURED_ERROR =
-  'Firebase is not configured — add your firebaseConfig to .env.local (see .env.example).';
-
 /** Create an account with an email + password. `displayName` is optional. */
 export async function signup(
   email: string,
@@ -219,15 +217,15 @@ export async function signup(
   displayName?: string,
 ): Promise<AuthResult> {
   const clean = email.trim();
-  if (!EMAIL_RE.test(clean)) return { ok: false, error: 'Enter a valid email address.' };
+  if (!EMAIL_RE.test(clean)) return { ok: false, error: t('auth.error.invalidEmail') };
   if (password.length < 6) {
-    return { ok: false, error: 'Password must be at least 6 characters.' };
+    return { ok: false, error: t('auth.error.shortPassword') };
   }
-  if (MODE === 'unconfigured') return { ok: false, error: UNCONFIGURED_ERROR };
+  if (MODE === 'unconfigured') return { ok: false, error: t('auth.error.unconfigured') };
   try {
     const { getFirebaseAuth, createEmailAccount, firebaseUserToAuthUser } = await loadClient();
     const auth = getFirebaseAuth();
-    if (!auth) return { ok: false, error: UNCONFIGURED_ERROR };
+    if (!auth) return { ok: false, error: t('auth.error.unconfigured') };
     const user = await createEmailAccount(auth, clean, password, displayName);
     const mapped = firebaseUserToAuthUser(user);
     // Write the pending marker BEFORE flipping the auth state, so the first
@@ -246,13 +244,13 @@ export async function signup(
 export async function login(email: string, password: string): Promise<AuthResult> {
   const clean = email.trim();
   if (!clean || !password) {
-    return { ok: false, error: 'Enter your email and password.' };
+    return { ok: false, error: t('auth.error.missingCredentials') };
   }
-  if (MODE === 'unconfigured') return { ok: false, error: UNCONFIGURED_ERROR };
+  if (MODE === 'unconfigured') return { ok: false, error: t('auth.error.unconfigured') };
   try {
     const { getFirebaseAuth, signInEmailPassword, firebaseUserToAuthUser } = await loadClient();
     const auth = getFirebaseAuth();
-    if (!auth) return { ok: false, error: UNCONFIGURED_ERROR };
+    if (!auth) return { ok: false, error: t('auth.error.unconfigured') };
     const user = await signInEmailPassword(auth, clean, password);
     enterSignedInState(firebaseUserToAuthUser(user));
     return { ok: true };
@@ -264,11 +262,11 @@ export async function login(email: string, password: string): Promise<AuthResult
 
 /** Google sign-in via popup (desktop browsers; allow popups for this site). */
 export async function signInWithGoogle(): Promise<AuthResult> {
-  if (MODE === 'unconfigured') return { ok: false, error: UNCONFIGURED_ERROR };
+  if (MODE === 'unconfigured') return { ok: false, error: t('auth.error.unconfigured') };
   try {
     const { getFirebaseAuth, signInWithGoogle, firebaseUserToAuthUser } = await loadClient();
     const auth = getFirebaseAuth();
-    if (!auth) return { ok: false, error: UNCONFIGURED_ERROR };
+    if (!auth) return { ok: false, error: t('auth.error.unconfigured') };
     const user = await signInWithGoogle(auth);
     const mapped = firebaseUserToAuthUser(user);
     // Google doesn't say whether the account is new; a creationTime very close
@@ -324,14 +322,14 @@ export function continueAsGuest(): void {
 export async function deleteAccount(): Promise<AuthResult> {
   try {
     const token = await getAuthIdToken();
-    if (!token) return { ok: false, error: 'Please sign in again before deleting your account.' };
+    if (!token) return { ok: false, error: t('auth.error.reSignInToDelete') };
     const response = await fetch('/api/account', {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!response.ok) {
       const data = (await response.json().catch(() => null)) as { error?: string } | null;
-      return { ok: false, error: data?.error ?? 'Could not delete your account.' };
+      return { ok: false, error: data?.error ?? t('auth.error.deleteFailed') };
     }
     const { getFirebaseAuth } = await loadClient();
     const current = getFirebaseAuth()?.currentUser;

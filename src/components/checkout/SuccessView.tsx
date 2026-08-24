@@ -9,6 +9,7 @@ import {
   runSuccessPoll,
   type EntitlementSnapshot,
 } from '@/lib/successFlow';
+import { useT } from '@/lib/i18n';
 
 interface Props {
   /** Verified paid plan id from the server (display context only); null = nothing verified. */
@@ -33,6 +34,7 @@ type Phase = 'verifying' | 'activating' | 'active' | 'pending' | 'unverified';
 export default function SuccessView({ planId, billing, email }: Props) {
   // No verified plan → start in a neutral "pending" state (never a permanent
   // failure) and let the entitlement poll decide.
+  const t = useT();
   const [phase, setPhase] = useState<Phase>(isPlanId(planId) ? 'verifying' : 'pending');
   const [timedOut, setTimedOut] = useState(false);
   const [activePlan, setActivePlan] = useState<PlanId | null>(null);
@@ -115,14 +117,18 @@ export default function SuccessView({ planId, billing, email }: Props) {
               </svg>
             </span>
             <h1 className="mt-5 text-2xl font-bold tracking-tight text-white">
-              Welcome to {confirmedPlan.name}!
+              {t('checkout.success.welcome', { plan: confirmedPlan.name })}
             </h1>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
-              Your {confirmedPlan.name} plan is active
               {confirmedPlan.id !== 'lifetime'
-                ? ` (${(activeBilling ?? billing) === 'monthly' ? 'monthly' : 'annual'} billing)`
-                : ''}
-              .{email ? ` A receipt is on its way to ${email}.` : ''}
+                ? t(
+                    (activeBilling ?? billing) === 'monthly'
+                      ? 'checkout.success.active.monthly'
+                      : 'checkout.success.active.annual',
+                    { plan: confirmedPlan.name },
+                  )
+                : t('checkout.success.active.lifetime', { plan: confirmedPlan.name })}
+              .{email ? ` ${t('checkout.success.receipt', { email })}` : ''}
             </p>
             <ul className="mx-auto mt-5 max-w-sm space-y-2 text-left">
               {confirmedPlan.features(0).slice(0, 4).map((f) => (
@@ -149,7 +155,7 @@ export default function SuccessView({ planId, billing, email }: Props) {
               href="/dashboard"
               className="btn-primary mt-7 inline-flex h-12 items-center justify-center rounded-xl px-8 text-sm font-semibold text-white"
             >
-              Start practicing
+              {t('checkout.success.startCta')}
             </Link>
           </>
         ) : phase === 'verifying' || phase === 'activating' ? (
@@ -167,19 +173,21 @@ export default function SuccessView({ planId, billing, email }: Props) {
               )}
             </span>
             <h1 className="mt-5 text-2xl font-bold tracking-tight text-white">
-              {phase === 'verifying' ? 'Confirming your plan…' : 'Payment received — activating your plan'}
+              {phase === 'verifying' ? t('checkout.success.verifying') : t('checkout.success.activating')}
             </h1>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
               {phase === 'verifying'
-                ? `We're confirming your ${plan?.name ?? 'plan'} with our payment provider.`
-                : 'Your payment was submitted. We\u2019re waiting for your plan to activate — this usually takes a few seconds. It may take a moment for all your Pro features to unlock.'}
+                ? t('checkout.success.verifyingBody', {
+                    plan: plan?.name ?? t('checkout.word.plan'),
+                  })
+                : t('checkout.success.activatingBody')}
             </p>
             <div className="mt-7 flex flex-col gap-2.5">
               <Link
                 href="/dashboard"
                 className="btn-primary inline-flex h-12 items-center justify-center rounded-xl px-8 text-sm font-semibold text-white"
               >
-                Go to dashboard
+                {t('checkout.success.goDashboard')}
               </Link>
               {phase === 'activating' && (
                 <button
@@ -187,7 +195,7 @@ export default function SuccessView({ planId, billing, email }: Props) {
                   onClick={() => window.location.reload()}
                   className="btn-clean inline-flex h-11 items-center justify-center rounded-xl px-8 text-sm font-medium text-slate-300"
                 >
-                  Check again
+                  {t('checkout.success.checkAgain')}
                 </button>
               )}
             </div>
@@ -207,26 +215,26 @@ export default function SuccessView({ planId, billing, email }: Props) {
               )}
             </span>
             <h1 className="mt-5 text-2xl font-bold tracking-tight text-white">
-              {timedOut ? "We haven't confirmed your plan yet" : 'Your payment was submitted'}
+              {timedOut ? t('checkout.success.pendingTimeout') : t('checkout.success.submitted')}
             </h1>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
               {timedOut
-                ? 'If you completed payment, it may take a moment to appear. Everything remains free until it\u2019s confirmed — nothing was charged incorrectly.'
-                : "We're waiting for your plan to activate — this usually takes a few seconds."}
+                ? t('checkout.success.timeoutBody')
+                : t('checkout.success.pendingBody')}
             </p>
             <div className="mt-7 flex flex-col gap-2.5">
               <Link
                 href="/dashboard"
                 className="btn-primary inline-flex h-12 items-center justify-center rounded-xl px-8 text-sm font-semibold text-white"
               >
-                Go to dashboard
+                {t('checkout.success.goDashboard')}
               </Link>
               <button
                 type="button"
                 onClick={() => window.location.reload()}
                 className="btn-clean inline-flex h-11 items-center justify-center rounded-xl px-8 text-sm font-medium text-slate-300"
               >
-                Check again
+                {t('checkout.success.checkAgain')}
               </button>
             </div>
           </>
@@ -235,17 +243,15 @@ export default function SuccessView({ planId, billing, email }: Props) {
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-neon-amber/30 bg-neon-amber/10 text-2xl">
               📩
             </span>
-            <h1 className="mt-4 text-xl font-bold tracking-tight text-white">Thanks for your order</h1>
+            <h1 className="mt-4 text-xl font-bold tracking-tight text-white">{t('checkout.success.thanksTitle')}</h1>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
-              We couldn&apos;t confirm your plan on this screen, but if you completed a
-              checkout, it may take a moment to appear. Everything remains free until
-              it&apos;s confirmed.
+              {t('checkout.success.unverifiedBody')}
             </p>
             <Link
               href="/dashboard"
               className="btn-clean mt-7 inline-flex h-11 items-center justify-center rounded-xl px-8 text-sm font-semibold text-white"
             >
-              Continue with free access
+              {t('checkout.continueFree')}
             </Link>
           </>
         )}

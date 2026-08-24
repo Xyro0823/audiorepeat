@@ -9,6 +9,7 @@ import { updateAccountPrefs } from '@/lib/accountPrefs';
 import { FREE_LANG_LIMIT } from '@/lib/plans';
 import { updateSettings } from '@/lib/settingsStore';
 import { PACK_LANG } from '@/lib/starterSets';
+import { useT } from '@/lib/i18n';
 
 interface Props {
   onClose: () => void;
@@ -33,6 +34,7 @@ interface LangEntry {
  */
 export default function DowngradeModal({ onClose }: Props) {
   const { sets } = useLists();
+  const t = useT();
   const [selected, setSelected] = useState<string | null>(null);
   const [done, setDone] = useState(false);
 
@@ -88,7 +90,7 @@ export default function DowngradeModal({ onClose }: Props) {
       className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Switch to the Free plan"
+      aria-label={t('checkout.downgrade.aria')}
     >
       <div className="glass animate-fade-up w-full max-w-md rounded-3xl p-6">
         {done ? (
@@ -107,27 +109,40 @@ export default function DowngradeModal({ onClose }: Props) {
                 <path d="m5 13 4 4L19 7" />
               </svg>
             </span>
-            <h2 className="mt-4 text-lg font-bold text-white">Free plan active</h2>
+            <h2 className="mt-4 text-lg font-bold text-white">{t('checkout.downgrade.doneTitle')}</h2>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
-              You&apos;re keeping <span className="font-semibold text-neon-amber">{keep?.label}</span>
-              {keep && keep.setCount > 1 ? ` (${keep.setCount} sets)` : ''}.{' '}
+              {t('checkout.downgrade.keptPrefix')}{' '}
+              <span className="font-semibold text-neon-amber">{keep?.label}</span>
+              {keep && keep.setCount > 1
+                ? t('checkout.downgrade.setsWrap', {
+                    sets: t('checkout.downgrade.sets.other', { count: keep.setCount }),
+                  })
+                : ''}
+              .{' '}
               {hiddenLangsCount > 0 ? (
                 <>
                   {hiddenLangsCount === 1
-                    ? '1 other language was hidden'
-                    : `${hiddenLangsCount} other languages were hidden`}{' '}
-                  ({hiddenSetsCount} set{hiddenSetsCount === 1 ? '' : 's'}) — nothing was
-                  deleted, and they&apos;ll come back automatically if you upgrade again.
+                    ? t('checkout.downgrade.hiddenLangs.one')
+                    : t('checkout.downgrade.hiddenLangs.other', { count: hiddenLangsCount })}{' '}
+                  {t('checkout.downgrade.setsWrap', {
+                    sets: t(
+                      hiddenSetsCount === 1
+                        ? 'checkout.downgrade.sets.one'
+                        : 'checkout.downgrade.sets.other',
+                      { count: hiddenSetsCount },
+                    ),
+                  })}
+                  {t('checkout.downgrade.hiddenNote')}
                 </>
               ) : (
-                'Nothing was hidden.'
+                t('checkout.downgrade.nothingHidden')
               )}
             </p>
             <button
               onClick={onClose}
               className="btn-primary mt-6 inline-flex h-11 items-center justify-center rounded-xl px-7 text-sm font-semibold text-white"
             >
-              Done
+              {t('common.done')}
             </button>
           </div>
         ) : langs.length <= FREE_LANG_LIMIT ? (
@@ -135,36 +150,44 @@ export default function DowngradeModal({ onClose }: Props) {
             <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-2xl">
               📚
             </span>
-            <h2 className="mt-4 text-lg font-bold text-white">Already within the limit</h2>
+            <h2 className="mt-4 text-lg font-bold text-white">{t('checkout.downgrade.withinLimit.title')}</h2>
             <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
-              Your library already uses a single language, so there&apos;s nothing to hide.
-              The Free plan includes {FREE_LANG_LIMIT} active language
-              {FREE_LANG_LIMIT === 1 ? '' : 's'}.
+              {t(
+                FREE_LANG_LIMIT === 1
+                  ? 'checkout.downgrade.withinLimit.body.one'
+                  : 'checkout.downgrade.withinLimit.body.other',
+                { limit: FREE_LANG_LIMIT },
+              )}
             </p>
             <button
               onClick={onClose}
               className="btn-clean mt-6 inline-flex h-11 items-center justify-center rounded-xl px-7 text-sm font-semibold text-white"
             >
-              Close
+              {t('common.close')}
             </button>
           </div>
         ) : (
           <>
             <div className="mb-1 flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white">Switch to the Free plan</h2>
+              <h2 className="text-lg font-bold text-white">{t('checkout.downgrade.title')}</h2>
               <button
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t('common.close')}
                 className="rounded-lg px-2 py-1 text-slate-400 transition hover:bg-white/5 hover:text-white"
               >
                 ✕
               </button>
             </div>
             <p className="text-sm leading-relaxed text-slate-400">
-              Free includes {FREE_LANG_LIMIT} active language
-              {FREE_LANG_LIMIT === 1 ? '' : 's'}. Pick the language you want to keep —
-              sets in other languages are <span className="text-slate-200">hidden, not deleted</span>,
-              and return automatically if you upgrade again.
+              {t(
+                FREE_LANG_LIMIT === 1
+                  ? 'checkout.downgrade.intro.one'
+                  : 'checkout.downgrade.intro.other',
+                { limit: FREE_LANG_LIMIT },
+              )}
+              {t('checkout.downgrade.introMiddle')}{' '}
+              <span className="text-slate-200">{t('checkout.downgrade.hiddenBold')}</span>
+              {t('checkout.downgrade.introSuffix')}
             </p>
 
             <div className="mt-4 max-h-[40vh] space-y-1.5 overflow-y-auto pr-1">
@@ -187,7 +210,15 @@ export default function DowngradeModal({ onClose }: Props) {
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-semibold text-white">{l.label}</span>
                       <span className="block text-[11px] text-slate-500">
-                        {l.setCount} set{l.setCount === 1 ? '' : 's'} · {l.wordCount} words
+                        {t('checkout.downgrade.langMeta', {
+                          sets: t(
+                            l.setCount === 1
+                              ? 'checkout.downgrade.sets.one'
+                              : 'checkout.downgrade.sets.other',
+                            { count: l.setCount },
+                          ),
+                          words: `${l.wordCount} ${t('common.words')}`,
+                        })}
                       </span>
                     </span>
                     <span
@@ -218,21 +249,32 @@ export default function DowngradeModal({ onClose }: Props) {
             <div className="mt-4 rounded-xl border border-white/10 bg-night-900/50 p-3">
               {keep ? (
                 <p className="text-xs leading-relaxed text-slate-400">
-                  Keep <span className="font-semibold text-white">{keep.label}</span> and hide{' '}
-                  {hiddenLangsCount} other language
-                  {hiddenLangsCount === 1 ? '' : 's'} ({hiddenSetsCount} set
-                  {hiddenSetsCount === 1 ? '' : 's'}). Your streaks, stats and word mastery are
-                  kept.
+                  {t('checkout.downgrade.keepPrefix')}{' '}
+                  <span className="font-semibold text-white">{keep.label}</span>{' '}
+                  {t(
+                    hiddenLangsCount === 1
+                      ? 'checkout.downgrade.keepSuffix.one'
+                      : 'checkout.downgrade.keepSuffix.other',
+                    {
+                      count: hiddenLangsCount,
+                      sets: t(
+                        hiddenSetsCount === 1
+                          ? 'checkout.downgrade.sets.one'
+                          : 'checkout.downgrade.sets.other',
+                        { count: hiddenSetsCount },
+                      ),
+                    },
+                  )}
                 </p>
               ) : (
-                <p className="text-xs text-slate-500">Select a language to continue.</p>
+                <p className="text-xs text-slate-500">{t('checkout.downgrade.selectPrompt')}</p>
               )}
               <button
                 onClick={confirm}
                 disabled={!keep}
                 className="mt-3 w-full rounded-xl bg-gradient-to-r from-neon-amber to-neon-magenta px-4 py-2.5 text-sm font-bold text-night-950 transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                Confirm — switch to Free
+                {t('checkout.downgrade.confirmCta')}
               </button>
             </div>
           </>

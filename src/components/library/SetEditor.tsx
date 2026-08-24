@@ -13,6 +13,7 @@ import {
   deleteSelectedWords,
   type BulkWordProgress,
 } from '@/lib/sets/bulkWordActions';
+import { useT, type TKey } from '@/lib/i18n';
 
 const REPEAT_OPTIONS = [1, 2, 3, 5];
 
@@ -36,6 +37,7 @@ const inputClass =
   'w-full rounded-xl border border-white/10 bg-night-800/80 px-4 py-2.5 text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60';
 
 export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSave }: Props) {
+  const t = useT();
   const [name, setName] = useState(set?.name ?? '');
   const [lang, setLang] = useState(set?.lang ?? defaultLang ?? 'es-ES');
   const [nativeLang, setNativeLang] = useState(set?.nativeLang ?? 'en-US');
@@ -92,11 +94,11 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
     setSelectedWordIds(allSelected ? new Set() : new Set(words.map((word) => word.id)));
   };
 
-  const applyProgress = (progress: BulkWordProgress, label: string) => {
+  const applyProgress = (progress: BulkWordProgress, statusKey: TKey) => {
     if (selectedCount === 0) return;
     setWords((previous) => applyBulkWordProgress(previous, selectedWordIds, progress));
     setPendingDeleteIds(null);
-    setBulkStatus(`${selectedCount} ${selectedCount === 1 ? 'word' : 'words'} marked ${label}.`);
+    setBulkStatus(t(statusKey, { count: selectedCount }));
   };
 
   const requestDelete = (ids: Iterable<string>) => {
@@ -118,7 +120,7 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
       return next;
     });
     setPendingDeleteIds(null);
-    setBulkStatus(`${count} ${count === 1 ? 'word' : 'words'} deleted from this draft.`);
+    setBulkStatus(t('library.bulk.deletedFromDraft', { count }));
   };
 
   const submit = useCallback(async () => {
@@ -142,11 +144,11 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
       });
     } catch {
       // Save failed — keep the editor open so the user can retry.
-      setSaveError('Could not save this set. Your changes are still here — please try again.');
+      setSaveError(t('library.editor.saveError'));
     } finally {
       setSaving(false);
     }
-  }, [valid, saving, locked, name, lang, nativeLang, words, cefr, set, onSave]);
+  }, [valid, saving, locked, name, lang, nativeLang, words, cefr, set, onSave, t]);
 
   const langHint = findLanguage(lang)?.label;
   const nativeLangHint = findLanguage(nativeLang)?.label;
@@ -162,12 +164,12 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
       <div className="glass animate-fade-up relative max-h-[94dvh] w-full max-w-2xl overflow-x-hidden overflow-y-auto rounded-3xl p-4 sm:max-h-[88vh] sm:p-6">
         <div className="mb-5 flex items-center justify-between">
           <h2 id="set-editor-title" className="text-xl font-bold text-white">
-            {set ? 'Edit set' : 'New vocabulary set'}
+            {set ? t('library.editor.editTitle') : t('library.editor.newTitle')}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('common.close')}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
           >
             ✕
@@ -176,12 +178,12 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
 
         <label className="block">
           <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
-            Set name
+            {t('library.editor.setName')}
           </span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. German Basics"
+            placeholder={t('library.editor.namePlaceholder')}
             className={inputClass}
             autoFocus
           />
@@ -190,32 +192,32 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
-              Target language
+              {t('library.editor.targetLanguage')}
             </span>
             <input
               list="lang-presets"
               value={lang}
               onChange={(e) => setLang(e.target.value)}
-              placeholder="e.g. es-ES or German (Germany)"
+              placeholder={t('library.editor.targetPlaceholder')}
               className={inputClass}
             />
             <span className="mt-1 block text-[11px] text-slate-500">
-              {langHint ? `Speaking: ${langHint}` : 'Start typing to search languages'}
+              {langHint ? t('library.editor.speakingHint', { lang: langHint }) : t('library.typeToSearch')}
             </span>
           </label>
           <label className="block">
             <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
-              Native language
+              {t('library.editor.nativeLanguage')}
             </span>
             <input
               list="lang-presets"
               value={nativeLang}
               onChange={(e) => setNativeLang(e.target.value)}
-              placeholder="e.g. en-US"
+              placeholder={t('library.editor.nativePlaceholder')}
               className={inputClass}
             />
             <span className="mt-1 block text-[11px] text-slate-500">
-              {nativeLangHint ? `Translations in: ${nativeLangHint}` : 'Start typing to search languages'}
+              {nativeLangHint ? t('library.editor.translationsHint', { lang: nativeLangHint }) : t('library.typeToSearch')}
             </span>
           </label>
         </div>
@@ -231,14 +233,14 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
 
         <label className="mt-4 block">
           <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
-            CEFR level (optional)
+            {t('library.editor.cefrLabel')}
           </span>
           <select
             value={cefr ?? ''}
             onChange={(e) => setCefr((e.target.value || undefined) as CefrLevel | undefined)}
             className={inputClass}
           >
-            <option value="">No level</option>
+            <option value="">{t('library.editor.noLevel')}</option>
             {CEFR_LEVELS.map((lvl) => (
               <option key={lvl} value={lvl}>
                 {lvl} — {CEFR_META[lvl].label}: {CEFR_META[lvl].description}
@@ -257,53 +259,53 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
                 type="checkbox"
                 checked={allSelected}
                 onChange={toggleAllWords}
-                aria-label={allSelected ? 'Deselect all words' : 'Select all words'}
+                aria-label={allSelected ? t('library.editor.deselectAll') : t('library.editor.selectAll')}
                 className="h-4 w-4 cursor-pointer accent-neon-cyan"
               />
-              Words ({words.length})
+              {t('library.editor.wordsCount', { count: words.length })}
             </label>
             <span className="text-[11px] leading-relaxed text-slate-600 sm:text-right">
-              repeats: 1×–5× per word, then the translation once
+              {t('library.editor.repeatsHint')}
             </span>
           </div>
 
           {selectedCount > 0 && (
             <section
-              aria-label="Bulk word actions"
+              aria-label={t('library.bulk.actionsAria')}
               className="sticky top-0 z-20 mb-3 rounded-2xl border border-neon-cyan/25 bg-night-900 p-3 shadow-xl"
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="shrink-0 text-xs font-semibold text-neon-cyan">
-                  {selectedCount} selected
+                  {t('library.editor.selectedCount', { count: selectedCount })}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   <button
                     type="button"
-                    onClick={() => applyProgress('mastered', 'Known')}
+                    onClick={() => applyProgress('mastered', 'library.bulk.markedKnown')}
                     className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neon-green/25 bg-neon-green/10 px-3 text-xs font-semibold text-neon-green transition hover:bg-neon-green/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan sm:flex-none"
                   >
-                    <Check className="h-3.5 w-3.5" aria-hidden /> Known
+                    <Check className="h-3.5 w-3.5" aria-hidden /> {t('library.bulk.known')}
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyProgress('hard', 'Review')}
+                    onClick={() => applyProgress('hard', 'library.bulk.markedReview')}
                     className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neon-amber/25 bg-neon-amber/10 px-3 text-xs font-semibold text-neon-amber transition hover:bg-neon-amber/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan sm:flex-none"
                   >
-                    <Star className="h-3.5 w-3.5" aria-hidden /> Review
+                    <Star className="h-3.5 w-3.5" aria-hidden /> {t('library.bulk.review')}
                   </button>
                   <button
                     type="button"
-                    onClick={() => applyProgress('reset', 'Learning')}
+                    onClick={() => applyProgress('reset', 'library.bulk.markedReset')}
                     className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs font-semibold text-slate-300 transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan sm:flex-none"
                   >
-                    <RotateCcw className="h-3.5 w-3.5" aria-hidden /> Reset
+                    <RotateCcw className="h-3.5 w-3.5" aria-hidden /> {t('library.bulk.reset')}
                   </button>
                   <button
                     type="button"
                     onClick={() => requestDelete(selectedWordIds)}
                     className="inline-flex min-h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-neon-magenta/25 bg-neon-magenta/10 px-3 text-xs font-semibold text-neon-magenta transition hover:bg-neon-magenta/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan sm:flex-none"
                   >
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden /> Delete
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden /> {t('common.delete')}
                   </button>
                 </div>
               </div>
@@ -316,10 +318,10 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
               className="sticky top-0 z-30 mb-3 rounded-2xl border border-neon-magenta/30 bg-night-900 p-3 shadow-xl"
             >
               <p className="text-sm font-semibold text-white">
-                Delete {pendingDeleteIds.length} {pendingDeleteIds.length === 1 ? 'word' : 'words'}?
+                {t('library.bulk.deleteQuestion', { count: pendingDeleteIds.length })}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                This only changes the current draft. It takes effect when you save the set.
+                {t('library.bulk.draftNote')}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
@@ -327,14 +329,14 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
                   onClick={confirmDelete}
                   className="min-h-10 rounded-xl bg-neon-magenta px-4 text-xs font-bold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
                 >
-                  Confirm delete
+                  {t('library.confirmDelete')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setPendingDeleteIds(null)}
                   className="min-h-10 rounded-xl border border-white/10 px-4 text-xs font-semibold text-slate-300 transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
                 >
-                  Keep words
+                  {t('library.keepWords')}
                 </button>
               </div>
             </div>
@@ -350,7 +352,9 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
                       type="checkbox"
                       checked={selectedWordIds.has(w.id)}
                       onChange={() => toggleWordSelection(w.id)}
-                      aria-label={`Select ${w.target.trim() || `word ${i + 1}`}`}
+                      aria-label={t('library.bulk.selectWord', {
+                        name: w.target.trim() || t('library.bulk.wordNumber', { n: i + 1 }),
+                      })}
                       className="h-4 w-4 cursor-pointer accent-neon-cyan"
                     />
                   </label>
@@ -359,26 +363,26 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
                       <input
                         value={w.target}
                         onChange={(e) => updateWord(i, { target: e.target.value })}
-                        placeholder="Target (gracias)"
-                        aria-label={`Target word ${i + 1}`}
+                        placeholder={t('library.editor.targetInputPlaceholder')}
+                        aria-label={t('library.editor.targetAria', { n: i + 1 })}
                         className="min-w-0 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60"
                       />
                       <input
                         value={w.translation}
                         onChange={(e) => updateWord(i, { translation: e.target.value })}
-                        placeholder="Translation (thank you)"
-                        aria-label={`Translation ${i + 1}`}
+                        placeholder={t('library.editor.translationInputPlaceholder')}
+                        aria-label={t('library.editor.translationAria', { n: i + 1 })}
                         className="min-w-0 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/60"
                       />
                     </div>
                     <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-1" aria-label={`Repeats for word ${i + 1}`}>
+                      <div className="flex flex-wrap items-center gap-1" aria-label={t('library.bulk.repeatsAria', { n: i + 1 })}>
                         {REPEAT_OPTIONS.map((r) => (
                           <button
                             type="button"
                             key={r}
                             onClick={() => updateWord(i, { repeats: w.repeats === r ? undefined : r })}
-                            title={w.repeats === r ? 'Use the global default instead' : `${r} repeats`}
+                            title={w.repeats === r ? t('library.editor.useDefaultRepeats') : t('library.editor.repeatsN', { count: r })}
                             aria-pressed={w.repeats === r}
                             className={`h-8 w-8 rounded-lg text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan ${
                               w.repeats === r
@@ -393,10 +397,12 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
                       <button
                         type="button"
                         onClick={() => requestDelete([w.id])}
-                        aria-label={`Delete ${w.target.trim() || `word ${i + 1}`}`}
+                        aria-label={t('library.bulk.deleteWord', {
+                          name: w.target.trim() || t('library.bulk.wordNumber', { n: i + 1 }),
+                        })}
                         className="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2 text-xs font-semibold text-slate-500 transition hover:bg-white/5 hover:text-neon-magenta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
                       >
-                        <Trash2 className="h-3.5 w-3.5" aria-hidden /> Delete
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden /> {t('common.delete')}
                       </button>
                     </div>
                   </div>
@@ -404,8 +410,8 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
                 <input
                   value={w.example ?? ''}
                   onChange={(e) => updateWord(i, { example: e.target.value })}
-                  placeholder={`Example sentence (optional) — e.g. "${w.target || '¡Gracias!'}" in context`}
-                  aria-label={`Example sentence ${i + 1}`}
+                  placeholder={t('library.editor.examplePlaceholder', { word: w.target || '¡Gracias!' })}
+                  aria-label={t('library.editor.exampleAria', { n: i + 1 })}
                   className="mt-1.5 w-full min-w-0 rounded-xl border border-white/5 bg-night-800/40 px-3 py-2 text-xs text-slate-300 placeholder:text-slate-600 outline-none transition focus:border-neon-cyan/50"
                 />
               </div>
@@ -416,7 +422,7 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
             onClick={() => setWords((prev) => [...prev, newWord()])}
             className="mt-3 min-h-11 rounded-xl border border-dashed border-white/15 px-4 py-2 text-sm text-slate-400 transition hover:border-neon-cyan/50 hover:text-neon-cyan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
           >
-            + Add word
+            {t('library.editor.addWord')}
           </button>
         </div>
 
@@ -427,7 +433,7 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
             onClick={onClose}
             className="min-h-11 rounded-xl border border-white/10 px-5 py-2.5 text-sm text-slate-300 transition hover:border-white/25 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -435,7 +441,7 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
             disabled={!valid || saving || locked}
             className="min-h-11 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-night-900 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {saving ? 'Saving…' : set ? 'Save & play' : 'Create & play'}
+            {saving ? t('common.saving') : set ? t('library.editor.savePlay') : t('library.editor.createPlay')}
           </button>
         </div>
       </div>

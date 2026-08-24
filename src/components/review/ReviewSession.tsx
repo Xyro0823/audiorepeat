@@ -9,6 +9,7 @@ import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
 import { useLists } from '@/hooks/useLists';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
+import { useT } from '@/lib/i18n';
 import { planHasFeature } from '@/lib/plans';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
@@ -24,6 +25,7 @@ import {
 const SESSION_LIMIT = 30;
 
 export default function ReviewSession() {
+  const t = useT();
   const { sets, loading, settings, saveSettings, saveSet } = useLists();
   const { user } = useAuth();
   const { recordWords } = usePracticeStats();
@@ -119,11 +121,11 @@ export default function ReviewSession() {
       setCompleted((count) => count + 1);
       setQueue((items) => items?.slice(1) ?? []);
     } catch {
-      setSessionError('Could not save this review. Try the rating again.');
+      setSessionError(t('review.error.saveFailed'));
     } finally {
       setSaving(false);
     }
-  }, [cloudEngine, current, deviceEngine, recordWords, saveSet, saving, sets]);
+  }, [cloudEngine, current, deviceEngine, recordWords, saveSet, saving, sets, t]);
 
   const enableCloudVoice = useCallback(() => {
     saveSettings({ cloudTts: true });
@@ -135,8 +137,8 @@ export default function ReviewSession() {
   if (!canReview && !loading) {
     return (
       <ProFeatureLock
-        title="Spaced repetition review"
-        description="FSRS scheduling, review sessions and word mastery marks are part of Pro. Keep listening and dictation practice on the Free plan."
+        title={t('review.lock.title')}
+        description={t('review.lock.body')}
       />
     );
   }
@@ -154,21 +156,23 @@ export default function ReviewSession() {
       <main className="mx-auto flex min-h-[75vh] w-full max-w-xl flex-col items-center justify-center px-5 text-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-full border border-neon-green/25 bg-neon-green/10 text-4xl">✓</div>
         <p className="mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-neon-green">
-          {completed > 0 ? 'Session complete' : 'Review Today'}
+          {completed > 0 ? t('review.done.eyebrow') : t('review.empty.eyebrow')}
         </p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
-          {completed > 0 ? `${completed} words strengthened` : 'Nothing due right now'}
+          {completed > 0
+            ? t('review.done.title', { count: completed })
+            : t('review.empty.title')}
         </h1>
         <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
           {completed > 0
-            ? 'FSRS has scheduled each word for the moment you are most likely to need it again.'
-            : 'Mark difficult words as Review while listening. Known words will rotate into this queue over time.'}
+            ? t('review.done.body')
+            : t('review.empty.body')}
         </p>
         <Link
           href="/dashboard#review-today"
           className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl bg-neon-violet px-5 text-sm font-bold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-violet"
         >
-          Back to dashboard
+          {t('review.backToDashboard')}
         </Link>
       </main>
     );
@@ -183,10 +187,10 @@ export default function ReviewSession() {
           href="/dashboard#review-today"
           className="rounded-lg px-2 py-2 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-violet"
         >
-          ← Dashboard
+          {t('review.dashboardCrumb')}
         </Link>
         <span className="text-slate-700">/</span>
-        <h1 className="text-sm font-semibold text-white">Review Today</h1>
+        <h1 className="text-sm font-semibold text-white">{t('review.header.title')}</h1>
         <span className="ml-auto text-xs tabular-nums text-slate-500">
           {completed + 1} / {initialTotal}
         </span>
@@ -204,7 +208,7 @@ export default function ReviewSession() {
           <span className="rounded-full border border-white/10 px-2.5 py-1 text-slate-400">
             {current.setName}
           </span>
-          <span>about {estimatedReviewMinutes(queue.length)} min left</span>
+          <span>{t('review.timeLeft', { minutes: estimatedReviewMinutes(queue.length) })}</span>
         </div>
 
         <p className="text-5xl font-bold tracking-tight text-neon-cyan sm:text-6xl">
@@ -218,14 +222,14 @@ export default function ReviewSession() {
           className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 px-4 text-sm font-semibold text-neon-cyan transition hover:bg-neon-cyan/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan disabled:cursor-not-allowed disabled:opacity-50"
         >
           <span aria-hidden>{speaking ? '◼' : '▶'}</span>
-          {speaking ? 'Speaking…' : 'Hear word'}
+          {speaking ? t('review.speaking') : t('review.hearWord')}
         </button>
 
         {cloudConsentNeeded ? (
           <div className="mt-7 w-full max-w-md rounded-2xl border border-neon-cyan/25 bg-neon-cyan/[0.07] p-4 text-left">
-            <p className="text-sm font-bold text-white">Cloud voice needed</p>
+            <p className="text-sm font-bold text-white">{t('review.cloud.title')}</p>
             <p className="mt-1 text-xs leading-relaxed text-slate-400">
-              This device has no voice for this language. Only the word being spoken is sent to Microsoft Azure.
+              {t('review.cloud.body')}
             </p>
             <button
               type="button"
@@ -235,7 +239,9 @@ export default function ReviewSession() {
               }}
               className="mt-3 min-h-11 w-full rounded-xl bg-neon-cyan px-4 text-sm font-bold text-night-950 transition hover:brightness-110 sm:w-auto"
             >
-              {user ? 'Enable cloud voice' : 'Sign in & enable cloud voice'}
+              {user
+                ? t('review.cloud.enable')
+                : t('review.cloud.enableSignIn')}
             </button>
           </div>
         ) : !revealed ? (
@@ -244,19 +250,19 @@ export default function ReviewSession() {
             onClick={revealAnswer}
             className="mt-10 min-h-12 rounded-xl bg-white px-6 text-sm font-bold text-night-950 transition hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-night-950 active:scale-[0.98]"
           >
-            Show answer
+            {t('review.showAnswer')}
           </button>
         ) : (
           <div className="mt-9 w-full max-w-xl animate-fade-up">
             <p className="text-2xl font-semibold text-neon-violet">{current.word.translation}</p>
             <p className="mt-6 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-              How well did you remember?
+              {t('review.rate.prompt')}
             </p>
             <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3">
               {([
-                { rating: 'again', label: 'Again', hint: '< 1 day', tone: 'border-neon-magenta/35 text-neon-magenta hover:bg-neon-magenta/10' },
-                { rating: 'hard', label: 'Review', hint: 'Sooner', tone: 'border-neon-amber/35 text-neon-amber hover:bg-neon-amber/10' },
-                { rating: 'good', label: 'Known', hint: 'Later', tone: 'border-neon-green/35 text-neon-green hover:bg-neon-green/10' },
+                { rating: 'again', label: t('review.rate.again'), hint: t('review.rate.againHint'), tone: 'border-neon-magenta/35 text-neon-magenta hover:bg-neon-magenta/10' },
+                { rating: 'hard', label: t('review.rate.review'), hint: t('review.rate.soonHint'), tone: 'border-neon-amber/35 text-neon-amber hover:bg-neon-amber/10' },
+                { rating: 'good', label: t('review.rate.known'), hint: t('review.rate.laterHint'), tone: 'border-neon-green/35 text-neon-green hover:bg-neon-green/10' },
               ] as const).map((choice) => (
                 <button
                   key={choice.rating}

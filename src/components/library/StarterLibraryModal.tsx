@@ -11,6 +11,7 @@ import {
 } from '@/lib/vocab/wordBanks';
 import { CEFR_LEVELS } from '@/types/app';
 import type { CefrLevel, VocabSet } from '@/types/app';
+import { useT, type TKey } from '@/lib/i18n';
 import CefrBadge from './CefrBadge';
 import TopicLibraryTab from './TopicLibraryTab';
 import VirtualList from './VirtualList';
@@ -71,13 +72,15 @@ function importedLevelKeys(sets: VocabSet[]): Set<string> {
 }
 
 export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, onImport }: Props) {
+  const t = useT();
   const [tab, setTab] = useState<'cefr' | 'topics'>('cefr');
   const [manifest, setManifest] = useState<WordBankManifest | null>(null);
   const [lang, setLang] = useState<string | null>(null);
   const [level, setLevel] = useState<CefrLevel | null>(null);
   const [bank, setBank] = useState<WordBankWord[] | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  /** Stored as a key so the message re-renders in the active locale. */
+  const [error, setError] = useState<TKey | null>(null);
   const [query, setQuery] = useState('');
   const [batchSize, setBatchSize] = useState(200);
   /** Shown when a Free user taps import for a language they don't own yet. */
@@ -120,7 +123,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
         if (first) setLang(first);
       })
       .catch(() => {
-        if (alive) setError('The vocabulary library is not available yet — try again online.');
+        if (alive) setError('library.starter.errorUnavailable');
       });
     return () => {
       alive = false;
@@ -143,7 +146,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
         setBank(b?.words ?? []);
       } catch {
         if (!alive) return;
-        setError('Could not load this level.');
+        setError('library.starter.errorLevel');
         setBank(null);
       } finally {
         if (alive) setLoading(false);
@@ -265,25 +268,28 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-label="Browse library"
+      aria-label={t('library.starter.title')}
     >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
       <div className="glass animate-fade-up relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <div>
-            <h2 className="text-xl font-bold text-white">Browse library</h2>
+            <h2 className="text-xl font-bold text-white">{t('library.starter.title')}</h2>
             <p className="text-xs text-slate-400">
               {tab === 'topics'
-                ? 'Topic-based word packs for everyday situations — import one per language.'
+                ? t('library.starter.subtitleTopics')
                 : manifest
-                  ? `Comprehensive CEFR word packs in ${Object.keys(manifest).length} languages — ${langTotal.toLocaleString()} words total. Import a level or practice a batch.`
-                  : 'Comprehensive CEFR word packs — import a level or practice a batch.'}
+                  ? t('library.starter.subtitleFull', {
+                      langs: Object.keys(manifest).length,
+                      words: langTotal.toLocaleString(),
+                    })
+                  : t('library.starter.subtitlePlain')}
             </p>
           </div>
           <button
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t('common.close')}
             className="rounded-lg px-2 py-1 text-slate-400 transition hover:bg-white/5 hover:text-white"
           >
             ✕
@@ -293,19 +299,19 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
         {/* Tabs */}
         <div className="flex gap-1.5 border-b border-white/10 px-6 py-2.5">
           {[
-            { key: 'cefr', label: 'CEFR levels' },
-            { key: 'topics', label: 'Topics' },
-          ].map((t) => (
+            { key: 'cefr', label: t('library.starter.tabCefr') },
+            { key: 'topics', label: t('library.starter.tabTopics') },
+          ].map((tabItem) => (
             <button
-              key={t.key}
-              onClick={() => setTab(t.key as 'cefr' | 'topics')}
+              key={tabItem.key}
+              onClick={() => setTab(tabItem.key as 'cefr' | 'topics')}
               className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition ${
-                tab === t.key
+                tab === tabItem.key
                   ? 'border-neon-cyan/60 bg-neon-cyan/15 text-neon-cyan'
                   : 'border-white/10 text-slate-400 hover:border-white/25 hover:text-white'
               }`}
             >
-              {t.label}
+              {tabItem.label}
             </button>
           ))}
         </div>
@@ -313,11 +319,11 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
         {tab === 'topics' ? (
           <TopicLibraryTab sets={sets} onImport={onImport} canAddLang={canAddLang} />
         ) : error && !manifest ? (
-          <div className="p-10 text-center text-sm text-neon-amber">{error}</div>
+          <div className="p-10 text-center text-sm text-neon-amber">{t(error)}</div>
         ) : !manifest ? (
           <div className="flex flex-col items-center gap-4 p-12">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
-            <p className="text-sm text-slate-500">Loading the vocabulary library…</p>
+            <p className="text-sm text-slate-500">{t('library.starter.loadingLibrary')}</p>
           </div>
         ) : (
           <>
@@ -332,10 +338,10 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                   setUpgradePrompt(false);
                 }}
                 className={selectClass}
-                aria-label="Language"
+                aria-label={t('common.language')}
               >
                 <option value="" disabled>
-                  Pick a language
+                  {t('library.pickLanguage')}
                 </option>
                 {STARTER_LANGS.map((code) => {
                   const pack = PACK_LANG[code];
@@ -345,7 +351,8 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                   return (
                     <option key={code} value={pack}>
                       {canAddLang(pack) ? '' : '🔒 '}
-                      {starterLangLabel(code)} · {count.toLocaleString()} words
+                      {starterLangLabel(code)}
+                      {t('library.starter.optionMeta', { count: count.toLocaleString() })}
                     </option>
                   );
                 })}
@@ -361,7 +368,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                       key={lvl}
                       onClick={() => setLevel(active ? null : lvl)}
                       disabled={!lang || count === 0}
-                      title={count > 0 ? `${count} words` : 'Not available yet'}
+                      title={count > 0 ? t('library.starter.chipCount', { count: count.toLocaleString() }) : t('library.starter.notYet')}
                       className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                         count === 0
                           ? 'cursor-not-allowed border-white/5 text-slate-600'
@@ -384,11 +391,11 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder={`Search ${lang ? starterLangLabel(lang) : ''} words…`}
+                placeholder={t('library.starter.searchPlaceholder', { lang: lang ? starterLangLabel(lang) : '' })}
                 className={`${inputClass} flex-1`}
               />
               <div className="flex items-center gap-1.5">
-                <span className="text-[11px] uppercase tracking-wider text-slate-500">Batch</span>
+                <span className="text-[11px] uppercase tracking-wider text-slate-500">{t('library.starter.batch')}</span>
                 {BATCH_SIZES.map((n) => (
                   <button
                     key={n}
@@ -409,12 +416,12 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
               <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center text-sm text-slate-400">
                 <p>
                   {!lang
-                    ? 'Pick a language to browse its word packs.'
-                    : 'Pick a level to see its words.'}
+                    ? t('library.starter.pickLangBody')
+                    : t('library.starter.pickLevelBody')}
                 </p>
                 {lang && level === null && (
                   <p className="text-xs text-slate-500">
-                    Each level is a full study deck — A1/A2 ≈ 200–300 words, B1/B2 ≈ 500, C1/C2 ≈ 1,000.
+                    {t('library.starter.levelsHint')}
                   </p>
                 )}
               </div>
@@ -422,11 +429,11 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
               <div className="flex flex-1 flex-col items-center justify-center gap-4 p-10">
                 <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
                 <p className="text-sm text-slate-500">
-                  Loading {currentLevelCount.toLocaleString()} words…
+                  {t('library.starter.loadingLevel', { count: currentLevelCount.toLocaleString() })}
                 </p>
               </div>
             ) : error ? (
-              <div className="p-10 text-center text-sm text-neon-amber">{error}</div>
+              <div className="p-10 text-center text-sm text-neon-amber">{t(error)}</div>
             ) : (
               <>
                 {/* Level info + actions */}
@@ -438,8 +445,12 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                     </div>
                     <span className="mt-0.5 block text-xs text-slate-500">
                       <span className="font-semibold text-white">{filtered.length.toLocaleString()}</span>{' '}
-                      {query ? 'matches' : 'words in this level'}
-                      {query && <span> of {bank?.length.toLocaleString() ?? 0}</span>}
+                      {query ? t('library.starter.matches') : t('library.starter.wordsInLevel')}
+                      {query && (
+                        <span>
+                          {t('library.starter.ofTotal', { count: bank?.length.toLocaleString() ?? 0 })}
+                        </span>
+                      )}
                     </span>
                   </div>
                   <div className="flex flex-col items-end gap-2">
@@ -454,7 +465,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                         disabled={filtered.length === 0}
                         className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        ▶ Practice batch of {Math.min(batchSize, filtered.length)}
+                        {t('library.starter.practiceBatch', { count: Math.min(batchSize, filtered.length) })}
                       </button>
                       <button
                         onClick={() => {
@@ -463,10 +474,11 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                           );
                         }}
                         disabled={!bank || bank.length === 0}
-                        title="Import the whole level as one set — play all words"
+                        title={t('library.starter.playAllTitle')}
                         className="rounded-xl border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:border-neon-cyan/60 hover:text-neon-cyan active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                       >
-                        ⬇ Play all {bank ? `(${bank.length.toLocaleString()})` : ''}
+                        {t('library.starter.playAll')}{' '}
+                        {bank ? t('library.starter.playAllCount', { count: bank.length.toLocaleString() }) : ''}
                       </button>
                     </div>
                   </div>
@@ -475,11 +487,11 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                 {/* Virtualized preview */}
                 <div className="flex-1 overflow-y-auto px-6 py-4">
                   <div className="mb-2 text-[11px] uppercase tracking-wider text-slate-500">
-                    Preview — {filtered.length.toLocaleString()} words (scroll to browse)
+                    {t('library.starter.previewHeader', { count: filtered.length.toLocaleString() })}
                   </div>
                   {filtered.length === 0 ? (
                     <div className="rounded-2xl border border-white/10 p-8 text-center text-sm text-slate-400">
-                      No words match “{query}”.
+                      {t('library.starter.noMatch', { query })}
                     </div>
                   ) : (
                     <VirtualList
@@ -506,9 +518,12 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
           <div className="border-t border-white/10 px-6 py-3">
             <div className="mb-1 flex items-center justify-between text-xs text-slate-400">
               <span>
-                {starterLangLabel(lang)}: {importedLevelCount} of {availableLevelCount} levels imported
+                {starterLangLabel(lang)}:{' '}
+                {t('library.starter.progressLevels', { imported: importedLevelCount, available: availableLevelCount })}
                 {currentLangTotal > 0 && (
-                  <span className="text-slate-500"> · {currentLangTotal.toLocaleString()} words</span>
+                  <span className="text-slate-500">
+                    {t('library.starter.progressWords', { count: currentLangTotal.toLocaleString() })}
+                  </span>
                 )}
               </span>
               <span className="font-semibold text-slate-300">

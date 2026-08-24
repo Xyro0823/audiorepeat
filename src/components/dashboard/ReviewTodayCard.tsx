@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { estimatedReviewMinutes } from '@/lib/review/fsrs';
 import { scheduleDailyReminder } from '@/lib/reminders';
+import { useT } from '@/lib/i18n';
 
 interface Props {
   dueCount: number;
@@ -21,6 +22,7 @@ export default function ReviewTodayCard({
   onStart,
   onSettingsChange,
 }: Props) {
+  const t = useT();
   const [message, setMessage] = useState<string | null>(null);
   const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
   const notificationSupported =
@@ -33,21 +35,21 @@ export default function ReviewTodayCard({
   const toggleReminder = useCallback(async () => {
     if (reminderEnabled) {
       onSettingsChange({ reminderEnabled: false });
-      setMessage('Daily reminder turned off.');
+      setMessage(t('dashboard.reminder.msg.off'));
       return;
     }
     if (!notificationSupported) {
-      setMessage('Install the app in a notification-capable browser to use reminders.');
+      setMessage(t('dashboard.reminder.msg.needPwa'));
       return;
     }
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
-      setMessage('Notifications are blocked. Allow them in your browser settings.');
+      setMessage(t('dashboard.reminder.msg.blocked'));
       return;
     }
     onSettingsChange({ reminderEnabled: true });
-    setMessage(`Daily reminder set for ${reminderTime}.`);
-  }, [notificationSupported, onSettingsChange, reminderEnabled, reminderTime]);
+    setMessage(t('dashboard.reminder.msg.set', { time: reminderTime }));
+  }, [notificationSupported, onSettingsChange, reminderEnabled, reminderTime, t]);
 
   return (
     <section
@@ -62,14 +64,17 @@ export default function ReviewTodayCard({
             <span className="relative text-3xl font-bold tabular-nums text-white">{dueCount}</span>
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neon-violet">Memory queue</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-neon-violet">{t('dashboard.review.memoryQueue')}</p>
             <h2 id="review-today-title" className="mt-1 text-xl font-bold tracking-tight text-white">
-              Review Today
+              {t('dashboard.reviewToday')}
             </h2>
             <p className="mt-1 text-sm leading-relaxed text-slate-400">
               {dueCount > 0
-                ? `${dueCount} word${dueCount === 1 ? '' : 's'} · about ${estimatedReviewMinutes(dueCount)} minutes`
-                : 'You are caught up. Mark difficult words as Review while listening.'}
+                ? t(
+                    dueCount === 1 ? 'dashboard.review.due.one' : 'dashboard.review.due.other',
+                    { count: dueCount, minutes: estimatedReviewMinutes(dueCount) },
+                  )
+                : t('dashboard.review.caughtUp')}
             </p>
           </div>
           <button
@@ -78,16 +83,16 @@ export default function ReviewTodayCard({
             disabled={dueCount === 0}
             className="hidden min-h-11 shrink-0 rounded-xl bg-neon-violet px-5 text-sm font-bold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-violet disabled:cursor-not-allowed disabled:opacity-35 sm:block"
           >
-            Start review
+            {t('dashboard.review.start')}
           </button>
         </div>
 
         <div className="border-t border-white/10 bg-white/[0.025] p-4 md:border-l md:border-t-0">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Daily reminder</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{t('dashboard.reminder.title')}</p>
           <div className="mt-2 flex items-center gap-2">
             <input
               type="time"
-              aria-label="Daily reminder time"
+              aria-label={t('dashboard.reminder.timeAria')}
               value={reminderTime}
               onChange={(event) => onSettingsChange({ reminderTime: event.target.value })}
               className="min-h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-night-900 px-3 text-sm text-white outline-none focus:border-neon-cyan/50"
@@ -102,11 +107,14 @@ export default function ReviewTodayCard({
                   : 'border-white/10 text-slate-300 hover:border-neon-cyan/35 hover:text-white'
               }`}
             >
-              {reminderEnabled ? 'On' : 'Enable'}
+              {reminderEnabled ? t('dashboard.reminder.on') : t('dashboard.reminder.enable')}
             </button>
           </div>
           <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
-            {message ?? (reminderEnabled ? `Next reminder at ${reminderTime}` : 'Get your due-word count at this time.')}
+            {message ??
+              (reminderEnabled
+                ? t('dashboard.reminder.next', { time: reminderTime })
+                : t('dashboard.reminder.hint'))}
           </p>
         </div>
       </div>
@@ -118,7 +126,7 @@ export default function ReviewTodayCard({
           disabled={dueCount === 0}
           className="min-h-11 w-full rounded-xl bg-neon-violet px-5 text-sm font-bold text-white transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-35"
         >
-          Start review
+          {t('dashboard.review.start')}
         </button>
       </div>
     </section>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useSyncExternalStore } from 'react';
+import { useEffect, useSyncExternalStore, type ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import {
   ArrowLeft,
@@ -11,6 +11,7 @@ import {
   Headphones,
   X,
 } from 'lucide-react';
+import { useT, type TFn, type TKey } from '@/lib/i18n';
 import {
   dismissFirstSessionGuide,
   getFirstSessionGuideSnapshot,
@@ -30,14 +31,21 @@ interface Props {
   uid: string;
 }
 
-const GUIDE_STEPS = [
+interface GuideStep {
+  eyebrowKey: TKey;
+  titleKey: TKey;
+  descriptionKey: TKey;
+  icon: typeof Headphones;
+  detail: (t: TFn) => ReactNode;
+}
+
+const GUIDE_STEPS: readonly GuideStep[] = [
   {
-    eyebrow: 'Listen',
-    title: 'Let the loop do the work',
-    description:
-      'Press Play once. AudioRepeat cycles through the target word and translation, then moves forward hands-free.',
+    eyebrowKey: 'onboarding.guide.step1.eyebrow',
+    titleKey: 'onboarding.guide.step1.title',
+    descriptionKey: 'onboarding.guide.step1.description',
     icon: Headphones,
-    detail: (
+    detail: () => (
       <div className="flex items-end justify-center gap-1.5" aria-hidden>
         {[12, 22, 32, 18, 27, 14, 24].map((height, index) => (
           <span
@@ -50,38 +58,38 @@ const GUIDE_STEPS = [
     ),
   },
   {
-    eyebrow: 'Decide',
-    title: 'Teach the app what needs work',
-    description:
-      'Use Known when recall feels easy. Use Review when a word needs another pass—this keeps your daily queue useful.',
+    eyebrowKey: 'onboarding.guide.step2.eyebrow',
+    titleKey: 'onboarding.guide.step2.title',
+    descriptionKey: 'onboarding.guide.step2.description',
     icon: Brain,
-    detail: (
+    detail: (t) => (
       <div className="grid grid-cols-2 gap-2 text-center text-xs font-semibold">
         <span className="rounded-xl border border-neon-green/25 bg-neon-green/[0.08] px-3 py-2.5 text-neon-green">
-          <Check className="mr-1 inline h-3.5 w-3.5" aria-hidden /> Known
+          <Check className="mr-1 inline h-3.5 w-3.5" aria-hidden /> {t('onboarding.guide.known')}
         </span>
         <span className="rounded-xl border border-neon-violet/25 bg-neon-violet/[0.08] px-3 py-2.5 text-neon-violet">
-          Review sooner
+          {t('onboarding.guide.reviewSooner')}
         </span>
       </div>
     ),
   },
   {
-    eyebrow: 'Return',
-    title: 'Come back to Review Today',
-    description:
-      'Your difficult words reappear when they are most useful to practise. A short daily session is enough to keep momentum.',
+    eyebrowKey: 'onboarding.guide.step3.eyebrow',
+    titleKey: 'onboarding.guide.step3.title',
+    descriptionKey: 'onboarding.guide.step3.description',
     icon: CalendarClock,
-    detail: (
+    detail: (t) => (
       <div className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-night-950/50 px-3 py-2.5">
-        <span className="text-xs font-semibold text-slate-300">Next smart review</span>
+        <span className="text-xs font-semibold text-slate-300">
+          {t('onboarding.guide.nextSmartReview')}
+        </span>
         <span className="rounded-full bg-neon-cyan/10 px-2.5 py-1 text-[11px] font-bold text-neon-cyan">
-          Review Today
+          {t('onboarding.guide.reviewToday')}
         </span>
       </div>
     ),
   },
-] as const;
+];
 
 /**
  * A small, non-blocking coach card shown only during a newly onboarded
@@ -90,6 +98,7 @@ const GUIDE_STEPS = [
  */
 export default function FirstSessionGuide({ uid }: Props) {
   const pathname = usePathname();
+  const t = useT();
   useSyncExternalStore(
     subscribeOnboardingPending,
     getOnboardingPendingVersion,
@@ -140,17 +149,17 @@ export default function FirstSessionGuide({ uid }: Props) {
         </span>
         <div className="min-w-0 flex-1 pt-0.5">
           <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-neon-cyan">
-            First loop · {content.eyebrow}
+            {t('onboarding.guide.firstLoop')} · {t(content.eyebrowKey)}
           </p>
           <h2 id="first-session-guide-title" className="mt-1 text-base font-bold tracking-tight text-white">
-            {content.title}
+            {t(content.titleKey)}
           </h2>
         </div>
         <button
           type="button"
           onClick={() => dismissFirstSessionGuide(uid)}
-          aria-label="Skip first-session guide"
-          title="Skip guide"
+          aria-label={t('onboarding.guide.skipAria')}
+          title={t('onboarding.guide.skipTitle')}
           className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
         >
           <X className="h-4 w-4" aria-hidden />
@@ -158,18 +167,24 @@ export default function FirstSessionGuide({ uid }: Props) {
       </div>
 
       <p id="first-session-guide-description" className="mt-3 text-sm leading-6 text-slate-300">
-        {content.description}
+        {t(content.descriptionKey)}
       </p>
 
       <div className="mt-3 rounded-2xl border border-white/[0.08] bg-white/[0.035] p-3">
-        {content.detail}
+        {content.detail(t)}
       </div>
 
       <div className="mt-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5" aria-label={`Step ${step + 1} of ${GUIDE_STEPS.length}`}>
+        <div
+          className="flex items-center gap-1.5"
+          aria-label={t('onboarding.guide.stepProgress', {
+            current: step + 1,
+            total: GUIDE_STEPS.length,
+          })}
+        >
           {GUIDE_STEPS.map((item, index) => (
             <span
-              key={item.eyebrow}
+              key={item.eyebrowKey}
               className={`h-1.5 rounded-full transition-[width,background-color] ${
                 index === step ? 'w-6 bg-neon-cyan' : 'w-1.5 bg-white/20'
               }`}
@@ -185,7 +200,7 @@ export default function FirstSessionGuide({ uid }: Props) {
               onClick={() => saveFirstSessionGuideStep(uid, step - 1)}
               className="flex min-h-11 items-center gap-1 rounded-xl px-3 text-xs font-semibold text-slate-400 transition hover:bg-white/[0.05] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
             >
-              <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> Back
+              <ArrowLeft className="h-3.5 w-3.5" aria-hidden /> {t('common.back')}
             </button>
           )}
           <button
@@ -197,7 +212,7 @@ export default function FirstSessionGuide({ uid }: Props) {
             }
             className="flex min-h-11 items-center gap-1.5 rounded-xl bg-neon-cyan px-4 text-xs font-bold text-night-950 transition hover:brightness-110 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-night-800"
           >
-            {lastStep ? 'Got it' : 'Next'}
+            {lastStep ? t('onboarding.guide.gotIt') : t('common.next')}
             {!lastStep && <ArrowRight className="h-3.5 w-3.5" aria-hidden />}
           </button>
         </div>

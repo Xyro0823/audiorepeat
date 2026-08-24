@@ -19,29 +19,35 @@ import { buildDueReviewQueue } from '@/lib/review/fsrs';
 import { scheduleDailyReminder, sendReminderTest } from '@/lib/reminders';
 import type { ThemeName } from '@/types/app';
 import { DEFAULT_SETTINGS } from '@/types/app';
+import { setUiLang, UI_LANGUAGES, useT } from '@/lib/i18n';
 import VoicePicker from '@/components/player/VoicePicker';
 import ChangeFreeLanguageModal from '@/components/onboarding/ChangeFreeLanguageModal';
 
 const REPEAT_OPTIONS = [1, 2, 3, 5];
 const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5, 2];
 
-const THEMES: { id: ThemeName; label: string; desc: string; swatches: string[] }[] = [
+const THEME_LABEL_KEYS = {
+  neon: 'settings.theme.neon.label',
+  dark: 'settings.theme.dark.label',
+  light: 'settings.theme.light.label',
+} as const;
+const THEME_DESC_KEYS = {
+  neon: 'settings.theme.neon.desc',
+  dark: 'settings.theme.dark.desc',
+  light: 'settings.theme.light.desc',
+} as const;
+
+const THEMES: { id: ThemeName; swatches: string[] }[] = [
   {
     id: 'neon',
-    label: 'Dark Glass',
-    desc: 'Deep charcoal mesh with blue accents',
     swatches: ['#0b0c10', '#3b82f6', '#38bdf8'],
   },
   {
     id: 'dark',
-    label: 'Dark Mode',
-    desc: 'Muted charcoal, calmer standard accents',
     swatches: ['#0b0c10', '#38bdf8', '#0ea5e9'],
   },
   {
     id: 'light',
-    label: 'Minimal Light',
-    desc: 'Light surfaces with dark slate text',
     swatches: ['#f6f7fb', '#0891b2', '#2563eb'],
   },
 ];
@@ -90,6 +96,7 @@ interface Props {
 export default function SettingsModal({ onClose }: Props) {
   const { allSets, sets, settings, loading, saveSettings, restoreBackup: restoreBackupData, saveSet, freeLangKey } =
     useLists();
+  const t = useT();
   const [showDowngrade, setShowDowngrade] = useState(false);
   const [changingLang, setChangingLang] = useState(false);
   const { days } = usePracticeStats();
@@ -144,12 +151,12 @@ export default function SettingsModal({ onClose }: Props) {
     async (on: boolean) => {
       if (on) {
         if (typeof Notification === 'undefined') {
-          flash('err', 'Notifications are not supported in this browser.');
+          flash('err', t('settings.flash.notifications.unsupported'));
           return;
         }
         const perm = await Notification.requestPermission();
         if (perm !== 'granted') {
-          flash('err', 'Permission denied — enable notifications in your browser settings.');
+          flash('err', t('settings.flash.permission.denied'));
           return;
         }
         saveSettings({ reminderEnabled: true });
@@ -157,7 +164,7 @@ export default function SettingsModal({ onClose }: Props) {
         saveSettings({ reminderEnabled: false });
       }
     },
-    [flash, saveSettings],
+    [flash, saveSettings, t],
   );
 
   const sendTest = useCallback(async () => {
@@ -169,17 +176,15 @@ export default function SettingsModal({ onClose }: Props) {
     // In dev there is no service worker (registration is production-only), so
     // the message would go nowhere — tell the user instead of claiming success.
     if (typeof navigator === 'undefined' || !navigator.serviceWorker?.controller) {
-      flash('err', 'Reminders need the installed PWA (production build) — not available in dev.');
+      flash('err', t('settings.flash.reminders.need.pwa'));
       return;
     }
     const sent = await sendReminderTest(reviewDueCount);
     flash(
       sent ? 'ok' : 'err',
-      sent
-        ? 'Test notification sent (check your notification center).'
-        : 'Could not reach the installed app notification service.',
+      sent ? t('settings.flash.test.sent') : t('settings.flash.test.failed'),
     );
-  }, [toggleReminder, flash, reviewDueCount]);
+  }, [toggleReminder, flash, reviewDueCount, t]);
 
   // ---------- data backup ----------
   const handleExport = useCallback(() => {
@@ -193,8 +198,8 @@ export default function SettingsModal({ onClose }: Props) {
     // backup never loses sets that will return on upgrade.
     const json = buildBackup({ settings, sets: allSets, days, username });
     downloadBackup(json, `audiorepeat-backup-${new Date().toISOString().slice(0, 10)}.json`);
-    flash('ok', 'Backup downloaded — keep it somewhere safe.');
-  }, [settings, allSets, days, user, flash]);
+    flash('ok', t('settings.flash.backup.downloaded'));
+  }, [settings, allSets, days, user, flash, t]);
 
   const handleImportFile = useCallback(
     async (file: File) => {
@@ -202,17 +207,17 @@ export default function SettingsModal({ onClose }: Props) {
         const text = await file.text();
         const parsed = parseBackup(text);
         if (!parsed) {
-          flash('err', 'That file is not a valid AudioRepeat backup.');
+          flash('err', t('settings.flash.invalid.backup'));
           return;
         }
         setPendingImport(parsed);
       } catch {
-        flash('err', 'Could not read that backup file.');
+        flash('err', t('settings.flash.read.failed'));
       } finally {
         if (importInputRef.current) importInputRef.current.value = '';
       }
     },
-    [flash],
+    [flash, t],
   );
 
   const restoreBackup = useCallback(async () => {
@@ -232,13 +237,13 @@ export default function SettingsModal({ onClose }: Props) {
         window.localStorage.setItem(usernameStorageKey(null), pendingImport.username);
       }
       setPendingImport(null);
-      flash('ok', 'Backup restored — reloading…');
+      flash('ok', t('settings.flash.restored'));
       // Reload so stats/username and the UI all settle to the restored state.
       window.setTimeout(() => window.location.reload(), 400);
     } catch {
-      flash('err', 'Restore failed — reload the app and check your data.');
+      flash('err', t('settings.flash.restore.failed'));
     }
-  }, [pendingImport, restoreBackupData, user, flash]);
+  }, [pendingImport, restoreBackupData, user, flash, t]);
 
   const clearCachedAudio = useCallback(async () => {
     let cleared = 0;
@@ -253,11 +258,11 @@ export default function SettingsModal({ onClose }: Props) {
         }
       }
     } catch {
-      flash('err', 'Could not clear the audio cache.');
+      flash('err', t('settings.flash.clear.cache.failed'));
       return;
     }
-    flash('ok', cleared > 0 ? `Cleared ${cleared} cached audio clip(s).` : 'No cached audio found.');
-  }, [flash]);
+    flash('ok', cleared > 0 ? t('settings.flash.cache.cleared', { count: cleared }) : t('settings.flash.no.cached.audio'));
+  }, [flash, t]);
 
   const resetProgress = useCallback(async () => {
     try {
@@ -280,9 +285,9 @@ export default function SettingsModal({ onClose }: Props) {
       setConfirmReset(false);
       window.setTimeout(() => window.location.reload(), 400);
     } catch {
-      flash('err', 'Reset failed.');
+      flash('err', t('settings.flash.reset.failed'));
     }
-  }, [sets, saveSet, user, flash]);
+  }, [sets, saveSet, user, flash, t]);
 
   const notificationSupported =
     typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
@@ -296,14 +301,14 @@ export default function SettingsModal({ onClose }: Props) {
       className="fixed inset-0 z-[100] flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Settings"
+      aria-label={t('settings.aria.label')}
     >
       <div className="glass animate-fade-up max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-3xl p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">⚙️ Settings</h2>
+          <h2 className="text-xl font-bold text-white">{t('settings.title')}</h2>
           <button
             onClick={onClose}
-            aria-label="Close settings"
+            aria-label={t('settings.close.aria')}
             className="rounded-lg px-2 py-1 text-slate-400 transition hover:bg-white/5 hover:text-white"
           >
             ✕
@@ -314,24 +319,24 @@ export default function SettingsModal({ onClose }: Props) {
         <div className="mb-5 flex flex-wrap gap-1.5 rounded-2xl border border-white/10 bg-night-900/60 p-1.5">
           {          (
             [
-              { id: 'language', label: '🌐 Language' },
-              { id: 'playback', label: '🎛️ Playback' },
-              { id: 'appearance', label: '🎨 Appearance' },
-              { id: 'data', label: '💾 Data' },
-              { id: 'reminders', label: '🔔 Reminders' },
+              { id: 'language', label: t('settings.tab.language') },
+              { id: 'playback', label: t('settings.tab.playback') },
+              { id: 'appearance', label: t('settings.tab.appearance') },
+              { id: 'data', label: t('settings.tab.data') },
+              { id: 'reminders', label: t('settings.tab.reminders') },
             ] as const
-          ).map((t) => (
+          ).map((tabItem) => (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
-              aria-pressed={tab === t.id}
+              key={tabItem.id}
+              onClick={() => setTab(tabItem.id)}
+              aria-pressed={tab === tabItem.id}
               className={`flex-1 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-95 ${
-                tab === t.id
+                tab === tabItem.id
                   ? 'bg-gradient-to-r from-neon-cyan/20 to-neon-violet/20 text-white ring-1 ring-neon-cyan/40'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              {t.label}
+              {tabItem.label}
             </button>
           ))}
         </div>
@@ -340,18 +345,39 @@ export default function SettingsModal({ onClose }: Props) {
         {tab === 'language' && (
           <div className="space-y-4">
             <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
-              <p className="text-sm font-semibold text-white">Practice language</p>
+              <p className="text-sm font-semibold text-white">{t('settings.uiLang.title')}</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                {t('settings.uiLang.hint')}
+              </p>
+              <label className="mt-3 block">
+                <span className="sr-only">{t('settings.uiLang.title')}</span>
+                <select
+                  value={settings.uiLang}
+                  onChange={(e) => setUiLang(e.target.value === 'mn' ? 'mn' : 'en')}
+                  className="w-full appearance-none rounded-xl border border-white/10 bg-night-800/80 px-4 py-2.5 pr-10 text-sm text-white outline-none transition focus:border-neon-cyan/60"
+                >
+                  {UI_LANGUAGES.map((lang) => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
+              <p className="text-sm font-semibold text-white">{t('settings.practice.lang')}</p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
                 {isProPlan(settings.plan)
-                  ? `Pro plan — you can create sets in all ${SUPPORTED_LANGUAGE_COUNT} supported languages.`
-                  : `Free plan includes ${FREE_LANG_LIMIT} active language. Upgrade to access all ${SUPPORTED_LANGUAGE_COUNT}.`}
+                  ? t('settings.pro.lang.line', { count: SUPPORTED_LANGUAGE_COUNT })
+                  : t('settings.free.lang.line', { limit: FREE_LANG_LIMIT, count: SUPPORTED_LANGUAGE_COUNT })}
               </p>
 
               {isProPlan(settings.plan) ? (
                 <div className="mt-3">
                   <label className="block">
                     <span className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-slate-500">
-                      Default new-set language
+                      {t('settings.default.new.set.lang')}
                     </span>
                     <select
                       value={settings.defaultNewSetLang ?? ''}
@@ -360,16 +386,16 @@ export default function SettingsModal({ onClose }: Props) {
                       }}
                       className="w-full appearance-none rounded-xl border border-white/10 bg-night-800/80 px-4 py-2.5 pr-10 text-sm text-white outline-none transition focus:border-neon-cyan/60"
                     >
-                      <option value="">Auto — language of the set</option>
+                      <option value="">{t('settings.auto.set.lang')}</option>
                       {FREE_LANG_OPTIONS.map((o) => (
                         <option key={o.code} value={o.code}>
-                          {o.label}{o.hasFullPack ? ' · full CEFR pack' : ''}
+                          {o.label}{o.hasFullPack ? t('settings.full.pack.suffix') : ''}
                         </option>
                       ))}
                     </select>
                   </label>
                   <p className="mt-1.5 text-[11px] text-slate-500">
-                    Sets you create will default to this language. You can always change it per set.
+                    {t('settings.default.set.lang.hint')}
                   </p>
                 </div>
               ) : (
@@ -379,10 +405,10 @@ export default function SettingsModal({ onClose }: Props) {
                       {FREE_LANG_OPTIONS.find((o) => o.key === settings.selectedFreeLang)?.label ??
                         findLanguage(settings.selectedFreeLang ?? '')?.label ??
                         settings.selectedFreeLang ??
-                        'Not selected yet'}
+                        t('settings.not.selected.yet')}
                     </span>
                     <span className="rounded-full border border-neon-cyan/40 bg-neon-cyan/10 px-2 py-0.5 text-[10px] font-semibold text-neon-cyan">
-                      Current
+                      {t('settings.current')}
                     </span>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -391,28 +417,26 @@ export default function SettingsModal({ onClose }: Props) {
                       onClick={() => setChangingLang(true)}
                       className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-neon-cyan/40 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
                     >
-                      Change language
+                      {t('settings.change.language')}
                     </button>
                     <Link
                       href="/checkout?plan=pro"
                       className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-neon-cyan/40 hover:text-white"
                     >
-                      ⭐ Upgrade to unlock all {SUPPORTED_LANGUAGE_COUNT} languages
+                      {t('settings.upgrade.all.languages', { count: SUPPORTED_LANGUAGE_COUNT })}
                     </Link>
                   </div>
                   <p className="text-[11px] leading-relaxed text-slate-500">
-                    Switching hides your other languages — they come back if you upgrade. Nothing
-                    is ever deleted.
+                    {t('settings.switching.hint')}
                   </p>
                 </div>
               )}
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
-              <p className="text-sm font-semibold text-white">Voice availability</p>
+              <p className="text-sm font-semibold text-white">{t('settings.voice.availability')}</p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                Device voices play instantly. When a voice is missing, secure cloud speech can
-                generate it once and save it for offline replay.
+                {t('settings.voice.availability.body')}
               </p>
               {cloudTtsReady ? (
                 planHasFeature(settings.plan, 'offlineAudio') ? (
@@ -420,34 +444,33 @@ export default function SettingsModal({ onClose }: Props) {
                     <Toggle
                       checked={settings.cloudTts}
                       onChange={(cloudTts) => saveSettings({ cloudTts })}
-                      label="Use secure cloud voices"
-                      hint="Sends only the word being spoken to Microsoft Azure, then caches the audio on this device"
+                      label={t('settings.cloud.voices.toggle')}
+                      hint={t('settings.cloud.voices.hint')}
                     />
                   </div>
                 ) : (
                   <div className="mt-3 rounded-xl border border-neon-amber/25 bg-neon-amber/5 p-3">
                     <p className="text-sm font-semibold text-white">
-                      ⭐ Cloud voices &amp; offline audio packs are part of Pro
+                      {t('settings.pro.cloud.title')}
                     </p>
                     <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
-                      The Free plan uses the standard voices installed on this device. Pro can
-                      generate any missing voice in the cloud and cache it for offline replay.
+                      {t('settings.pro.cloud.body')}
                     </p>
                     <Link
                       href="/checkout?plan=pro"
                       className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-neon-amber px-3.5 py-2 text-xs font-bold text-night-950 transition hover:brightness-110"
                     >
-                      Upgrade to Pro
+                      {t('settings.upgrade.to.pro')}
                     </Link>
                   </div>
                 )
               ) : (
                 <p className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-[11px] text-slate-500">
-                  Cloud voices are not configured on this server yet.
+                  {t('settings.cloud.not.configured')}
                 </p>
               )}
               {voicesLoading ? (
-                <p className="mt-2 text-[11px] text-slate-400">Loading voices…</p>
+                <p className="mt-2 text-[11px] text-slate-400">{t('settings.loading.voices')}</p>
               ) : (
                 <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-3">
                   {FREE_LANG_OPTIONS.map((o) => {
@@ -472,8 +495,8 @@ export default function SettingsModal({ onClose }: Props) {
                 </div>
               )}
               <p className="mt-2 text-[11px] text-slate-500">
-                Green = installed on this device. Cyan = secure cloud voice with offline cache.
-                {!cloudTtsReady && ' Gray = cloud speech is not configured yet.'}
+                {t('settings.voice.legend')}
+                {!cloudTtsReady && t('settings.voice.legend.gray')}
               </p>
             </div>
           </div>
@@ -496,7 +519,7 @@ export default function SettingsModal({ onClose }: Props) {
           <div className="space-y-5">
             <div>
               <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-                Repeat each word
+                {t('settings.repeat.each.word')}
               </p>
               <div className="flex gap-1.5">
                 {REPEAT_OPTIONS.map((r) => (
@@ -514,13 +537,13 @@ export default function SettingsModal({ onClose }: Props) {
                 ))}
               </div>
               <p className="mt-1.5 text-[11px] text-slate-500">
-                The translation is always spoken once after the repeats.
+                {t('settings.repeat.hint')}
               </p>
             </div>
 
             <div>
               <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-                Default playback speed
+                {t('settings.default.speed')}
               </p>
               <div className="flex gap-1.5">
                 {SPEED_OPTIONS.map((s) => (
@@ -538,13 +561,13 @@ export default function SettingsModal({ onClose }: Props) {
                 ))}
               </div>
               <p className="mt-1.5 text-[11px] text-slate-500">
-                The player bar also offers a fine-grained 0.5×–2× slider for the current session.
+                {t('settings.speed.hint')}
               </p>
             </div>
 
             <div>
               <p className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-slate-500">
-                <span>Pause before translation</span>
+                <span>{t('settings.pause.before.translation')}</span>
                 <span className="rounded-md bg-night-800 px-2 py-0.5 font-mono text-neon-cyan">
                   {(settings.targetGapMs / 1000).toFixed(1)}s
                 </span>
@@ -566,7 +589,7 @@ export default function SettingsModal({ onClose }: Props) {
 
             <div className="space-y-4 border-t border-white/10 pt-4">
               <VoicePicker
-                label={`Default target voice (${targetLang})`}
+                label={t('settings.target.voice.label', { lang: targetLang })}
                 lang={targetLang}
                 value={settings.targetVoiceURI}
                 voices={voices}
@@ -574,7 +597,7 @@ export default function SettingsModal({ onClose }: Props) {
                 onChange={(uri) => saveSettings({ targetVoiceURI: uri })}
               />
               <VoicePicker
-                label="Default translation voice"
+                label={t('settings.translation.voice.label')}
                 lang="en-US"
                 value={settings.translationVoiceURI}
                 voices={voices}
@@ -582,8 +605,7 @@ export default function SettingsModal({ onClose }: Props) {
                 onChange={(uri) => saveSettings({ translationVoiceURI: uri })}
               />
               <p className="text-[11px] text-slate-500">
-                Voices apply to every set unless a set has its own overrides (Loop settings →{' '}
-                “Customize settings for this set”).
+                {t('settings.voices.override.hint')}
               </p>
             </div>
           </div>
@@ -594,22 +616,22 @@ export default function SettingsModal({ onClose }: Props) {
           <div className="space-y-5">
             <div>
               <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-                Theme
+                {t('settings.theme')}
               </p>
               <div className="grid gap-2 sm:grid-cols-3">
-                {THEMES.map((t) => (
+                {THEMES.map((theme) => (
                   <button
-                    key={t.id}
-                    onClick={() => saveSettings({ theme: t.id })}
-                    aria-pressed={settings.theme === t.id}
+                    key={theme.id}
+                    onClick={() => saveSettings({ theme: theme.id })}
+                    aria-pressed={settings.theme === theme.id}
                     className={`rounded-2xl border p-3 text-left transition active:scale-95 ${
-                      settings.theme === t.id
+                      settings.theme === theme.id
                         ? 'border-neon-cyan/60 bg-neon-cyan/10 ring-1 ring-neon-cyan/50'
                         : 'border-white/10 bg-night-800/60 hover:border-white/25'
                     }`}
                   >
                     <span className="flex gap-1.5">
-                      {t.swatches.map((c) => (
+                      {theme.swatches.map((c) => (
                         <span
                           key={c}
                           className="h-6 w-6 rounded-full border border-white/20"
@@ -617,9 +639,11 @@ export default function SettingsModal({ onClose }: Props) {
                         />
                       ))}
                     </span>
-                    <span className="mt-2 block text-sm font-semibold text-white">{t.label}</span>
+                    <span className="mt-2 block text-sm font-semibold text-white">
+                      {t(THEME_LABEL_KEYS[theme.id])}
+                    </span>
                     <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">
-                      {t.desc}
+                      {t(THEME_DESC_KEYS[theme.id])}
                     </span>
                   </button>
                 ))}
@@ -630,23 +654,23 @@ export default function SettingsModal({ onClose }: Props) {
               <Toggle
                 checked={settings.showHints}
                 onChange={(v) => saveSettings({ showHints: v })}
-                label="Emoji & visual hints on word cards"
-                hint="A contextual emoji for each word — works offline"
+                label={t('settings.hints.toggle')}
+                hint={t('settings.hints.hint')}
               />
               <Toggle
                 checked={settings.showExamples}
                 onChange={(v) => saveSettings({ showExamples: v })}
-                label="Example sentences"
-                hint="Show a word's example sentence when it has one"
+                label={t('settings.examples.toggle')}
+                hint={t('settings.examples.hint')}
               />
               <p className="text-sm text-slate-400">
                 {cloudTtsReady
                   ? planHasFeature(settings.plan, 'offlineAudio')
                     ? settings.cloudTts
-                      ? 'Cloud speech is enabled for missing device voices. Generated audio is cached for offline replay.'
-                      : 'Cloud speech is available but off. Enable it in the Language tab to use missing voices.'
-                    : 'Cloud voices and offline audio packs are a Pro feature — the Free plan uses your device voices.'
-                  : 'Cloud speech is not configured yet, so playback currently uses device voices.'}
+                      ? t('settings.cloud.speech.on')
+                      : t('settings.cloud.speech.available.off')
+                    : t('settings.cloud.speech.pro.only')
+                  : t('settings.cloud.speech.unconfigured')}
               </p>
             </div>
           </div>
@@ -656,13 +680,15 @@ export default function SettingsModal({ onClose }: Props) {
         {tab === 'data' && (
           <div className="space-y-4">
             <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
-              <p className="text-sm font-semibold text-white">Account</p>
+              <p className="text-sm font-semibold text-white">{t('settings.account')}</p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
                 {user
-                  ? `Signed in with Firebase as ${user.email ?? `@${user.username}`}. Your identity syncs online; stats, streak and sets stay on this device.`
+                  ? t('settings.account.signed.in', {
+                      who: user.email ?? `@${user.username}`,
+                    })
                   : mode === 'firebase'
-                    ? 'You are using the app as a guest. Sign in with Google or an email account from the header.'
-                    : "Firebase isn't configured yet — add your config to .env.local (see .env.example) to enable sign-in. Until then, the app runs in guest mode."}
+                    ? t('settings.account.guest')
+                    : t('settings.account.unconfigured')}
               </p>
               <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] text-slate-400">
                 <span
@@ -680,31 +706,30 @@ export default function SettingsModal({ onClose }: Props) {
                   href={isProPlan(settings.plan) ? '/checkout' : '/checkout?plan=pro'}
                   className="font-semibold text-neon-cyan transition hover:text-neon-amber"
                 >
-                  {isProPlan(settings.plan) ? 'View plans' : 'Upgrade'}
+                  {isProPlan(settings.plan) ? t('settings.view.plans') : t('settings.upgrade')}
                 </Link>
                 {isProPlan(settings.plan) && (
                   <button
                     onClick={() => setShowDowngrade(true)}
                     className="font-semibold text-slate-400 underline decoration-slate-600 underline-offset-2 transition hover:text-neon-amber hover:decoration-neon-amber/50"
                   >
-                    Switch to Free
+                    {t('settings.switch.to.free')}
                   </button>
                 )}
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
-              <p className="text-sm font-semibold text-white">Backup & restore</p>
+              <p className="text-sm font-semibold text-white">{t('settings.backup.title')}</p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                Export your sets, settings, stats and display name as a single JSON file, and
-                restore them on any device.
+                {t('settings.backup.body')}
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   onClick={handleExport}
                   className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
                 >
-                  ⬇ Export backup
+                  {t('settings.export.backup')}
                 </button>
                 <input
                   ref={importInputRef}
@@ -720,28 +745,28 @@ export default function SettingsModal({ onClose }: Props) {
                   onClick={() => importInputRef.current?.click()}
                   className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-white/25 hover:text-white active:scale-95"
                 >
-                  ⬆ Import backup
+                  {t('settings.import.backup')}
                 </button>
               </div>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
-              <p className="text-sm font-semibold text-white">Cache</p>
+              <p className="text-sm font-semibold text-white">{t('settings.cache.title')}</p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                Older locally cached speech clips can be removed here. New clips are not generated while offline speech generation is disabled.
+                {t('settings.cache.body')}
               </p>
               <button
                 onClick={() => void clearCachedAudio()}
                 className="mt-3 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:border-neon-amber/40 hover:text-neon-amber active:scale-95"
               >
-                🗑 Clear cached audio
+                {t('settings.clear.cached.audio')}
               </button>
             </div>
 
             <div className="rounded-2xl border border-neon-magenta/20 bg-neon-magenta/5 p-4">
-              <p className="text-sm font-semibold text-white">Reset study progress</p>
+              <p className="text-sm font-semibold text-white">{t('settings.reset.progress.title')}</p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
-                Clears your streak, daily stats and word-mastery marks. Your sets are kept.
+                {t('settings.reset.progress.body')}
               </p>
               {confirmReset ? (
                 <div className="mt-3 flex gap-2">
@@ -749,13 +774,13 @@ export default function SettingsModal({ onClose }: Props) {
                     onClick={() => void resetProgress()}
                     className="rounded-xl bg-neon-magenta px-4 py-2 text-sm font-semibold text-white transition hover:brightness-110 active:scale-95"
                   >
-                    Yes, reset everything
+                    {t('settings.reset.progress.confirm')}
                   </button>
                   <button
                     onClick={() => setConfirmReset(false)}
                     className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:text-white active:scale-95"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                 </div>
               ) : (
@@ -763,7 +788,7 @@ export default function SettingsModal({ onClose }: Props) {
                   onClick={() => setConfirmReset(true)}
                   className="mt-3 rounded-xl border border-neon-magenta/40 px-4 py-2 text-sm text-neon-magenta transition hover:bg-neon-magenta/10 active:scale-95"
                 >
-                  Reset progress…
+                  {t('settings.reset.progress.button')}
                 </button>
               )}
             </div>
@@ -775,8 +800,7 @@ export default function SettingsModal({ onClose }: Props) {
           <div className="space-y-4">
             {!notificationSupported ? (
               <div className="rounded-2xl border border-neon-amber/30 bg-neon-amber/10 p-4 text-sm text-neon-amber">
-                Daily reminders need the Service Worker + Notification API. They work when the app
-                is installed as a PWA (production build) — not in the dev preview.
+                {t('settings.reminders.unsupported.body')}
               </div>
             ) : (
               <>
@@ -784,13 +808,13 @@ export default function SettingsModal({ onClose }: Props) {
                   <Toggle
                     checked={settings.reminderEnabled}
                     onChange={(v) => void toggleReminder(v)}
-                    label="Daily practice reminder"
-                    hint="A notification reminds you to practice at the chosen time"
+                    label={t('settings.daily.reminder.toggle')}
+                    hint={t('settings.daily.reminder.hint')}
                   />
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     <label className="block">
                       <span className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
-                        Remind me at
+                        {t('settings.remind.me.at')}
                       </span>
                       <input
                         type="time"
@@ -804,21 +828,18 @@ export default function SettingsModal({ onClose }: Props) {
                       disabled={!settings.reminderEnabled}
                       className="mt-5 rounded-xl border border-white/10 px-4 py-2.5 text-sm text-slate-300 transition hover:border-neon-cyan/40 hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-40"
                     >
-                      Send test notification
+                      {t('settings.send.test.notification')}
                     </button>
                   </div>
                   <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
-                    Uses the browser’s Notification Triggers API, so the reminder fires even when
-                    the app is closed (Chrome desktop & Android). The reminder re-arms whenever you
-                    open the app.
+                    {t('settings.reminders.triggers.hint')}
                   </p>
                 </div>
 
                 {typeof Notification !== 'undefined' &&
                   Notification.permission === 'denied' && (
                     <p className="text-[11px] text-neon-magenta">
-                      Notifications are blocked in your browser settings. Unblock them to enable
-                      reminders.
+                      {t('settings.reminders.blocked.note')}
                     </p>
                   )}
               </>
@@ -849,23 +870,22 @@ export default function SettingsModal({ onClose }: Props) {
           aria-modal="true"
         >
           <div className="glass animate-fade-up w-full max-w-sm rounded-3xl p-6 text-center">
-            <p className="text-lg font-bold text-white">Restore backup?</p>
+            <p className="text-lg font-bold text-white">{t('settings.restore.question')}</p>
             <p className="mt-2 text-sm text-slate-400">
-              This replaces your current library, settings, stats and display name with the backup
-              ({pendingImport.sets?.length ?? 0} sets).
+              {t('settings.restore.body', { count: pendingImport.sets?.length ?? 0 })}
             </p>
             <div className="mt-5 flex justify-center gap-2">
               <button
                 onClick={() => void restoreBackup()}
                 className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
               >
-                Restore
+                {t('settings.restore.button')}
               </button>
               <button
                 onClick={() => setPendingImport(null)}
                 className="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-slate-300 transition hover:text-white active:scale-95"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>

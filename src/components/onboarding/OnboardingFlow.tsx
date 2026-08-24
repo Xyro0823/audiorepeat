@@ -30,6 +30,7 @@ import {
   type OnboardingRecord,
 } from '@/lib/onboarding';
 import { getSettingsSnapshot, subscribeSettings } from '@/lib/settingsStore';
+import { useT, type TKey } from '@/lib/i18n';
 import { updateAccountPrefs } from '@/lib/accountPrefs';
 import { isProPlan } from '@/lib/plans';
 import { getAllSets, putSet } from '@/lib/db/indexedDb';
@@ -38,11 +39,11 @@ import FreeLanguagePicker from './FreeLanguagePicker';
 
 type Step = 1 | 2 | 3 | 4;
 
-const STEP_TITLES: Record<Step, string> = {
-  1: 'Choose language',
-  2: 'Choose starting level',
-  3: 'Choose learning goal',
-  4: "You're all set",
+const STEP_TITLE_KEYS: Record<Step, TKey> = {
+  1: 'onboarding.step.title.language',
+  2: 'onboarding.step.title.level',
+  3: 'onboarding.step.title.goal',
+  4: 'onboarding.step.title.ready',
 };
 
 /**
@@ -69,6 +70,7 @@ export default function OnboardingFlow() {
 
 function OnboardingFlowInner({ uid }: { uid: string }) {
   const router = useRouter();
+  const t = useT();
   // Plan-aware: Pro/Lifetime accounts see an unrestricted language step (no
   // locks) and still record a preferred language. Settings hydrate asynchron
   // (entitlement sync / IndexedDB), so the picker upgrades in place if needed.
@@ -302,7 +304,7 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
       className="fixed inset-0 z-[100] flex overflow-y-auto bg-night-950/95 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
-      aria-label="Welcome to AudioRepeat"
+      aria-label={t('onboarding.aria.title')}
     >
       {/* Ambient glows */}
       <div className="pointer-events-none absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-neon-cyan/15 blur-3xl" />
@@ -322,7 +324,7 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
           ))}
         </div>
         <p className="mt-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-          Step {step} of 4 · {STEP_TITLES[step]}
+          {t('onboarding.step.count', { step, total: 4 })} · {t(STEP_TITLE_KEYS[step])}
         </p>
 
         <div className="mt-5">
@@ -330,11 +332,11 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
 
           {step === 2 && (
             <div>
-              <h2 className="text-xl font-bold tracking-tight text-white">Choose your starting level</h2>
+              <h2 className="text-xl font-bold tracking-tight text-white">{t('onboarding.level.heading')}</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
-                We&apos;ll seed your library with words that fit — you can change it anytime.
+                {t('onboarding.level.sub')}
               </p>
-              <div className="mt-5 space-y-2" role="radiogroup" aria-label="Starting level">
+              <div className="mt-5 space-y-2" role="radiogroup" aria-label={t('onboarding.level.groupAria')}>
                 {ONBOARDING_LEVELS.map((o) => {
                   const active = level === o.level;
                   return (
@@ -391,7 +393,7 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
                   onClick={() => setStep(1)}
                   className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
                 >
-                  ← Back
+                  {t('onboarding.back')}
                 </button>
                 <button
                   type="button"
@@ -399,7 +401,7 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
                   disabled={!level}
                   className="flex-1 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-3 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Continue
+                  {t('common.continue')}
                 </button>
               </div>
             </div>
@@ -407,11 +409,11 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
 
           {step === 3 && (
             <div>
-              <h2 className="text-xl font-bold tracking-tight text-white">What brings you here?</h2>
+              <h2 className="text-xl font-bold tracking-tight text-white">{t('onboarding.goal.heading')}</h2>
               <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
-                Pick a learning goal — we&apos;ll use it to tailor your practice.
+                {t('onboarding.goal.sub')}
               </p>
-              <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Learning goal">
+              <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2" role="radiogroup" aria-label={t('onboarding.goal.groupAria')}>
                 {ONBOARDING_GOALS.map((o) => {
                   const active = goal === o.id;
                   return (
@@ -461,7 +463,7 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
                   onClick={() => setStep(2)}
                   className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
                 >
-                  ← Back
+                  {t('onboarding.back')}
                 </button>
                 <button
                   type="button"
@@ -469,7 +471,7 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
                   disabled={!goal}
                   className="flex-1 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-3 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  Continue
+                  {t('common.continue')}
                 </button>
               </div>
             </div>
@@ -480,14 +482,14 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
               <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-gradient-to-br from-[#141433] to-night-950 text-3xl shadow-[0_0_30px_rgba(34,228,255,0.25)]">
                 <span aria-hidden>{lang ? flagFor(seedCodeForLangKey(lang) ?? lang) ?? '🌐' : '🌐'}</span>
               </span>
-              <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">You&apos;re all set!</h2>
-              <p className="mt-1.5 text-sm text-slate-400">Here&apos;s your practice plan:</p>
+              <h2 className="mt-4 text-2xl font-bold tracking-tight text-white">{t('onboarding.ready.heading')}</h2>
+              <p className="mt-1.5 text-sm text-slate-400">{t('onboarding.ready.planIntro')}</p>
 
               <dl className="mx-auto mt-5 max-w-sm space-y-2.5 text-left">
                 {[
-                  { label: 'Language', value: langLabel },
-                  { label: 'Starting level', value: levelLabel },
-                  { label: 'Goal', value: goalLabel },
+                  { label: t('onboarding.summary.language'), value: langLabel },
+                  { label: t('onboarding.summary.startingLevel'), value: levelLabel },
+                  { label: t('onboarding.summary.goal'), value: goalLabel },
                 ].map((row) => (
                   <div
                     key={row.label}
@@ -505,7 +507,7 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
               {shownRecommendation && (
                 <div className="mt-5 rounded-2xl border border-neon-cyan/25 bg-neon-cyan/[0.06] p-4 text-left">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-neon-cyan/80">
-                    Recommended first session
+                    {t('onboarding.ready.recommended')}
                   </p>
                   <p className="mt-1.5 text-sm font-bold text-white">{shownRecommendation.title}</p>
                   <p className="mt-0.5 text-xs text-slate-400">{shownRecommendation.reason}</p>
@@ -521,7 +523,7 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
                 {finishing ? (
                   <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-night-950/30 border-t-night-950 align-middle" />
                 ) : (
-                  'Start recommended practice'
+                  t('onboarding.ready.startPractice')
                 )}
               </button>
               <button
@@ -530,14 +532,14 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
                 disabled={finishing}
                 className="mt-2.5 w-full rounded-xl border border-white/10 py-2.5 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white"
               >
-                Go to dashboard
+                {t('onboarding.ready.goDashboard')}
               </button>
               <button
                 type="button"
                 onClick={() => setStep(3)}
                 className="mt-2 w-full text-xs font-medium text-slate-500 transition hover:text-slate-300"
               >
-                ← Back
+                {t('onboarding.back')}
               </button>
             </div>
           )}

@@ -1,5 +1,7 @@
 'use client';
 
+import { useT } from '@/lib/i18n';
+
 interface Props {
   /** Called when the assistant button is tapped (e.g. reveal the AI insights card). */
   onOpen: () => void;
@@ -13,14 +15,16 @@ interface Props {
  * sparkle icon. The bounce lives on an outer wrapper so the button's own
  * hover/active transforms aren't overridden by the animation.
  */
-export default function AiAssistantButton({ onOpen, label = 'Open AI assistant' }: Props) {
+export default function AiAssistantButton({ onOpen, label }: Props) {
+  const t = useT();
+  const resolvedLabel = label ?? t('dashboard.aiAssistant.open');
   return (
     <div className="animate-ai-bounce fixed bottom-6 right-6 z-50">
       <button
         type="button"
         onClick={onOpen}
-        aria-label={label}
-        title={label}
+        aria-label={resolvedLabel}
+        title={resolvedLabel}
         className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-[0_10px_32px_rgba(2,132,199,0.45),inset_0_1px_0_rgba(255,255,255,0.35)] ring-1 ring-white/25 transition-transform duration-150 hover:scale-110 active:scale-95"
       >
         {/* Sparkle / AI icon */}

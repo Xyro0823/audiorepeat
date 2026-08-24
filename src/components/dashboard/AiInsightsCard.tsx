@@ -1,5 +1,7 @@
 'use client';
 
+import { useT } from '@/lib/i18n';
+
 interface Props {
   /** Words currently marked as needing review (hard) across the library. */
   reviewCount: number;
@@ -14,30 +16,48 @@ interface Props {
  * prompts, each with a pure-emerald status dot, plus the daily audio goal bar.
  */
 export default function AiInsightsCard({ reviewCount, goalPct, streak }: Props) {
+  const t = useT();
   const rows = [
     {
+      id: 'review',
       dot: 'bg-emerald-400',
       glow: 'shadow-[0_0_8px_rgba(52,211,153,0.8)]',
       text:
         reviewCount > 0
-          ? `${reviewCount} word${reviewCount === 1 ? '' : 's'} need review today`
-          : 'All caught up — nothing needs review',
-      meta: reviewCount > 0 ? 'Tap review mode in the player' : 'Nice work!',
+          ? t(
+              reviewCount === 1
+                ? 'dashboard.insights.review.some.one'
+                : 'dashboard.insights.review.some.other',
+              { count: reviewCount },
+            )
+          : t('dashboard.insights.review.none'),
+      meta: reviewCount > 0
+        ? t('dashboard.insights.review.meta.some')
+        : t('dashboard.insights.review.meta.none'),
     },
     {
+      id: 'goal',
       dot: 'bg-emerald-400',
       glow: 'shadow-[0_0_8px_rgba(52,211,153,0.8)]',
       text:
         goalPct >= 100
-          ? 'Daily audio goal complete'
-          : `Daily audio goal ${goalPct}% complete`,
-      meta: goalPct >= 100 ? 'Fantastic focus 🎉' : `${100 - goalPct}% to go — keep listening`,
+          ? t('dashboard.insights.goal.done')
+          : t('dashboard.insights.goal.progress', { pct: goalPct }),
+      meta: goalPct >= 100
+        ? t('dashboard.insights.goal.meta.done')
+        : t('dashboard.insights.goal.meta.left', { pct: 100 - goalPct }),
     },
     {
+      id: 'streak',
       dot: 'bg-emerald-400',
       glow: 'shadow-[0_0_8px_rgba(52,211,153,0.8)]',
-      text: streak > 0 ? `${streak}-day streak — keep it alive` : 'Start a streak today',
-      meta: streak > 0 ? 'Consistency beats intensity' : 'One short session is enough',
+      text:
+        streak > 0
+          ? t('dashboard.insights.streak.some', { days: streak })
+          : t('dashboard.insights.streak.none'),
+      meta: streak > 0
+        ? t('dashboard.insights.streak.meta.some')
+        : t('dashboard.insights.streak.meta.none'),
     },
   ];
 
@@ -54,14 +74,14 @@ export default function AiInsightsCard({ reviewCount, goalPct, streak }: Props) 
           </svg>
         </span>
         <div>
-          <h3 className="text-sm font-semibold tracking-tight text-white">AI Insights</h3>
-          <p className="text-[11px] text-slate-500">Smart recommendations for today</p>
+          <h3 className="text-sm font-semibold tracking-tight text-white">{t('dashboard.insights.title')}</h3>
+          <p className="text-[11px] text-slate-500">{t('dashboard.insights.subtitle')}</p>
         </div>
       </div>
 
       <ul className="mt-3.5 space-y-3">
         {rows.map((r) => (
-          <li key={r.text} className="flex items-start gap-2.5">
+          <li key={r.id} className="flex items-start gap-2.5">
             <span
               aria-hidden
               className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${r.dot} ${r.glow}`}
@@ -81,7 +101,7 @@ export default function AiInsightsCard({ reviewCount, goalPct, streak }: Props) 
       {/* Daily audio goal bar */}
       <div className="mt-4">
         <div className="flex items-center justify-between text-[11px] text-slate-500">
-          <span className="font-medium text-slate-400">Daily audio goal</span>
+          <span className="font-medium text-slate-400">{t('dashboard.insights.goalLabel')}</span>
           <span className="font-semibold tabular-nums text-neon-cyan">{goalPct}%</span>
         </div>
         <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-white/10">

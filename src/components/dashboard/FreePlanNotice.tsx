@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { FREE_LANG_LIMIT, LANGUAGES_UNLOCKED_BY_PRO } from '@/lib/plans';
 import { SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
+import { useT } from '@/lib/i18n';
 
 const DISMISS_KEY = 'audiorepeat-free-plan-notice-dismissed';
 
@@ -22,6 +23,7 @@ interface Props {
  * Hidden entirely for Pro/Lifetime users.
  */
 export default function FreePlanNotice({ pro }: Props) {
+  const t = useT();
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
@@ -42,17 +44,28 @@ export default function FreePlanNotice({ pro }: Props) {
         <span className="mr-1.5" aria-hidden>
           ⭐
         </span>
-        Your <span className="font-semibold text-neon-amber">Free</span> plan includes {FREE_LANG_LIMIT}{' '}
-        {FREE_LANG_LIMIT === 1 ? 'language' : 'languages'} —{' '}
-        {missing === 1 ? '1 more language is' : `${missing} more languages are`} ready to unlock.
-        <span className="text-slate-500"> {totalLangs} total.</span>
+        {t('dashboard.freeNotice.prefix')}{' '}
+        <span className="font-semibold text-neon-amber">{t('common.free')}</span>{' '}
+        {t(
+          FREE_LANG_LIMIT === 1
+            ? 'dashboard.freeNotice.includes.one'
+            : 'dashboard.freeNotice.includes.other',
+          { limit: FREE_LANG_LIMIT },
+        )}
+        {missing === 1
+          ? t('dashboard.freeNotice.more.one')
+          : t('dashboard.freeNotice.more.other', { count: missing })}
+        <span className="text-slate-500">
+          {' '}
+          {t('dashboard.freeNotice.total', { count: totalLangs })}
+        </span>
       </p>
       <div className="flex shrink-0 items-center gap-2">
         <Link
           href="/checkout?plan=pro"
           className="rounded-lg bg-gradient-to-r from-neon-amber to-neon-magenta px-3.5 py-1.5 text-xs font-bold text-night-950 transition hover:brightness-110 active:scale-95"
         >
-          Upgrade to unlock
+          {t('dashboard.freeNotice.upgrade')}
         </Link>
         <button
           onClick={() => {
@@ -63,7 +76,7 @@ export default function FreePlanNotice({ pro }: Props) {
               /* storage unavailable */
             }
           }}
-          aria-label="Dismiss upgrade notice"
+          aria-label={t('dashboard.freeNotice.dismissAria')}
           className="rounded-lg px-2 py-1 text-slate-500 transition hover:bg-white/5 hover:text-white"
         >
           ✕

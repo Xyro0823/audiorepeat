@@ -12,6 +12,7 @@ import { deleteSetDatabaseForOwner } from '@/lib/db/indexedDb';
 import { firstSessionGuideKey } from '@/lib/firstSessionGuide';
 import { clearOnboardingState } from '@/lib/onboarding';
 import { isProPlan, PLAN_BADGE, planDetail } from '@/lib/plans';
+import { useT } from '@/lib/i18n';
 import { getSettingsSnapshot, subscribeSettings } from '@/lib/settingsStore';
 
 function initialsOf(name: string): string {
@@ -45,6 +46,7 @@ const itemClass =
  */
 export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }: Props) {
   const { status, user, logout, deleteAccount } = useAuth();
+  const t = useT();
   // Server-verified admin gate — admin links render only for allowlisted
   // admins and never flash before verification (fail-closed). This is a UX
   // convenience; the admin pages/APIs enforce access server-side regardless.
@@ -124,7 +126,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
     setMenuError(null);
     const deletedUid = user?.id;
     if (!deletedUid) {
-      setMenuError('Please sign in again before deleting your account.');
+      setMenuError(t('auth.error.reSignInToDelete'));
       setConfirmDelete(false);
       return;
     }
@@ -168,7 +170,9 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        title={signedIn ? `Signed in as ${user!.username}` : 'Account & tools'}
+        title={
+          signedIn ? t('auth.signedInAs', { name: user!.username }) : t('auth.accountAndTools')
+        }
         className="btn-toolbar-ghost flex h-11 items-center gap-2 rounded-xl px-2 pr-2.5 text-[13px] font-medium text-slate-300"
       >
         {signedIn ? (
@@ -227,7 +231,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
         <div
           ref={menuRef}
           role="menu"
-          aria-label="Account & tools"
+          aria-label={t('auth.accountAndTools')}
           className={`dropdown-panel animate-fade-up absolute right-0 z-[100] w-60 overflow-y-auto overscroll-contain rounded-2xl p-2 ${
             pos?.up ? 'bottom-full mb-2' : 'top-full mt-2'
           }`}
@@ -237,7 +241,9 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
             <>
               <div className="px-3 py-2">
                 <p className="truncate text-sm font-semibold text-white">@{user!.username}</p>
-                <p className="truncate text-[11px] text-slate-500">{user!.email ?? 'Firebase account'}</p>
+                <p className="truncate text-[11px] text-slate-500">
+                  {user!.email ?? t('auth.firebaseAccount')}
+                </p>
                 <p className="mt-1.5 flex items-center gap-1.5">
                   <span
                     className={`rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
@@ -261,7 +267,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
           {pro ? (
             <>
               <Link role="menuitem" href="/checkout" className={itemClass} onClick={close}>
-                <span aria-hidden>⭐</span> Manage plan
+                <span aria-hidden>⭐</span> {t('auth.managePlan')}
                 <span className="ml-auto rounded-full border border-neon-amber/40 bg-neon-amber/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
                   {PLAN_BADGE[settings.plan].short}
                 </span>
@@ -274,12 +280,12 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
                   setShowDowngrade(true);
                 }}
               >
-                <span aria-hidden>⬇️</span> Switch to Free plan
+                <span aria-hidden>⬇️</span> {t('auth.switchToFreePlan')}
               </button>
             </>
           ) : (
             <Link role="menuitem" href="/checkout?plan=pro" className={itemClass} onClick={close}>
-              <span aria-hidden>⭐</span> Upgrade to Pro
+              <span aria-hidden>⭐</span> {t('auth.upgradeToPro')}
             </Link>
           )}
 
@@ -294,10 +300,10 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
               onLeaderboard();
             }}
           >
-            <span aria-hidden>🏆</span> Leaderboard
+            <span aria-hidden>🏆</span> {t('auth.leaderboard')}
           </button>
           <Link role="menuitem" href="/stats" className={itemClass} onClick={close}>
-            <span aria-hidden>📊</span> Stats
+            <span aria-hidden>📊</span> {t('auth.stats')}
             {!pro && (
               <span className="ml-auto rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
                 Pro
@@ -312,7 +318,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
               onSubtitles();
             }}
           >
-            <span aria-hidden>🎬</span> Subtitles → set
+            <span aria-hidden>🎬</span> {t('auth.subtitlesToSet')}
           </button>
           <button
             role="menuitem"
@@ -322,26 +328,26 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
               onBrowse();
             }}
           >
-            <span aria-hidden>📚</span> Browse library
+            <span aria-hidden>📚</span> {t('auth.browseLibrary')}
           </button>
 
           {admin === 'admin' && (
             <>
               <div className="my-1 h-px bg-white/10" />
               <div className="px-3 pb-1 pt-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                Admin
+                {t('auth.adminSection')}
               </div>
               <Link role="menuitem" href="/admin/entitlements" className={itemClass} onClick={close}>
-                <span aria-hidden>🎁</span> Gift Pro
+                <span aria-hidden>🎁</span> {t('auth.giftPro')}
               </Link>
               <Link role="menuitem" href="/admin/diagnostics" className={itemClass} onClick={close}>
-                <span aria-hidden>🩺</span> Language Diagnostics
+                <span aria-hidden>🩺</span> {t('auth.languageDiagnostics')}
               </Link>
               <Link role="menuitem" href="/admin/analytics" className={itemClass} onClick={close}>
-                <span aria-hidden>📈</span> Onboarding Analytics
+                <span aria-hidden>📈</span> {t('auth.onboardingAnalytics')}
               </Link>
               <Link role="menuitem" href="/admin/errors" className={itemClass} onClick={close}>
-                <span aria-hidden>🛡️</span> Error Diagnostics
+                <span aria-hidden>🛡️</span> {t('auth.errorDiagnostics')}
               </Link>
             </>
           )}
@@ -357,7 +363,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
                 setShowAuth(true);
               }}
             >
-              <span aria-hidden>🔐</span> Sign in / Create account
+              <span aria-hidden>🔐</span> {t('auth.signInOrCreate')}
             </button>
           ) : (
             <>
@@ -369,12 +375,12 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
                   logout();
                 }}
               >
-                <span aria-hidden>🚪</span> Sign out
+                <span aria-hidden>🚪</span> {t('auth.signOut')}
               </button>
               {confirmDelete ? (
                 <div className="mt-1 rounded-xl border border-neon-magenta/30 bg-neon-magenta/10 p-2">
                   <p className="px-1 pb-2 text-[11px] leading-snug text-neon-magenta">
-                    Delete your Firebase account and its stats? This can&apos;t be undone.
+                    {t('auth.deleteConfirm.body')}
                   </p>
                   {menuError && (
                     <p className="px-1 pb-2 text-[11px] leading-snug text-neon-magenta">{menuError}</p>
@@ -385,7 +391,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
                       onClick={() => void handleDelete()}
                       className="flex-1 rounded-lg bg-neon-magenta px-2 py-1.5 text-xs font-semibold text-white transition hover:brightness-110 active:scale-95"
                     >
-                      Delete
+                      {t('auth.deleteConfirm.delete')}
                     </button>
                     <button
                       role="menuitem"
@@ -395,7 +401,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
                       }}
                       className="flex-1 rounded-lg border border-white/10 px-2 py-1.5 text-xs text-slate-300 transition hover:text-white active:scale-95"
                     >
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                   </div>
                 </div>
@@ -408,7 +414,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
                   }}
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-neon-magenta transition hover:bg-neon-magenta/10"
                 >
-                  <span aria-hidden>🗑</span> Delete account
+                  <span aria-hidden>🗑</span> {t('auth.deleteAccount')}
                 </button>
               )}
             </>

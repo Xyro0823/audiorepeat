@@ -3,11 +3,15 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const source = readFileSync(join(process.cwd(), 'src/components/player/PlayerView.tsx'), 'utf8');
+const playerEn = readFileSync(join(process.cwd(), 'src/lib/i18n/en/player.ts'), 'utf8');
 
 describe('PlayerView cloud voice consent', () => {
   it('puts the opt-in action in the player instead of requiring Settings discovery', () => {
-    expect(source).toContain('Hear this language clearly');
-    expect(source).toContain("user ? 'Enable cloud voice' : 'Sign in & enable cloud voice'");
+    expect(playerEn).toContain("'player.cloudVoice.title': 'Hear this language clearly'");
+    expect(source).toContain("t('player.cloudVoice.title')");
+    expect(source).toContain(
+      "user ? t('player.cloudVoice.enable') : t('player.cloudVoice.signInEnable')",
+    );
     expect(source).toContain('onClick={requestCloudVoice}');
   });
 

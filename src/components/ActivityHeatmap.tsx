@@ -2,6 +2,7 @@
 
 import type { DayCell } from '@/lib/practiceStats';
 import { formatDuration } from '@/lib/format';
+import { t } from '@/lib/i18n';
 
 // 0 = no practice, 1-4 = increasing intensity (scaled against the week max).
 export const HEATMAP_LEVEL_CLASSES = [
@@ -18,9 +19,12 @@ export function heatmapLevel(words: number, max: number): number {
 }
 
 export function heatmapCellTitle(cell: DayCell): string {
-  const head = cell.isToday ? 'Today' : `${cell.weekday} ${cell.dayOfMonth}`;
-  if (cell.words <= 0 && cell.ms <= 0) return `${head} — no practice`;
-  return `${head} — ${cell.words} word${cell.words === 1 ? '' : 's'} · ${formatDuration(cell.ms)}`;
+  const head = cell.isToday ? t('common.today') : `${cell.weekday} ${cell.dayOfMonth}`;
+  if (cell.words <= 0 && cell.ms <= 0) return t('stats.heatmap.cellNone', { head });
+  return t(
+    cell.words === 1 ? 'stats.heatmap.cellOne' : 'stats.heatmap.cellMany',
+    { head, count: cell.words, time: formatDuration(cell.ms) },
+  );
 }
 
 export default function ActivityHeatmap({ week }: { week: DayCell[] }) {
@@ -42,11 +46,11 @@ export default function ActivityHeatmap({ week }: { week: DayCell[] }) {
         ))}
       </div>
       <div className="mt-2 flex items-center justify-end gap-1 text-[10px] text-slate-600">
-        <span>Less</span>
+        <span>{t('stats.legend.less')}</span>
         {HEATMAP_LEVEL_CLASSES.map((cls, i) => (
           <span key={i} className={`h-2.5 w-2.5 rounded-sm ${cls}`} />
         ))}
-        <span>More</span>
+        <span>{t('stats.legend.more')}</span>
       </div>
     </div>
   );

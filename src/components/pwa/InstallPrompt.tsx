@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { captureInstallEvent, clearInstallEvent, type InstallEvent } from "@/lib/installStore";
+import { useT } from "@/lib/i18n";
 
 const DISMISS_KEY = "audiorepeat-install-dismissed";
 
@@ -42,6 +43,7 @@ function wasDismissed(): boolean {
  * player page where the fixed control bar lives.
  */
 export default function InstallPrompt() {
+  const t = useT();
   const [showIosHint, setShowIosHint] = useState(() => {
     if (isStandalone()) return false;
     return isIOS() && !wasDismissed();
@@ -109,14 +111,14 @@ export default function InstallPrompt() {
           </svg>
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-white">Add to Home Screen</p>
+          <p className="truncate text-sm font-semibold text-white">{t('dashboard.install.addTitle')}</p>
           <p className="truncate text-[11px] text-slate-400">
-            Tap Share, then Add to Home Screen
+            {t('pwa.install.ios')}
           </p>
         </div>
         <button
           onClick={dismiss}
-          aria-label="Dismiss"
+          aria-label={t('dashboard.install.dismissAria')}
           className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-slate-500 transition hover:bg-white/10 hover:text-white"
         >
           <svg

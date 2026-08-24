@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useT } from '@/lib/i18n';
 import type { LoopWord } from '@/types/loop';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export default function WordNavigator({ open, words, currentIndex, onSelect, onClose }: Props) {
+  const t = useT();
   const [query, setQuery] = useState('');
   const currentButtonRef = useRef<HTMLButtonElement | null>(null);
   const normalizedQuery = query.trim().toLocaleLowerCase();
@@ -66,13 +68,13 @@ export default function WordNavigator({ open, words, currentIndex, onSelect, onC
         <div className="border-b border-white/10 px-4 pb-4 pt-5 sm:px-6">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 id="word-navigator-title" className="text-lg font-bold text-white">Find a word</h2>
-              <p className="mt-0.5 text-xs text-slate-500">{words.length} words in the current play order</p>
+              <h2 id="word-navigator-title" className="text-lg font-bold text-white">{t('player.nav.title')}</h2>
+              <p className="mt-0.5 text-xs text-slate-500">{t('player.nav.count', { count: words.length })}</p>
             </div>
             <button
               type="button"
               onClick={close}
-              aria-label="Close word search"
+              aria-label={t('player.nav.closeAria')}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xl text-slate-300 transition hover:border-neon-cyan/50 hover:text-neon-cyan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
             >
               ×
@@ -83,12 +85,12 @@ export default function WordNavigator({ open, words, currentIndex, onSelect, onC
               <circle cx="11" cy="11" r="7" />
               <path d="m20 20-4-4" />
             </svg>
-            <span className="sr-only">Search target word or translation</span>
+            <span className="sr-only">{t('player.nav.searchSr')}</span>
             <input
               autoFocus
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search word or translation…"
+              placeholder={t('player.nav.searchPlaceholder')}
               className="min-w-0 flex-1 bg-transparent text-base text-white outline-none placeholder:text-slate-600"
             />
             {query && (
@@ -97,16 +99,16 @@ export default function WordNavigator({ open, words, currentIndex, onSelect, onC
                 onClick={() => setQuery('')}
                 className="min-h-11 px-1 text-xs font-semibold text-slate-400 hover:text-white"
               >
-                Clear
+                {t('player.nav.clear')}
               </button>
             )}
           </label>
         </div>
 
-        <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2 sm:px-3" role="listbox" aria-label="Words">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-2 py-2 sm:px-3" role="listbox" aria-label={t('player.nav.listAria')}>
           {matches.length === 0 ? (
             <div className="flex min-h-40 items-center justify-center px-5 text-center text-sm text-slate-500">
-              No matching words found.
+              {t('player.nav.noMatches')}
             </div>
           ) : (
             matches.map(({ word, index }) => {
@@ -135,7 +137,7 @@ export default function WordNavigator({ open, words, currentIndex, onSelect, onC
                     <span className="block truncate text-base font-semibold">{word.target}</span>
                     <span className="mt-0.5 block truncate text-sm text-slate-500">{word.translation}</span>
                   </span>
-                  {current && <span className="shrink-0 text-xs font-semibold">Playing</span>}
+                  {current && <span className="shrink-0 text-xs font-semibold">{t('player.nav.playing')}</span>}
                 </button>
               );
             })

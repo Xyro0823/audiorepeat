@@ -10,6 +10,7 @@ import ActivityHeatmap, {
 import ProFeatureLock from '@/components/common/ProFeatureLock';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { formatDuration } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import { planHasFeature } from '@/lib/plans';
 import {
   getSettingsSnapshot,
@@ -34,6 +35,7 @@ function Tile({ label, value, sub }: { label: string; value: string; sub: string
 }
 
 export default function StatsView() {
+  const t = useT();
   const { days, week, wordsToday, msToday, streak, loaded } = usePracticeStats();
   // Plan entitlement for the gate. This page doesn't mount useLists, so drive
   // the shared settings store directly (hydration is idempotent and shared).
@@ -55,8 +57,8 @@ export default function StatsView() {
   if (loaded && settingsHydrated() && !canStats) {
     return (
       <ProFeatureLock
-        title="Practice stats"
-        description="Streaks, heatmaps and word history are part of Pro. Keep listening and dictation practice on the Free plan."
+        title={t('stats.lock.title')}
+        description={t('stats.lock.body')}
       />
     );
   }
@@ -67,13 +69,13 @@ export default function StatsView() {
         <Link
           href="/"
           className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-          aria-label="Back to library"
+          aria-label={t('stats.backAria')}
         >
           <span>←</span>
-          <span>Library</span>
+          <span>{t('stats.library')}</span>
         </Link>
         <span className="text-slate-700">/</span>
-        <h1 className="text-2xl font-bold tracking-tight text-white">Stats</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-white">{t('stats.title')}</h1>
         <span className="ml-auto flex items-center gap-2">
           <SettingsButton />
           <ProfileDropdown onLeaderboard={() => {}} onSubtitles={() => {}} onBrowse={() => {}} />
@@ -89,42 +91,42 @@ export default function StatsView() {
         </div>
         <p className="mt-4 text-6xl font-bold tabular-nums text-white">{streak}</p>
         <p className="mt-1 text-sm font-medium uppercase tracking-[0.25em] text-slate-400">
-          day streak
+          {t('stats.dayStreak')}
         </p>
         <p className="mt-3 text-xs text-slate-500">
-          Best: {all.bestStreak} days · {all.activeDays} active days
+          {t('stats.streakSummary', { best: all.bestStreak, active: all.activeDays })}
         </p>
       </section>
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Tile label="Today" value={String(wordsToday)} sub="words listened" />
-        <Tile label="Today" value={formatDuration(msToday)} sub="study time" />
-        <Tile label="All time" value={all.words.toLocaleString()} sub="words listened" />
-        <Tile label="All time" value={formatDuration(all.ms)} sub="study time" />
+        <Tile label={t('common.today')} value={String(wordsToday)} sub={t('stats.metric.wordsListened')} />
+        <Tile label={t('common.today')} value={formatDuration(msToday)} sub={t('stats.metric.studyTime')} />
+        <Tile label={t('stats.period.allTime')} value={all.words.toLocaleString()} sub={t('stats.metric.wordsListened')} />
+        <Tile label={t('stats.period.allTime')} value={formatDuration(all.ms)} sub={t('stats.metric.studyTime')} />
       </div>
 
       {loaded && all.activeDays === 0 ? (
         <section className="glass animate-fade-up mt-4 rounded-2xl p-10 text-center">
-          <p className="text-lg font-semibold text-white">No practice yet</p>
+          <p className="text-lg font-semibold text-white">{t('stats.empty.title')}</p>
           <p className="mx-auto mt-2 max-w-sm text-sm text-slate-400">
-            Open a set and press play — your streak and stats will start building here.
+            {t('stats.empty.body')}
           </p>
           <Link
             href="/"
             className="mt-5 inline-block rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
           >
-            Back to library
+            {t('stats.empty.backLibrary')}
           </Link>
         </section>
       ) : (
         <>
           <section className="glass animate-fade-up mt-4 rounded-2xl p-5">
-            <h2 className="text-sm font-semibold text-white">This week</h2>
+            <h2 className="text-sm font-semibold text-white">{t('stats.week.title')}</h2>
             <ActivityHeatmap week={week} />
           </section>
 
           <section className="glass animate-fade-up mt-4 rounded-2xl p-5">
-            <h2 className="text-sm font-semibold text-white">Last 30 days</h2>
+            <h2 className="text-sm font-semibold text-white">{t('stats.month.title')}</h2>
             <div className="mt-4 grid grid-cols-6 gap-1.5">
               {month.map((cell) => (
                 <div
@@ -139,17 +141,17 @@ export default function StatsView() {
               ))}
             </div>
             <div className="mt-3 flex items-center justify-end gap-1 text-[10px] text-slate-600">
-              <span>Less</span>
+              <span>{t('stats.legend.less')}</span>
               {HEATMAP_LEVEL_CLASSES.map((cls, i) => (
                 <span key={i} className={`h-2.5 w-2.5 rounded-sm ${cls}`} />
               ))}
-              <span>More</span>
+              <span>{t('stats.legend.more')}</span>
             </div>
           </section>
 
           <section className="glass animate-fade-up mt-4 rounded-2xl p-5">
-            <h2 className="text-sm font-semibold text-white">Last 8 weeks</h2>
-            <p className="text-[11px] text-slate-500">words listened per week</p>
+            <h2 className="text-sm font-semibold text-white">{t('stats.weekly.title')}</h2>
+            <p className="text-[11px] text-slate-500">{t('stats.weekly.sub')}</p>
             <div className="mt-4 flex items-end gap-2">
               {weeks.map((w, i) => (
                 <div key={i} className="flex flex-1 flex-col items-center justify-end gap-1">
@@ -157,7 +159,11 @@ export default function StatsView() {
                     {w.words > 0 ? w.words : ''}
                   </span>
                   <div
-                    title={`Week of ${w.label} — ${w.words} words · ${formatDuration(w.ms)}`}
+                    title={t('stats.weekly.barTitle', {
+                      label: w.label,
+                      words: w.words,
+                      time: formatDuration(w.ms),
+                    })}
                     className={
                       w.words > 0
                         ? 'w-full rounded-t-md bg-gradient-to-t from-neon-violet/50 to-neon-cyan'

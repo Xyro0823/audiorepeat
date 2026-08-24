@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { shareUrlForSet } from '@/lib/sets/share';
+import { useT } from '@/lib/i18n';
 import type { VocabSet } from '@/types/app';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 const subscribeHydration = () => () => {};
 
 export default function ShareSetModal({ set, onClose }: Props) {
+  const t = useT();
   const mounted = useSyncExternalStore(subscribeHydration, () => true, () => false);
   const [qr, setQr] = useState<string | null>(null);
   const [qrError, setQrError] = useState(false);
@@ -55,9 +57,9 @@ export default function ShareSetModal({ set, onClose }: Props) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2500);
     } catch {
-      window.prompt('Copy this share link:', url);
+      window.prompt(t('library.share.promptCopy'), url);
     }
-  }, [url]);
+  }, [url, t]);
 
   const share = useCallback(async () => {
     if (!navigator.share) {
@@ -67,13 +69,13 @@ export default function ShareSetModal({ set, onClose }: Props) {
     try {
       await navigator.share({
         title: set.name,
-        text: `Practice “${set.name}” in AudioRepeat`,
+        text: t('library.share.nativeText', { name: set.name }),
         url,
       });
     } catch {
       // User cancellation is not an error that needs UI.
     }
-  }, [copy, set.name, url]);
+  }, [copy, set.name, url, t]);
 
   if (!mounted) return null;
 
@@ -90,16 +92,16 @@ export default function ShareSetModal({ set, onClose }: Props) {
       <div className="glass animate-fade-up m-auto w-full max-w-lg rounded-3xl border border-white/10 p-5 shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:p-6">
         <div className="flex items-start gap-4">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-neon-cyan">Share set</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-neon-cyan">{t('library.share.set')}</p>
             <h2 id="share-set-title" className="mt-1 truncate text-xl font-bold text-white">{set.name}</h2>
             <p className="mt-1 text-sm text-slate-400">
-              {set.words.length} words · progress and review history stay private
+              {t('library.share.privacyLine', { count: set.words.length })}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close share dialog"
+            aria-label={t('library.share.closeAria')}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 text-slate-400 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
           >
             ×
@@ -111,10 +113,10 @@ export default function ShareSetModal({ set, onClose }: Props) {
             {qr ? (
               // Generated locally; no QR contents are sent to a third party.
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={qr} alt={`QR code for ${set.name}`} className="h-full w-full" />
+              <img src={qr} alt={t('library.share.qrAlt', { name: set.name })} className="h-full w-full" />
             ) : qrError ? (
               <p className="px-3 text-center text-xs leading-relaxed text-slate-600">
-                This set is too large for a QR code. Use the share link instead.
+                {t('library.share.qrTooLarge')}
               </p>
             ) : (
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-slate-800" />
@@ -122,9 +124,9 @@ export default function ShareSetModal({ set, onClose }: Props) {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-white">Scan to import</p>
+            <p className="text-sm font-semibold text-white">{t('library.share.scanToImport')}</p>
             <p className="mt-1 text-xs leading-relaxed text-slate-400">
-              The recipient imports a fresh copy into their own library.
+              {t('library.share.recipientBody')}
             </p>
             <div className="mt-4 grid gap-2">
               <button
@@ -132,14 +134,14 @@ export default function ShareSetModal({ set, onClose }: Props) {
                 onClick={() => void share()}
                 className="min-h-11 rounded-xl bg-neon-cyan px-4 text-sm font-bold text-night-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
               >
-                Share set
+                {t('library.share.set')}
               </button>
               <button
                 type="button"
                 onClick={() => void copy()}
                 className="min-h-11 rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-300 transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
               >
-                {copied ? '✓ Link copied' : 'Copy link'}
+                {copied ? t('library.share.linkCopied') : t('library.share.copyLink')}
               </button>
               {qr && (
                 <a
@@ -147,7 +149,7 @@ export default function ShareSetModal({ set, onClose }: Props) {
                   download={`${set.name.replace(/[^\w-]+/g, '-').toLowerCase()}-qr.png`}
                   className="min-h-10 rounded-xl px-4 py-2.5 text-center text-xs font-semibold text-slate-500 transition hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
                 >
-                  Download QR image
+                  {t('library.share.downloadQr')}
                 </a>
               )}
             </div>

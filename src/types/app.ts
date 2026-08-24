@@ -1,5 +1,6 @@
 import type { LoopSettings } from './loop';
 import type { PlanId } from '@/lib/plans';
+import type { UiLang } from '@/lib/i18n/types';
 
 export const CEFR_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'] as const;
 export type CefrLevel = (typeof CEFR_LEVELS)[number];
@@ -110,6 +111,12 @@ export interface AppSettings extends LoopSettings {
   reminderEnabled: boolean;
   /** Reminder time as "HH:MM" in the device's local timezone. */
   reminderTime: string;
+  /**
+   * Interface language (the language buttons/labels render in) — unrelated to
+   * the learning languages above. Scoped per account like every other
+   * setting; guests keep their own value.
+   */
+  uiLang: UiLang;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -131,4 +138,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   showExamples: true,
   reminderEnabled: false,
   reminderTime: '09:00',
+  uiLang: 'en',
 };

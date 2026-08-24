@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { flagFor } from '@/components/LanguageBadge';
 import { FREE_LANG_OPTIONS } from '@/lib/freeLang';
 import { FREE_LANG_LIMIT } from '@/lib/plans';
+import { useT } from '@/lib/i18n';
 
 interface Props {
   /** Pro/Lifetime — every language is selectable without locks. */
@@ -28,24 +29,30 @@ export default function FreeLanguagePicker({
   pro,
   initialKey,
   onContinue,
-  title = 'Choose your free language',
-  subtitle = pro
-    ? 'Your plan includes every language — pick the one you want to focus on.'
-    : `Your Free plan includes ${FREE_LANG_LIMIT} language. Choose the language you want to practice.`,
+  title,
+  subtitle,
 }: Props) {
+  const t = useT();
   const [selected, setSelected] = useState<string | null>(initialKey ?? null);
 
   const options = useMemo(() => FREE_LANG_OPTIONS, []);
 
   return (
     <div className="w-full">
-      <h2 className="text-xl font-bold tracking-tight text-white">{title}</h2>
-      <p className="mt-1.5 text-sm leading-relaxed text-slate-400">{subtitle}</p>
+      <h2 className="text-xl font-bold tracking-tight text-white">
+        {title ?? t('onboarding.freeLang.title')}
+      </h2>
+      <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+        {subtitle ??
+          (pro
+            ? t('onboarding.freeLang.subtitlePro')
+            : t('onboarding.freeLang.subtitleFree', { limit: FREE_LANG_LIMIT }))}
+      </p>
 
       <div
         className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3"
         role="radiogroup"
-        aria-label="Language"
+        aria-label={t('common.language')}
       >
         {options.map((opt) => {
           const active = selected === opt.key;
@@ -82,7 +89,11 @@ export default function FreeLanguagePicker({
                     included ? 'text-neon-cyan' : locked ? 'text-neon-amber' : 'text-slate-500'
                   }`}
                 >
-                  {included ? '✓ Included with Free' : locked ? '🔒 Pro' : '✓ Preferred'}
+                  {included
+                    ? t('onboarding.freeLang.included')
+                    : locked
+                      ? t('onboarding.freeLang.locked')
+                      : t('onboarding.freeLang.preferred')}
                 </span>
               </span>
             </button>
@@ -98,7 +109,7 @@ export default function FreeLanguagePicker({
         disabled={!selected}
         className="mt-6 w-full rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-3 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
       >
-        Continue
+        {t('common.continue')}
       </button>
     </div>
   );

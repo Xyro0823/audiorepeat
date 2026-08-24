@@ -2,6 +2,7 @@
 
 import { seedCodeForLangKey } from '@/lib/freeLang';
 import { findLanguage } from '@/lib/languages';
+import { useT } from '@/lib/i18n';
 
 interface Props {
   /** Normalized pack key of the Free user's included language, or null. */
@@ -17,6 +18,7 @@ interface Props {
  * while no selection exists yet (the onboarding picker owns that state).
  */
 export default function FreeLanguageBar({ langKey, pro, onChange }: Props) {
+  const t = useT();
   if (pro || !langKey) return null;
   const label = findLanguage(seedCodeForLangKey(langKey) ?? langKey)?.label ?? langKey;
 
@@ -26,14 +28,15 @@ export default function FreeLanguageBar({ langKey, pro, onChange }: Props) {
         <span className="mr-1.5" aria-hidden>
           🌍
         </span>
-        Your <span className="font-semibold text-neon-cyan">free language</span>:{' '}
+        {t('onboarding.bar.your')}{' '}
+        <span className="font-semibold text-neon-cyan">{t('onboarding.bar.freeLanguage')}</span>:{' '}
         <span className="font-semibold text-white">{label}</span>
       </p>
       <button
         onClick={onChange}
         className="shrink-0 rounded-lg border border-neon-cyan/40 px-3.5 py-1.5 text-xs font-bold text-neon-cyan transition hover:bg-neon-cyan/10 active:scale-95"
       >
-        Change
+        {t('onboarding.bar.change')}
       </button>
     </div>
   );

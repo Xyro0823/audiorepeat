@@ -7,6 +7,7 @@ import { dayByLang, dayKey } from '@/lib/practiceStats';
 import { formatDuration } from '@/lib/format';
 import { findLanguage } from '@/lib/languages';
 import { usernameStorageKey } from '@/lib/auth/scopes';
+import { useT } from '@/lib/i18n';
 
 const MAX_USERNAME = 24;
 
@@ -34,6 +35,7 @@ interface Props {
 }
 
 export default function LeaderboardModal({ onClose }: Props) {
+  const t = useT();
   const { days, streak, wordsToday, msToday } = usePracticeStats();
   // Signed-in users are identified by their account name (read-only here);
   // guests keep an editable nickname.
@@ -67,10 +69,10 @@ export default function LeaderboardModal({ onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm">
       <div className="glass animate-fade-up max-h-[88vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 text-center shadow-[0_0_60px_rgba(255,201,77,0.12)]">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">🏆 Daily Leaderboard</h2>
+          <h2 className="text-lg font-bold text-white">{t('library.leaderboard.title')}</h2>
           <button
             onClick={onClose}
-            aria-label="Close leaderboard"
+            aria-label={t('library.leaderboard.closeAria')}
             className="rounded-lg px-2 py-1 text-slate-400 transition hover:bg-white/5 hover:text-white"
           >
             ✕
@@ -83,17 +85,22 @@ export default function LeaderboardModal({ onClose }: Props) {
             <div className="min-w-0 text-left">
               <p className="truncate text-lg font-bold text-white">{username}</p>
               <p className="text-[11px] text-slate-400">
-                🔥 {streak}-day streak · {wordsToday} words · {formatDuration(msToday)} today
+                {t('library.leaderboard.todayStats', {
+                  streak,
+                  words: wordsToday,
+                  time: formatDuration(msToday),
+                })}
               </p>
             </div>
             <span className="shrink-0 rounded-full border border-neon-amber/50 bg-neon-amber/15 px-3 py-1 text-xs font-bold text-neon-amber">
-              Rank #1
+              {t('library.leaderboard.rankBadge')}
             </span>
           </div>
           {isAccount ? (
             <p className="mt-3 rounded-xl border border-white/10 bg-night-800/60 px-3 py-2 text-left text-[11px] text-slate-400">
-              Your account name <span className="font-semibold text-white">@{username}</span> is
-              your leaderboard name.
+              {t('library.leaderboard.accountNamePrefix')}{' '}
+              <span className="font-semibold text-white">@{username}</span>{' '}
+              {t('library.leaderboard.accountNameSuffix')}
             </p>
           ) : (
             <div className="mt-3 flex gap-2">
@@ -101,15 +108,15 @@ export default function LeaderboardModal({ onClose }: Props) {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 maxLength={MAX_USERNAME}
-                placeholder="Display name"
-                aria-label="Display name"
+                placeholder={t('library.leaderboard.displayName')}
+                aria-label={t('library.leaderboard.displayName')}
                 className="min-w-0 flex-1 rounded-xl border border-white/10 bg-night-800/80 px-3 py-2 text-sm text-white outline-none transition placeholder:text-slate-600 focus:border-neon-amber/60"
               />
               <button
                 onClick={commitUsername}
                 className="shrink-0 rounded-xl bg-gradient-to-r from-neon-amber to-neon-magenta px-4 py-2 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
               >
-                {saved ? 'Saved ✓' : 'Save'}
+                {saved ? t('library.leaderboard.savedCheck') : t('common.save')}
               </button>
             </div>
           )}
@@ -118,13 +125,13 @@ export default function LeaderboardModal({ onClose }: Props) {
         {/* Ranked languages practiced today. */}
         <div className="mt-4 text-left">
           <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
-            Today by language
+            {t('library.leaderboard.todayByLanguage')}
           </p>
           {rows.length === 0 ? (
             <div className="mt-2 rounded-2xl border border-dashed border-white/10 p-6 text-center">
-              <p className="text-sm text-slate-400">No practice yet today</p>
+              <p className="text-sm text-slate-400">{t('library.leaderboard.emptyTitle')}</p>
               <p className="mt-1 text-xs text-slate-500">
-                Press play on a set to start climbing the board.
+                {t('library.leaderboard.emptyBody')}
               </p>
             </div>
           ) : (
@@ -144,7 +151,7 @@ export default function LeaderboardModal({ onClose }: Props) {
                   <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-200">
                     {findLanguage(row.lang)?.label ?? row.lang}
                   </span>
-                  <span className="text-xs tabular-nums text-slate-400">{row.w} words</span>
+                  <span className="text-xs tabular-nums text-slate-400">{t('library.leaderboard.rowWords', { count: row.w })}</span>
                   <span className="w-14 text-right text-sm font-semibold tabular-nums text-neon-cyan">
                     {formatDuration(row.ms)}
                   </span>
@@ -155,9 +162,7 @@ export default function LeaderboardModal({ onClose }: Props) {
         </div>
 
         <p className="mt-4 text-[11px] leading-relaxed text-slate-600">
-          AudioRepeat is offline-first with no server, so this board ranks your own daily
-          practice by language. The layout is ready for a friends/global feed if a backend is
-          ever added.
+          {t('library.leaderboard.footerNote')}
         </p>
       </div>
     </div>

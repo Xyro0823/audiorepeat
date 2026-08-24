@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useT } from '@/lib/i18n';
 
 /**
  * Shared Free-plan lock screen for Pro-only routes (/review, /stats). The
@@ -15,6 +16,7 @@ export default function ProFeatureLock({
   title: string;
   description: string;
 }) {
+  const t = useT();
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center px-5 pb-20 pt-16 text-center">
       <section className="glass animate-fade-up w-full rounded-3xl p-8">
@@ -34,7 +36,7 @@ export default function ProFeatureLock({
           </svg>
         </div>
         <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-neon-amber">
-          Pro feature
+          {t('dashboard.lock.badge')}
         </p>
         <h1 className="mt-2 text-xl font-bold tracking-tight text-white">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">{description}</p>
@@ -42,17 +44,17 @@ export default function ProFeatureLock({
           href="/checkout?plan=pro"
           className="mt-6 inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-6 text-sm font-bold text-night-950 transition hover:brightness-110 active:scale-[0.98]"
         >
-          ⭐ Upgrade to Pro
+          {t('dashboard.lock.cta')}
         </Link>
         <p className="mt-3 text-[11px] text-slate-500">
-          Free keeps listening drills, dictation and one language with standard voices.
+          {t('dashboard.lock.freeNote')}
         </p>
       </section>
       <Link
         href="/dashboard"
         className="mt-4 text-sm text-slate-400 underline decoration-slate-600 underline-offset-4 transition hover:text-white"
       >
-        Back to practice
+        {t('dashboard.lock.back')}
       </Link>
     </main>
   );

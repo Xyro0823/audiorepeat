@@ -2,25 +2,27 @@
 
 import { useLibrarySync } from '@/hooks/useLibrarySync';
 import { useAuth } from '@/hooks/useAuth';
+import { useT } from '@/lib/i18n';
 
 export default function CloudSyncBadge() {
   const { user } = useAuth();
   const { phase, syncNow } = useLibrarySync();
+  const t = useT();
   if (!user) return null;
   const copy = {
-    idle: 'Cloud sync ready',
-    syncing: 'Syncing…',
-    synced: 'Synced',
-    offline: 'Saved offline',
-    error: 'Sync needs retry',
+    idle: t('sync.state.idle'),
+    syncing: t('sync.state.syncing'),
+    synced: t('sync.state.synced'),
+    offline: t('sync.state.offline'),
+    error: t('sync.state.error'),
   }[phase];
   return (
     <button
       type="button"
       onClick={() => void syncNow()}
       disabled={phase === 'syncing'}
-      title="Sync this library across your signed-in devices"
-      className="inline-flex min-h-8 items-center gap-1.5 whitespace-nowrap rounded-full border border-white/10 px-2.5 text-[11px] font-medium text-slate-400 transition hover:border-neon-cyan/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan disabled:cursor-wait"
+      title={t('dashboard.sync.title')}
+      className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-white/10 px-2.5 text-[11px] font-medium text-slate-400 transition hover:border-neon-cyan/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan disabled:cursor-wait"
     >
       <span
         className={`h-1.5 w-1.5 rounded-full ${

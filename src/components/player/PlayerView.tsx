@@ -28,6 +28,7 @@ import {
   planHasFeature,
 } from '@/lib/plans';
 import { formatCountdown } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import { recordSetPlayed } from '@/lib/libraryMeta';
 import {
   clearPlaybackPosition,
@@ -55,6 +56,7 @@ const LIBRARY_HREF = '/dashboard';
 
 export default function PlayerView({ setId }: { setId: string | null }) {
   const router = useRouter();
+  const t = useT();
   const { user } = useAuth();
   const { sets, loading, settings, saveSettings, saveSet } = useLists();
   const set = sets.find((s) => s.id === setId) ?? null;
@@ -199,8 +201,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
 
   const enableCloudVoice = useCallback(() => {
     changeSettings({ cloudTts: true });
-    setToast('Cloud voice enabled. Audio will be saved for faster replay.');
-  }, [changeSettings]);
+    setToast(t('player.toast.cloudEnabled'));
+  }, [changeSettings, t]);
 
   const requestCloudVoice = useCallback(() => {
     if (!canCloudAudio) {
@@ -299,7 +301,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         // speechSynthesis on the lock screen), and only once per run.
         if (p.failed > 0 && !handle.summaryShown()) {
           handle.markSummaryShown();
-          setPrewarmSummary(`${p.succeeded} of ${p.total} cached`);
+          setPrewarmSummary(t('player.prewarm.summary', { done: p.succeeded, total: p.total }));
           summaryTimer = window.setTimeout(() => setPrewarmSummary(null), 4000);
         }
         setPrewarm(null);
@@ -327,6 +329,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     cloudTtsReady,
     targetNeedsCloud,
     translationNeedsCloud,
+    t,
   ]);
 
   useEffect(() => {
@@ -384,12 +387,12 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const resumePlayback = useCallback(() => {
     if (resumeIndex <= 0) return;
     if (cloudVoiceConsentNeeded) {
-      setToast('Enable cloud voice below to hear this language clearly.');
+      setToast(t('player.toast.enableCloudVoice'));
       return;
     }
     setResumeWordId(null);
     playFromWord(resumeIndex);
-  }, [cloudVoiceConsentNeeded, playFromWord, resumeIndex]);
+  }, [cloudVoiceConsentNeeded, playFromWord, resumeIndex, t]);
   const startFromBeginning = useCallback(() => {
     if (set) clearPlaybackPosition(user?.id, set.id);
     lastSavedPositionRef.current = null;
@@ -539,13 +542,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         stop();
         if (quizOnRef.current) quizRef.current?.stop();
         if (dictationOnRef.current) dictationRef.current?.stop();
-        setToast('🌙 Sleep timer ended — tap Play within 30s to snooze.');
+        setToast(t('player.toast.sleepEnded'));
         return;
       }
       setSleepRemaining(left);
     }, 500);
     return () => window.clearInterval(id);
-  }, [sleepEndAt, stop]);
+  }, [sleepEndAt, stop, t]);
 
   // Snooze window: expires on its own if the user never taps Play.
   useEffect(() => {
@@ -576,18 +579,16 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // Loop playback that honors the snooze window.
   const startPlayback = useCallback(() => {
     if (dailyLimitReached) {
-      setToast(
-        `Free plan includes ${FREE_DAILY_WORD_LIMIT} words a day — upgrade to Pro for unlimited practice.`,
-      );
+      setToast(t('player.toast.freeLimit', { limit: FREE_DAILY_WORD_LIMIT }));
       return;
     }
     if (cloudVoiceConsentNeeded) {
-      setToast('Enable cloud voice below to hear this language clearly.');
+      setToast(t('player.toast.enableCloudVoice'));
       return;
     }
     play();
     snoozeRestart();
-  }, [dailyLimitReached, cloudVoiceConsentNeeded, play, snoozeRestart]);
+  }, [dailyLimitReached, cloudVoiceConsentNeeded, play, snoozeRestart, t]);
 
   // Stable handle for the lock-screen play request (forwarded into the audio
   // loop's media-session handler, which lives before this callback is defined).
@@ -606,14 +607,12 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // dictation is a Free feature, so its words count against the allowance).
   const startDictation = useCallback(() => {
     if (dailyLimitReached) {
-      setToast(
-        `Free plan includes ${FREE_DAILY_WORD_LIMIT} words a day — upgrade to Pro for unlimited practice.`,
-      );
+      setToast(t('player.toast.freeLimit', { limit: FREE_DAILY_WORD_LIMIT }));
       return;
     }
     dictation.start();
     snoozeRestart();
-  }, [dailyLimitReached, dictation, snoozeRestart]);
+  }, [dailyLimitReached, dictation, snoozeRestart, t]);
 
   // User-triggered stop: halts playback AND cancels the sleep timer (a manual
   // stop means "done for now", so the timer must not fire a stale toast later).
@@ -638,7 +637,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       quiz.stop();
     } else {
       if (cloudVoiceConsentNeeded) {
-        setToast('Enable cloud voice below before starting the quiz.');
+        setToast(t('player.toast.enableCloudForQuiz'));
         return;
       }
       setQuizOn(true);
@@ -649,7 +648,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       stop(); // halt the loop so both engines never speak at once
       startQuiz();
     }
-  }, [canQuiz, quizOn, dictationOn, cloudVoiceConsentNeeded, stop, quiz, dictation, startQuiz]);
+  }, [canQuiz, quizOn, dictationOn, cloudVoiceConsentNeeded, stop, quiz, dictation, startQuiz, t]);
 
   const toggleDictation = useCallback(() => {
     if (dictationOn) {
@@ -657,7 +656,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       dictation.stop();
     } else {
       if (cloudVoiceConsentNeeded) {
-        setToast('Enable cloud voice below before starting dictation.');
+        setToast(t('player.toast.enableCloudForDictation'));
         return;
       }
       setDictationWanted(true);
@@ -668,7 +667,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       stop(); // halt the loop so only dictation speaks
       startDictation();
     }
-  }, [dictationOn, quizOn, cloudVoiceConsentNeeded, stop, dictation, quiz, startDictation]);
+  }, [dictationOn, quizOn, cloudVoiceConsentNeeded, stop, dictation, quiz, startDictation, t]);
 
   // Count each quiz/dictation question as a word listened (keeps streak/stats honest).
   useEffect(() => {
@@ -804,7 +803,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-4 px-5">
         <div className="h-10 w-10 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
-        <p className="text-sm text-slate-500">Loading…</p>
+        <p className="text-sm text-slate-500">{t('player.state.loading')}</p>
       </main>
     );
   }
@@ -812,13 +811,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   if (!set) {
     return (
       <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-4 px-5 text-center">
-        <p className="text-2xl font-semibold text-white">Set not found</p>
-        <p className="text-sm text-slate-400">It may have been deleted.</p>
+        <p className="text-2xl font-semibold text-white">{t('player.state.setNotFound')}</p>
+        <p className="text-sm text-slate-400">{t('player.state.setNotFoundBody')}</p>
         <Link
           href={LIBRARY_HREF}
           className="mt-2 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110"
         >
-          Back to library
+          {t('player.state.backToLibrary')}
         </Link>
       </main>
     );
@@ -837,17 +836,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         <Link
           href={LIBRARY_HREF}
           className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
-          aria-label="Back to library"
+          aria-label={t('player.header.libraryAria')}
         >
           <span>←</span>
-          <span>Library</span>
+          <span>{t('player.header.library')}</span>
         </Link>
         <span className="text-slate-700">/</span>
         <h1 className="truncate text-sm font-semibold text-slate-200">{set.name}</h1>
         <span className="ml-auto shrink-0 rounded-full border border-white/10 px-2.5 py-0.5 text-[11px] text-slate-400">
           {filter === 'all'
-            ? `${set.words.length} words`
-            : `${words.length} / ${set.words.length} words`}
+            ? t('player.header.wordsAll', { count: set.words.length })
+            : t('player.header.wordsFiltered', { shown: words.length, total: set.words.length })}
         </span>
         <StreakBadge streak={streak} />
         <SettingsButton />
@@ -861,11 +860,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       <div className="animate-fade-up mt-4 flex flex-wrap items-center gap-1.5">
         {(
           [
-            { key: 'all', label: 'All', count: set.words.length },
+            { key: 'all', label: t('player.filter.all'), count: set.words.length },
             ...(canReview
               ? ([
-                  { key: 'learning', label: 'Learning', count: learningCount },
-                  { key: 'hard', label: 'Review', count: hardCount },
+                  { key: 'learning', label: t('player.filter.learning'), count: learningCount },
+                  { key: 'hard', label: t('player.filter.review'), count: hardCount },
                 ] as const)
               : []),
           ] as const
@@ -885,25 +884,27 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         ))}
         {filter !== 'all' && (
           <span className="ml-2 text-[11px] text-slate-500">
-            {filter === 'hard' ? 'only words marked for review' : 'only words not yet mastered'}
+            {filter === 'hard'
+              ? t('player.filter.hintHard')
+              : t('player.filter.hintLearning')}
           </span>
         )}
         {!canReview && (
           <button
             onClick={upgradeToPro}
-            title="Spaced-repetition filters are a Pro feature"
+            title={t('player.filter.reviewProTitle')}
             className="rounded-full border border-neon-amber/30 bg-neon-amber/5 px-3 py-1.5 text-xs font-medium text-neon-amber/90 transition hover:border-neon-amber/60 hover:text-neon-amber active:scale-95"
           >
-            <span aria-hidden>⭐</span> Review · Pro
+            <span aria-hidden>⭐</span> {t('player.filter.reviewProLabel')}
           </button>
         )}
         {!canUseAllLangs && (
           <button
             onClick={upgradeToPro}
-            title={`The Free plan includes ${FREE_LANG_LIMIT} active language${FREE_LANG_LIMIT === 1 ? '' : 's'} — upgrade to unlock all languages`}
+            title={t('player.filter.freeLangTitle', { limit: FREE_LANG_LIMIT })}
             className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-neon-amber/40 hover:text-neon-amber active:scale-95"
           >
-            <span aria-hidden>⭐</span> Free · {FREE_LANG_LIMIT} language
+            <span aria-hidden>⭐</span> {t('player.filter.freeLangLabel', { limit: FREE_LANG_LIMIT })}
           </button>
         )}
 
@@ -915,10 +916,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           aria-pressed={canQuiz ? quizOn : false}
           title={
             words.length === 0
-              ? 'No words to quiz on with this filter'
+              ? t('player.filter.quizEmpty')
               : canQuiz
-                ? 'Hear a word, then pick its translation from four choices'
-                : 'Quiz mode is a Pro feature'
+                ? t('player.filter.quizHow')
+                : t('player.filter.quizProTitle')
           }
           className={`rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
             quizOn
@@ -938,7 +939,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             <circle cx="12" cy="12" r="9" />
             <path d="M9.5 8.5 15 12l-5.5 3.5v-7Z" />
           </svg>
-          Quiz
+          {t('player.filter.quiz')}
           {!canQuiz && (
             <span className="ml-1.5 rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
               Pro
@@ -952,8 +953,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           aria-pressed={dictationOn}
           title={
             words.length === 0
-              ? 'No words to dictate with this filter'
-              : 'Hear a word with its spelling hidden, then type what you hear'
+              ? t('player.filter.dictationEmpty')
+              : t('player.filter.dictationHow')
           }
           className={`rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
             dictationOn
@@ -973,13 +974,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             <path d="M4 7V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-4l-4 3v-3H6a2 2 0 0 1-2-2v-1" />
             <path d="M12 4v8" />
           </svg>
-          Dictation
+          {t('player.filter.dictation')}
         </button>
 
         {sleepEndAt !== null && sleepRemaining !== null && (
           <button
             onClick={() => setSleepTimer(null)}
-            title="Sleep timer active — tap to cancel"
+            title={t('player.filter.sleepCancelTitle')}
             className="rounded-full border border-neon-amber/40 bg-neon-amber/10 px-3 py-1.5 text-xs font-medium text-neon-amber transition hover:border-neon-amber/70 hover:bg-neon-amber/20 active:scale-95"
           >
             🌙 {formatCountdown(sleepRemaining)}
@@ -991,10 +992,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               setSnoozeUntil(null);
               setSnoozeRemaining(null);
             }}
-            title="Tap Play within 30s to restart the timer, or tap here to dismiss"
+            title={t('player.filter.snoozeTitle')}
             className="rounded-full border border-neon-amber/40 bg-neon-amber/10 px-3 py-1.5 text-xs font-medium text-neon-amber transition hover:border-neon-amber/70 hover:bg-neon-amber/20 active:scale-95"
           >
-            ⏰ Snooze {formatCountdown(snoozeRemaining)}
+            {t('player.filter.snoozeLabel', { time: formatCountdown(snoozeRemaining) })}
           </button>
         )}
       </div>
@@ -1002,17 +1003,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       <div className="flex flex-1 flex-col justify-center py-8">
         {words.length === 0 ? (
           <div className="animate-fade-up flex flex-col items-center gap-3 text-center">
-            <p className="text-3xl font-bold text-white">All caught up! 🎉</p>
+            <p className="text-3xl font-bold text-white">{t('player.empty.title')}</p>
             <p className="max-w-xs text-sm text-slate-400">
               {filter === 'hard'
-                ? 'No words are marked for review. While drilling, tap Review on words you want to revisit.'
-                : 'Every word in this set is mastered.'}
+                ? t('player.empty.hardBody')
+                : t('player.empty.masteredBody')}
             </p>
             <button
               onClick={() => setFilter('all')}
               className="mt-2 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
             >
-              Play all {set.words.length} words
+              {t('player.empty.playAll', { count: set.words.length })}
             </button>
           </div>
         ) : quizOn ? (
@@ -1062,18 +1063,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <h2 id="daily-limit-title" className="text-sm font-bold text-white">
-                      Daily Free limit reached
+                      {t('player.limit.title')}
                     </h2>
                     <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                      The Free plan includes {FREE_DAILY_WORD_LIMIT} words a day. Your allowance
-                      resets at midnight — or practice without limits with Pro.
+                      {t('player.limit.body', { limit: FREE_DAILY_WORD_LIMIT })}
                     </p>
                     <button
                       type="button"
                       onClick={upgradeToPro}
                       className="mt-3 min-h-11 w-full rounded-xl bg-neon-amber px-4 text-sm font-bold text-night-950 transition hover:brightness-110 active:scale-[0.98] sm:w-auto"
                     >
-                      Upgrade to Pro
+                      {t('player.limit.upgrade')}
                     </button>
                   </div>
                 </div>
@@ -1082,9 +1082,9 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             {resumeWord && !isPlaying && progress.wordIndex === 0 && (
               <div className="mx-auto mb-7 flex w-full max-w-md flex-col gap-4 rounded-2xl border border-neon-cyan/20 bg-neon-cyan/5 p-4 text-left sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neon-cyan">Continue listening</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-neon-cyan">{t('player.resume.heading')}</p>
                   <p className="mt-1 truncate text-sm font-semibold text-white">
-                    Word {resumeIndex + 1} · {resumeWord.target}
+                    {t('player.resume.wordLine', { index: resumeIndex + 1, word: resumeWord.target })}
                   </p>
                   <p className="mt-0.5 truncate text-xs text-slate-500">{resumeWord.translation}</p>
                 </div>
@@ -1094,14 +1094,14 @@ export default function PlayerView({ setId }: { setId: string | null }) {
                     onClick={startFromBeginning}
                     className="min-h-11 rounded-xl border border-white/10 px-3 text-xs font-semibold text-slate-400 transition hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
                   >
-                    Start over
+                    {t('player.resume.startOver')}
                   </button>
                   <button
                     type="button"
                     onClick={resumePlayback}
                     className="min-h-11 rounded-xl bg-neon-cyan px-4 text-xs font-bold text-night-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-night-950"
                   >
-                    ▶ Resume
+                    {t('player.resume.cta')}
                   </button>
                 </div>
               </div>
@@ -1120,21 +1120,20 @@ export default function PlayerView({ setId }: { setId: string | null }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <h2 id="cloud-voice-title" className="text-sm font-bold text-white">
-                      Hear this language clearly
+                      {t('player.cloudVoice.title')}
                     </h2>
                     <p className="mt-1 text-xs leading-relaxed text-slate-400">
-                      This device has no compatible voice. AudioRepeat can securely send only the
-                      word being spoken to Microsoft Azure, then save the audio on this device.
+                      {t('player.cloudVoice.body')}
                     </p>
                     <button
                       type="button"
                       onClick={requestCloudVoice}
                       className="mt-3 min-h-11 w-full rounded-xl bg-neon-cyan px-4 text-sm font-bold text-night-950 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan focus-visible:ring-offset-2 focus-visible:ring-offset-night-950 active:scale-[0.98] sm:w-auto"
                     >
-                      {user ? 'Enable cloud voice' : 'Sign in & enable cloud voice'}
+                      {user ? t('player.cloudVoice.enable') : t('player.cloudVoice.signInEnable')}
                     </button>
                     <p className="mt-2 text-[11px] text-slate-500">
-                      You can turn it off anytime in Settings.
+                      {t('player.cloudVoice.footer')}
                     </p>
                   </div>
                 </div>

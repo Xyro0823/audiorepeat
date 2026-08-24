@@ -1,5 +1,6 @@
 'use client';
 
+import { useT } from '@/lib/i18n';
 import type { QuizQuestion } from '@/hooks/useQuizMode';
 
 interface Props {
@@ -58,6 +59,7 @@ export default function QuizCard({
   onReplay,
   onRestart,
 }: Props) {
+  const t = useT();
   if (finished) {
     if (total === 0) {
       return (
@@ -67,15 +69,15 @@ export default function QuizCard({
               <path d="M13 2 4.5 13.5H11L9.5 22 19 9.5h-6.5L13 2Z" />
             </svg>
           </div>
-          <p className="text-2xl font-bold text-white">Quiz complete!</p>
+          <p className="text-2xl font-bold text-white">{t('player.quiz.completeTitle')}</p>
           <p className="max-w-xs text-sm text-slate-400">
-            All {wordCount} questions were skipped. Try answering next time — you get instant feedback on every word.
+            {t('player.quiz.allSkippedBody', { count: wordCount })}
           </p>
           <button
             onClick={onRestart}
             className="mt-2 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-6 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
           >
-            ▶ Play again
+            {t('player.playAgain')}
           </button>
         </div>
       );
@@ -88,16 +90,16 @@ export default function QuizCard({
             <path d="M20 6 9 17l-5-5" />
           </svg>
         </div>
-        <p className="text-2xl font-bold text-white">Quiz complete!</p>
+        <p className="text-2xl font-bold text-white">{t('player.quiz.completeTitle')}</p>
         <p className="text-5xl font-bold tabular-nums text-neon-cyan">
           {correctCount} <span className="text-2xl text-slate-400">/ {total}</span>
         </p>
-        <p className="text-sm text-slate-400">{pct}% correct</p>
+        <p className="text-sm text-slate-400">{t('player.quiz.pctCorrect', { pct })}</p>
         <button
           onClick={onRestart}
           className="mt-2 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-6 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
         >
-          ▶ Play again
+          {t('player.playAgain')}
         </button>
       </div>
     );
@@ -112,9 +114,9 @@ export default function QuizCard({
             <path d="M12 8v4l2.5 2.5" />
           </svg>
         </div>
-        <p className="text-lg font-semibold text-white">Quiz mode</p>
+        <p className="text-lg font-semibold text-white">{t('player.quiz.modeTitle')}</p>
         <p className="max-w-xs text-sm text-slate-400">
-          Press play to hear a word, then pick its translation from the choices.
+          {t('player.quiz.modeIntro')}
         </p>
       </div>
     );
@@ -127,17 +129,17 @@ export default function QuizCard({
     <div className="animate-fade-up flex flex-col items-center text-center">
       <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
         <span>
-          Question {question.wordIndex + 1} / {wordCount}
+          {t('player.quiz.questionN', { current: question.wordIndex + 1, total: wordCount })}
         </span>
         <span className="rounded-full border border-neon-green/30 bg-neon-green/10 px-2 py-0.5 text-[10px] font-semibold normal-case tracking-normal text-neon-green">
-          {correctCount}/{total} correct
+          {t('player.scoreBadge', { correct: correctCount, total })}
         </span>
       </div>
 
       <p className="mt-6 text-5xl font-bold tracking-tight text-neon-violet sm:text-6xl">
         {question.word.target}
       </p>
-      <p className="mt-3 text-xs uppercase tracking-widest text-slate-500">Pick the translation</p>
+      <p className="mt-3 text-xs uppercase tracking-widest text-slate-500">{t('player.quiz.pickTranslation')}</p>
 
       <div className="mt-6 grid w-full max-w-md gap-2 sm:grid-cols-2">
         {question.options.map((option, i) => {
@@ -158,8 +160,8 @@ export default function QuizCard({
           }`}
         >
           {isCorrect
-            ? 'Correct! ✓'
-            : `✗ It was "${question.options[question.correctIndex]}"`}
+            ? t('player.quiz.correct')
+            : t('player.quiz.itWas', { answer: question.options[question.correctIndex] })}
         </p>
       )}
 
@@ -172,7 +174,7 @@ export default function QuizCard({
           <path d="M15.5 8.5a5 5 0 0 1 0 7" />
           <path d="M18.5 5.5a9 9 0 0 1 0 13" />
         </svg>
-        Replay word
+        {t('player.quiz.replayWord')}
       </button>
     </div>
   );

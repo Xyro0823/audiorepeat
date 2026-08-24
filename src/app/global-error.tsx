@@ -2,6 +2,9 @@
 
 import { useEffect } from 'react';
 import { reportClientError } from '@/lib/errorMonitoring/client';
+// Safe even though global-error renders outside providers: useT reads the
+// module settings store, whose snapshot defaults to English before hydration.
+import { useT } from '@/lib/i18n';
 
 export default function GlobalError({
   error,
@@ -10,6 +13,7 @@ export default function GlobalError({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
+  const t = useT();
   useEffect(() => {
     reportClientError(error, 'global-boundary');
   }, [error]);
@@ -30,9 +34,9 @@ export default function GlobalError({
         }}
       >
         <main style={{ width: 'min(100%, 520px)', textAlign: 'center' }}>
-          <h1 style={{ margin: 0, fontSize: 24 }}>AudioRepeat needs a quick refresh</h1>
+          <h1 style={{ margin: 0, fontSize: 24 }}>{t('error.generic.title')}</h1>
           <p style={{ margin: '12px 0 24px', color: '#94a3b8', lineHeight: 1.6 }}>
-            Your saved learning data is safe. Retry now to restore the app.
+            {t('error.generic.body')}
           </p>
           <button
             type="button"
@@ -47,7 +51,7 @@ export default function GlobalError({
               cursor: 'pointer',
             }}
           >
-            Retry
+            {t('common.retry')}
           </button>
         </main>
       </body>

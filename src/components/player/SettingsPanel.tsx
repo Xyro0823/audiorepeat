@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { formatCountdown } from '@/lib/format';
+import { useT } from '@/lib/i18n';
 import type { AppSettings } from '@/types/app';
 import type { TTSEngineVoice } from '@/lib/tts/engine';
 import PrewarmStatus from './PrewarmStatus';
@@ -84,6 +85,7 @@ export default function SettingsPanel({
 }: Props) {
   const [open, setOpen] = useState(false);
   const [customMin, setCustomMin] = useState('');
+  const t = useT();
 
   return (
     <section className="animate-fade-up mb-6">
@@ -102,10 +104,10 @@ export default function SettingsPanel({
           >
             <path d="m6 9 6 6 6-6" />
           </svg>
-          Loop settings
+          {t('player.settings.title')}
           {customMode && (
             <span className="rounded-full bg-neon-magenta/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-neon-magenta">
-              this set
+              {t('player.settings.thisSet')}
             </span>
           )}
         </button>
@@ -118,18 +120,18 @@ export default function SettingsPanel({
             <Toggle
               checked={customMode}
               onChange={onToggleCustom}
-              label="Customize settings for this set"
+              label={t('player.settings.customizeSet')}
               hint={
                 customMode
-                  ? 'Changes below apply only to this set'
-                  : 'Changes below apply to all sets'
+                  ? t('player.settings.customHintOn')
+                  : t('player.settings.customHintOff')
               }
             />
           </div>
 
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-              Repeats per word
+              {t('player.settings.repeats')}
             </p>
             <div className="flex gap-1.5">
               {REPEAT_OPTIONS.map((r) => (
@@ -147,13 +149,13 @@ export default function SettingsPanel({
               ))}
             </div>
             <p className="mt-2 text-[11px] text-slate-500">
-              The translation is always spoken once after the repeats.
+              {t('player.settings.repeatHint')}
             </p>
           </div>
 
           <div>
             <p className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-slate-500">
-              <span>Speed</span>
+              <span>{t('player.settings.speed')}</span>
               <span className="rounded-md bg-night-800 px-2 py-0.5 font-mono text-neon-cyan">
                 {settings.speed.toFixed(1)}×
               </span>
@@ -175,7 +177,7 @@ export default function SettingsPanel({
 
           <div>
             <p className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-slate-500">
-              <span>Pause before translation</span>
+              <span>{t('player.settings.gapBefore')}</span>
               <span className="rounded-md bg-night-800 px-2 py-0.5 font-mono text-neon-cyan">
                 {(settings.targetGapMs / 1000).toFixed(1)}s
               </span>
@@ -197,7 +199,7 @@ export default function SettingsPanel({
 
           <div>
             <p className="mb-2 flex items-center justify-between text-xs font-medium uppercase tracking-wider text-slate-500">
-              <span>Pause after translation</span>
+              <span>{t('player.settings.gapAfter')}</span>
               <span className="rounded-md bg-night-800 px-2 py-0.5 font-mono text-neon-cyan">
                 {(settings.translationGapMs / 1000).toFixed(1)}s
               </span>
@@ -221,26 +223,26 @@ export default function SettingsPanel({
             <Toggle
               checked={settings.loop}
               onChange={(v) => onChange({ loop: v })}
-              label="Loop the whole list"
+              label={t('player.settings.loopList')}
             />
             <p className="text-sm text-slate-500">
               {cloudTtsReady && settings.cloudTts
-                ? 'Missing device voices use secure cloud speech and are cached for offline replay.'
+                ? t('player.settings.cloudOn')
                 : cloudTtsReady
-                  ? 'Cloud speech is available but off. Enable it in Settings → Language.'
-                  : 'Cloud speech is not configured yet; device speech is used instead.'}
+                  ? t('player.settings.cloudAvailableOff')
+                  : t('player.settings.cloudUnconfigured')}
             </p>
             <Toggle
               checked={settings.showHints}
               onChange={(v) => onChange({ showHints: v })}
-              label="Show emoji hints on word cards"
-              hint="A contextual emoji for each word — works offline"
+              label={t('player.settings.showHints')}
+              hint={t('player.settings.showHintsHint')}
             />
           </div>
 
           <div className="sm:col-span-2">
             <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
-              Sleep timer
+              {t('player.settings.sleepTimer')}
             </p>
             <div className="flex flex-wrap items-center gap-1.5">
               <button
@@ -251,7 +253,7 @@ export default function SettingsPanel({
                     : 'bg-night-800 text-slate-400 hover:text-white'
                 }`}
               >
-                Off
+                {t('player.settings.sleepOff')}
               </button>
               {SLEEP_PRESETS.map((min) => (
                 <button
@@ -274,7 +276,7 @@ export default function SettingsPanel({
                   type="number"
                   min={1}
                   max={180}
-                  placeholder="Custom"
+                  placeholder={t('player.settings.sleepPlaceholder')}
                   value={customMin}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -283,21 +285,21 @@ export default function SettingsPanel({
                     if (v !== '' && n >= 1 && n <= 180) onSleepChange(n);
                   }}
                   className="w-16 bg-transparent text-sm text-slate-300 outline-none placeholder:text-slate-600"
-                  aria-label="Custom sleep timer minutes"
+                  aria-label={t('player.settings.sleepInputAria')}
                 />
                 <span className="text-xs text-slate-500">m</span>
               </span>
             </div>
             <p className="mt-2 text-[11px] text-slate-500">
               {sleepRemaining !== null && sleepMinutes !== null
-                ? `🌙 Stops in ${formatCountdown(sleepRemaining)} — volume fades out during the last 15 seconds.`
-                : 'Volume fades out smoothly over the last 15 seconds, then playback stops.'}
+                ? t('player.settings.sleepActive', { time: formatCountdown(sleepRemaining) })
+                : t('player.settings.sleepHint')}
             </p>
           </div>
 
           <div className="flex flex-col gap-4 sm:col-span-2">
             <VoicePicker
-              label={`Target voice (${targetLang})`}
+              label={t('player.settings.targetVoice', { lang: targetLang })}
               lang={targetLang}
               value={settings.targetVoiceURI}
               voices={voices}
@@ -305,7 +307,7 @@ export default function SettingsPanel({
               onChange={(uri) => onChange({ targetVoiceURI: uri })}
             />
             <VoicePicker
-              label={`Translation voice (${nativeLang})`}
+              label={t('player.settings.translationVoice', { lang: nativeLang })}
               lang={nativeLang}
               value={settings.translationVoiceURI}
               voices={voices}

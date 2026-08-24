@@ -26,6 +26,7 @@ import {
 } from '@/lib/sets/shareImport';
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { CefrLevel, VocabSet } from '@/types/app';
+import { useT, type TKey } from '@/lib/i18n';
 import CefrBadge from './CefrBadge';
 import LeaderboardModal from './LeaderboardModal';
 import NewSetButton from './NewSetButton';
@@ -106,13 +107,13 @@ function ProgressBar({ pct, className = '' }: { pct: number; className?: string 
   );
 }
 
-const CEFR_LABEL: Record<string, string> = {
-  A1: 'Beginner',
-  A2: 'Elementary',
-  B1: 'Intermediate',
-  B2: 'Upper-intermediate',
-  C1: 'Advanced',
-  C2: 'Proficiency',
+const CEFR_LABEL_KEYS: Record<CefrLevel, TKey> = {
+  A1: 'library.cefr.A1',
+  A2: 'library.cefr.A2',
+  B1: 'library.cefr.B1',
+  B2: 'library.cefr.B2',
+  C1: 'library.cefr.C1',
+  C2: 'library.cefr.C2',
 };
 
 /** Curated order of "featured" languages for the sidebar list. */
@@ -141,6 +142,7 @@ interface FeaturedCardProps {
 }
 
 function FeaturedCard({ set, bookmarked, onBookmark, onPlay }: FeaturedCardProps) {
+  const t = useT();
   const pct = masteryPct(set);
   const flag = flagFor(set.lang) ?? '🌐';
 
@@ -159,33 +161,46 @@ function FeaturedCard({ set, bookmarked, onBookmark, onPlay }: FeaturedCardProps
       <div className="relative p-6 md:p-8">
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-neon-amber/40 bg-neon-amber/10 px-2.5 py-1 text-[11px] font-semibold text-neon-amber">
-            <span aria-hidden>★</span> Editor&apos;s Pick
+            <span aria-hidden>★</span> {t('library.featured.editorsPick')}
           </span>
           <span className="inline-flex items-center gap-1.5 rounded-full border border-neon-cyan/40 bg-neon-cyan/10 px-2.5 py-1 text-[11px] font-semibold text-neon-cyan">
-            <span aria-hidden>🎧</span> Device Speech Audio
+            <span aria-hidden>🎧</span> {t('library.featured.deviceSpeech')}
           </span>
         </div>
 
         <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-          Featured set of the day
+          {t('library.featured.ofDay')}
         </p>
         <h2 className="mt-1 max-w-xl text-2xl font-bold tracking-tight text-white md:text-3xl">
           {set.name}
         </h2>
         <p className="mt-1.5 text-sm text-slate-400">
-          {languageLabel(set.lang)} → {languageLabel(set.nativeLang)} · {set.words.length} words
-          {set.cefr ? ` · ${set.cefr} ${CEFR_LABEL[set.cefr]}` : ''}
+          {t('library.featured.meta', {
+            target: languageLabel(set.lang),
+            native: languageLabel(set.nativeLang),
+            count: set.words.length,
+          })}
+          {set.cefr
+            ? t('library.featured.metaCefr', {
+                level: set.cefr,
+                label: t(CEFR_LABEL_KEYS[set.cefr]),
+              })
+            : ''}
         </p>
         <p className="mt-2.5 max-w-lg text-[13px] leading-relaxed text-slate-400">
-          Loop, repeat, and retain {set.words.length} essential {languageLabel(set.lang)} words
-          with hands-free audio drilling — perfect for commutes, chores, and winding down.
+          {t('library.featured.body', {
+            count: set.words.length,
+            lang: languageLabel(set.lang),
+          })}
         </p>
 
         <div className="mt-5 max-w-md">
           <div className="flex items-center justify-between text-[11px] text-slate-400">
-            <span className="font-medium text-slate-300">{pct}% mastered</span>
+            <span className="font-medium text-slate-300">{t('library.masteredPct', { pct })}</span>
             <span>
-              {set.words.filter((w) => w.mastery === 'mastered').length} words known
+              {t('library.featured.knownCount', {
+                count: set.words.filter((w) => w.mastery === 'mastered').length,
+              })}
             </span>
           </div>
           <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-black/40">
@@ -204,7 +219,7 @@ function FeaturedCard({ set, bookmarked, onBookmark, onPlay }: FeaturedCardProps
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
               <path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z" />
             </svg>
-            Start Learning
+            {t('library.featured.startLearning')}
           </button>
           <button
             onClick={onBookmark}
@@ -224,7 +239,7 @@ function FeaturedCard({ set, bookmarked, onBookmark, onPlay }: FeaturedCardProps
             >
               <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
             </svg>
-            {bookmarked ? 'Saved' : 'Save'}
+            {bookmarked ? t('common.saved') : t('common.save')}
           </button>
         </div>
       </div>
@@ -259,6 +274,7 @@ function PortraitCard({
   onShare,
   onDelete,
 }: PortraitCardProps) {
+  const t = useT();
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const rootRef = useRef<HTMLElement | null>(null);
@@ -316,7 +332,7 @@ function PortraitCard({
         )}
 
         <span className="glass absolute bottom-3 right-3 rounded-full px-2.5 py-1 text-[11px] font-medium text-slate-200">
-          {set.words.length} words
+          {t('library.wordsCount', { count: set.words.length })}
         </span>
 
         {/* Three-dots actions menu (dropdown renders outside the clipped cover) */}
@@ -325,7 +341,7 @@ function PortraitCard({
             setMenuOpen((o) => !o);
             setConfirmDelete(false);
           }}
-          aria-label={`Actions for ${set.name}`}
+          aria-label={t('library.card.actionsAria', { name: set.name })}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
           className="btn-clean absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-200"
@@ -341,7 +357,7 @@ function PortraitCard({
       {menuOpen && (
         <div
           role="menu"
-          aria-label={`Actions for ${set.name}`}
+          aria-label={t('library.card.actionsAria', { name: set.name })}
           className="dropdown-panel animate-fade-up absolute right-2.5 top-12 z-40 w-48 rounded-xl p-1.5 shadow-[0_20px_60px_rgba(0,0,0,0.6)]"
         >
           <button
@@ -349,10 +365,10 @@ function PortraitCard({
             className={`${menuItem} text-neon-amber hover:bg-neon-amber/10`}
             onClick={run(onChallenge)}
           >
-            <span aria-hidden>⚡</span> 1-Min challenge
+            <span aria-hidden>⚡</span> {t('library.card.challenge')}
             {!canChallenge && (
               <span className="ml-auto rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
-                Pro
+                {t('common.pro')}
               </span>
             )}
           </button>
@@ -361,14 +377,14 @@ function PortraitCard({
             className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
             onClick={run(onEdit)}
           >
-            <span aria-hidden>✏️</span> Edit
+            <span aria-hidden>✏️</span> {t('common.edit')}
           </button>
           <button
             role="menuitem"
             className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
             onClick={run(onExport)}
           >
-            <span aria-hidden>⬇</span> Download JSON
+            <span aria-hidden>⬇</span> {t('library.card.downloadJson')}
           </button>
           {!set.id.startsWith('seed-') && (
             <button
@@ -376,7 +392,7 @@ function PortraitCard({
               className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
               onClick={run(onShare)}
             >
-              <span aria-hidden>🔗</span> Copy share link
+              <span aria-hidden>🔗</span> {t('library.card.copyShareLink')}
             </button>
           )}
           <div className="my-1 h-px bg-white/10" />
@@ -387,14 +403,14 @@ function PortraitCard({
                 className={`${menuItem} text-neon-magenta hover:bg-neon-magenta/10`}
                 onClick={run(onDelete)}
               >
-                <span aria-hidden>🗑</span> Confirm delete
+                <span aria-hidden>🗑</span> {t('library.confirmDelete')}
               </button>
               <button
                 role="menuitem"
                 className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
                 onClick={() => setConfirmDelete(false)}
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           ) : (
@@ -403,7 +419,7 @@ function PortraitCard({
               className={`${menuItem} text-neon-magenta hover:bg-neon-magenta/10`}
               onClick={() => setConfirmDelete(true)}
             >
-              <span aria-hidden>🗑</span> Delete
+              <span aria-hidden>🗑</span> {t('common.delete')}
             </button>
           )}
         </div>
@@ -416,13 +432,13 @@ function PortraitCard({
         </h3>
         <p className="mt-0.5 truncate text-xs text-slate-500">
           {languageLabel(set.lang)} → {languageLabel(set.nativeLang)}
-          {set.settings ? ' · custom settings' : ''}
+          {set.settings ? t('library.card.customSettings') : ''}
         </p>
 
         <div className="mt-auto pt-3">
           <div className="flex items-center justify-between text-[11px]">
-            <span className="font-medium text-slate-500">{pct}% mastered</span>
-            {hard > 0 && <span className="text-neon-amber">{hard} to review</span>}
+            <span className="font-medium text-slate-500">{t('library.masteredPct', { pct })}</span>
+            {hard > 0 && <span className="text-neon-amber">{t('library.card.toReview', { count: hard })}</span>}
           </div>
           <ProgressBar pct={pct} className="mt-1.5" />
         </div>
@@ -435,12 +451,12 @@ function PortraitCard({
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
               <path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z" />
             </svg>
-            Play
+            {t('common.play')}
           </button>
           <button
             onClick={onChallenge}
-            title={canChallenge ? 'Quick 1-minute speed test' : 'Speed challenges are a Pro feature'}
-            className="btn-clean flex h-9 min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-1.5 text-xs font-medium text-slate-300"
+            title={canChallenge ? t('library.card.quickTestTitle') : t('library.card.proTestTitle')}
+            className="btn-clean flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg px-1.5 text-xs font-medium text-slate-300"
           >
             <svg
               viewBox="0 0 24 24"
@@ -455,10 +471,10 @@ function PortraitCard({
               <circle cx="12" cy="13" r="8" />
               <path d="M12 9v4l2.5 2.5M9 2h6" />
             </svg>
-            {canChallenge ? 'Quick Test' : 'Test'}
+            {canChallenge ? t('library.card.quickTest') : t('library.card.test')}
             {!canChallenge && (
               <span className="rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
-                Pro
+                {t('common.pro')}
               </span>
             )}
           </button>
@@ -474,6 +490,7 @@ export default function SetLibrary() {
   const { sets, allSets, loading, settings, saveSet, removeSet, saveSettings, freeLangKey } = useLists();
   const { wordsToday, msToday, streak, week, days, recordWords } = usePracticeStats();
   const { recents, favorites, toggleFavorite } = useLibraryMeta();
+  const t = useT();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const subtitleInputRef = useRef<HTMLInputElement>(null);
@@ -511,13 +528,16 @@ export default function SetLibrary() {
       const text = await file.text();
       const parsed = parseSetJson(text);
       if (!parsed) {
-        flash({ kind: 'err', text: 'That file is not a valid AudioRepeat set.' });
+        flash({ kind: 'err', text: t('library.flash.invalidFile') });
         return;
       }
       await saveSet(parsed);
-      flash({ kind: 'ok', text: `Imported "${parsed.name}" (${parsed.words.length} words).` });
+      flash({
+        kind: 'ok',
+        text: t('library.flash.imported', { name: parsed.name, count: parsed.words.length }),
+      });
     } catch {
-      flash({ kind: 'err', text: 'Could not read that file.' });
+      flash({ kind: 'err', text: t('library.flash.readFailed') });
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -528,7 +548,7 @@ export default function SetLibrary() {
       const text = await file.text();
       setSubtitleImport({ fileName: file.name, text });
     } catch {
-      flash({ kind: 'err', text: 'Could not read that subtitle file.' });
+      flash({ kind: 'err', text: t('library.flash.readSubtitleFailed') });
     } finally {
       if (subtitleInputRef.current) subtitleInputRef.current.value = '';
     }
@@ -569,12 +589,12 @@ export default function SetLibrary() {
     const result = previewSharedSetLink(window.location.href);
     if (result.status === 'ready') queueMicrotask(() => setPendingSharedSet(result.preview));
     else if (result.status === 'invalid') {
-      queueMicrotask(() => flash({ kind: 'err', text: 'That share link is invalid or corrupted.' }));
+      queueMicrotask(() => flash({ kind: 'err', text: t('library.flash.badShareLink') }));
     }
     if (result.status !== 'none') {
       window.history.replaceState(null, '', withoutSharedSetPayload(window.location.href));
     }
-  }, [flash]);
+  }, [flash, t]);
 
   const duplicateSharedSet = useMemo(
     () => pendingSharedSet ? findDuplicateSharedSet(pendingSharedSet.set, sets) : null,
@@ -775,7 +795,7 @@ export default function SetLibrary() {
         <div className="mr-auto min-w-0">
           <h1 className="text-[15px] font-semibold leading-tight tracking-tight text-white">AudioRepeat</h1>
           <p className="hidden text-[11px] leading-snug text-slate-500 sm:block">
-            {FREE_LANG_OPTIONS.length} languages · hands-free practice
+            {t('library.tagline', { count: FREE_LANG_OPTIONS.length })}
           </p>
         </div>
         <div className="nav-actions ml-auto flex w-full items-center justify-between gap-0.5 rounded-2xl p-1 sm:w-auto sm:justify-start">
@@ -844,7 +864,7 @@ export default function SetLibrary() {
         {/* ------------------------------------------------------------ */}
         <aside className="glass animate-fade-up rounded-3xl p-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Featured Languages
+            {t('library.sidebar.featuredLanguages')}
           </h2>
 
           <ul className="mt-2.5 space-y-0.5">
@@ -852,7 +872,7 @@ export default function SetLibrary() {
               <li key={s.id}>
                 <button
                   onClick={() => playSet(s)}
-                  title={`Play ${s.name}`}
+                  title={t('library.sidebar.playAria', { name: s.name })}
                   className="flex w-full items-center gap-2.5 rounded-xl p-2 text-left transition hover:bg-white/5"
                 >
                   <MiniCover lang={s.lang} className="h-10 w-10 rounded-lg" />
@@ -862,7 +882,7 @@ export default function SetLibrary() {
                     </span>
                     <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-slate-500">
                       {s.cefr && <CefrBadge level={s.cefr} className="!px-1.5 !py-0 !text-[9px]" />}
-                      <span className="truncate">{s.words.length} words</span>
+                      <span className="truncate">{t('library.wordsCount', { count: s.words.length })}</span>
                     </span>
                   </span>
                   <svg
@@ -885,7 +905,7 @@ export default function SetLibrary() {
           <div className="my-4 h-px bg-white/10" />
 
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Continue Practice
+            {t('library.sidebar.continuePractice')}
           </h2>
 
           {recentSets.length > 0 ? (
@@ -897,7 +917,7 @@ export default function SetLibrary() {
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
                   <path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z" />
                 </svg>
-                Play Last Practice
+                {t('library.sidebar.playLast')}
               </button>
 
               <ul className="mt-2 space-y-0.5">
@@ -905,7 +925,7 @@ export default function SetLibrary() {
                   <li key={s.id}>
                     <button
                       onClick={() => playSet(s)}
-                      title={`Play ${s.name}`}
+                      title={t('library.sidebar.playAria', { name: s.name })}
                       className="flex w-full items-center gap-2.5 rounded-xl p-2 text-left transition hover:bg-white/5"
                     >
                       <MiniCover lang={s.lang} className="h-10 w-10 rounded-lg" />
@@ -915,7 +935,7 @@ export default function SetLibrary() {
                         </span>
                         <span className="mt-0.5 flex items-center gap-1.5 text-[10px] text-slate-500">
                           {s.cefr && <CefrBadge level={s.cefr} className="!px-1.5 !py-0 !text-[9px]" />}
-                          <span className="truncate">{s.words.length} words</span>
+                          <span className="truncate">{t('library.wordsCount', { count: s.words.length })}</span>
                         </span>
                       </span>
                       <span className="flex w-12 shrink-0 flex-col items-end gap-1">
@@ -931,31 +951,30 @@ export default function SetLibrary() {
             </>
           ) : (
             <p className="mt-3 text-sm leading-relaxed text-slate-500">
-              Practice any set and it will show up here so you can resume right where you left
-              off.
+              {t('library.sidebar.recentsEmpty')}
             </p>
           )}
 
           <div className="my-4 h-px bg-white/10" />
 
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
-            Today
+            {t('library.sidebar.today')}
           </h2>
           <dl className="mt-2.5 space-y-2 text-sm">
             <div className="flex items-center justify-between">
-              <dt className="text-slate-500">Words listened</dt>
+              <dt className="text-slate-500">{t('library.sidebar.wordsListened')}</dt>
               <dd className="font-semibold tabular-nums text-slate-200">{wordsToday}</dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-slate-500">Study time</dt>
+              <dt className="text-slate-500">{t('library.sidebar.studyTime')}</dt>
               <dd className="font-semibold tabular-nums text-slate-200">
                 {formatDuration(msToday)}
               </dd>
             </div>
             <div className="flex items-center justify-between">
-              <dt className="text-slate-500">Streak</dt>
+              <dt className="text-slate-500">{t('library.sidebar.streak')}</dt>
               <dd className="font-semibold tabular-nums text-neon-amber">
-                {streak > 0 ? `🔥 ${streak} day${streak === 1 ? '' : 's'}` : '—'}
+                {streak > 0 ? t('library.sidebar.streakDays', { count: streak }) : '—'}
               </dd>
             </div>
           </dl>
@@ -1016,14 +1035,23 @@ export default function SetLibrary() {
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold tracking-tight text-white">
-                  Language Sets &amp; Library
+                  {t('library.grid.title')}
                 </h2>
                 <p className="text-xs text-slate-500">
                   {loading
-                    ? 'Loading your sets…'
+                    ? t('library.grid.loading')
                     : filtersActive
-                      ? `${filteredSets.length} of ${sets.length} set${sets.length === 1 ? '' : 's'} · ${filteredWords.toLocaleString()} words · ${filteredLangCount} language${filteredLangCount === 1 ? '' : 's'}`
-                      : `${sets.length} set${sets.length === 1 ? '' : 's'} · ${totalWords.toLocaleString()} words · ${langCount} language${langCount === 1 ? '' : 's'}`}
+                      ? t('library.grid.filteredSummary', {
+                          shown: filteredSets.length,
+                          total: sets.length,
+                          words: filteredWords.toLocaleString(),
+                          langs: filteredLangCount,
+                        })
+                      : t('library.grid.summary', {
+                          sets: sets.length,
+                          words: totalWords.toLocaleString(),
+                          langs: langCount,
+                        })}
                 </p>
               </div>
               <div className="flex flex-wrap items-center justify-end gap-2">
@@ -1032,7 +1060,7 @@ export default function SetLibrary() {
                   onClick={() => setBrowse(true)}
                   className="btn-clean flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-medium text-slate-300"
                 >
-                  <span aria-hidden>＋</span> Browse library
+                  <span aria-hidden>＋</span> {t('library.starter.title')}
                 </button>
               </div>
             </div>
@@ -1048,8 +1076,8 @@ export default function SetLibrary() {
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search sets or languages…"
-                  aria-label="Search sets"
+                  placeholder={t('library.grid.searchPlaceholder')}
+                  aria-label={t('library.grid.searchAria')}
                   className="btn-clean h-9 w-full rounded-xl pl-9 pr-3 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-neon-violet/60"
                 />
               </div>
@@ -1058,7 +1086,7 @@ export default function SetLibrary() {
                 <div
                   className="flex flex-wrap items-center gap-1.5"
                   role="group"
-                  aria-label="Filter by CEFR level"
+                  aria-label={t('library.grid.filterCefrAria')}
                 >
                   {(['all', ...CEFR_LEVELS] as const).map((lvl) => {
                     const active = cefrFilter === lvl;
@@ -1076,7 +1104,7 @@ export default function SetLibrary() {
                             : 'text-slate-400 hover:bg-white/5 hover:text-white'
                         }`}
                       >
-                        {lvl === 'all' ? 'All' : lvl}
+                        {lvl === 'all' ? t('common.all') : lvl}
                       </button>
                     );
                   })}
@@ -1087,10 +1115,10 @@ export default function SetLibrary() {
                 <select
                   value={langFilter}
                   onChange={(e) => setLangFilter(e.target.value)}
-                  aria-label="Filter by language"
+                  aria-label={t('library.grid.filterLangAria')}
                   className="btn-clean h-9 rounded-xl px-3 text-sm text-white focus:outline-none focus:ring-1 focus:ring-neon-violet/60 [&>option]:bg-slate-900"
                 >
-                  <option value="all">All languages</option>
+                  <option value="all">{t('library.grid.allLanguages')}</option>
                   {langOptions.map((l) => (
                     <option key={l} value={l}>
                       {languageLabel(l)}
@@ -1105,7 +1133,7 @@ export default function SetLibrary() {
                   onClick={clearFilters}
                   className="text-xs font-medium text-neon-violet transition hover:text-white"
                 >
-                  Clear filters
+                  {t('library.grid.clearFilters')}
                 </button>
               )}
             </div>
@@ -1122,29 +1150,28 @@ export default function SetLibrary() {
               </div>
             ) : sets.length === 0 ? (
               <div className="glass-card mx-auto max-w-md rounded-2xl p-10 text-center">
-                <p className="text-lg font-semibold text-white">No vocabulary sets yet</p>
+                <p className="text-lg font-semibold text-white">{t('library.grid.emptyTitle')}</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  Create your first set with the + New button, import a JSON set, or grab a
-                  starter pack from the library.
+                  {t('library.grid.emptyBody')}
                 </p>
                 <button
                   onClick={() => setBrowse(true)}
                   className="btn-primary mx-auto mt-5 flex h-10 items-center justify-center rounded-xl px-5 text-sm font-semibold text-white"
                 >
-                  Browse starter library
+                  {t('library.grid.browseStarter')}
                 </button>
               </div>
             ) : filteredSets.length === 0 ? (
               <div className="glass-card mx-auto max-w-md rounded-2xl p-10 text-center">
-                <p className="text-lg font-semibold text-white">No sets match your filters</p>
+                <p className="text-lg font-semibold text-white">{t('library.grid.noMatchTitle')}</p>
                 <p className="mt-2 text-sm text-slate-400">
-                  Try a different search, level, or language.
+                  {t('library.grid.noMatchBody')}
                 </p>
                 <button
                   onClick={clearFilters}
                   className="btn-clean mx-auto mt-5 flex h-10 items-center justify-center rounded-xl px-5 text-sm font-semibold text-white"
                 >
-                  Clear filters
+                  {t('library.grid.clearFilters')}
                 </button>
               </div>
             ) : (
@@ -1200,7 +1227,10 @@ export default function SetLibrary() {
           onClose={() => setPendingSharedSet(null)}
           onConfirm={async (set) => {
             await saveSet(set);
-            flash({ kind: 'ok', text: `Imported "${set.name}" (${set.words.length} words).` });
+            flash({
+              kind: 'ok',
+              text: t('library.flash.imported', { name: set.name, count: set.words.length }),
+            });
           }}
         />
       )}
@@ -1240,9 +1270,12 @@ export default function SetLibrary() {
           onImport={async (set) => {
             try {
               await saveSet(set);
-              flash({ kind: 'ok', text: `Imported "${set.name}" (${set.words.length} words).` });
+              flash({
+                kind: 'ok',
+                text: t('library.flash.imported', { name: set.name, count: set.words.length }),
+              });
             } catch {
-              flash({ kind: 'err', text: 'Could not import that starter set.' });
+              flash({ kind: 'err', text: t('library.flash.starterFailed') });
             }
           }}
         />

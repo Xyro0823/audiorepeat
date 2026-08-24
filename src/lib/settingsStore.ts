@@ -1,4 +1,5 @@
 import { getSettings, putSettings } from '@/lib/db/indexedDb';
+import { DEFAULT_UI_LANG, isUiLang } from '@/lib/i18n/types';
 import type { AppSettings } from '@/types/app';
 import { DEFAULT_SETTINGS } from '@/types/app';
 
@@ -87,6 +88,8 @@ function applyStoredSettings(stored: AppSettings | undefined): void {
       5000,
       Math.max(1000, stored?.targetGapMs ?? DEFAULT_SETTINGS.targetGapMs),
     ),
+    // Legacy records predate uiLang; unknown values fall back to English.
+    uiLang: isUiLang(stored?.uiLang) ? stored.uiLang : DEFAULT_UI_LANG,
   };
 }
 

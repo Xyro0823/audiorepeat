@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLists } from '@/hooks/useLists';
 import { useAuth } from '@/hooks/useAuth';
 import { bestScoreStorageKey } from '@/lib/auth/scopes';
+import { useT } from '@/lib/i18n';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
@@ -67,6 +68,7 @@ interface Props {
 }
 
 export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
+  const t = useT();
   const { settings } = useLists();
   // Personal-best records are scoped per account (guests keep the legacy key).
   const { user } = useAuth();
@@ -125,7 +127,7 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
         // some words failed, and only once per warm-up run.
         if (p.failed > 0 && !handle.summaryShown()) {
           handle.markSummaryShown();
-          setPrewarmSummary(`${p.succeeded} of ${p.total} cached`);
+          setPrewarmSummary(t('player.prewarm.summary', { done: p.succeeded, total: p.total }));
           summaryTimer = window.setTimeout(() => setPrewarmSummary(null), 4000);
         }
         setPrewarm(null);
@@ -137,7 +139,7 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
       setPrewarmSummary(null);
       if (summaryTimer !== undefined) window.clearTimeout(summaryTimer);
     };
-  }, [set, settings.cachedAudio, settings.cloudTts, settings.targetVoiceURI, settings.translationVoiceURI, cloudTtsReady]);
+  }, [set, settings.cachedAudio, settings.cloudTts, settings.targetVoiceURI, settings.translationVoiceURI, cloudTtsReady, t]);
 
   const [phase, setPhase] = useState<'intro' | 'playing' | 'finished'>('intro');
   const phaseRef = useRef(phase);
@@ -386,13 +388,12 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
                 <path d="M13 2 4.5 13.5H11L9.5 22 19 9.5h-6.5L13 2Z" />
               </svg>
             </div>
-            <h2 className="mt-4 text-2xl font-bold text-white">1-Minute Challenge</h2>
+            <h2 className="mt-4 text-2xl font-bold text-white">{t('challenge.intro.title')}</h2>
             <p className="mt-1 text-sm text-slate-400">
-              {set.name} · {set.words.length} words
+              {t('challenge.intro.setMeta', { name: set.name, count: set.words.length })}
             </p>
             <p className="mx-auto mt-4 max-w-xs text-sm text-slate-400">
-              Hear each word and pick its translation as fast as you can — how
-              many can you get in {CHALLENGE_SECONDS} seconds?
+              {t('challenge.intro.description', { seconds: CHALLENGE_SECONDS })}
             </p>
             {(prewarm || prewarmSummary) && (
               <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
@@ -401,7 +402,12 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
             )}
             {best.best > 0 && (
               <p className="mt-3 text-sm font-semibold text-neon-amber">
-                ⚡ Personal best: {best.best} · {best.plays} play{best.plays === 1 ? '' : 's'}
+                {t(
+                  best.plays === 1
+                    ? 'challenge.intro.personalBest.one'
+                    : 'challenge.intro.personalBest.other',
+                  { score: best.best, plays: best.plays },
+                )}
               </p>
             )}
             <div className="mt-6 flex gap-2">
@@ -409,13 +415,13 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
                 onClick={start}
                 className="flex-1 rounded-xl bg-gradient-to-r from-neon-amber to-neon-magenta px-5 py-3 text-sm font-bold text-night-950 transition hover:brightness-110 active:scale-95"
               >
-                ▶ Start
+                {t('challenge.intro.start')}
               </button>
               <button
                 onClick={close}
                 className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white active:scale-95"
               >
-                Close
+                {t('common.close')}
               </button>
             </div>
           </>
@@ -431,15 +437,15 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
                     : 'border-neon-cyan/40 bg-neon-cyan/10 text-neon-cyan'
                 }`}
               >
-                {timeLeft}s
+                {t('challenge.playing.timer', { seconds: timeLeft })}
               </span>
               <span className="text-sm font-semibold text-slate-300">
-                Score <span className="text-neon-amber">{score}</span>
+                {t('challenge.playing.score')} <span className="text-neon-amber">{score}</span>
               </span>
               <button
                 onClick={close}
-                aria-label="Exit challenge"
-                title="Exit — the current run is not saved"
+                aria-label={t('challenge.playing.exitAria')}
+                title={t('challenge.playing.exitTitle')}
                 className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-slate-400 transition hover:border-neon-magenta/50 hover:text-neon-magenta active:scale-90"
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -458,12 +464,12 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
                 </svg>
               </div>
               <p className="text-sm text-slate-400">
-                {round.wordIndex + 1} · pick the translation
+                {t('challenge.playing.pickTranslation', { index: round.wordIndex + 1 })}
               </p>
               <button
                 onClick={replay}
-                aria-label="Replay word"
-                title="Replay word"
+                aria-label={t('challenge.playing.replayWord')}
+                title={t('challenge.playing.replayWord')}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-slate-300 transition hover:border-neon-amber/50 hover:text-neon-amber active:scale-90"
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -504,8 +510,8 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
                 }`}
               >
                 {lastWasCorrect
-                  ? '✓ Correct!'
-                  : `✗ It was "${round.options[round.correctIndex]}"`}
+                  ? t('challenge.answer.correct')
+                  : t('challenge.answer.wasAnswer', { answer: round.options[round.correctIndex] })}
               </p>
             )}
           </>
@@ -524,18 +530,25 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
                 <path d="M20 6 9 17l-5-5" />
               </svg>
             </div>
-            <h2 className="mt-4 text-2xl font-bold text-white">Time&apos;s up!</h2>
+            <h2 className="mt-4 text-2xl font-bold text-white">{t('challenge.finish.title')}</h2>
             <p className="mt-1 text-5xl font-bold tabular-nums text-neon-amber">
               {score}
             </p>
-            <p className="text-sm text-slate-400">correct in 60 seconds</p>
+            <p className="text-sm text-slate-400">
+              {t('challenge.finish.subtitle', { seconds: CHALLENGE_SECONDS })}
+            </p>
             {isNewBest ? (
               <p className="mt-3 rounded-full border border-neon-amber/40 bg-neon-amber/10 px-4 py-1.5 text-sm font-semibold text-neon-amber">
-                🏆 New personal best!
+                {t('challenge.finish.newBest')}
               </p>
             ) : best.best > 0 ? (
               <p className="mt-3 text-sm text-slate-400">
-                Best: {best.best} · {best.plays} play{best.plays === 1 ? '' : 's'}
+                {t(
+                  best.plays === 1
+                    ? 'challenge.finish.best.one'
+                    : 'challenge.finish.best.other',
+                  { score: best.best, plays: best.plays },
+                )}
               </p>
             ) : null}
             <div className="mt-6 flex gap-2">
@@ -543,13 +556,13 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
                 onClick={start}
                 className="flex-1 rounded-xl bg-gradient-to-r from-neon-amber to-neon-magenta px-5 py-3 text-sm font-bold text-night-950 transition hover:brightness-110 active:scale-95"
               >
-                ↻ Play again
+                {t('challenge.finish.playAgain')}
               </button>
               <button
                 onClick={close}
                 className="rounded-xl border border-white/10 px-5 py-3 text-sm font-medium text-slate-300 transition hover:border-white/25 hover:text-white active:scale-95"
               >
-                Close
+                {t('common.close')}
               </button>
             </div>
           </>

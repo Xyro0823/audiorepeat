@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useT } from '@/lib/i18n';
 
 interface Props {
   wordIndex: number;
@@ -21,6 +22,7 @@ export default function ProgressBar({
   onSeek,
   onOpenNavigator,
 }: Props) {
+  const t = useT();
   const [previewIndex, setPreviewIndex] = useState<number | null>(null);
   const previewRef = useRef<number | null>(null);
   const playbackValue =
@@ -59,7 +61,7 @@ export default function ProgressBar({
           step={1}
           value={shownIndex}
           disabled={total === 0}
-          aria-label="Jump to a word"
+          aria-label={t('player.progress.jumpAria')}
           aria-valuetext={label}
           onChange={(event) => preview(Number(event.currentTarget.value))}
           onPointerUp={commit}
@@ -81,10 +83,10 @@ export default function ProgressBar({
           onClick={onOpenNavigator}
           disabled={total === 0}
           className="-ml-2 min-h-11 rounded-lg px-2 text-left transition hover:bg-white/5 hover:text-neon-cyan focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan disabled:cursor-not-allowed disabled:opacity-50"
-          aria-label={`Open word search, current word ${label}`}
+          aria-label={t('player.progress.openSearchAria', { label })}
         >
           <span className="font-semibold text-slate-300">{label}</span>
-          <span className="ml-2">Find a word</span>
+          <span className="ml-2">{t('player.nav.title')}</span>
         </button>
         <span>{Math.round(value * 100)}%</span>
       </div>
