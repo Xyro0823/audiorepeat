@@ -24,12 +24,14 @@ import {
   getAllSets,
   getDeletedSetIds,
   migrateLegacySetsToOwner,
+  migrateLegacySettingsToOwner,
   putSet,
   replaceBackupData,
 } from '@/lib/db/indexedDb';
 import { scheduleLibrarySync, syncLibraryNow } from '@/lib/sync/client';
 import {
   getSettingsSnapshot,
+  activateSettingsOwner,
   adoptPersistedSettings,
   hydrateSettings,
   refreshSettings,
@@ -216,9 +218,19 @@ export function useLists() {
     (async () => {
       const uid = getAuthSnapshot().user?.id ?? null;
       activateSetOwner(uid);
+      activateSettingsOwner(uid);
       if (uid && await migrateLegacySetsToOwner(uid)) {
         adoptLegacyStorageKey(SEED_VERSION_KEY, uid);
         adoptLegacyStorageKey(DEFERRED_SEED_KEY, uid);
+      }
+      // One-time adoption of the legacy device-global settings record (the
+      // auth layer also runs this; both are idempotent and claim-guarded).
+      if (uid) {
+        try {
+          await migrateLegacySettingsToOwner(uid);
+        } catch {
+          /* hydration below loads whatever this account already has */
+        }
       }
       let list = await getAllSets();
       // Offline-first: an existing local library renders immediately while a
@@ -396,7 +408,11 @@ export function useLists() {
   const seenOwnerRef = useRef<string | null | undefined>(undefined);
   useEffect(() => {
     const switchOwner = (next: string | null) => {
+      // Swap BOTH owner-scoped stores immediately: the settings activation
+      // resets the shared snapshot to defaults and cancels any pending write
+      // from the previous account, so nothing stale can flash or persist.
       activateSetOwner(next);
+      activateSettingsOwner(next);
       void (async () => {
         if (next) {
           try {
@@ -404,7 +420,15 @@ export function useLists() {
           } catch {
             /* the localStorage claim marker prevents a double migration */
           }
+          try {
+            await migrateLegacySettingsToOwner(next);
+          } catch {
+            /* claim-guarded; a failure just leaves this account's own record */
+          }
         }
+        // Load THIS account's (or the guest's) persisted settings before any
+        // consumer reads plan/language state from the snapshot.
+        await hydrateSettings();
         setSets(await getAllSets());
         setLoading(false);
         if (!next) return;

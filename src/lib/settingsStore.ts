@@ -17,10 +17,38 @@ let hydrated = false;
 let persistTimer: number | null = null;
 let refreshInFlight: Promise<void> | null = null;
 let hydrateInFlight: Promise<void> | null = null;
+/** The account the store is currently scoped to (null = guest). */
+let activeOwner: string | null | undefined;
 const listeners = new Set<() => void>();
 
 function emit(): void {
   for (const l of listeners) l();
+}
+
+/**
+ * Target the store at an account. Called by the auth layer on every auth
+ * transition (sign-in, logout, guest continuation) BEFORE any settings are
+ * read or written, and mirrors activateSetOwner for the library.
+ *
+ * Synchronously resets the in-memory snapshot to fail-closed defaults and
+ * cancels any pending debounced write, so the PREVIOUS account's settings can
+ * never leak into the next account's session or database — not even a write
+ * that was still sitting in the debounce window when the switch happened.
+ * Callers then re-hydrate to load the new scope's persisted record.
+ */
+export function activateSettingsOwner(uid: string | null | undefined): void {
+  const next = uid ?? null;
+  if (activeOwner === next && (hydrated || hydrateInFlight)) return;
+  if (persistTimer !== null) {
+    clearTimeout(persistTimer);
+    persistTimer = null;
+  }
+  activeOwner = next;
+  settings = { ...DEFAULT_SETTINGS };
+  hydrated = false;
+  hydrateInFlight = null;
+  refreshInFlight = null;
+  emit();
 }
 
 export function subscribeSettings(listener: () => void): () => void {
@@ -39,6 +67,29 @@ export function settingsHydrated(): boolean {
   return hydrated;
 }
 
+/**
+ * Apply a record read back from storage. Any write scheduled BEFORE hydration
+ * (e.g. an entitlement reset firing mid-account-switch, based on defaults)
+ * is superseded by the stored truth and cancelled — committing that stale
+ * snapshot would clobber this account's persisted record.
+ */
+function applyStoredSettings(stored: AppSettings | undefined): void {
+  if (persistTimer !== null) {
+    clearTimeout(persistTimer);
+    persistTimer = null;
+  }
+  settings = {
+    ...DEFAULT_SETTINGS,
+    ...stored,
+    // targetGapMs now lives in the 1-5s range; clamp any legacy stored value
+    // (old default was 600ms) so the slider never shows an out-of-range value.
+    targetGapMs: Math.min(
+      5000,
+      Math.max(1000, stored?.targetGapMs ?? DEFAULT_SETTINGS.targetGapMs),
+    ),
+  };
+}
+
 /** Load persisted settings once (idempotent across all hook instances).
  * Concurrent callers share the in-flight read: `hydrated` flips before the
  * async IndexedDB read finishes, so a second useLists consumer mounting
@@ -50,17 +101,7 @@ export function hydrateSettings(): Promise<void> {
   if (hydrateInFlight) return hydrateInFlight;
   hydrateInFlight = (async () => {
     try {
-      const stored = await getSettings();
-      settings = {
-        ...DEFAULT_SETTINGS,
-        ...stored,
-        // targetGapMs now lives in the 1-5s range; clamp any legacy stored value
-        // (old default was 600ms) so the slider never shows an out-of-range value.
-        targetGapMs: Math.min(
-          5000,
-          Math.max(1000, stored?.targetGapMs ?? DEFAULT_SETTINGS.targetGapMs),
-        ),
-      };
+      applyStoredSettings(await getSettings());
     } catch {
       settings = { ...DEFAULT_SETTINGS };
     } finally {
@@ -86,15 +127,7 @@ export async function refreshSettings(): Promise<void> {
   if (refreshInFlight) return refreshInFlight;
   refreshInFlight = (async () => {
     try {
-      const stored = await getSettings();
-      settings = {
-        ...DEFAULT_SETTINGS,
-        ...stored,
-        targetGapMs: Math.min(
-          5000,
-          Math.max(1000, stored?.targetGapMs ?? DEFAULT_SETTINGS.targetGapMs),
-        ),
-      };
+      applyStoredSettings(await getSettings());
     } catch {
       settings = { ...DEFAULT_SETTINGS };
     }

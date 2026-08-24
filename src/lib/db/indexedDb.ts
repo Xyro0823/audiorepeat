@@ -23,6 +23,8 @@ export interface SyncQueueEntry {
 const DB_VERSION = 4;
 const LEGACY_DB_NAME = 'audiorepeat';
 const LEGACY_CLAIM_KEY = 'audiorepeat-library-claimed-by';
+/** One-time claim marker for the legacy DEVICE-GLOBAL settings record. */
+const LEGACY_SETTINGS_CLAIM_KEY = 'audiorepeat-settings-claimed-by';
 let globalDbPromise: Promise<IDBPDatabase<AudioRepeatDB>> | null = null;
 let activeOwner: string | null = null;
 let setDbPromise: Promise<IDBPDatabase<AudioRepeatDB>> | null = null;
@@ -125,19 +127,110 @@ export async function getDeletedSetIds(): Promise<Set<string>> {
   return new Set((await getSetTombstones()).map((entry) => entry.id));
 }
 
+/**
+ * Settings live in the ACTIVE OWNER's database, exactly like the library:
+ * signed-in user U → `audiorepeat-user-<U>`; guests → the legacy
+ * `audiorepeat` database (their pre-account home, byte-for-byte compatible).
+ * The device-global settings row that shipped before account scoping is
+ * migrated once by migrateLegacySettingsToOwner — never shared between
+ * accounts.
+ */
 export async function getSettings(): Promise<AppSettings | undefined> {
-  const db = await getDb();
+  const db = await getSetDb();
   return (await db.get('settings', 'global'))?.value;
 }
 
 export async function putSettings(settings: AppSettings): Promise<void> {
-  const db = await getDb();
+  const db = await getSetDb();
   await db.put('settings', { key: 'global', value: settings });
 }
 
-/** Atomically replace the database-backed slices restored from a backup. */
+/**
+ * Decide what to do with the legacy device-global settings record for a
+ * signing-in owner. Pure decision core (unit-tested):
+ *  - 'adopt'       → copy legacy into this owner's scope, claim it, clear it
+ *                    (first signed-in account claims pre-account device data,
+ *                    mirroring migrateLegacySetsToOwner).
+ *  - 'claim-only'  → this owner's scope already has settings; just record the
+ *                    claim if absent so no LATER account can adopt leftovers.
+ *  - 'skip'        → another account already claimed the legacy record; this
+ *                    owner must never inherit another user's settings.
+ */
+export type LegacySettingsAdoption = 'adopt' | 'claim-only' | 'skip';
+
+export function planLegacySettingsAdoption(args: {
+  scopedExists: boolean;
+  claimedBy: string | null;
+  owner: string;
+}): LegacySettingsAdoption {
+  if (args.claimedBy && args.claimedBy !== args.owner) return 'skip';
+  return args.scopedExists ? 'claim-only' : 'adopt';
+}
+
+/**
+ * One-time migration of the legacy unscoped settings record. The FIRST
+ * signed-in account after this release adopts it (theme, voices, language
+ * preferences); it is copied before the legacy row is cleared, so a crash
+ * cannot destroy data. Later accounts start from their own scope and never
+ * see another user's preferences.
+ */
+export async function migrateLegacySettingsToOwner(owner: string): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  activateSetOwner(owner);
+  const scoped = await getSetDb();
+  const scopedRecord = await scoped.get('settings', 'global');
+  let claimedBy: string | null = null;
+  try {
+    claimedBy = window.localStorage.getItem(LEGACY_SETTINGS_CLAIM_KEY);
+  } catch {
+    /* storage unavailable: clearing the source still prevents cross-account reuse */
+  }
+  const action = planLegacySettingsAdoption({
+    scopedExists: Boolean(scopedRecord),
+    claimedBy,
+    owner,
+  });
+  if (action === 'skip') return false;
+  const legacy = await getDb();
+  if (action === 'adopt') {
+    const stored = await getSettingsLegacy(legacy);
+    try {
+      window.localStorage.setItem(LEGACY_SETTINGS_CLAIM_KEY, owner);
+    } catch {
+      /* copied data remains safe even without the marker */
+    }
+    if (stored) await scoped.put('settings', { key: 'global', value: stored });
+    // Clear only after the copy committed — a crash here leaves both copies,
+    // and re-running adoption is idempotent (the claim marker gates it).
+    await legacy.delete('settings', 'global');
+    return true;
+  }
+  // claim-only: this account's scope already exists. Record the claim when
+  // absent, but NEVER touch the legacy row — since this account migrated (or
+  // started fresh), that row may hold a guest's own settings.
+  if (!claimedBy) {
+    try {
+      window.localStorage.setItem(LEGACY_SETTINGS_CLAIM_KEY, owner);
+    } catch {
+      /* ignore */
+    }
+  }
+  return false;
+}
+
+async function getSettingsLegacy(
+  db: IDBPDatabase<AudioRepeatDB>,
+): Promise<AppSettings | undefined> {
+  return (await db.get('settings', 'global'))?.value;
+}
+
+/**
+ * Atomically replace the database-backed slices restored from a backup.
+ * Both slices land in the ACTIVE OWNER's database — a restore must never
+ * write into another account's scope (or the guest's).
+ */
 export async function replaceBackupData(settings: AppSettings, sets: VocabSet[]): Promise<void> {
-  const [globalDb, setDb] = await Promise.all([getDb(), getSetDb()]);
+  const setDb = await getSetDb();
   const tx = setDb.transaction(['sets', 'tombstones', 'syncQueue'], 'readwrite');
   const previous = await tx.objectStore('sets').getAll();
   const nextIds = new Set(sets.map((set) => set.id));
@@ -155,11 +248,11 @@ export async function replaceBackupData(settings: AppSettings, sets: VocabSet[])
     await tx.objectStore('syncQueue').put({ id: set.id, kind: 'set', changedAt: set.updatedAt });
   }
   await tx.done;
-  await globalDb.put('settings', { key: 'global', value: settings });
+  await setDb.put('settings', { key: 'global', value: settings });
 }
 
 /**
- * One-time privacy migration. The first signed-in account after this release
+ * One-time privacy migration for the LIBRARY. The first signed-in account after this release
  * claims the old unscoped library; it is copied before the guest database is
  * cleared, so a crash cannot destroy data. Later accounts never inherit it.
  */

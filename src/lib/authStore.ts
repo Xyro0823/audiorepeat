@@ -11,8 +11,11 @@
  */
 import { getAuthMode } from '@/lib/firebase/config';
 import { isNewlyCreatedAccount, markOnboardingPending } from '@/lib/onboarding';
-import { activateSetOwner } from '@/lib/db/indexedDb';
-import { updateSettings } from '@/lib/settingsStore';
+import {
+  activateSetOwner,
+  migrateLegacySettingsToOwner,
+} from '@/lib/db/indexedDb';
+import { activateSettingsOwner, hydrateSettings, updateSettings } from '@/lib/settingsStore';
 import type { AuthResult, AuthState } from '@/types/auth';
 
 const MODE = getAuthMode();
@@ -65,12 +68,45 @@ export function resetLocalEntitlement(): void {
   updateSettings({ plan: 'basic', planBilling: 'annual', planSource: null });
 }
 
+/**
+ * Point BOTH owner-scoped local stores (library + settings) at this account,
+ * then rehydrate settings from the account's own scope. Order matters: the
+ * activation resets must land before any entitlement write so the fail-closed
+ * Free patch is written to the NEW account's scope, never the previous one's.
+ */
+function activateAccountScope(user: NonNullable<AuthState['user']>): void {
+  activateSetOwner(user.id);
+  activateSettingsOwner(user.id);
+}
+
+/**
+ * One-time adoption of the legacy device-global settings record, then load
+ * this account's own persisted settings, then normalize the locally mirrored
+ * plan (fail-closed) and let the server entitlement correct it. Every step
+ * is idempotent; the claim marker inside the migration guarantees one user's
+ * preferences are never adopted into another user's scope.
+ */
+async function rehydrateAccountSettings(uid: string): Promise<void> {
+  try {
+    await migrateLegacySettingsToOwner(uid);
+  } catch {
+    /* hydration below still loads whatever this account already has */
+  }
+  await hydrateSettings();
+  resetLocalEntitlement();
+  void syncPlanFromServer(uid);
+}
+
 function enterSignedInState(user: NonNullable<AuthState['user']>): void {
   // Fail closed before any asynchronous server lookup. This also prevents a
   // late response for User A from appearing during User B's session.
-  resetLocalEntitlement();
-  activateSetOwner(user.id);
+  activateAccountScope(user);
   setState({ status: 'signed-in', user });
+  // Synchronous Free reset into THIS account's scope, then the async chain
+  // adopts legacy settings (first sign-in), reloads the account's own record
+  // and mirrors the authoritative server entitlement.
+  resetLocalEntitlement();
+  void rehydrateAccountSettings(user.id);
 }
 
 /**
@@ -121,7 +157,10 @@ export async function hydrateAuth(): Promise<void> {
   if (hydrated) return;
   hydrated = true;
   if (MODE === 'unconfigured') {
+    activateSetOwner(null);
+    activateSettingsOwner(null);
     resetLocalEntitlement();
+    void hydrateSettings();
     setState({ status: 'guest', user: null });
     return;
   }
@@ -130,7 +169,9 @@ export async function hydrateAuth(): Promise<void> {
     const auth = getFirebaseAuth();
     if (!auth) {
       activateSetOwner(null);
+      activateSettingsOwner(null);
       resetLocalEntitlement();
+      void hydrateSettings();
       setState({ status: 'guest', user: null });
       return;
     }
@@ -152,14 +193,18 @@ export async function hydrateAuth(): Promise<void> {
       } else {
         // Signed out. An explicit `logout()` already moved to 'signed-out'
         // (login screen); anything else (fresh visit) becomes a guest.
-        resetLocalEntitlement();
         activateSetOwner(null);
+        activateSettingsOwner(null);
+        resetLocalEntitlement();
+        void hydrateSettings();
         setStateFn((prev) => prev.status === 'signed-out' ? prev : { status: 'guest', user: null });
       }
     });
   } catch {
     activateSetOwner(null);
+    activateSettingsOwner(null);
     resetLocalEntitlement();
+    void hydrateSettings();
     setState({ status: 'guest', user: null });
   }
 }
@@ -248,9 +293,12 @@ export function logout(): void {
       /* sign-out failure is non-critical */
     });
   // Reset entitlement to Free so the signed-out/guest session never inherits
-  // another user's cached Pro plan from the global settings store.
-  resetLocalEntitlement();
+  // another user's cached Pro plan. Owner activation happens FIRST so the
+  // reset lands in the guest scope, never the signed-out account's record.
   activateSetOwner(null);
+  activateSettingsOwner(null);
+  resetLocalEntitlement();
+  void hydrateSettings();
   setState({ status: 'signed-out', user: null });
 }
 
@@ -263,9 +311,12 @@ export function continueAsGuest(): void {
       /* non-critical */
     });
   // Reset entitlement to Free so the guest session never inherits a signed-in
-  // user's cached Pro plan from the global settings store.
-  resetLocalEntitlement();
+  // user's cached Pro plan. Owner activation happens FIRST so the reset lands
+  // in the guest scope, never the previous account's record.
   activateSetOwner(null);
+  activateSettingsOwner(null);
+  resetLocalEntitlement();
+  void hydrateSettings();
   setState({ status: 'guest', user: null });
 }
 
@@ -287,8 +338,10 @@ export async function deleteAccount(): Promise<AuthResult> {
     // The server deletes Firebase Auth last; this local call is only a safe
     // compatibility no-op when the SDK has not observed that deletion yet.
     if (current) await current.reload().catch(() => {});
-    resetLocalEntitlement();
     activateSetOwner(null);
+    activateSettingsOwner(null);
+    resetLocalEntitlement();
+    void hydrateSettings();
     setState({ status: 'guest', user: null });
     return { ok: true };
   } catch (err) {
