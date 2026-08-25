@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import "@/lib/i18n/register/checkout";
+import "@/lib/i18n/register/landing";
 import SuccessView from "@/components/checkout/SuccessView";
 import { isPaddleConfigured, verifyPaddleTransaction } from "@/lib/paddle/server";
 

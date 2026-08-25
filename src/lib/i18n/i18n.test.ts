@@ -8,11 +8,22 @@ import { DEFAULT_SETTINGS } from '@/types/app';
  * persistence of the interface language (guest / User A / User B never see
  * each other's choice; a reload restores it).
  */
-import { dictionaries } from './dictionaries';
+import { getDictionary } from './dictionaries';
+// Register EVERY bundle: the integrity checks below double as the coverage
+// invariant for the split registry — if a registrar forgets a namespace,
+// its keys vanish from the table and these tests fail.
+import './register/core';
+import './register/landing';
+import './register/dashboard';
+import './register/library';
+import './register/player';
+import './register/review';
+import './register/stats';
+import './register/checkout';
 
 describe('dictionary integrity', () => {
-  const enKeys = Object.keys(dictionaries.en).sort();
-  const mnKeys = Object.keys(dictionaries.mn).sort();
+  const enKeys = Object.keys(getDictionary('en')).sort();
+  const mnKeys = Object.keys(getDictionary('mn')).sort();
 
   it('translates every key — en/mn key sets are identical', () => {
     expect(mnKeys).toEqual(enKeys);
@@ -20,15 +31,16 @@ describe('dictionary integrity', () => {
   });
 
   it('has no empty Mongolian values', () => {
+    const mnTable = getDictionary('mn');
     for (const key of enKeys) {
-      expect((dictionaries.mn as Record<string, string>)[key].trim(), key).not.toBe('');
+      expect((mnTable[key] ?? '').trim(), key).not.toBe('');
     }
   });
 
   it('keeps {placeholder} names identical across locales', () => {
     const placeholderRe = /\{(\w+)\}/g;
-    const en = dictionaries.en as Record<string, string>;
-    const table = dictionaries.mn as Record<string, string>;
+    const en = getDictionary('en');
+    const table = getDictionary('mn');
     for (const key of enKeys) {
       const grab = (value: string): string =>
         [...value.matchAll(placeholderRe)].map((m) => m[1]).sort().join(',');
@@ -37,10 +49,11 @@ describe('dictionary integrity', () => {
   });
 
   it('keeps brand name AudioRepeat untouched in both locales', () => {
-    const enTable = dictionaries.en as Record<string, string>;
-    const tables: Array<[string, Record<string, string>]> = Object.entries(dictionaries).map(
-      ([lang, dict]) => [lang, dict as Record<string, string>],
-    );
+    const enTable = getDictionary('en');
+    const tables: Array<[string, Record<string, string>]> = [
+      ['en', getDictionary('en')],
+      ['mn', getDictionary('mn')],
+    ];
     for (const key of enKeys) {
       if (!enTable[key].includes('AudioRepeat')) continue;
       for (const [lang, table] of tables) {

@@ -1,8 +1,14 @@
 import { useCallback, useSyncExternalStore } from 'react';
-import { dictionaries, type TKey } from './dictionaries';
+import { getDictionary, type TKey } from './dictionaries';
 import { DEFAULT_UI_LANG, isUiLang, UI_LANGUAGES, type UiLang } from './types';
 import { markExplicitUiLangChoice } from './choice';
 import { getSettingsSnapshot, subscribeSettings, updateSettings } from '@/lib/settingsStore';
+
+// CORE namespaces (common/auth/settings/onboarding) are part of the i18n
+// entry itself — every consumer of this module gets them synchronously.
+// Route-specific namespaces register via static imports in route entries
+// (see src/lib/i18n/register/*).
+import './register/core';
 
 /**
  * Translation core. Pure functions live here so non-React modules (auth
@@ -31,8 +37,8 @@ function interpolate(template: string, vars: TVars | undefined): string {
 
 /** Translate for an explicit locale (pure, SSR-safe). */
 export function translate(lang: UiLang, key: TKey, vars?: TVars): string {
-  const table = dictionaries[lang] ?? dictionaries[DEFAULT_UI_LANG];
-  const template = table[key] ?? dictionaries[DEFAULT_UI_LANG][key] ?? String(key);
+  const template =
+    getDictionary(lang)[key] ?? getDictionary(DEFAULT_UI_LANG)[key] ?? String(key);
   return interpolate(template, vars);
 }
 

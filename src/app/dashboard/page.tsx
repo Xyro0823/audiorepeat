@@ -1,3 +1,9 @@
+import "@/lib/i18n/register/library";
+import "@/lib/i18n/register/dashboard";
+import "@/lib/i18n/register/landing";
+import "@/lib/i18n/register/player";
+import "@/lib/i18n/register/challenge";
+import "@/lib/i18n/register/stats";
 import SetLibrary from "@/components/library/SetLibrary";
 import Hero from "@/components/Hero";
 

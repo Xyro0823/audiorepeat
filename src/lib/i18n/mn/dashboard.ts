@@ -110,10 +110,6 @@ export const dashboardMn: Record<DashboardKeys, string> = {
   'dashboard.lock.back': 'Дадлага руу буцах',
 
   // PWA install extras (InstallPrompt / InstallAppButton)
-  'dashboard.install.addTitle': 'Үндсэн дэлгэцэнд нэмэх',
-  'dashboard.install.dismissAria': 'Хаах',
-  'dashboard.install.menuPrefix': 'Хөтчийнхөө цэсийг нээгээд сонгоно уу',
-  'dashboard.install.or': 'эсвэл',
 
   // PWA update prompt (UpdatePrompt — waiting service worker)
   'dashboard.update.title': 'Шинэчлэл бэлэн боллоо',
@@ -122,5 +118,4 @@ export const dashboardMn: Record<DashboardKeys, string> = {
   'dashboard.update.dismissAria': 'Шинэчлэлийн мэдэгдлийг хаах',
 
   // Error boundary extra
-  'dashboard.error.dashboardLink': 'Дашборд',
 };

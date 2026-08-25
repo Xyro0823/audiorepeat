@@ -66,6 +66,12 @@ export const pwaEn = {
   'pwa.install.later': 'Not now',
   'pwa.install.ios': 'Tap the Share button, then “Add to Home Screen”.',
   'pwa.installed': 'App installed',
+  // PWA install surface lives in the root layout — keys kept in core so any
+  // route can render the prompt without the dashboard namespace.
+  'dashboard.install.addTitle': 'Add to Home Screen',
+  'dashboard.install.dismissAria': 'Dismiss',
+  'dashboard.install.menuPrefix': 'Open your browser menu and choose',
+  'dashboard.install.or': 'or',
 } as const;
 export type PwaKeys = keyof typeof pwaEn;
 
@@ -90,6 +96,8 @@ export const errorsEn = {
   'error.empty.words.body': 'Add words to start practicing.',
   'error.offline.title': 'You are offline',
   'error.offline.body': 'Practice still works — changes sync when you reconnect.',
+  // Global error boundary lives on every route — key kept in core.
+  'dashboard.error.dashboardLink': 'Dashboard',
 } as const;
 export type ErrorKeys = keyof typeof errorsEn;
 

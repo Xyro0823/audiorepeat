@@ -107,10 +107,6 @@ export const dashboardEn = {
   'dashboard.lock.back': 'Back to practice',
 
   // PWA install extras (InstallPrompt / InstallAppButton)
-  'dashboard.install.addTitle': 'Add to Home Screen',
-  'dashboard.install.dismissAria': 'Dismiss',
-  'dashboard.install.menuPrefix': 'Open your browser menu and choose',
-  'dashboard.install.or': 'or',
 
   // PWA update prompt (UpdatePrompt — waiting service worker)
   'dashboard.update.title': 'Update available',
@@ -119,7 +115,6 @@ export const dashboardEn = {
   'dashboard.update.dismissAria': 'Dismiss update notice',
 
   // Error boundary extra
-  'dashboard.error.dashboardLink': 'Dashboard',
 } as const;
 
 export type DashboardKeys = keyof typeof dashboardEn;

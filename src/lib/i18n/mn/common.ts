@@ -62,6 +62,12 @@ export const pwaMn: Record<PwaKeys, string> = {
   'pwa.install.later': 'Дараа',
   'pwa.install.ios': 'Хуваалцах товчийг дараад “Үндсэн дэлгэцэнд нэмэх”-ийг сонгоно уу.',
   'pwa.installed': 'Апп суугдлаа',
+  // PWA install surface lives in the root layout — keys kept in core so any
+  // route can render the prompt without the dashboard namespace.
+  'dashboard.install.addTitle': 'Үндсэн дэлгэцэнд нэмэх',
+  'dashboard.install.dismissAria': 'Хаах',
+  'dashboard.install.menuPrefix': 'Браузерын цэсийг нээгээд сонгоно уу',
+  'dashboard.install.or': 'эсвэл',
 };
 
 export const syncMn: Record<SyncKeys, string> = {
@@ -83,6 +89,8 @@ export const errorsMn: Record<ErrorKeys, string> = {
   'error.empty.words.body': 'Дадлаж эхлэхийн тулд үг нэмээрэй.',
   'error.offline.title': 'Та офлайн байна',
   'error.offline.body': 'Дадлага офлайн ч ажилладаг — холбогдсон даруйдаа синк хийгдэнэ.',
+  // Global error boundary lives on every route — key kept in core.
+  'dashboard.error.dashboardLink': 'Дашборд',
 };
 
 export const mn = { ...commonMn, ...pwaMn, ...syncMn, ...errorsMn };

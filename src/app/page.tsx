@@ -1,3 +1,4 @@
+import "@/lib/i18n/register/landing";
 import LandingPage from "@/components/landing/LandingPage";
 import { faqStructuredData, serializeStructuredData, softwareApplicationStructuredData } from "@/lib/structuredData";
 
