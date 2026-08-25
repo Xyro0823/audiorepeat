@@ -48,6 +48,20 @@ html {
   outline-offset: 3px;
 }
 
+/* App-wide visible keyboard focus indicator (mouse clicks are excluded by
+   the :focus-visible heuristic, so the visual design is unchanged). */
+a:focus-visible,
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role='switch']:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-neon-cyan, #38bdf8);
+  outline-offset: 2px;
+}
+
 body {
   color: #e6e7ec;
   /* Deep dark mesh gradient with fine noise texture. */

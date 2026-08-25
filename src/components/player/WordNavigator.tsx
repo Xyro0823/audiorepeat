@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useT } from '@/lib/i18n';
+import useDialogA11y from '@/hooks/useDialogA11y';
 import type { LoopWord } from '@/types/loop';
 
 interface Props {
@@ -31,6 +32,7 @@ export default function WordNavigator({ open, words, currentIndex, onSelect, onC
     setQuery('');
     onClose();
   }, [onClose]);
+  const dialogRef = useDialogA11y<HTMLElement>(open, close);
 
   useEffect(() => {
     if (!open) return;
@@ -39,16 +41,11 @@ export default function WordNavigator({ open, words, currentIndex, onSelect, onC
     const frame = window.requestAnimationFrame(() => {
       currentButtonRef.current?.scrollIntoView({ block: 'center' });
     });
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') close();
-    };
-    window.addEventListener('keydown', onKeyDown);
     return () => {
       window.cancelAnimationFrame(frame);
-      window.removeEventListener('keydown', onKeyDown);
       document.body.style.overflow = previousOverflow;
     };
-  }, [close, open]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -60,6 +57,7 @@ export default function WordNavigator({ open, words, currentIndex, onSelect, onC
       }}
     >
       <section
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="word-navigator-title"

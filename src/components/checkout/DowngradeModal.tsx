@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { flagFor } from '@/components/LanguageBadge';
 import { useLists } from '@/hooks/useLists';
+import useDialogA11y from '@/hooks/useDialogA11y';
 import { findLanguage } from '@/lib/languages';
 import { updateAccountPrefs } from '@/lib/accountPrefs';
 import { FREE_LANG_LIMIT } from '@/lib/plans';
@@ -37,6 +38,7 @@ export default function DowngradeModal({ onClose }: Props) {
   const t = useT();
   const [selected, setSelected] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
 
   // Group the user's visible languages by the normalized limit key, so a
   // language split across seed (BCP-47, e.g. "es-ES") and topic-pack (bare
@@ -87,6 +89,7 @@ export default function DowngradeModal({ onClose }: Props) {
 
   const modal = (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
@@ -173,7 +176,7 @@ export default function DowngradeModal({ onClose }: Props) {
               <button
                 onClick={onClose}
                 aria-label={t('common.close')}
-                className="rounded-lg px-2 py-1 text-slate-400 transition hover:bg-white/5 hover:text-white"
+                className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
               >
                 ✕
               </button>

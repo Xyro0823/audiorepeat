@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useT } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
+import useDialogA11y from '@/hooks/useDialogA11y';
 
 type Mode = 'gate' | 'overlay';
 
@@ -76,14 +77,9 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (mode !== 'overlay') return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose?.();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [mode, onClose]);
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, () => {
+    if (mode === 'overlay') onClose?.();
+  });
 
   const done = useCallback(() => {
     onSuccess?.();
@@ -137,6 +133,7 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
     // the top when it doesn't (small phones with the keyboard open) — plain
     // flex centering would clip the top of an overflowing card.
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[100] flex overflow-y-auto bg-night-950/95 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
@@ -287,7 +284,7 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
               )}
 
               {error && (
-                <div className="animate-fade-up rounded-xl border border-neon-magenta/40 bg-neon-magenta/10 px-4 py-2.5 text-sm text-neon-magenta">
+                <div role="alert" className="animate-fade-up rounded-xl border border-neon-magenta/40 bg-neon-magenta/10 px-4 py-2.5 text-sm text-neon-magenta">
                   {error}
                 </div>
               )}

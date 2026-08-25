@@ -86,6 +86,8 @@ export const playerEn = {
     'No device voice is installed for this language, so AudioRepeat is using its secure cloud voice and saving the result for offline replay.',
   'player.card.cloudVoice': 'Cloud voice · cached after first play',
   'player.card.repeatN': 'repeat {current} / {total}',
+  'player.card.liveAnnounce':
+    '{index} / {total}: {word}. Translation: {translation}.',
   'player.badge.mastered': 'mastered',
   'player.badge.review': 'review',
   'player.mastery.unmark': 'Unmark this word',

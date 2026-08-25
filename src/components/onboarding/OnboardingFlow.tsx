@@ -36,6 +36,7 @@ import { isProPlan } from '@/lib/plans';
 import { getAllSets, putSet } from '@/lib/db/indexedDb';
 import type { CefrLevel } from '@/types/app';
 import FreeLanguagePicker from './FreeLanguagePicker';
+import useDialogA11y from '@/hooks/useDialogA11y';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -84,6 +85,9 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
   useSyncExternalStore(subscribeOnboardingPending, getOnboardingPendingVersion, getOnboardingPendingVersion);
   const record = readOnboardingRecord(uid);
   const visible = shouldShowOnboarding(readOnboardingPending(uid), record);
+  // Full-screen wizard: contain Tab and move focus in while visible. Escape
+  // intentionally does nothing — onboarding must be completed explicitly.
+  const dialogRef = useDialogA11y<HTMLDivElement>(visible, () => {});
 
   const [step, setStep] = useState<Step>(() =>
     record?.lang && record.level && record.goal ? 4 : record?.lang && record.level ? 3 : record?.lang ? 2 : 1,
@@ -295,12 +299,12 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
 
   if (!visible) return null;
 
-  const langLabel = lang ? findLanguage(seedCodeForLangKey(lang) ?? lang)?.label ?? lang : null;
-  const levelLabel = level ? ONBOARDING_LEVELS.find((o) => o.level === level)?.label : null;
+  const langLabel = lang ? findLanguage(seedCodeForLangKey(lang) ?? lang)?.label ?? lang : null;  const levelLabel = level ? ONBOARDING_LEVELS.find((o) => o.level === level)?.label : null;
   const goalLabel = goal ? ONBOARDING_GOALS.find((o) => o.id === goal)?.label : null;
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[100] flex overflow-y-auto bg-night-950/95 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"

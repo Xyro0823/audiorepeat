@@ -22,6 +22,7 @@ import { DEFAULT_SETTINGS } from '@/types/app';
 import { setUiLang, UI_LANGUAGES, useT } from '@/lib/i18n';
 import VoicePicker from '@/components/player/VoicePicker';
 import ChangeFreeLanguageModal from '@/components/onboarding/ChangeFreeLanguageModal';
+import useDialogA11y from '@/hooks/useDialogA11y';
 
 const REPEAT_OPTIONS = [1, 2, 3, 5];
 const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5, 2];
@@ -66,7 +67,12 @@ function Toggle({
   hint?: string;
 }) {
   return (
-    <button onClick={() => onChange(!checked)} className="flex w-full items-center gap-3 text-left">
+    <button
+      onClick={() => onChange(!checked)}
+      role="switch"
+      aria-checked={checked}
+      className="flex w-full items-center gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+    >
       <span
         className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
           checked ? 'bg-neon-cyan' : 'bg-night-600'
@@ -93,6 +99,50 @@ interface Props {
   onClose: () => void;
 }
 
+function RestoreConfirmOverlay({
+  t,
+  count,
+  onConfirm,
+  onCancel,
+}: {
+  t: ReturnType<typeof useT>;
+  count: number;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onCancel);
+  return (
+    <div
+      ref={dialogRef}
+      className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('settings.restore.question')}
+    >
+      <div className="glass animate-fade-up w-full max-w-sm rounded-3xl p-6 text-center">
+        <p className="text-lg font-bold text-white">{t('settings.restore.question')}</p>
+        <p className="mt-2 text-sm text-slate-400">
+          {t('settings.restore.body', { count })}
+        </p>
+        <div className="mt-5 flex justify-center gap-2">
+          <button
+            onClick={onConfirm}
+            className="min-h-11 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+          >
+            {t('settings.restore.button')}
+          </button>
+          <button
+            onClick={onCancel}
+            className="min-h-11 rounded-xl border border-white/10 px-5 py-2.5 text-sm text-slate-300 transition hover:text-white active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+          >
+            {t('common.cancel')}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SettingsModal({ onClose }: Props) {
   const { allSets, sets, settings, loading, saveSettings, restoreBackup: restoreBackupData, saveSet, freeLangKey } =
     useLists();
@@ -107,6 +157,7 @@ export default function SettingsModal({ onClose }: Props) {
   const [confirmReset, setConfirmReset] = useState(false);
   const [pendingImport, setPendingImport] = useState<BackupData | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
 
   const { voices, loading: voicesLoading, hasVoice } = useSpeechVoices();
   const cloudTtsReady = useCloudTtsStatus();
@@ -131,14 +182,6 @@ export default function SettingsModal({ onClose }: Props) {
     setMsg({ kind, text });
     window.setTimeout(() => setMsg((m) => (m?.text === text ? null : m)), 4000);
   }, []);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
 
   // Keep the SW's schedule in sync with the persisted settings (also re-arms
   // the trigger after a SW update or browser restart).
@@ -298,6 +341,7 @@ export default function SettingsModal({ onClose }: Props) {
   // this fixed overlay and trap it inside the header's box.
   const modal = (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[100] flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
@@ -309,7 +353,7 @@ export default function SettingsModal({ onClose }: Props) {
           <button
             onClick={onClose}
             aria-label={t('settings.close.aria')}
-            className="-my-2 -mr-2 flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/5 hover:text-white"
+            className="-my-2 -mr-2 flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
           >
             ✕
           </button>
@@ -506,13 +550,15 @@ export default function SettingsModal({ onClose }: Props) {
 
         {msg && (
           <div
-            className={`animate-fade-up mb-4 rounded-xl border px-4 py-2.5 text-sm ${
+            role={msg.kind === 'err' ? 'alert' : 'status'}
+            className={`animate-fade-up mb-4 flex items-start gap-2 rounded-xl border px-4 py-2.5 text-sm ${
               msg.kind === 'ok'
                 ? 'border-neon-green/40 bg-neon-green/10 text-neon-green'
                 : 'border-neon-magenta/40 bg-neon-magenta/10 text-neon-magenta'
             }`}
           >
-            {msg.text}
+            <span aria-hidden>{msg.kind === 'ok' ? '✓' : '⚠'}</span>
+            <span>{msg.text}</span>
           </div>
         )}
 
@@ -866,32 +912,12 @@ export default function SettingsModal({ onClose }: Props) {
 
       {/* Restore-confirmation overlay (kept above the modal content) */}
       {pendingImport && (
-        <div
-          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="glass animate-fade-up w-full max-w-sm rounded-3xl p-6 text-center">
-            <p className="text-lg font-bold text-white">{t('settings.restore.question')}</p>
-            <p className="mt-2 text-sm text-slate-400">
-              {t('settings.restore.body', { count: pendingImport.sets?.length ?? 0 })}
-            </p>
-            <div className="mt-5 flex justify-center gap-2">
-              <button
-                onClick={() => void restoreBackup()}
-                className="rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
-              >
-                {t('settings.restore.button')}
-              </button>
-              <button
-                onClick={() => setPendingImport(null)}
-                className="rounded-xl border border-white/10 px-5 py-2.5 text-sm text-slate-300 transition hover:text-white active:scale-95"
-              >
-                {t('common.cancel')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <RestoreConfirmOverlay
+          t={t}
+          count={pendingImport.sets?.length ?? 0}
+          onConfirm={() => void restoreBackup()}
+          onCancel={() => setPendingImport(null)}
+        />
       )}
     </div>
   );

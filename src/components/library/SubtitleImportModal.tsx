@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import LanguageLock from '@/components/library/LanguageLock';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
 import { PACK_LANG } from '@/lib/starterSets';
 import { parseSubtitleText } from '@/lib/subtitles/parser';
 import { translateKeywords } from '@/lib/subtitles/matcher';
 import { useT } from '@/lib/i18n';
+import useDialogA11y from '@/hooks/useDialogA11y';
 import type { VocabSet } from '@/types/app';
 
 const PLACEHOLDER = '—'; // fill me in
@@ -38,13 +39,7 @@ export default function SubtitleImportModal({ fileName, text, defaultLang, canUs
 
   const parsed = useMemo(() => parseSubtitleText(text), [text]);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
 
   const langHint = findLanguage(lang)?.label;
   const hasPack = !!PACK_LANG[lang];
@@ -84,7 +79,13 @@ export default function SubtitleImportModal({ fileName, text, defaultLang, canUs
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('library.subtitles.title')}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm"
+    >
       <div className="glass animate-fade-up max-h-[88vh] w-full max-w-md overflow-y-auto rounded-3xl p-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-white">{t('library.subtitles.title')}</h2>

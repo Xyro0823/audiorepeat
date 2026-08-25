@@ -93,6 +93,8 @@ export const playerMn: Record<PlayerKeys, string> = {
     'Энэ хэлэнд төхөөрөмжийн хоолой суугдаагүй тул AudioRepeat аюулгүй клауд дуу хоолойг ашиглаж, үр дүнг офлайн тоглуулалтад кэшлэж байна.',
   'player.card.cloudVoice': 'Клауд хоолой · анхны тоглолтын дараа кэшлэгдсэн',
   'player.card.repeatN': 'Давталт {current} / {total}',
+  'player.card.liveAnnounce':
+    '{index} / {total}: {word}. Орчуулга: {translation}.',
   'player.badge.mastered': 'эзэмшсэн',
   'player.badge.review': 'давтах',
   'player.mastery.unmark': 'Тэмдэглэгээ авах',

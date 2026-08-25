@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Check, RotateCcw, Star, Trash2 } from 'lucide-react';
 import { findLanguage, LANGUAGES } from '@/lib/languages';
 import LanguageLock from '@/components/library/LanguageLock';
@@ -14,6 +14,7 @@ import {
   type BulkWordProgress,
 } from '@/lib/sets/bulkWordActions';
 import { useT, type TKey } from '@/lib/i18n';
+import useDialogA11y from '@/hooks/useDialogA11y';
 
 const REPEAT_OPTIONS = [1, 2, 3, 5];
 
@@ -49,18 +50,11 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
   const [pendingDeleteIds, setPendingDeleteIds] = useState<string[] | null>(null);
   const [bulkStatus, setBulkStatus] = useState('');
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      if (pendingDeleteIds) {
-        setPendingDeleteIds(null);
-        return;
-      }
-      onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, pendingDeleteIds]);
+  // Escape first dismisses the inline delete confirmation, then the editor.
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, () => {
+    if (pendingDeleteIds) setPendingDeleteIds(null);
+    else onClose();
+  });
 
   const valid = name.trim().length > 0 && cleanEditorWords(words).length > 0;
 
@@ -155,6 +149,7 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
       role="dialog"
       aria-modal="true"

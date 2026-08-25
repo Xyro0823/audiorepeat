@@ -8,6 +8,7 @@ import { seedSetForLang } from '@/lib/seedSets';
 import { getAllSets } from '@/lib/db/indexedDb';
 import { updateAccountPrefs } from '@/lib/accountPrefs';
 import { useT } from '@/lib/i18n';
+import useDialogA11y from '@/hooks/useDialogA11y';
 import type { VocabSet } from '@/types/app';
 import FreeLanguagePicker from './FreeLanguagePicker';
 
@@ -30,6 +31,7 @@ interface Props {
 export default function ChangeFreeLanguageModal({ currentKey, allSets, saveSet, onClose }: Props) {
   const t = useT();
   const [busy, setBusy] = useState(false);
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
 
   const confirm = useCallback(
     async (key: string) => {
@@ -66,6 +68,7 @@ export default function ChangeFreeLanguageModal({ currentKey, allSets, saveSet, 
 
   const modal = (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"

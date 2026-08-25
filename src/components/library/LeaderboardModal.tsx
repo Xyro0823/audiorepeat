@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
+import useDialogA11y from '@/hooks/useDialogA11y';
 import { dayByLang, dayKey } from '@/lib/practiceStats';
 import { formatDuration } from '@/lib/format';
 import { findLanguage } from '@/lib/languages';
@@ -46,14 +47,7 @@ export default function LeaderboardModal({ onClose }: Props) {
   );
   const [draft, setDraft] = useState(username);
   const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
 
   const rows = useMemo(() => dayByLang(days, dayKey(new Date())), [days]);
 
@@ -66,14 +60,20 @@ export default function LeaderboardModal({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('library.leaderboard.title')}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm"
+    >
       <div className="glass animate-fade-up max-h-[88vh] w-full max-w-md overflow-y-auto rounded-3xl p-6 text-center shadow-[0_0_60px_rgba(255,201,77,0.12)]">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold text-white">{t('library.leaderboard.title')}</h2>
           <button
             onClick={onClose}
             aria-label={t('library.leaderboard.closeAria')}
-            className="rounded-lg px-2 py-1 text-slate-400 transition hover:bg-white/5 hover:text-white"
+            className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
           >
             ✕
           </button>

@@ -12,6 +12,7 @@ import {
 import { CEFR_LEVELS } from '@/types/app';
 import type { CefrLevel, VocabSet } from '@/types/app';
 import { useT, type TKey } from '@/lib/i18n';
+import useDialogA11y from '@/hooks/useDialogA11y';
 import CefrBadge from './CefrBadge';
 import TopicLibraryTab from './TopicLibraryTab';
 import VirtualList from './VirtualList';
@@ -104,13 +105,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
   );
 
   // Escape to close
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
 
   // Load the manifest once; default to the first language that has a pack.
   useEffect(() => {
@@ -265,6 +260,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
 
   return (
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"

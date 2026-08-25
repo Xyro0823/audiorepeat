@@ -1155,6 +1155,16 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               canMark={canReview}
               onMark={markWord}
             />
+            {/* Screen-reader track announcement (visual card above). */}
+            <p aria-live="polite" className="sr-only">
+              {currentWord &&
+                t('player.card.liveAnnounce', {
+                  index: progress.wordIndex + 1,
+                  total: words.length,
+                  word: currentWord.target,
+                  translation: currentWord.translation,
+                })}
+            </p>
             <ProgressBar
               wordIndex={progress.wordIndex}
               repeatIndex={progress.repeatIndex}

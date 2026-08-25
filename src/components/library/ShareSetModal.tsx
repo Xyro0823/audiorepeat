@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { shareUrlForSet } from '@/lib/sets/share';
 import { useT } from '@/lib/i18n';
+import useDialogA11y from '@/hooks/useDialogA11y';
 import type { VocabSet } from '@/types/app';
 
 interface Props {
@@ -20,6 +21,9 @@ export default function ShareSetModal({ set, onClose }: Props) {
   const [qrError, setQrError] = useState(false);
   const [copied, setCopied] = useState(false);
   const url = shareUrlForSet(set);
+  // The portal only renders once `mounted` is true; keep the dialog hook on
+  // the same lifecycle by gating it with the mounted flag.
+  const dialogRef = useDialogA11y<HTMLDivElement>(mounted, onClose);
 
   useEffect(() => {
     let active = true;
@@ -42,14 +46,6 @@ export default function ShareSetModal({ set, onClose }: Props) {
       active = false;
     };
   }, [url]);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
 
   const copy = useCallback(async () => {
     try {
@@ -81,6 +77,7 @@ export default function ShareSetModal({ set, onClose }: Props) {
 
   return createPortal(
     <div
+      ref={dialogRef}
       className="fixed inset-0 z-[130] flex overflow-y-auto bg-night-950/85 p-4 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
