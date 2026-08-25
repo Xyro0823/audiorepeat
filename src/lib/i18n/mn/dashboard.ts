@@ -115,6 +115,12 @@ export const dashboardMn: Record<DashboardKeys, string> = {
   'dashboard.install.menuPrefix': 'Хөтчийнхөө цэсийг нээгээд сонгоно уу',
   'dashboard.install.or': 'эсвэл',
 
+  // PWA update prompt (UpdatePrompt — waiting service worker)
+  'dashboard.update.title': 'Шинэчлэл бэлэн боллоо',
+  'dashboard.update.body': 'AudioRepeat-ийн шинэ хувилбар бэлэн боллоо.',
+  'dashboard.update.reload': 'Одоо шинэчлэх',
+  'dashboard.update.dismissAria': 'Шинэчлэлийн мэдэгдлийг хаах',
+
   // Error boundary extra
   'dashboard.error.dashboardLink': 'Дашборд',
 };

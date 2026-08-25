@@ -112,6 +112,12 @@ export const dashboardEn = {
   'dashboard.install.menuPrefix': 'Open your browser menu and choose',
   'dashboard.install.or': 'or',
 
+  // PWA update prompt (UpdatePrompt — waiting service worker)
+  'dashboard.update.title': 'Update available',
+  'dashboard.update.body': 'A new version of AudioRepeat is ready.',
+  'dashboard.update.reload': 'Update now',
+  'dashboard.update.dismissAria': 'Dismiss update notice',
+
   // Error boundary extra
   'dashboard.error.dashboardLink': 'Dashboard',
 } as const;

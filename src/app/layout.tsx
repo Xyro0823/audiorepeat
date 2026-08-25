@@ -13,6 +13,7 @@ import AuthGate from "@/components/auth/AuthGate";
 import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import SwRegister from "@/components/pwa/SwRegister";
+import UpdatePrompt from "@/components/pwa/UpdatePrompt";
 import ThemeManager from "@/components/settings/ThemeManager";
 import UiLangGate from "@/components/settings/UiLangGate";
 import { SITE_URL } from "@/lib/site";
@@ -132,6 +133,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ThemeManager />
         <UiLangGate />
         <SwRegister />
+        <UpdatePrompt />
         <InstallPrompt />
       </body>
     </html>

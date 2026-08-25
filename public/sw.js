@@ -61,11 +61,12 @@ const SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
+  // Precache, then WAIT. The worker must not skipWaiting() on its own: an
+  // auto-activated worker leaves open tabs running a stale shell (or breaks
+  // them when activate() prunes old caches). The app detects the waiting
+  // worker and lets the user accept; only then is SKIP_WAITING posted below.
   event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) => cache.addAll(SHELL))
-      .then(() => self.skipWaiting()),
+    caches.open(CACHE).then((cache) => cache.addAll(SHELL)),
   );
 });
 
@@ -113,6 +114,9 @@ self.addEventListener("message", (event) => {
     event.waitUntil(scheduleReminder(data));
   } else if (data.type === "CLEAR_REMINDER") {
     event.waitUntil(clearReminder());
+  } else if (data.type === "SKIP_WAITING") {
+    // User accepted the update prompt — activate the waiting worker now.
+    self.skipWaiting();
   }
 });
 
