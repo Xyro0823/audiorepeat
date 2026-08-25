@@ -1,14 +1,24 @@
 import { NextResponse } from 'next/server';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import {
   getPaddle,
   isPaddleConfigured,
   resolveBillingForPrice,
   resolvePlanForPrice,
 } from '@/lib/paddle/server';
-import { createEntitlementStore, isAdminConfigured } from '@/lib/firebase/admin';
+import { createEntitlementStore, getAdminDb, isAdminConfigured } from '@/lib/firebase/admin';
 import { NO_STORE_HEADERS } from '@/lib/http';
 import {
   handlePaddleAdjustmentEvent,
+} from '@/lib/stripe/entitlements';
+import {
+  buildWebhookFailureRecord,
+  failureDocId,
+  safeEventType,
+  type WebhookFailureKind,
+  type WebhookFailureStage,
+} from '@/lib/errorMonitoring/webhookFailures';
+import {
   handlePaddleSubscriptionEvent,
   handlePaddleTransactionCompleted,
   type PaddleAdjustmentLike,
@@ -24,6 +34,45 @@ const PRICES: PaddlePriceResolver = {
   resolvePlan: resolvePlanForPrice,
   resolveBilling: resolveBillingForPrice,
 };
+
+const FAILURE_COLLECTION = 'webhook_failures';
+const RETENTION_MS = 30 * 24 * 60 * 60 * 1_000;
+
+/**
+ * Record a bounded, sanitized webhook-processing failure for the admin
+ * error-diagnostics UI. Stores ONLY safe classifications (kind, allowlisted
+ * event type, stage, safe error class) — never the payload, signature header,
+ * emails or payment details. Retries of the same event collapse into one
+ * document via a deterministic id and a retry counter. Monitoring can never
+ * break webhook processing (or change its response): all errors are swallowed.
+ */
+async function recordWebhookFailure(
+  kind: WebhookFailureKind,
+  stage: WebhookFailureStage,
+  eventId: string | null,
+  eventType: unknown,
+  error: unknown,
+): Promise<void> {
+  try {
+    if (!isAdminConfigured()) return;
+    const record = buildWebhookFailureRecord({ kind, stage, error, eventType });
+    await getAdminDb()
+      .collection(FAILURE_COLLECTION)
+      .doc(failureDocId(kind, eventId, stage))
+      .set(
+        {
+          ...record,
+          count: FieldValue.increment(1),
+          updatedAt: Timestamp.now(),
+          // Ready for a Firestore TTL policy; nothing relies on deletion.
+          expiresAt: Timestamp.fromMillis(Date.now() + RETENTION_MS),
+        },
+        { merge: true },
+      );
+  } catch {
+    // Observability must never alter the webhook contract.
+  }
+}
 
 /**
  * Paddle webhook endpoint — the server-side source of truth for entitlement.
@@ -65,6 +114,7 @@ export async function POST(request: Request) {
   const signature = request.headers.get('paddle-signature');
   const rawBody = await request.text();
   if (!signature) {
+    await recordWebhookFailure('invalid-signature', 'verify', null, 'unknown', null);
     return NextResponse.json(
       { error: 'missing-signature' },
       { status: 400, headers: NO_STORE_HEADERS },
@@ -81,6 +131,7 @@ export async function POST(request: Request) {
       data: object;
     };
   } catch {
+    await recordWebhookFailure('invalid-signature', 'verify', null, 'unknown', null);
     return NextResponse.json(
       { error: 'invalid-signature' },
       { status: 400, headers: NO_STORE_HEADERS },
@@ -141,6 +192,8 @@ export async function POST(request: Request) {
     }
   } catch (err) {
     console.error('[paddle-webhook] event processing failed:', err);
+    // Sanitized diagnostic for the admin error page (payload never stored).
+    await recordWebhookFailure('processing-failed', 'apply', event.eventId, safeEventType(event.eventType), err);
     // 5xx → Paddle retries the same event (the marker was NOT written).
     return NextResponse.json(
       { error: 'processing-failed' },

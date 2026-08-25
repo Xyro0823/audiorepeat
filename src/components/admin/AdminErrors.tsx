@@ -5,6 +5,7 @@ import AdminBackNav from '@/components/admin/AdminBackNav';
 import { useAuth } from '@/hooks/useAuth';
 import { getAuthIdToken } from '@/lib/authStore';
 import type { ErrorMonitoringSummary } from '@/lib/errorMonitoring/admin';
+import type { WebhookFailureSummary } from '@/lib/errorMonitoring/webhookFailures';
 
 type AdminState = 'checking' | 'admin' | 'forbidden' | 'server-error';
 
@@ -36,6 +37,7 @@ export default function AdminErrors() {
   const [adminState, setAdminState] = useState<AdminState>('checking');
   const [checkedUid, setCheckedUid] = useState<string | null>(null);
   const [summary, setSummary] = useState<ErrorMonitoringSummary | null>(null);
+  const [webhook, setWebhook] = useState<WebhookFailureSummary | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const load = useCallback(async (expectedUid: string): Promise<void> => {
@@ -52,7 +54,7 @@ export default function AdminErrors() {
         cache: 'no-store',
       });
       const data = (await response.json().catch(() => null)) as
-        | { summary?: ErrorMonitoringSummary; error?: string }
+        | { summary?: ErrorMonitoringSummary; paddleWebhook?: WebhookFailureSummary; error?: string }
         | null;
       if (response.status === 403) {
         setCheckedUid(expectedUid);
@@ -66,6 +68,19 @@ export default function AdminErrors() {
         return;
       }
       setSummary(data.summary);
+      // Webhook failures are optional in the payload (older API versions);
+      // a missing section renders as the healthy "no failures" state.
+      setWebhook(
+        data.paddleWebhook ?? {
+          windowDays: data.summary.windowDays,
+          totalEvents: 0,
+          totalRecords: 0,
+          invalidSignatures: 0,
+          truncated: false,
+          byEventType: [],
+          latest: [],
+        },
+      );
       setCheckedUid(expectedUid);
       setAdminState('admin');
     } catch {
@@ -173,6 +188,58 @@ export default function AdminErrors() {
               <p className="text-sm font-semibold text-neon-green">30-day TTL ready</p>
             </Card>
           </div>
+
+          {webhook && (
+            <Card
+              title={`Paddle webhooks · ${webhook.windowDays} days`}
+            >
+              {webhook.totalEvents === 0 ? (
+                <div className="flex items-center gap-2">
+                  <span aria-hidden className="text-lg text-neon-green">✓</span>
+                  <p className="text-sm font-semibold text-neon-green">
+                    All webhook events processed — no failures recorded.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-neon-magenta">
+                    {webhook.totalEvents} failed webhook processing{webhook.totalEvents === 1 ? '' : 's'}
+                    {webhook.truncated ? ' (list truncated)' : ''}
+                  </p>
+                  <CountList rows={webhook.byEventType} />
+                  {webhook.latest.length > 0 && (
+                    <div className="mt-4 overflow-x-auto">
+                      <table className="w-full min-w-[560px] text-left text-xs">
+                        <thead className="text-slate-500">
+                          <tr className="border-b border-white/10">
+                            <th className="pb-2 font-semibold">Last failure</th>
+                            <th className="pb-2 font-semibold">Event type</th>
+                            <th className="pb-2 font-semibold">Kind</th>
+                            <th className="pb-2 font-semibold">Stage</th>
+                            <th className="pb-2 font-semibold">Class</th>
+                            <th className="pb-2 font-semibold">Retries</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5 text-slate-300">
+                          {webhook.latest.map((row) => (
+                            <tr key={row.id}>
+                              <td className="py-2 pr-4 text-slate-500">{new Date(row.updatedAt).toLocaleString()}</td>
+                              <td className="py-2 pr-4">{row.eventType}</td>
+                              <td className="py-2 pr-4">{row.kind}</td>
+                              <td className="py-2 pr-4">{row.stage}</td>
+                              <td className="py-2 pr-4">{row.errorName}</td>
+                              <td className="py-2 tabular-nums">{row.count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
+            </Card>
+          )}
+
           <div className="grid gap-5 sm:grid-cols-2">
             <Card title="By product area"><CountList rows={data.byArea} /></Card>
             <Card title="By safe error class"><CountList rows={data.byErrorName} /></Card>

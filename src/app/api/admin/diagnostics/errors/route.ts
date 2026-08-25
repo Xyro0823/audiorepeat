@@ -10,12 +10,17 @@ import {
   type ErrorVisibility,
   type SafeErrorName,
 } from '@/lib/errorMonitoring/schema';
+import {
+  safeWebhookFailureRow,
+  summarizeWebhookFailures,
+} from '@/lib/errorMonitoring/webhookFailures';
 import { getAdminDb, verifyAdminRequest } from '@/lib/firebase/admin';
 import { NO_STORE_HEADERS } from '@/lib/http';
 
 export const runtime = 'nodejs';
 
 const ERROR_COLLECTION = 'client_errors';
+const WEBHOOK_FAILURE_COLLECTION = 'webhook_failures';
 const WINDOW_DAYS = 7;
 const QUERY_LIMIT = 500;
 
@@ -58,9 +63,10 @@ export async function GET(request: Request) {
   if (!auth.ok) {
     return NextResponse.json({ error: auth.error }, { status: auth.status, headers: NO_STORE_HEADERS });
   }
+  const db = getAdminDb();
   try {
     const since = Timestamp.fromMillis(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1_000);
-    const snap = await getAdminDb()
+    const snap = await db
       .collection(ERROR_COLLECTION)
       .where('createdAt', '>=', since)
       .orderBy('createdAt', 'desc')
@@ -69,8 +75,30 @@ export async function GET(request: Request) {
     const events = snap.docs
       .map((doc) => safeEvent(doc.id, doc.data()))
       .filter((event): event is AdminErrorEvent => event !== null);
+    // Webhook failures are best-effort: an empty/failed read degrades to a
+    // healthy empty summary instead of hiding the client-error diagnostics.
+    let paddleWebhook = summarizeWebhookFailures([], { windowDays: WINDOW_DAYS });
+    try {
+      const wfSnap = await db
+        .collection(WEBHOOK_FAILURE_COLLECTION)
+        .where('updatedAt', '>=', since)
+        .limit(QUERY_LIMIT)
+        .get();
+      const rows = wfSnap.docs
+        .map((doc) => safeWebhookFailureRow(doc.id, doc.data()))
+        .filter((row): row is NonNullable<typeof row> => row !== null);
+      paddleWebhook = summarizeWebhookFailures(rows, {
+        windowDays: WINDOW_DAYS,
+        truncated: wfSnap.size >= QUERY_LIMIT,
+      });
+    } catch {
+      // keep the empty webhook summary
+    }
     return NextResponse.json(
-      { summary: summarizeErrorEvents(events, { windowDays: WINDOW_DAYS, truncated: snap.size >= QUERY_LIMIT }) },
+      {
+        summary: summarizeErrorEvents(events, { windowDays: WINDOW_DAYS, truncated: snap.size >= QUERY_LIMIT }),
+        paddleWebhook,
+      },
       { headers: NO_STORE_HEADERS },
     );
   } catch {
