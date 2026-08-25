@@ -151,3 +151,42 @@ export async function verifyPaddleTransaction(transactionId: string): Promise<{
     email: txn.customer?.email ?? undefined,
   };
 }
+
+/**
+ * Subscription statuses that still represent a live or resumable Paddle
+ * subscription. `past_due`/`grace` may still bill again; `paused` can be
+ * resumed and resume billing — all must be canceled before account deletion.
+ * `canceled` needs no action; lifetime purchases have no subscription at all.
+ */
+export const LIVE_PADDLE_SUBSCRIPTION_STATUSES: ReadonlySet<string> = new Set([
+  'active',
+  'trialing',
+  'past_due',
+  'grace',
+  'paused',
+]);
+
+export type PaddleCancellationResult = 'canceled' | 'failed';
+
+/**
+ * Cancel a Paddle subscription immediately. Used by the account-deletion flow:
+ * billing MUST be terminated (and verified) before any user data is deleted.
+ *
+ * Fail-closed contract: any SDK/network error, an unexpected response status,
+ * or a misconfiguration returns 'failed' — the caller must then refuse the
+ * deletion and keep the account + data intact.
+ */
+export async function cancelPaddleSubscriptionNow(
+  subscriptionId: string,
+): Promise<PaddleCancellationResult> {
+  try {
+    const subscription = await getPaddle().subscriptions.cancel(subscriptionId, {
+      effectiveFrom: 'immediately',
+    });
+    // Only a confirmed 'canceled' status counts as success; anything else is
+    // treated as a failure so deletion never proceeds on a guess.
+    return subscription?.status === 'canceled' ? 'canceled' : 'failed';
+  } catch {
+    return 'failed';
+  }
+}

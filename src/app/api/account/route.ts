@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getAdminAuth, getAdminDb, isAdminConfigured, verifyIdToken } from '@/lib/firebase/admin';
+import {
+  LIVE_PADDLE_SUBSCRIPTION_STATUSES,
+  cancelPaddleSubscriptionNow,
+  isPaddleConfigured,
+} from '@/lib/paddle/server';
 import { NO_STORE_HEADERS } from '@/lib/http';
 
 export const runtime = 'nodejs';
@@ -26,8 +31,42 @@ export async function DELETE(request: Request) {
     const entitlementRef = db.doc(`entitlements/${uid}`);
     const entitlement = await entitlementRef.get();
     const record = entitlement.data() as { status?: string; stripeSubscriptionId?: string | null; paddleSubscriptionId?: string | null } | undefined;
-    const active = record?.status === 'active' || record?.status === 'trialing';
-    if (active && (record?.stripeSubscriptionId || record?.paddleSubscriptionId)) {
+
+    // ---- billing safety: never orphan a live Paddle subscription ----
+    // Active/trialing/past_due/grace/paused subscriptions must be VERIFIED
+    // canceled BEFORE any data is deleted; a failed cancellation fails closed
+    // (409 — account and data are kept). 'canceled' subscriptions need no
+    // action. Lifetime purchases carry no subscription id and pass through.
+    if (record?.paddleSubscriptionId && LIVE_PADDLE_SUBSCRIPTION_STATUSES.has(record.status ?? '')) {
+      if (!isPaddleConfigured()) {
+        return NextResponse.json(
+          { error: 'Cancel your subscription before deleting your account (billing is not configurable on this server).' },
+          { status: 409, headers: NO_STORE_HEADERS },
+        );
+      }
+      const result = await cancelPaddleSubscriptionNow(record.paddleSubscriptionId);
+      if (result !== 'canceled') {
+        return NextResponse.json(
+          { error: 'We could not cancel your subscription, so your account was not deleted. Please try again or contact support.' },
+          { status: 409, headers: NO_STORE_HEADERS },
+        );
+      }
+      // Record the verified cancellation locally so a delayed/lost webhook
+      // can't resurrect Pro on an account whose owner already deleted it.
+      // The authoritative webhook still applies afterwards (idempotent,
+      // ordering-guarded by paddleEventAt).
+      await entitlementRef.set(
+        { status: 'canceled', paddleCanceledAt: Date.now() },
+        { merge: true },
+      );
+    }
+
+    // Stripe subscriptions keep the hard block: there is no server-side
+    // cancellation path wired for them yet, so fail closed.
+    const stripeActive =
+      (record?.status === 'active' || record?.status === 'trialing') &&
+      Boolean(record?.stripeSubscriptionId);
+    if (stripeActive) {
       return NextResponse.json(
         { error: 'Cancel your active subscription before deleting your account.' },
         { status: 409, headers: NO_STORE_HEADERS },
@@ -60,6 +99,13 @@ export async function DELETE(request: Request) {
       .filter((snapshot) => snapshot.exists !== false && snapshot.data())
       .map((snapshot) => ({ ref: snapshot.ref ?? entitlementRef, data: snapshot.data() }));
     const batch = db.batch();
+    // If we verified-canceled above, the rollback copy must reflect it —
+    // never restore a stale 'active' status after an Auth-delete failure.
+    for (const snapshot of snapshots) {
+      if (snapshot.ref.path === entitlementRef.path) {
+        snapshot.data = { ...snapshot.data, status: 'canceled', paddleCanceledAt: Date.now() };
+      }
+    }
     batch.delete(entitlementRef);
     for (const doc of interest.docs) batch.delete(doc.ref);
     for (const doc of purchases.docs) batch.delete(doc.ref);
