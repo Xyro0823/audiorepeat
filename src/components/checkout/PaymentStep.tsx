@@ -3,6 +3,7 @@
 import { useCallback, useRef, useState } from 'react';
 import type { AuthUser } from '@/types/auth';
 import type { PlanDef } from '@/lib/plans';
+import { SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
 import { checkoutSuccessUrl } from '@/lib/checkoutUrl';
 import { useT } from '@/lib/i18n';
 import { PlanText, planTaglineKey } from '@/lib/i18n/PlanText';
@@ -220,7 +221,7 @@ export default function PaymentStep({
             </div>
           </div>
           <ul className="mt-4 space-y-2 border-t border-white/10 pt-4">
-            {plan.features(0).map((f) => (
+            {plan.features(SUPPORTED_LANGUAGE_COUNT).map((f) => (
               <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
                 <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-cyan-500/15">
                   <svg

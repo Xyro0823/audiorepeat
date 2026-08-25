@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { isPlanId, PLANS, type PlanId } from '@/lib/plans';
+import { SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
 import { updateSettings } from '@/lib/settingsStore';
 import {
   planBillingForEntitlement,
@@ -131,7 +132,7 @@ export default function SuccessView({ planId, billing, email }: Props) {
               .{email ? ` ${t('checkout.success.receipt', { email })}` : ''}
             </p>
             <ul className="mx-auto mt-5 max-w-sm space-y-2 text-left">
-              {confirmedPlan.features(0).slice(0, 4).map((f) => (
+              {confirmedPlan.features(SUPPORTED_LANGUAGE_COUNT).slice(0, 4).map((f) => (
                 <li key={f} className="flex items-start gap-2 text-sm text-slate-300">
                   <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-cyan-500/15">
                     <svg
