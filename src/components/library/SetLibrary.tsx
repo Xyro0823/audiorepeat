@@ -27,17 +27,23 @@ import {
 import { downloadSet, parseSetJson } from '@/lib/sets/io';
 import type { CefrLevel, VocabSet } from '@/types/app';
 import { useT, type TKey } from '@/lib/i18n';
+import dynamic from 'next/dynamic';
+
+// Heavy overlay UI is code-split: each piece loads on first open only. They
+// render nothing until their state gate flips, so there is no layout shift
+// and no loading placeholder needed (the previous behavior shipped all of
+// this JS in the initial route graph).
+const SetEditor = dynamic(() => import('./SetEditor'), { ssr: false });
+const SpeedChallenge = dynamic(() => import('../speed/SpeedChallenge'), { ssr: false });
+const LeaderboardModal = dynamic(() => import('./LeaderboardModal'), { ssr: false });
+const ShareSetModal = dynamic(() => import('./ShareSetModal'), { ssr: false });
+const ShareImportPreviewModal = dynamic(() => import('./ShareImportPreviewModal'), { ssr: false });
+const StarterLibraryModal = dynamic(() => import('./StarterLibraryModal'), { ssr: false });
+const SubtitleImportModal = dynamic(() => import('./SubtitleImportModal'), { ssr: false });
 import CefrBadge from './CefrBadge';
-import LeaderboardModal from './LeaderboardModal';
 import NewSetButton from './NewSetButton';
 import ProfileDropdown from '@/components/auth/ProfileDropdown';
-import SetEditor from './SetEditor';
-import ShareSetModal from './ShareSetModal';
-import ShareImportPreviewModal from './ShareImportPreviewModal';
 import SettingsButton from '@/components/settings/SettingsButton';
-import SpeedChallenge from '../speed/SpeedChallenge';
-import StarterLibraryModal from './StarterLibraryModal';
-import SubtitleImportModal from './SubtitleImportModal';
 import InstallAppButton from '@/components/pwa/InstallAppButton';
 import AiAssistantButton from '@/components/dashboard/AiAssistantButton';
 import AiInsightsCard from '@/components/dashboard/AiInsightsCard';
