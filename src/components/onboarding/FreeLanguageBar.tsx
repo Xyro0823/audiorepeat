@@ -34,7 +34,7 @@ export default function FreeLanguageBar({ langKey, pro, onChange }: Props) {
       </p>
       <button
         onClick={onChange}
-        className="shrink-0 rounded-lg border border-neon-cyan/40 px-3.5 py-1.5 text-xs font-bold text-neon-cyan transition hover:bg-neon-cyan/10 active:scale-95"
+        className="inline-flex min-h-10 shrink-0 items-center rounded-lg border border-neon-cyan/40 px-3.5 text-xs font-bold text-neon-cyan transition hover:bg-neon-cyan/10 active:scale-95"
       >
         {t('onboarding.bar.change')}
       </button>

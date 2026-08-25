@@ -841,9 +841,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           <span>←</span>
           <span>{t('player.header.library')}</span>
         </Link>
-        <span className="text-slate-700">/</span>
-        <h1 className="truncate text-sm font-semibold text-slate-200">{set.name}</h1>
-        <span className="ml-auto shrink-0 rounded-full border border-white/10 px-2.5 py-0.5 text-[11px] text-slate-400">
+        {/* Breadcrumb separator + count pill are desktop-only density — on
+            phones they starve the set title of space. */}
+        <span className="hidden text-slate-700 sm:inline">/</span>
+        <h1 className="min-w-0 truncate text-sm font-semibold text-slate-200">{set.name}</h1>
+        <span className="ml-auto hidden shrink-0 rounded-full border border-white/10 px-2.5 py-0.5 text-[11px] text-slate-400 sm:inline">
           {filter === 'all'
             ? t('player.header.wordsAll', { count: set.words.length })
             : t('player.header.wordsFiltered', { shown: words.length, total: set.words.length })}
@@ -872,7 +874,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           <button
             key={f.key}
             onClick={() => setFilter(f.key)}
-            className={`rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 ${
+            className={`inline-flex min-h-10 items-center rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 ${
               filter === f.key
                 ? 'border-neon-cyan/60 bg-neon-cyan/15 text-neon-cyan'
                 : 'border-white/10 bg-white/5 text-slate-400 hover:border-white/25 hover:text-white'
@@ -893,7 +895,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           <button
             onClick={upgradeToPro}
             title={t('player.filter.reviewProTitle')}
-            className="rounded-full border border-neon-amber/30 bg-neon-amber/5 px-3 py-1.5 text-xs font-medium text-neon-amber/90 transition hover:border-neon-amber/60 hover:text-neon-amber active:scale-95"
+            className="inline-flex min-h-10 items-center rounded-full border border-neon-amber/30 bg-neon-amber/5 px-3 py-1.5 text-xs font-medium text-neon-amber/90 transition hover:border-neon-amber/60 hover:text-neon-amber active:scale-95"
           >
             <span aria-hidden>⭐</span> {t('player.filter.reviewProLabel')}
           </button>
@@ -902,7 +904,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
           <button
             onClick={upgradeToPro}
             title={t('player.filter.freeLangTitle', { limit: FREE_LANG_LIMIT })}
-            className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-neon-amber/40 hover:text-neon-amber active:scale-95"
+            className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-400 transition hover:border-neon-amber/40 hover:text-neon-amber active:scale-95"
           >
             <span aria-hidden>⭐</span> {t('player.filter.freeLangLabel', { limit: FREE_LANG_LIMIT })}
           </button>
@@ -921,7 +923,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
                 ? t('player.filter.quizHow')
                 : t('player.filter.quizProTitle')
           }
-          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
+          className={`inline-flex min-h-10 items-center rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
             quizOn
               ? 'border-neon-magenta/60 bg-neon-magenta/15 text-neon-magenta'
               : 'border-white/10 bg-white/5 text-slate-400 hover:border-neon-magenta/40 hover:text-white'
@@ -956,7 +958,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               ? t('player.filter.dictationEmpty')
               : t('player.filter.dictationHow')
           }
-          className={`rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
+          className={`inline-flex min-h-10 items-center rounded-full border px-3 py-1.5 text-xs font-medium transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 ${
             dictationOn
               ? 'border-neon-violet/60 bg-neon-violet/15 text-neon-violet'
               : 'border-white/10 bg-white/5 text-slate-400 hover:border-neon-violet/40 hover:text-white'

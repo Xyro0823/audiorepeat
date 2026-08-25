@@ -56,7 +56,7 @@ export default function WelcomeHero({ wordsToday, msToday, streak, onStart }: Pr
           {onStart && (
             <button
               onClick={onStart}
-              className="btn-primary flex h-9 items-center gap-1.5 rounded-full px-5 text-[13px] font-semibold text-white"
+              className="btn-primary flex h-11 items-center gap-1.5 rounded-full px-5 text-[13px] font-semibold text-white"
             >
               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
                 <path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z" />

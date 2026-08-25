@@ -309,14 +309,16 @@ export default function SettingsModal({ onClose }: Props) {
           <button
             onClick={onClose}
             aria-label={t('settings.close.aria')}
-            className="rounded-lg px-2 py-1 text-slate-400 transition hover:bg-white/5 hover:text-white"
+            className="-my-2 -mr-2 flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/5 hover:text-white"
           >
             ✕
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="mb-5 flex flex-wrap gap-1.5 rounded-2xl border border-white/10 bg-night-900/60 p-1.5">
+        {/* Horizontal scroll on phones (MN emoji tabs wrap badly when
+            squeezed into flex-1 cells); wrap + equal widths from sm up. */}
+        <div className="mb-5 flex gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-night-900/60 p-1.5 sm:flex-wrap">
           {          (
             [
               { id: 'language', label: t('settings.tab.language') },
@@ -330,7 +332,7 @@ export default function SettingsModal({ onClose }: Props) {
               key={tabItem.id}
               onClick={() => setTab(tabItem.id)}
               aria-pressed={tab === tabItem.id}
-              className={`flex-1 rounded-xl px-3 py-2 text-xs font-semibold transition active:scale-95 ${
+              className={`flex-none whitespace-nowrap rounded-xl px-3 py-2.5 text-xs font-semibold transition active:scale-95 sm:flex-1 ${
                 tab === tabItem.id
                   ? 'bg-gradient-to-r from-neon-cyan/20 to-neon-violet/20 text-white ring-1 ring-neon-cyan/40'
                   : 'text-slate-400 hover:text-white'

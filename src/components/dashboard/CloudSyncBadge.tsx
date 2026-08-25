@@ -22,10 +22,10 @@ export default function CloudSyncBadge() {
       onClick={() => void syncNow()}
       disabled={phase === 'syncing'}
       title={t('dashboard.sync.title')}
-      className="inline-flex min-h-8 items-center gap-1.5 rounded-full border border-white/10 px-2.5 text-[11px] font-medium text-slate-400 transition hover:border-neon-cyan/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan disabled:cursor-wait"
+      className="inline-flex min-h-9 max-w-[190px] items-center gap-1.5 rounded-full border border-white/10 px-2.5 text-[11px] font-medium text-slate-400 transition hover:border-neon-cyan/30 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan disabled:cursor-wait sm:max-w-none"
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${
+        className={`h-1.5 w-1.5 shrink-0 rounded-full ${
           phase === 'synced'
             ? 'bg-neon-green'
             : phase === 'syncing'
@@ -36,7 +36,7 @@ export default function CloudSyncBadge() {
         }`}
         aria-hidden
       />
-      {copy}
+      <span className="truncate">{copy}</span>
     </button>
   );
 }

@@ -230,7 +230,7 @@ export default function CheckoutFlow({
             <button
               type="button"
               onClick={() => setStep('payment')}
-              className="btn-neural inline-flex h-12 items-center gap-2 rounded-full px-8 text-sm font-semibold text-white"
+              className="btn-neural inline-flex min-h-12 flex-wrap items-center justify-center gap-x-2 gap-y-0.5 rounded-full px-6 py-3 text-center text-sm font-semibold text-white sm:h-12 sm:flex-nowrap sm:px-8"
             >
               {t('checkout.continueWith', { plan: plan.name, price })}
               <span className="text-xs font-medium opacity-80">{localizedNote(note)}</span>

@@ -369,7 +369,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                       onClick={() => setLevel(active ? null : lvl)}
                       disabled={!lang || count === 0}
                       title={count > 0 ? t('library.starter.chipCount', { count: count.toLocaleString() }) : t('library.starter.notYet')}
-                      className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                      className={`inline-flex min-h-9 items-center rounded-full border px-3.5 py-1 text-xs font-semibold transition ${
                         count === 0
                           ? 'cursor-not-allowed border-white/5 text-slate-600'
                           : active
@@ -400,7 +400,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                   <button
                     key={n}
                     onClick={() => setBatchSize(n)}
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                    className={`inline-flex min-h-9 items-center rounded-full border px-3.5 py-1 text-xs font-semibold transition ${
                       batchSize === n
                         ? 'border-neon-violet/60 bg-neon-violet/15 text-neon-violet'
                         : 'border-white/10 text-slate-400 hover:border-white/25 hover:text-white'

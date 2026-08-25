@@ -77,7 +77,7 @@ export default function FreePlanNotice({ pro }: Props) {
             }
           }}
           aria-label={t('dashboard.freeNotice.dismissAria')}
-          className="rounded-lg px-2 py-1 text-slate-500 transition hover:bg-white/5 hover:text-white"
+          className="-my-2 flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white/5 hover:text-white"
         >
           ✕
         </button>

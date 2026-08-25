@@ -47,7 +47,9 @@ export default function MetricCards({ accuracyPct, masteredCount, streak }: Prop
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+    // Stacked full-width rows on phones (MN metric labels need the room);
+    // 3-across returns at ~430px+ where each cell fits the copy.
+    <div className="grid grid-cols-1 gap-2 min-[430px]:grid-cols-3 sm:gap-3">
       {cards.map((c) => (
         <div
           key={c.id}

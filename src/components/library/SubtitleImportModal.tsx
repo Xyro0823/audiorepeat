@@ -102,15 +102,15 @@ export default function SubtitleImportModal({ fileName, text, defaultLang, canUs
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-xl bg-night-800/60 px-2 py-2">
             <p className="text-lg font-bold tabular-nums text-neon-cyan">{parsed.words.length}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-500">{t('library.subtitles.keywords')}</p>
+            <p className="text-[10px] uppercase tracking-normal text-slate-500 sm:tracking-wider">{t('library.subtitles.keywords')}</p>
           </div>
           <div className="rounded-xl bg-night-800/60 px-2 py-2">
             <p className="text-lg font-bold tabular-nums text-neon-violet">{parsed.totalTokens}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-500">{t('library.subtitles.tokens')}</p>
+            <p className="text-[10px] uppercase tracking-normal text-slate-500 sm:tracking-wider">{t('library.subtitles.tokens')}</p>
           </div>
           <div className="rounded-xl bg-night-800/60 px-2 py-2">
             <p className="text-lg font-bold tabular-nums text-neon-amber">{parsed.dialogLines}</p>
-            <p className="text-[10px] uppercase tracking-wider text-slate-500">{t('library.subtitles.dialogLines')}</p>
+            <p className="text-[10px] uppercase tracking-normal text-slate-500 sm:tracking-wider">{t('library.subtitles.dialogLines')}</p>
           </div>
         </div>
 

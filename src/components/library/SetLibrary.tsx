@@ -344,7 +344,7 @@ function PortraitCard({
           aria-label={t('library.card.actionsAria', { name: set.name })}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
-          className="btn-clean absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-200"
+          className="btn-clean absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-200 after:absolute after:inset-[-10px] after:content-['']"
         >
           <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
             <circle cx="5" cy="12" r="1.6" />
@@ -443,7 +443,9 @@ function PortraitCard({
           <ProgressBar pct={pct} className="mt-1.5" />
         </div>
 
-        <div className="mt-3 grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2">
+        {/* Full-width rows on mobile: MN labels ("Тоглуулах") clip inside the
+            narrow 2-col split; sm+ restores the side-by-side layout. */}
+        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
           <button
             onClick={onPlay}
             className="btn-primary flex h-9 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold text-white"
@@ -1096,7 +1098,7 @@ export default function SetLibrary() {
                         type="button"
                         onClick={() => setCefrFilter(lvl)}
                         aria-pressed={active}
-                        className={`h-8 rounded-full px-3 text-xs font-semibold transition ${
+                        className={`h-11 rounded-full px-3.5 text-xs font-semibold transition ${
                           active
                             ? lvl === 'all'
                               ? 'bg-white/15 text-white ring-1 ring-white/30'

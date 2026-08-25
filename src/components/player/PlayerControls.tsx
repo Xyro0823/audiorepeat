@@ -39,8 +39,11 @@ export default function PlayerControls({
   };
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-night-950/80 backdrop-blur-xl">
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-center gap-2.5 px-4 py-5 sm:gap-5">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-night-950/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
+      {/* Mobile: two stacked rows so all six controls fit 320–438px without
+          squashing the round buttons; sm+ restores the single centered dock. */}
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-2 px-4 py-4 sm:flex-row sm:justify-center sm:gap-5 sm:py-5">
+        <div className="flex items-center justify-center gap-4 sm:gap-5">
         <button
           onClick={onBack}
           aria-label={backAction === 'previous' ? t('player.controls.prevAria') : t('player.controls.replayAria')}
@@ -113,17 +116,20 @@ export default function PlayerControls({
             <rect x="17" y="5" width="2.2" height="14" rx="1" />
           </svg>
         </button>
+        </div>
 
-        <button
-          onClick={onStop}
-          aria-label={t('player.controls.stop')}
-          title={t('player.controls.stop')}
-          className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition hover:border-neon-magenta/50 hover:text-neon-magenta active:scale-90"
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
-            <rect x="6" y="6" width="12" height="12" rx="2" />
-          </svg>
-        </button>
+        {/* Secondary transport — own row on mobile, inline on sm+ */}
+        <div className="flex items-center justify-center gap-4 sm:gap-5">
+          <button
+            onClick={onStop}
+            aria-label={t('player.controls.stop')}
+            title={t('player.controls.stop')}
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition hover:border-neon-magenta/50 hover:text-neon-magenta active:scale-90"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor">
+              <rect x="6" y="6" width="12" height="12" rx="2" />
+            </svg>
+          </button>
 
         <button
           onClick={cycleSpeed}
@@ -175,7 +181,8 @@ export default function PlayerControls({
             <path d="m15 15 6 6" />
             <path d="M4 4l5 5" />
           </svg>
-        </button>
+          </button>
+        </div>
       </div>
     </div>
   );

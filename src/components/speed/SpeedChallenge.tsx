@@ -380,7 +380,7 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm">
-      <div className="animate-fade-up glass w-full max-w-md rounded-3xl p-6 text-center shadow-[0_0_60px_rgba(59,130,246,0.15)]">
+      <div className="animate-fade-up glass max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-3xl p-6 text-center shadow-[0_0_60px_rgba(59,130,246,0.15)]">
         {phase === 'intro' && (
           <>
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-neon-amber to-neon-magenta text-night-950 shadow-[0_0_30px_rgba(255,201,77,0.35)]">
@@ -446,7 +446,7 @@ export default function SpeedChallenge({ set, onClose, onRecordWord }: Props) {
                 onClick={close}
                 aria-label={t('challenge.playing.exitAria')}
                 title={t('challenge.playing.exitTitle')}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-slate-400 transition hover:border-neon-magenta/50 hover:text-neon-magenta active:scale-90"
+                className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-slate-400 transition hover:border-neon-magenta/50 hover:text-neon-magenta active:scale-90"
               >
                 <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 6 6 18" />

@@ -384,7 +384,7 @@ export default function SetEditor({ set, canUseLang, defaultLang, onClose, onSav
                             onClick={() => updateWord(i, { repeats: w.repeats === r ? undefined : r })}
                             title={w.repeats === r ? t('library.editor.useDefaultRepeats') : t('library.editor.repeatsN', { count: r })}
                             aria-pressed={w.repeats === r}
-                            className={`h-8 w-8 rounded-lg text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan ${
+                            className={`h-10 w-10 rounded-lg text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan sm:h-8 sm:w-8 ${
                               w.repeats === r
                                 ? 'bg-neon-cyan text-night-950'
                                 : 'bg-night-800 text-slate-400 hover:text-white'
