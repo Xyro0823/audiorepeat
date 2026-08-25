@@ -31,6 +31,57 @@ let timer: number | null = null;
 let replaceProgressOnce = false;
 const listeners = new Set<() => void>();
 
+// ---------- reconnect / retry / cross-tab resilience ----------
+
+/** Cross-tab serialization so two tabs never race the same sync round trip. */
+const SYNC_LOCK_NAME = 'audiorepeat-library-sync';
+
+const MAX_RETRY_ATTEMPTS = 5;
+const BASE_RETRY_DELAY_MS = 2_000;
+const MAX_RETRY_DELAY_MS = 60_000;
+
+let retryAttempts = 0;
+let retryTimer: number | null = null;
+let lastSyncedUid: string | null | undefined;
+
+/**
+ * Pure exponential backoff with a hard cap, exported for tests. Attempts are
+ * 0-based; the cap keeps worst-case delay bounded to avoid retry storms.
+ */
+export function nextRetryDelayMs(attempts: number): number {
+  return Math.min(BASE_RETRY_DELAY_MS * 2 ** Math.max(0, attempts), MAX_RETRY_DELAY_MS);
+}
+
+function clearRetryTimer(): void {
+  if (retryTimer !== null) {
+    window.clearTimeout(retryTimer);
+    retryTimer = null;
+  }
+}
+
+/** Schedule the next retry unless the cap is exhausted. */
+function scheduleRetry(): void {
+  if (retryAttempts >= MAX_RETRY_ATTEMPTS) return;
+  const delay = nextRetryDelayMs(retryAttempts);
+  retryAttempts += 1;
+  clearRetryTimer();
+  retryTimer = window.setTimeout(() => {
+    retryTimer = null;
+    void syncLibraryNow();
+  }, delay);
+}
+
+function resetRetries(): void {
+  retryAttempts = 0;
+  clearRetryTimer();
+}
+
+/** Serialize the network round trip across tabs (fallback: no-op wrapper). */
+async function withSyncLock<T>(fn: () => Promise<T>): Promise<T> {
+  if (typeof navigator === 'undefined' || !navigator.locks?.request) return fn();
+  return navigator.locks.request(SYNC_LOCK_NAME, () => fn());
+}
+
 /** Queue a one-shot full replace of remote learning progress. */
 export function requestProgressReplace(): void {
   if (!getAuthSnapshot().user) return;
@@ -58,6 +109,9 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
     const local = await getAllSets();
     const uid = getAuthSnapshot().user?.id;
     if (!uid) return local;
+    // Account switching must never inherit the previous account's backoff.
+    if (lastSyncedUid !== undefined && lastSyncedUid !== uid) resetRetries();
+    lastSyncedUid = uid;
     if (!navigator.onLine) {
       update({ ...snapshot, phase: 'offline' });
       return local;
@@ -70,6 +124,9 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
     update({ ...snapshot, phase: 'syncing' });
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 12_000);
+    // The lock only serializes the network round trip across tabs: local
+    // reads/merges stay outside so a queued tab never merges stale state.
+    const attempt = async (): Promise<VocabSet[]> => {
     try {
       const pending = await getPendingSyncPayload();
       // Learning progress rides the same authenticated round trip (state
@@ -132,6 +189,11 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
     } finally {
       window.clearTimeout(timeout);
     }
+    };
+    const result = await withSyncLock(attempt);
+    if (snapshot.phase === 'synced') resetRetries();
+    else scheduleRetry();
+    return result;
   })();
   try {
     return await inFlight;
@@ -148,4 +210,14 @@ export function scheduleLibrarySync(delayMs = 900): void {
     timer = null;
     void syncLibraryNow();
   }, delayMs);
+}
+
+// Reconnect: a browser "online" event always means connectivity changed, so
+// drop the backoff and resync promptly (bounded by scheduleLibrarySync's
+// coalescing — never a retry storm).
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', () => {
+    resetRetries();
+    scheduleLibrarySync(500);
+  });
 }
