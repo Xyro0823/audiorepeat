@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
+import { getSettingsSnapshot, subscribeSettings } from "@/lib/settingsStore";
 import {
   ArrowUpRight,
   Download,
@@ -15,9 +16,10 @@ import {
 } from "lucide-react";
 import AuthScreen from "@/components/auth/AuthScreen";
 import { useAuth } from "@/hooks/useAuth";
+import { setUiLang, useT, type TKey, type TVars, UI_LANGUAGES } from "@/lib/i18n";
 import { SUPPORTED_LANGUAGE_COUNT } from "@/lib/freeLang";
 import { landingAuthAction } from "@/lib/adminNav";
-import { PLAN_ORDER, PLANS } from "@/lib/plans";
+import { FREE_LANG_LIMIT, PLAN_ORDER, PLANS } from "@/lib/plans";
 import { LEGAL_IDENTITY } from "@/lib/legalIdentity";
 import InstallAppButton from "@/components/pwa/InstallAppButton";
 import AudioDemo from "./AudioDemo";
@@ -28,13 +30,57 @@ import NewsletterForm from "./NewsletterForm";
 /* Shared bits                                                        */
 /* ------------------------------------------------------------------ */
 
+/**
+ * Display-layer localization of the canonical plan copy from lib/plans.
+ * Names, prices and entitlements stay untouched — only the rendered bullet
+ * and note text is routed through the dictionary. Returns null for unknown
+ * strings so the canonical English always stands.
+ */
+function planCopy(text: string): { key: TKey; vars?: TVars } | null {
+  const freeLangs = new RegExp(`^${FREE_LANG_LIMIT} active languages?$`);
+  const allLangs = /^All (\d+) languages$/;
+  const daily = /^(\d+) words \/ day$/;
+  let m: RegExpMatchArray | null;
+  if (freeLangs.test(text)) {
+    return { key: "landing.plan.bullet.activeLanguage", vars: { limit: FREE_LANG_LIMIT } };
+  }
+  if ((m = text.match(allLangs))) {
+    return { key: "landing.plan.bullet.allLanguages", vars: { count: Number(m[1]) } };
+  }
+  if ((m = text.match(daily))) {
+    return { key: "landing.plan.bullet.dailyWords", vars: { limit: Number(m[1]) } };
+  }
+  switch (text) {
+    case "Standard TTS audio": return { key: "landing.plan.bullet.standardTts" };
+    case "Pronunciation practice tools": return { key: "landing.plan.bullet.pronunciation" };
+    case "Offline audio packs": return { key: "landing.plan.bullet.offlinePacks" };
+    case "Spaced repetition + quiz mode": return { key: "landing.plan.bullet.spacedQuiz" };
+    case "Speed challenges & stats": return { key: "landing.plan.bullet.speedStats" };
+    case "Everything in Pro": return { key: "landing.plan.bullet.everythingInPro" };
+    case "Future languages included": return { key: "landing.plan.bullet.futureLanguages" };
+    case "Priority support": return { key: "landing.plan.bullet.prioritySupport" };
+    case "forever free": return { key: "landing.plan.note.foreverFree" };
+    case "/year": return { key: "landing.plan.note.perYear" };
+    case "/mo": return { key: "landing.plan.note.perMonth" };
+    case "one-time payment": return { key: "landing.plan.note.oneTime" };
+    default: return null;
+  }
+}
+
+/** Canonical plan string rendered in the active UI language. */
+function PlanText({ text }: { text: string }) {
+  const t = useT();
+  const copy = planCopy(text);
+  return <>{copy ? t(copy.key, copy.vars) : text}</>;
+}
+
 const NAV_LINKS = [
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#demo", label: "Demo" },
-  { href: "#features", label: "Features" },
-  { href: "#pricing", label: "Pricing" },
-  { href: "#faq", label: "FAQ" },
-];
+  { href: "#how-it-works", labelKey: "landing.nav.how" },
+  { href: "#demo", labelKey: "landing.nav.demo" },
+  { href: "#features", labelKey: "landing.nav.features" },
+  { href: "#pricing", labelKey: "landing.nav.pricing" },
+  { href: "#faq", labelKey: "landing.nav.faq" },
+] as const;
 
 /** Cyan play-triangle logo mark. */
 function LogoMark() {
@@ -54,12 +100,46 @@ function LogoMark() {
 
 /** Truthful product-status pill; never presents synthetic live-user counts. */
 function TrustPill() {
+  const t = useT();
   return (
     <span className="inline-flex flex-wrap items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-center backdrop-blur-xl">
       <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" aria-hidden />
-      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">Privacy-first</span>
-      <span className="text-xs text-white">Uses voices available on your device</span>
+      <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">{t('landing.trust.title')}</span>
+      <span className="text-xs text-white">{t('landing.trust.body')}</span>
     </span>
+  );
+}
+
+/** Compact EN / МН interface-language toggle — works before any sign-in. */
+function UiLangToggle() {
+  const t = useT();
+  const lang = useSyncExternalStore(
+    subscribeSettings,
+    () => (getSettingsSnapshot().uiLang === 'mn' ? 'mn' : 'en'),
+    () => 'en' as const,
+  );
+  return (
+    <div
+      role="group"
+      aria-label={t('landing.nav.uiLangAria')}
+      className="inline-flex items-center rounded-full border border-white/15 bg-white/[0.04] p-0.5"
+    >
+      {UI_LANGUAGES.map((option) => (
+        <button
+          key={option.code}
+          type="button"
+          aria-pressed={lang === option.code}
+          onClick={() => setUiLang(option.code)}
+          className={`min-h-8 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors ${
+            lang === option.code
+              ? "bg-white text-black shadow-sm"
+              : "text-slate-300 hover:text-white"
+          }`}
+        >
+          {option.code === 'en' ? 'EN' : 'МН'}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -275,6 +355,7 @@ function NeuralConnections({
 export default function LandingPage() {
   const [annual, setAnnual] = useState(true);
   const { status } = useAuth();
+  const t = useT();
   const [showAuth, setShowAuth] = useState(false);
   const landingAction = landingAuthAction(status);
   const langCount = SUPPORTED_LANGUAGE_COUNT;
@@ -289,12 +370,12 @@ export default function LandingPage() {
     const { price, note } = p.priceFor(annual);
     return {
       name: p.name,
-      tagline: p.tagline,
+      taglineKey: `landing.plan.${id}.tagline` as TKey,
       plan: id,
       price,
       monthlyNote: note,
       features: p.features(langCount),
-      cta: p.cta,
+      ctaKey: `landing.plan.${id}.cta` as TKey,
       popular: p.popular,
     };
   });
@@ -302,25 +383,25 @@ export default function LandingPage() {
   const features = [
     {
       icon: Repeat,
-      title: "Spaced Repetition Audio Loop",
-      text: "Words resurface at the right intervals — hear them, then test yourself, until they stick for good.",
+      titleKey: "landing.features.item1.title",
+      textKey: "landing.features.item1.text",
     },
     {
       icon: WifiOff,
-      title: "Offline Audio Player",
-      text: "Download your sets and drill anywhere. Plane, train, subway — zero bars, zero interruptions.",
+      titleKey: "landing.features.item2.title",
+      textKey: "landing.features.item2.text",
     },
     {
       icon: Mic,
-      title: "Pronunciation Practice",
-      text: "Use available speech voices to hear each word, slow it down, loop it and shadow it back.",
+      titleKey: "landing.features.item3.title",
+      textKey: "landing.features.item3.text",
     },
     {
       icon: Languages,
-      title: "Curated Vocabulary Packs",
-      text: "Ready-made starter packs from A1 to C2 across widely studied languages.",
+      titleKey: "landing.features.item4.title",
+      textKey: "landing.features.item4.text",
     },
-  ];
+  ] as const;
 
   return (
     <div id="landing" className="relative min-h-screen overflow-x-clip bg-[#0a0a0a] text-[#e8eaef]">
@@ -328,7 +409,7 @@ export default function LandingPage() {
         href="#main-content"
         className="fixed left-4 top-3 z-[60] -translate-y-20 rounded-full bg-white px-4 py-2 text-sm font-semibold text-black transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-cyan-300"
       >
-        Skip to main content
+        {t('landing.nav.skip')}
       </a>
       {/* Ambient background: dot grid + cyan radials */}
       <div className="pointer-events-none fixed inset-0" aria-hidden>
@@ -341,7 +422,7 @@ export default function LandingPage() {
       {/* Fixed top navbar */}
       <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-[#0a0a0a]/70 backdrop-blur-xl">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6 lg:px-12">
-          <Link href="/" aria-label="AudioRepeat home" className="flex min-h-11 items-center gap-2.5 rounded-xl">
+          <Link href="/" aria-label={t('landing.nav.home')} className="flex min-h-11 items-center gap-2.5 rounded-xl">
             <LogoMark />
             {/* Wordmark hidden on ultra-narrow screens so the logo mark +
                 Sign in + Start Practice always fit without overflow. */}
@@ -357,7 +438,7 @@ export default function LandingPage() {
                 href={l.href}
                 className="text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400 transition-colors hover:text-cyan-300"
               >
-                {l.label}
+                {t(l.labelKey)}
               </a>
             ))}
           </div>
@@ -366,12 +447,13 @@ export default function LandingPage() {
               (signed in). Hidden while auth is loading so the wrong state
               never flashes; the primary CTA is always Start Practice. */}
           <div className="flex items-center gap-2.5">
+            <UiLangToggle />
             {landingAction?.kind === 'link' ? (
               <Link
                 href={landingAction.href}
                 className="inline-flex min-h-11 items-center rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-white/10 active:scale-95"
               >
-                {landingAction.label}
+                {t('landing.nav.dashboard')}
               </Link>
             ) : landingAction?.kind === 'auth' ? (
               <button
@@ -379,14 +461,14 @@ export default function LandingPage() {
                 onClick={() => setShowAuth(true)}
                 className="inline-flex min-h-11 items-center rounded-full border border-white/20 bg-white/5 px-4 py-2 text-[13px] font-semibold text-white transition hover:bg-white/10 active:scale-95"
               >
-                {landingAction.label}
+                {t('landing.nav.signIn')}
               </button>
             ) : null}
             <Link
               href="/dashboard"
               className="inline-flex min-h-11 items-center rounded-full bg-white px-5 py-2 text-[13px] font-semibold text-black shadow-[0_4px_20px_rgba(255,255,255,0.15)] transition hover:bg-slate-100 active:scale-95"
             >
-              Start Practice
+              {t('landing.nav.startPractice')}
             </Link>
           </div>
         </div>
@@ -429,19 +511,18 @@ export default function LandingPage() {
 
               <p className="inline-flex items-center gap-2 rounded-full border border-cyan-400/30 bg-cyan-500/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-300">
                 <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-cyan-300 shadow-[0_0_8px_rgba(103,232,249,0.9)]" />
-                Hands-free audio drilling
+                {t('landing.hero.badge')}
               </p>
 
               <h1 className="mx-auto mt-5 max-w-3xl text-balance text-3xl font-extrabold leading-tight tracking-tight text-white md:text-5xl lg:text-6xl">
-                Master Any Language with{" "}
+                {t('landing.hero.titlePrefix')}{" "}
                 <span className="bg-gradient-to-r from-[#22d3ee] via-[#06b6d4] to-[#3b82f6] bg-clip-text text-transparent">
-                  Hands-Free Audio Repeat
+                  {t('landing.hero.titleAccent')}
                 </span>
               </h1>
 
               <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400 md:text-[15px]">
-                Loop, repeat and retain vocabulary while you commute, cook or wind down.
-                Speech audio, spaced repetition and {langCount} languages — no screen required.
+                {t('landing.hero.subtitle', { count: langCount })}
               </p>
 
               <div className="mt-7 flex flex-wrap items-center justify-center gap-4">
@@ -449,19 +530,19 @@ export default function LandingPage() {
                   href="/dashboard"
                   className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg shadow-cyan-500/20 transition hover:brightness-110 active:scale-95"
                 >
-                  Start Learning Now
+                  {t('landing.hero.ctaPrimary')}
                   <ArrowUpRight className="h-4 w-4" aria-hidden />
                 </Link>
                 <Link
                   href="/dashboard#vocab-grid"
                   className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-3 font-semibold text-white transition hover:bg-white/10 active:scale-95"
                 >
-                  Explore Library
+                  {t('landing.hero.ctaSecondary')}
                 </Link>
               </div>
 
               <p className="mt-5 text-[11px] uppercase tracking-[0.2em] text-slate-500">
-                No pressure · No commitment · Just listening
+                {t('landing.hero.tagline')}
               </p>
             </div>
 
@@ -488,20 +569,20 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       <section id="how-it-works" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-24 pt-28 lg:px-12">
         <div className="text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">How it works</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.how.kicker')}</p>
           <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl">
-            From a word list to a listening habit
+            {t('landing.how.title')}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
-            Get started in minutes. No complicated course setup and no need to stare at a screen.
+            {t('landing.how.sub')}
           </p>
         </div>
         <ol className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
           {HOW_IT_WORKS.map((item) => (
             <li key={item.step} className="glass-neural rounded-3xl p-6">
               <span className="font-mono text-xs font-bold tracking-[0.2em] text-cyan-400">{item.step}</span>
-              <h3 className="mt-5 text-xl font-bold text-white">{item.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-slate-400">{item.text}</p>
+              <h3 className="mt-5 text-xl font-bold text-white">{t(item.titleKey)}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400">{t(item.textKey)}</p>
             </li>
           ))}
         </ol>
@@ -514,28 +595,27 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       <section id="features" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-24 pt-28 lg:px-12">
         <div className="text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">Why AudioRepeat</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.features.kicker')}</p>
           <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-white md:text-5xl">
-            An audio engine built for retention
+            {t('landing.features.title')}
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
-            Every feature is engineered around one idea: your ears are the fastest
-            path to fluency.
+            {t('landing.features.sub')}
           </p>
         </div>
 
         <div className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {features.map((f, i) => (
             <div
-              key={f.title}
+              key={f.titleKey}
               className="glass-neural group rounded-3xl p-6 hover:-translate-y-1 hover:border-cyan-400/40"
               style={{ animationDelay: `${i * 90}ms` }}
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#06b6d4]/10 transition-transform duration-300 group-hover:scale-110">
                 <f.icon className="h-6 w-6 text-[#22d3ee]" aria-hidden />
               </div>
-              <h3 className="mt-4 text-xl font-bold text-white">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{f.text}</p>
+              <h3 className="mt-4 text-xl font-bold text-white">{t(f.titleKey)}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{t(f.textKey)}</p>
             </div>
           ))}
         </div>
@@ -547,10 +627,11 @@ export default function LandingPage() {
       <section id="languages" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-28 lg:px-12">
         <div className="glass-neural rounded-[2rem] p-8 text-center md:p-12">
           <h2 className="text-4xl font-extrabold tracking-tight text-white md:text-5xl">
-            {langCount} languages. <span className="bg-gradient-to-r from-[#22d3ee] to-[#3b82f6] bg-clip-text text-transparent">One tap away.</span>
+            {t('landing.languages.titlePrefix', { count: langCount })}{" "}
+            <span className="bg-gradient-to-r from-[#22d3ee] to-[#3b82f6] bg-clip-text text-transparent">{t('landing.languages.titleAccent')}</span>
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
-            From Arabic to Zulu — device-compatible speech voices, real word packs, zero setup.
+            {t('landing.languages.sub')}
           </p>
           <div className="mx-auto mt-8 flex max-w-2xl flex-wrap items-center justify-center gap-2">
             {[
@@ -575,7 +656,7 @@ export default function LandingPage() {
               </span>
             ))}
             <span className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium text-slate-500">
-              + {Math.max(0, langCount - 12)} more
+              {t('landing.languages.more', { count: Math.max(0, langCount - 12) })}
             </span>
           </div>
         </div>
@@ -587,23 +668,23 @@ export default function LandingPage() {
       <section id="install" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-28 lg:px-12">
         <div className="grid items-center gap-8 rounded-[2rem] border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-white/[0.035] to-blue-500/10 p-7 sm:p-9 lg:grid-cols-[1fr_auto] lg:p-12">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">Installable web app</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.install.kicker')}</p>
             <h2 className="mt-3 text-balance text-3xl font-extrabold tracking-tight text-white md:text-4xl">
-              Keep AudioRepeat one tap away
+              {t('landing.install.title')}
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-400">
-              Install from your browser for a full-screen home-screen experience. Downloaded vocabulary stays ready for supported offline practice—no app-store account required.
+              {t('landing.install.body')}
             </p>
             <ul className="mt-6 grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
-              <li className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-cyan-300" aria-hidden /> Home-screen access</li>
-              <li className="flex items-center gap-2"><Download className="h-4 w-4 text-cyan-300" aria-hidden /> Offline-ready sets</li>
-              <li className="flex items-center gap-2"><Headphones className="h-4 w-4 text-cyan-300" aria-hidden /> Hands-free playback</li>
+              <li className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-cyan-300" aria-hidden /> {t('landing.install.bullet1')}</li>
+              <li className="flex items-center gap-2"><Download className="h-4 w-4 text-cyan-300" aria-hidden /> {t('landing.install.bullet2')}</li>
+              <li className="flex items-center gap-2"><Headphones className="h-4 w-4 text-cyan-300" aria-hidden /> {t('landing.install.bullet3')}</li>
             </ul>
           </div>
           <div className="flex flex-col items-stretch gap-3 sm:items-start lg:items-end">
             <InstallAppButton variant="landing" />
             <Link href="/dashboard" className="text-center text-xs font-semibold text-slate-400 underline decoration-white/20 underline-offset-4 transition-colors hover:text-white">
-              Open without installing
+              {t('landing.install.openWithout')}
             </Link>
           </div>
         </div>
@@ -614,13 +695,13 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-28 lg:px-12">
         <div className="text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">Pricing</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.pricing.kicker')}</p>
           <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-white md:text-5xl">
-            Learn at your pace, pay your way
+            {t('landing.pricing.title')}
           </h2>
 
           {/* monthly / annual toggle */}
-          <div className="mt-8 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1" role="group" aria-label="Pro billing period">
+          <div className="mt-8 inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.04] p-1" role="group" aria-label={t('landing.pricing.billingAria')}>
             <button
               type="button"
               aria-pressed={!annual}
@@ -629,7 +710,7 @@ export default function LandingPage() {
                 !annual ? "bg-white text-black shadow" : "text-slate-400 hover:text-white"
               }`}
             >
-              Monthly
+              {t('landing.pricing.monthly')}
             </button>
             <button
               type="button"
@@ -639,7 +720,7 @@ export default function LandingPage() {
                 annual ? "bg-white text-black shadow" : "text-slate-400 hover:text-white"
               }`}
             >
-              Annual <span className={`ml-1 text-[10px] font-bold ${annual ? "text-emerald-700" : "text-emerald-400"}`}>Save {ANNUAL_SAVINGS_PERCENT}%</span>
+              {t('landing.pricing.annual')} <span className={`ml-1 text-[10px] font-bold ${annual ? "text-emerald-700" : "text-emerald-400"}`}>{t('landing.pricing.save', { percent: ANNUAL_SAVINGS_PERCENT })}</span>
             </button>
           </div>
         </div>
@@ -656,16 +737,16 @@ export default function LandingPage() {
             >
               {p.popular && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-[#06b6d4] to-[#3b82f6] px-4 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white shadow-[0_0_20px_rgba(6,182,212,0.5)]">
-                  Most Popular
+                  {t('landing.pricing.mostPopular')}
                 </span>
               )}
               <h3 className="text-lg font-bold text-white">{p.name}</h3>
-              <p className="mt-1 text-[13px] text-slate-400">{p.tagline}</p>
+              <p className="mt-1 text-[13px] text-slate-400">{t(p.taglineKey)}</p>
               <div className="mt-6 flex items-end gap-2">
                 <span className="text-5xl font-extrabold tracking-tight text-white">
                   ${p.price}
                 </span>
-                <span className="pb-1.5 text-xs text-slate-500">{p.monthlyNote}</span>
+                <span className="pb-1.5 text-xs text-slate-500"><PlanText text={p.monthlyNote} /></span>
               </div>
               <ul className="mt-7 space-y-3">
                 {p.features.map((f) => (
@@ -675,7 +756,7 @@ export default function LandingPage() {
                         <path d="m5 13 4 4L19 7" />
                       </svg>
                     </span>
-                    {f}
+                    <PlanText text={f} />
                   </li>
                 ))}
               </ul>
@@ -685,7 +766,7 @@ export default function LandingPage() {
                   p.popular ? "btn-neural" : "glass-neural text-white hover:bg-white/[0.07]"
                 }`}
               >
-                {p.cta}
+                {t(p.ctaKey)}
                 <ArrowUpRight className="h-4 w-4" aria-hidden />
               </Link>
             </div>
@@ -698,27 +779,27 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       <section className="mx-auto w-full max-w-6xl px-6 pb-28 lg:px-12">
         <div className="text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">Clear about the audio</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.audio.kicker')}</p>
           <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl">
-            Your device provides the voice
+            {t('landing.audio.title')}
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
-            AudioRepeat uses speech-synthesis voices available through your browser and operating system. It does not present generated voices as human recordings.
+            {t('landing.audio.body')}
           </p>
         </div>
 
         <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
           {[
-            { icon: Headphones, title: "Installed voices first", text: "When a matching local voice is installed, AudioRepeat prefers it for reliable playback." },
-            { icon: Repeat, title: "You control the loop", text: "Adjust speed, repetition and ordering to fit the vocabulary you are practicing." },
-            { icon: ShieldCheck, title: "No fabricated speakers", text: "Names, portraits and testimonials are never used to imply recordings that do not exist." },
+            { icon: Headphones, titleKey: "landing.audio.card1.title" as const, textKey: "landing.audio.card1.text" as const },
+            { icon: Repeat, titleKey: "landing.audio.card2.title" as const, textKey: "landing.audio.card2.text" as const },
+            { icon: ShieldCheck, titleKey: "landing.audio.card3.title" as const, textKey: "landing.audio.card3.text" as const },
           ].map((item) => (
-            <div key={item.title} className="glass-neural rounded-3xl p-6">
+            <div key={item.titleKey} className="glass-neural rounded-3xl p-6">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-300">
                 <item.icon className="h-5 w-5" aria-hidden />
               </span>
-              <h3 className="mt-5 text-lg font-bold text-white">{item.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-slate-400">{item.text}</p>
+              <h3 className="mt-5 text-lg font-bold text-white">{t(item.titleKey)}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-slate-400">{t(item.textKey)}</p>
             </div>
           ))}
         </div>
@@ -729,29 +810,29 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       <section id="faq" className="mx-auto w-full max-w-4xl scroll-mt-28 px-6 pb-28 lg:px-12">
         <div className="text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">FAQ</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.faq.kicker')}</p>
           <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl">
-            Know before you start
+            {t('landing.faq.title')}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
-            Straight answers about plans, voices, offline use and payments.
+            {t('landing.faq.sub')}
           </p>
         </div>
         <div className="mt-10 space-y-3">
           {FAQ_ITEMS.map((item) => (
-            <details key={item.question} className="group rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-1 open:border-cyan-400/25 open:bg-cyan-500/[0.055]">
+            <details key={item.questionKey} className="group rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-1 open:border-cyan-400/25 open:bg-cyan-500/[0.055]">
               <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-left text-sm font-semibold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:text-base">
-                {item.question}
+                {t(item.questionKey)}
                 <span aria-hidden className="text-xl font-light text-cyan-300 transition-transform group-open:rotate-45">+</span>
               </summary>
-              <p className="max-w-3xl pb-5 pr-8 text-sm leading-relaxed text-slate-400">{item.answer}</p>
+              <p className="max-w-3xl pb-5 pr-8 text-sm leading-relaxed text-slate-400">{t(item.answerKey)}</p>
             </details>
           ))}
         </div>
         <p className="mt-8 text-center text-sm text-slate-400">
-          Still need help?{" "}
+          {t('landing.faq.helpPrefix')}{" "}
           <a href={`mailto:${LEGAL_IDENTITY.supportEmail}`} className="font-semibold text-cyan-300 underline decoration-cyan-300/40 underline-offset-4 hover:text-cyan-200">
-            Contact support
+            {t('landing.faq.contactSupport')}
           </a>
         </p>
       </section>
@@ -771,37 +852,37 @@ export default function LandingPage() {
               </span>
             </div>
             <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-slate-400">
-              Hands-free audio drilling for auditory learners in {langCount} languages.
+              {t('landing.footer.blurb', { count: langCount })}
             </p>
           </div>
 
           {/* Product links — only pages/sections that actually exist */}
           <div>
-            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">Product</h4>
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">{t('landing.footer.product')}</h4>
             <ul className="mt-4 space-y-2.5">
               <li>
-                <a href="#how-it-works" className="text-[13px] text-slate-400 transition hover:text-white">How It Works</a>
+                <a href="#how-it-works" className="text-[13px] text-slate-400 transition hover:text-white">{t('landing.footer.howItWorks')}</a>
               </li>
               <li>
-                <a href="#demo" className="text-[13px] text-slate-400 transition hover:text-white">Audio Demo</a>
+                <a href="#demo" className="text-[13px] text-slate-400 transition hover:text-white">{t('landing.footer.audioDemo')}</a>
               </li>
               <li>
-                <a href="#pricing" className="text-[13px] text-slate-400 transition hover:text-white">Pricing</a>
+                <a href="#pricing" className="text-[13px] text-slate-400 transition hover:text-white">{t('landing.footer.pricing')}</a>
               </li>
               <li>
-                <a href="#faq" className="text-[13px] text-slate-400 transition hover:text-white">FAQ</a>
+                <a href="#faq" className="text-[13px] text-slate-400 transition hover:text-white">{t('landing.footer.faq')}</a>
               </li>
               <li>
-                <a href={`mailto:${LEGAL_IDENTITY.supportEmail}`} className="text-[13px] text-slate-400 transition hover:text-white">Contact Support</a>
+                <a href={`mailto:${LEGAL_IDENTITY.supportEmail}`} className="text-[13px] text-slate-400 transition hover:text-white">{t('landing.footer.contactSupport')}</a>
               </li>
             </ul>
           </div>
 
           {/* Newsletter */}
           <div>
-            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">Join Newsletter</h4>
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">{t('landing.footer.newsletter')}</h4>
             <p className="mt-4 text-[13px] leading-relaxed text-slate-400">
-              Weekly language-learning tips, zero spam.
+              {t('landing.footer.newsletterBlurb')}
             </p>
             <NewsletterForm />
           </div>
@@ -809,22 +890,22 @@ export default function LandingPage() {
 
         <div className="border-t border-white/5">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-6 py-7 sm:flex-row lg:px-12">
-            <p className="text-xs text-slate-500">© 2026 AudioRepeat · Loop, repeat, retain.</p>
+            <p className="text-xs text-slate-500">{t('landing.footer.copyright')}</p>
             <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
-              <a href="#demo" className="transition hover:text-cyan-300">Audio Demo</a>
-              <a href="#install" className="transition hover:text-cyan-300">Install</a>
-              <Link href="/dashboard" className="transition hover:text-cyan-300">Practice</Link>
+              <a href="#demo" className="transition hover:text-cyan-300">{t('landing.footer.audioDemo')}</a>
+              <a href="#install" className="transition hover:text-cyan-300">{t('landing.footer.install')}</a>
+              <Link href="/dashboard" className="transition hover:text-cyan-300">{t('landing.footer.practice')}</Link>
             </div>
           </div>
           <div className="border-t border-white/5">
             <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-6 py-4 lg:px-12">
-              <Link href="/privacy" className="text-xs text-slate-500 transition hover:text-cyan-300">Privacy Policy</Link>
+              <Link href="/privacy" className="text-xs text-slate-500 transition hover:text-cyan-300">{t('landing.footer.privacy')}</Link>
               <span aria-hidden className="text-slate-700">·</span>
-              <Link href="/terms" className="text-xs text-slate-500 transition hover:text-cyan-300">Terms</Link>
+              <Link href="/terms" className="text-xs text-slate-500 transition hover:text-cyan-300">{t('landing.footer.terms')}</Link>
               <span aria-hidden className="text-slate-700">·</span>
-              <Link href="/refunds" className="text-xs text-slate-500 transition hover:text-cyan-300">Refund Policy</Link>
+              <Link href="/refunds" className="text-xs text-slate-500 transition hover:text-cyan-300">{t('landing.footer.refunds')}</Link>
               <span aria-hidden className="text-slate-700">·</span>
-              <a href={`mailto:${LEGAL_IDENTITY.supportEmail}`} className="text-xs text-slate-500 transition hover:text-cyan-300">Support</a>
+              <a href={`mailto:${LEGAL_IDENTITY.supportEmail}`} className="text-xs text-slate-500 transition hover:text-cyan-300">{t('landing.footer.support')}</a>
             </div>
           </div>
         </div>

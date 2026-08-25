@@ -1,20 +1,26 @@
 export { ANNUAL_SAVINGS_PERCENT, annualSavingsPercent } from "@/lib/plans";
 
+/**
+ * Landing content structure. Display copy lives in the i18n dictionaries
+ * (landing.* keys) so English and Монгол render from the same shape; the
+ * AUDIO_SAMPLES phrase pairs below are LEARNING CONTENT, not UI copy, and
+ * stay untranslated.
+ */
 export const HOW_IT_WORKS = [
   {
     step: "01",
-    title: "Choose a language",
-    text: "Start with a ready-made pack or choose the language for your own vocabulary set.",
+    titleKey: "landing.how.item1.title",
+    textKey: "landing.how.item1.text",
   },
   {
     step: "02",
-    title: "Build your listening loop",
-    text: "Pick words, set the speed and repetition pattern, then press play.",
+    titleKey: "landing.how.item2.title",
+    textKey: "landing.how.item2.text",
   },
   {
     step: "03",
-    title: "Listen and retain",
-    text: "Practice hands-free, revisit difficult words and follow your progress over time.",
+    titleKey: "landing.how.item3.title",
+    textKey: "landing.how.item3.text",
   },
 ] as const;
 
@@ -74,6 +80,21 @@ export const AUDIO_SAMPLES = [
 ] as const;
 
 export const FAQ_ITEMS = [
+  { questionKey: "landing.faq.q1", answerKey: "landing.faq.a1" },
+  { questionKey: "landing.faq.q2", answerKey: "landing.faq.a2" },
+  { questionKey: "landing.faq.q3", answerKey: "landing.faq.a3" },
+  { questionKey: "landing.faq.q4", answerKey: "landing.faq.a4" },
+  { questionKey: "landing.faq.q5", answerKey: "landing.faq.a5" },
+  { questionKey: "landing.faq.q6", answerKey: "landing.faq.a6" },
+  { questionKey: "landing.faq.q7", answerKey: "landing.faq.a7" },
+] as const;
+
+/**
+ * English-only FAQ copy for the SEO structured data (JSON-LD). Search
+ * engines always get the canonical English text; the visible page renders
+ * the localized FAQ_ITEMS above.
+ */
+export const FAQ_ITEMS_EN = [
   {
     question: "What can I do on the free plan?",
     answer: "You can practice one active language with standard device voices and up to 300 words per day. You can upgrade whenever you need every language and the full learning toolkit.",

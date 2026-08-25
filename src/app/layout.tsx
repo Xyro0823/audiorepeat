@@ -14,6 +14,7 @@ import OnboardingFlow from "@/components/onboarding/OnboardingFlow";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import SwRegister from "@/components/pwa/SwRegister";
 import ThemeManager from "@/components/settings/ThemeManager";
+import UiLangGate from "@/components/settings/UiLangGate";
 import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
@@ -129,6 +130,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             including the public landing page (a fresh account signs up there). */}
         <OnboardingFlow />
         <ThemeManager />
+        <UiLangGate />
         <SwRegister />
         <InstallPrompt />
       </body>

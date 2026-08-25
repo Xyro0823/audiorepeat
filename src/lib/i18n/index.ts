@@ -1,6 +1,7 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import { dictionaries, type TKey } from './dictionaries';
 import { DEFAULT_UI_LANG, isUiLang, UI_LANGUAGES, type UiLang } from './types';
+import { markExplicitUiLangChoice } from './choice';
 import { getSettingsSnapshot, subscribeSettings, updateSettings } from '@/lib/settingsStore';
 
 /**
@@ -46,9 +47,15 @@ export function t(key: TKey, vars?: TVars): string {
   return translate(currentUiLang(), key, vars);
 }
 
-/** Switch the interface language. Persists with the active account scope. */
-export function setUiLang(lang: UiLang): void {
+/**
+ * Switch the interface language. Persists with the active account scope and
+ * records an explicit device-level choice so browser auto-detection never
+ * overrides it later. `detected` marks the first-visit auto-switch, which
+ * must NOT count as a user choice.
+ */
+export function setUiLang(lang: UiLang, opts?: { detected?: boolean }): void {
   updateSettings({ uiLang: lang });
+  if (!opts?.detected) markExplicitUiLangChoice();
 }
 
 /** Stable per-call identity so consumers can memo effects on it if needed. */

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { FAQ_ITEMS } from '@/components/landing/landingContent';
+import { FAQ_ITEMS, FAQ_ITEMS_EN } from '@/components/landing/landingContent';
 import { PLANS } from '@/lib/plans';
 import { faqStructuredData, serializeStructuredData, softwareApplicationStructuredData } from './structuredData';
 
 describe('landing structured data', () => {
   it('publishes every visible FAQ without inventing ratings', () => {
     const faq = faqStructuredData();
+    // SEO JSON-LD always mirrors the canonical English FAQ copy.
     expect(faq.mainEntity).toHaveLength(FAQ_ITEMS.length);
-    expect(faq.mainEntity.map((item) => item.name)).toEqual(FAQ_ITEMS.map((item) => item.question));
+    expect(faq.mainEntity.map((item) => item.name)).toEqual(FAQ_ITEMS_EN.map((item) => item.question));
     expect(JSON.stringify(faq)).not.toContain('aggregateRating');
   });
 

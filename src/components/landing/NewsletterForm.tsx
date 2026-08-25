@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { ArrowUpRight, Loader2 } from "lucide-react";
+import { useT, type TKey } from "@/lib/i18n";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -22,12 +23,14 @@ type Status = "idle" | "loading" | "success" | "error";
 /**
  * Landing-page newsletter signup. Submits through the protected server API. Handles
  * empty/invalid input, loading, success, and retry-able errors locally while
- * preserving what the user typed.
+ * preserving what the user typed. Copy is a dictionary key translated at
+ * render time so a language switch never leaves stale English behind.
  */
 export default function NewsletterForm() {
+  const t = useT();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [errorMsgKey, setErrorMsgKey] = useState<TKey | null>(null);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -36,17 +39,17 @@ export default function NewsletterForm() {
     const value = email.trim();
     if (!value) {
       setStatus("error");
-      setErrorMsg("Please enter your email address.");
+      setErrorMsgKey("landing.newsletter.emailRequired");
       return;
     }
     if (!EMAIL_RE.test(value)) {
       setStatus("error");
-      setErrorMsg("That doesn't look like a valid email address.");
+      setErrorMsgKey("landing.newsletter.emailInvalid");
       return;
     }
 
     setStatus("loading");
-    setErrorMsg("");
+    setErrorMsgKey(null);
     try {
       const response = await withTimeout(fetch("/api/newsletter", {
         method: "POST",
@@ -58,7 +61,7 @@ export default function NewsletterForm() {
     } catch {
       // Generic retry-able message; keep the typed email in the input.
       setStatus("error");
-      setErrorMsg("Something went wrong, try again.");
+      setErrorMsgKey("landing.newsletter.error");
     }
   }
 
@@ -67,7 +70,7 @@ export default function NewsletterForm() {
       <div aria-live="polite" className="mt-4 flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5">
         <span className="text-sm font-medium text-emerald-300">✓</span>
         <span className="text-sm text-emerald-200">
-          You&apos;re in — check your inbox soon.
+          {t("landing.newsletter.success")}
         </span>
       </div>
     );
@@ -88,11 +91,11 @@ export default function NewsletterForm() {
           required
           autoComplete="email"
           spellCheck={false}
-          placeholder="you@example.com…"
+          placeholder={t("landing.newsletter.placeholder")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={busy}
-          aria-label="Email address for newsletter"
+          aria-label={t("landing.newsletter.emailAria")}
           aria-invalid={status === "error"}
           aria-describedby={status === "error" ? "newsletter-error" : undefined}
           className="w-full bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none disabled:opacity-60"
@@ -100,7 +103,7 @@ export default function NewsletterForm() {
         <button
           type="submit"
           disabled={busy}
-          aria-label={busy ? "Subscribing" : "Subscribe to newsletter"}
+          aria-label={busy ? t("landing.newsletter.subscribingAria") : t("landing.newsletter.subscribeAria")}
           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-[#06b6d4] to-[#3b82f6] text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
         >
           {busy ? (
@@ -111,9 +114,9 @@ export default function NewsletterForm() {
         </button>
       </form>
 
-      {status === "error" && (
+      {status === "error" && errorMsgKey && (
         <p id="newsletter-error" role="alert" className="mt-2 text-xs text-rose-400">
-          {errorMsg}
+          {t(errorMsgKey)}
         </p>
       )}
     </div>

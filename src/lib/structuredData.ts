@@ -1,4 +1,4 @@
-import { FAQ_ITEMS } from '@/components/landing/landingContent';
+import { FAQ_ITEMS_EN } from '@/components/landing/landingContent';
 import { PLANS } from '@/lib/plans';
 import { SITE_URL } from '@/lib/site';
 
@@ -27,10 +27,11 @@ export function softwareApplicationStructuredData() {
 }
 
 export function faqStructuredData() {
+  // SEO structured data always uses the canonical English copy.
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: FAQ_ITEMS.map(({ question, answer }) => ({
+    mainEntity: FAQ_ITEMS_EN.map(({ question, answer }) => ({
       '@type': 'Question',
       name: question,
       acceptedAnswer: { '@type': 'Answer', text: answer },

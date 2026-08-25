@@ -3,8 +3,10 @@ import { commonEn, en as commonEnAll } from './en/common';
 import { mn as commonMnAll } from './mn/common';
 import { dashboardEn } from './en/dashboard';
 import { dashboardMn } from './mn/dashboard';
+import { landingEn } from './en/landing';
 import { libraryEn } from './en/library';
 import { libraryMn } from './mn/library';
+import { landingMn } from './mn/landing';
 import { challengeEn } from './en/challenge';
 import { playerEn } from './en/player';
 import { challengeMn } from './mn/challenge';
@@ -30,6 +32,7 @@ import { checkoutMn } from './mn/checkout';
 const en = {
   ...commonEnAll,
   ...dashboardEn,
+  ...landingEn,
   ...libraryEn,
   ...challengeEn,
   ...playerEn,
@@ -44,6 +47,7 @@ const en = {
 const mn: Dict = {
   ...commonMnAll,
   ...dashboardMn,
+  ...landingMn,
   ...libraryMn,
   ...challengeMn,
   ...playerMn,
