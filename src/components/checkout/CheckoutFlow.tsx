@@ -9,7 +9,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { ANNUAL_SAVINGS_PERCENT, isPlanId, PLAN_ORDER, PLANS, type PlanId } from '@/lib/plans';
 import { SUPPORTED_LANGUAGE_COUNT } from '@/lib/freeLang';
 import { useT } from '@/lib/i18n';
+import { PlanText, planCopy, planTaglineKey } from '@/lib/i18n/PlanText';
 import PaymentStep from './PaymentStep';
+
+/** Localize a canonical price-note string ('/mo', 'forever free', …). */
+function useLocalizedPlanNote() {
+  const t = useT();
+  return (note: string) => {
+    const copy = planCopy(note);
+    return copy ? t(copy.key, copy.vars) : note;
+  };
+}
 
 function LogoMark() {
   return (
@@ -31,6 +41,7 @@ export default function CheckoutFlow({
   const router = useRouter();
   const { status, user, mode: authMode } = useAuth();
   const t = useT();
+  const localizedNote = useLocalizedPlanNote();
   // Pre-select the plan from ?plan= when valid; otherwise default to the
   // popular Pro tier and let the user change it.
   const [selected, setSelected] = useState<PlanId>(isPlanId(initialPlan) ? initialPlan : 'pro');
@@ -182,12 +193,12 @@ export default function CheckoutFlow({
                       </svg>
                     </span>
                   </span>
-                  <p className="mt-1 text-[13px] text-slate-400">{p.tagline}</p>
+                  <p className="mt-1 text-[13px] text-slate-400">{t(planTaglineKey(id))}</p>
                   <span className="mt-6 flex items-end gap-2">
                     <span className="text-5xl font-extrabold tracking-tight text-white">
                       ${pPrice}
                     </span>
-                    <span className="pb-1.5 text-xs text-slate-500">{pNote}</span>
+                    <span className="pb-1.5 text-xs text-slate-500"><PlanText text={pNote} /></span>
                   </span>
                   <span className="mt-7 space-y-3">
                     {p.features(SUPPORTED_LANGUAGE_COUNT).map((f) => (
@@ -206,7 +217,7 @@ export default function CheckoutFlow({
                             <path d="m5 13 4 4L19 7" />
                           </svg>
                         </span>
-                        {f}
+                        <PlanText text={f} />
                       </span>
                     ))}
                   </span>
@@ -222,7 +233,7 @@ export default function CheckoutFlow({
               className="btn-neural inline-flex h-12 items-center gap-2 rounded-full px-8 text-sm font-semibold text-white"
             >
               {t('checkout.continueWith', { plan: plan.name, price })}
-              <span className="text-xs font-medium opacity-80">{note}</span>
+              <span className="text-xs font-medium opacity-80">{localizedNote(note)}</span>
             </button>
             <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">
               {paddleEnabled
@@ -269,7 +280,7 @@ export default function CheckoutFlow({
                 <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-slate-400">
                   {t('checkout.signInGate.selectedPrefix')}{' '}
                   <span className="font-semibold text-white">{plan.name}</span>{' '}
-                  {t('checkout.signInGate.selectedSuffix', { price, note })}{' '}
+                  {t('checkout.signInGate.selectedSuffix', { price, note: localizedNote(note) })}{' '}
                   {paddleEnabled
                     ? t('checkout.signInGate.needAccount')
                     : t('checkout.signInGate.needAccountSoon')}

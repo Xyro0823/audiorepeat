@@ -5,6 +5,7 @@ import type { AuthUser } from '@/types/auth';
 import type { PlanDef } from '@/lib/plans';
 import { checkoutSuccessUrl } from '@/lib/checkoutUrl';
 import { useT } from '@/lib/i18n';
+import { PlanText, planTaglineKey } from '@/lib/i18n/PlanText';
 
 interface Props {
   plan: PlanDef;
@@ -204,12 +205,12 @@ export default function PaymentStep({
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-sm font-semibold text-white">{plan.name}</p>
-              <p className="mt-0.5 text-xs text-slate-400">{plan.tagline}</p>
+              <p className="mt-0.5 text-xs text-slate-400">{t(planTaglineKey(plan.id))}</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-extrabold tracking-tight text-white">
                 ${price}
-                <span className="ml-1 text-xs font-medium text-slate-500">{note}</span>
+                <span className="ml-1 text-xs font-medium text-slate-500"><PlanText text={note} /></span>
               </p>
               {plan.id === 'pro' && (
                 <p className="mt-0.5 text-[11px] uppercase tracking-wider text-slate-500">
@@ -234,9 +235,9 @@ export default function PaymentStep({
                   >
                     <path d="m5 13 4 4L19 7" />
                   </svg>
-                </span>
-                {f}
-              </li>
+                  </span>
+                  <PlanText text={f} />
+                </li>
             ))}
           </ul>
         </div>
