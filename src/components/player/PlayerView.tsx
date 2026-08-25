@@ -367,6 +367,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     skipPrevious,
     seekToWord,
     playFromWord,
+    playbackError,
   } =
     useAudioLoop({
       words,
@@ -1158,6 +1159,25 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               canMark={canReview}
               onMark={markWord}
             />
+            {/* TTS kept failing: playback is paused and the user must know. */}
+            {playbackError && (
+              <div
+                role="alert"
+                className="mx-auto mb-4 max-w-md rounded-xl border border-neon-amber/40 bg-neon-amber/10 px-4 py-3 text-center text-sm text-neon-amber"
+              >
+                <p className="font-semibold">{t('player.playback.error.title')}</p>
+                <p className="mt-1 text-xs leading-relaxed opacity-90">
+                  {t('player.playback.error.body')}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => play()}
+                  className="mt-2 min-h-11 rounded-lg border border-neon-amber/50 px-4 py-2 text-xs font-semibold transition hover:bg-neon-amber/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+                >
+                  {t('player.playback.error.retry')}
+                </button>
+              </div>
+            )}
             {/* Screen-reader track announcement (visual card above). */}
             <p aria-live="polite" className="sr-only">
               {currentWord &&

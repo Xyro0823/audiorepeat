@@ -87,9 +87,18 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
   const mediaMetaRef = useRef({ album: 'AudioRepeat', artist: '' });
   const onPlayRequestRef = useRef<() => void>(() => {});
   const schedulerRef = useRef<Scheduler>({ speakCurrent: () => {}, scheduleNext: () => {} });
+  // ---- playback-failure recovery (single safe retry, never infinite) ----
+  /** Voice URIs that already failed for the CURRENT step (one alternative max). */
+  const failedVoicesRef = useRef<Set<string>>(new Set());
+  /** One-shot alternative voice override for the current recovery attempt. */
+  const altVoiceRef = useRef<string | undefined>(undefined);
+  /** True once the current step has used its single alternative-voice retry. */
+  const retriedRef = useRef(false);
 
   const [status, setStatus] = useState<PlaybackStatus>('idle');
   const [progress, setProgress] = useState<Cursor>({ ...IDLE_CURSOR });
+  /** Set when TTS keeps failing — playback is paused and the user is told. */
+  const [playbackError, setPlaybackError] = useState(false);
 
   useEffect(() => {
     onWordChangeRef.current = onWordChange;
@@ -224,7 +233,8 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
       const word = list[c.wordIndex];
       const text = c.isTranslation ? word.translation : word.target;
       const lang = c.isTranslation ? (word.nativeLang ?? navigator.language) : word.lang;
-      const voiceURI = c.isTranslation ? s.translationVoiceURI : s.targetVoiceURI;
+      const voiceURI = altVoiceRef.current ??
+        (c.isTranslation ? s.translationVoiceURI : s.targetVoiceURI);
 
       getEngine().speak({
         text,
@@ -234,6 +244,11 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
         voiceURI,
         onStart: () => {
           if (token !== tokenRef.current) return;
+          // Speech works again: reset recovery state and any stale error.
+          failedVoicesRef.current.clear();
+          altVoiceRef.current = undefined;
+          retriedRef.current = false;
+          setPlaybackError(false);
           syncMediaSession('playing');
           onWordChangeRef.current?.(
             wordsRef.current[cursorRef.current.wordIndex],
@@ -246,11 +261,38 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
         onError: (err) => {
           if (token !== tokenRef.current) return;
           console.error('[useAudioLoop]', err);
-          schedulerRef.current.scheduleNext(); // skip the failing step, keep the loop alive
+          if (voiceURI) failedVoicesRef.current.add(voiceURI);
+          // ONE safe retry with a different, same-language voice — never an
+          // unrelated language, never an endless loop. If that is spent (or
+          // no compatible alternative exists), pause and tell the user
+          // instead of silently skipping for minutes.
+          if (!retriedRef.current) {
+            retriedRef.current = true;
+            const base = lang.split('-')[0].toLowerCase();
+            const alt = getEngine()
+              .getVoices(lang)
+              .find(
+                (v) =>
+                  !failedVoicesRef.current.has(v.uri) &&
+                  v.lang.toLowerCase().startsWith(base),
+              );
+            if (alt) {
+              altVoiceRef.current = alt.uri;
+              schedulerRef.current.speakCurrent(token); // same token: keep callbacks valid
+              return;
+            }
+          }
+          altVoiceRef.current = undefined;
+          tokenRef.current += 1; // invalidate this attempt chain
+          statusRef.current = 'paused';
+          setStatus('paused');
+          syncMediaSession('paused');
+          releaseWakeLock();
+          setPlaybackError(true);
         },
       });
     },
-    [finish, getEngine, syncMediaSession],
+    [finish, getEngine, syncMediaSession, releaseWakeLock],
   );
 
   const scheduleNext = useCallback(() => {
@@ -313,6 +355,11 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
     tokenRef.current += 1;
     getEngine().stop();
     clearGapTimer();
+    // A fresh start clears any recovery state from previous failures.
+    failedVoicesRef.current.clear();
+    altVoiceRef.current = undefined;
+    retriedRef.current = false;
+    setPlaybackError(false);
 
     if (!resuming) cursorRef.current = { ...IDLE_CURSOR };
     statusRef.current = 'playing';
@@ -342,6 +389,10 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
     tokenRef.current += 1;
     getEngine().stop();
     clearGapTimer();
+    failedVoicesRef.current.clear();
+    altVoiceRef.current = undefined;
+    retriedRef.current = false;
+    setPlaybackError(false);
     cursorRef.current = { ...IDLE_CURSOR };
     statusRef.current = 'idle';
     setStatus('idle');
@@ -484,6 +535,8 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
     currentWord: words[progress.wordIndex] ?? null,
     isPlaying: status === 'playing',
     isPaused: status === 'paused',
+    /** True when TTS kept failing: playback paused with a visible message. */
+    playbackError,
     play,
     pause,
     stop,

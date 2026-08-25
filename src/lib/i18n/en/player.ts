@@ -70,6 +70,12 @@ export const playerEn = {
   'player.voice.noMatch':
     'No voice found for {lang} on this device — the browser will fall back to its default.',
 
+  // Playback failure recovery (shown after a TTS failure + one failed retry)
+  'player.playback.error.title': 'Audio playback problem',
+  'player.playback.error.body':
+    'Speech failed repeatedly, so practice is paused instead of skipping words. Press resume to try again.',
+  'player.playback.error.retry': 'Resume audio',
+
   // Toasts
   'player.toast.cloudEnabled': 'Cloud voice enabled. Audio will be saved for faster replay.',
   'player.toast.enableCloudVoice': 'Enable cloud voice below to hear this language clearly.',
