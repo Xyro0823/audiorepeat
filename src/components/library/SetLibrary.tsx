@@ -27,7 +27,12 @@ import {
   withoutSharedSetPayload,
   type SharedSetPreview,
 } from '@/lib/sets/shareImport';
-import { downloadSet, parseSetJson } from '@/lib/sets/io';
+import { downloadSet, parseSetJsonChecked } from '@/lib/sets/io';
+import {
+  importFileBytesExceed,
+  importWordCountExceeds,
+  MAX_IMPORT_WORDS,
+} from '@/lib/sets/importLimits';
 import type { CefrLevel, VocabSet } from '@/types/app';
 import { useT, type TKey } from '@/lib/i18n';
 import dynamic from 'next/dynamic';
@@ -546,12 +551,22 @@ export default function SetLibrary() {
 
   const handleImportFile = async (file: File) => {
     try {
-      const text = await file.text();
-      const parsed = parseSetJson(text);
-      if (!parsed) {
-        flash({ kind: 'err', text: t('library.flash.invalidFile') });
+      // Reject oversized files before reading/parsing anything.
+      if (importFileBytesExceed(file)) {
+        flash({ kind: 'err', text: t('library.flash.importTooLarge') });
         return;
       }
+      const text = await file.text();
+      const result = parseSetJsonChecked(text);
+      if (!result.ok) {
+        flash(
+          result.error === 'too-many-words'
+            ? { kind: 'err', text: t('library.flash.importTooManyWords', { limit: result.limit }) }
+            : { kind: 'err', text: t('library.flash.invalidFile') },
+        );
+        return;
+      }
+      const parsed = result.set;
       await saveSet(parsed);
       flash({
         kind: 'ok',
@@ -566,6 +581,11 @@ export default function SetLibrary() {
 
   const handleSubtitleFile = async (file: File) => {
     try {
+      // Reject oversized subtitles before reading them into memory.
+      if (importFileBytesExceed(file)) {
+        flash({ kind: 'err', text: t('library.flash.importTooLarge') });
+        return;
+      }
       const text = await file.text();
       setSubtitleImport({ fileName: file.name, text });
     } catch {
@@ -1265,6 +1285,12 @@ export default function SetLibrary() {
           duplicate={duplicateSharedSet}
           onClose={() => setPendingSharedSet(null)}
           onConfirm={async (set) => {
+            // Last-line guard shared by share links: reject before saving so
+            // an oversized set is never partially imported.
+            if (importWordCountExceeds(set.words.length)) {
+              flash({ kind: 'err', text: t('library.flash.importTooManyWords', { limit: MAX_IMPORT_WORDS }) });
+              return;
+            }
             await saveSet(set);
             flash({
               kind: 'ok',
@@ -1284,6 +1310,11 @@ export default function SetLibrary() {
           canUseLang={canUseLang}
           onClose={() => setSubtitleImport(null)}
           onCreate={(set) => {
+            // Reject before opening the editor — never render oversized data.
+            if (importWordCountExceeds(set.words.length)) {
+              flash({ kind: 'err', text: t('library.flash.importTooManyWords', { limit: MAX_IMPORT_WORDS }) });
+              return;
+            }
             // Open the editor to review translations before saving (Save & play).
             setSubtitleImport(null);
             setEditing(set);
@@ -1308,6 +1339,10 @@ export default function SetLibrary() {
           onClose={() => setBrowse(false)}
           onImport={async (set) => {
             try {
+              if (importWordCountExceeds(set.words.length)) {
+                flash({ kind: 'err', text: t('library.flash.importTooManyWords', { limit: MAX_IMPORT_WORDS }) });
+                return;
+              }
               await saveSet(set);
               flash({
                 kind: 'ok',

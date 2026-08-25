@@ -1,8 +1,25 @@
 import { CEFR_LEVELS } from '@/types/app';
 import type { AppSettings, VocabSet, VocabWord } from '@/types/app';
+import {
+  importBytesExceed,
+  importWordCountExceeds,
+  MAX_IMPORT_WORDS,
+} from './importLimits';
 
 const FORMAT = 'audiorepeat-set';
 const VERSION = 1;
+
+export type ParseSetError = 'invalid' | 'too-large' | 'too-many-words';
+export interface ParseSetTooManyWords {
+  ok: false;
+  error: 'too-many-words';
+  /** The canonical cap (MAX_IMPORT_WORDS) for friendly messaging. */
+  limit: number;
+}
+export type ParseSetResult =
+  | { ok: true; set: VocabSet }
+  | { ok: false; error: Exclude<ParseSetError, 'too-many-words'> }
+  | ParseSetTooManyWords;
 
 export function exportSetJson(set: VocabSet): string {
   return JSON.stringify({ format: FORMAT, version: VERSION, set }, null, 2);
@@ -22,25 +39,44 @@ export function downloadSet(set: VocabSet): void {
 }
 
 /**
- * Parse imported JSON. Accepts:
+ * Parse imported JSON with explicit size-rejection reasons. Accepts:
  *  - the app's own export format ({ format: 'audiorepeat-set', set })
  *  - a bare array of { target, translation[, repeats] } (lenient)
- * Returns a new set (fresh id) or null if invalid.
+ *
+ * Oversized input is rejected BEFORE parsing (byte cap) or immediately after
+ * sanitizing (word cap) — an oversized set is never partially imported.
  */
-export function parseSetJson(text: string): VocabSet | null {
+export function parseSetJsonChecked(text: string): ParseSetResult {
+  // Byte-accurate pre-parse rejection: never JSON.parse unbounded input.
+  if (importBytesExceed(text)) return { ok: false, error: 'too-large' };
+
   let data: unknown;
   try {
     data = JSON.parse(text);
   } catch {
-    return null;
+    return { ok: false, error: 'invalid' };
   }
   if (Array.isArray(data)) {
     // lenient: bare array of { target, translation, repeats? }
-    return sanitizeSet({ name: 'Imported set', words: data });
+    const set = sanitizeSet({ name: 'Imported set', words: data });
+    return set ? { ok: true, set } : { ok: false, error: 'invalid' };
   }
   const rawSet =
     data && typeof data === 'object' && 'set' in data ? (data as { set: unknown }).set : data;
-  return sanitizeSet(rawSet);
+  const set = sanitizeSet(rawSet);
+  if (!set) return { ok: false, error: 'invalid' };
+  // Word-cap guard: a single import can never exceed the per-set limit, so
+  // oversized data is rejected whole instead of silently breaking sync later.
+  if (importWordCountExceeds(set.words.length)) {
+    return { ok: false, error: 'too-many-words', limit: MAX_IMPORT_WORDS } as const;
+  }
+  return { ok: true, set };
+}
+
+/** Back-compatible wrapper — callers that only need a set-or-null. */
+export function parseSetJson(text: string): VocabSet | null {
+  const result = parseSetJsonChecked(text);
+  return result.ok ? result.set : null;
 }
 
 function sanitizeSet(raw: unknown): VocabSet | null {

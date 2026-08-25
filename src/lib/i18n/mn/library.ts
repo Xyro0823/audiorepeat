@@ -29,6 +29,8 @@ export const libraryMn: Record<LibraryKeys, string> = {
 
   // ---- Түр гарах мэдэгдлүүд ----
   'library.flash.invalidFile': 'Энэ файл AudioRepeat-ийн зөв багц биш байна.',
+  'library.flash.importTooLarge': 'Файл хэт том байна — нэг импортын хязгаар 2 МБ.',
+  'library.flash.importTooManyWords': 'Үгс хэт олон байна — нэг багцад {limit} үгийн хязгаар тавьдаг.',
   'library.flash.imported': 'Импортлогдлоо: “{name}” ({count} үг).',
   'library.flash.readFailed': 'Энэ файлыг уншиж чадсангүй.',
   'library.flash.readSubtitleFailed': 'Энэ субтитрын файлыг уншиж чадсангүй.',

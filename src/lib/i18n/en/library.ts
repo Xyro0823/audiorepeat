@@ -29,6 +29,8 @@ export const libraryEn = {
 
   // ---- Transient flash messages ----
   'library.flash.invalidFile': 'That file is not a valid AudioRepeat set.',
+  'library.flash.importTooLarge': 'That file is too large - the limit is 2 MB per import.',
+  'library.flash.importTooManyWords': 'That set has too many words - the limit is {limit} words per set.',
   'library.flash.imported': 'Imported “{name}” ({count} words).',
   'library.flash.readFailed': 'Could not read that file.',
   'library.flash.readSubtitleFailed': 'Could not read that subtitle file.',
