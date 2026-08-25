@@ -58,6 +58,11 @@ import ChangeFreeLanguageModal from '@/components/onboarding/ChangeFreeLanguageM
 import { buildDueReviewQueue } from '@/lib/review/fsrs';
 import { nextDueAt } from '@/lib/review/nextDue';
 import { daysSinceLastPractice } from '@/lib/practiceStats';
+import {
+  buildSetSearchDocs,
+  filterLibrarySets,
+} from '@/lib/sets/search';
+import { useDebouncedSearchQuery } from '@/hooks/useDebouncedSearchQuery';
 
 function Logo() {
   return (
@@ -515,6 +520,9 @@ export default function SetLibrary() {
   const [pendingSharedSet, setPendingSharedSet] = useState<SharedSetPreview | null>(null);
   const [shareSet, setShareSet] = useState<VocabSet | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  // The grid re-filters from the DEBOUNCED query so rapid typing never
+  // recomputes/re-renders the library per keystroke; clearing is immediate.
+  const debouncedSearch = useDebouncedSearchQuery(searchQuery);
   const [cefrFilter, setCefrFilter] = useState<CefrLevel | 'all'>('all');
   const [langFilter, setLangFilter] = useState<string>('all');
   const [changingLang, setChangingLang] = useState(false);
@@ -660,19 +668,21 @@ export default function SetLibrary() {
   );
   const hasCefrSets = useMemo(() => sets.some((s) => s.cefr), [sets]);
 
-  const filteredSets = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return sets.filter((s) => {
-      if (cefrFilter !== 'all' && s.cefr !== cefrFilter) return false;
-      if (langFilter !== 'all' && s.lang !== langFilter) return false;
-      if (q && !s.name.toLowerCase().includes(q) && !languageLabel(s.lang).toLowerCase().includes(q)) {
-        return false;
-      }
-      return true;
-    });
-  }, [sets, searchQuery, cefrFilter, langFilter]);
+  // Searchable fields are precomputed once per library change; each settled
+  // keystroke is then just a cheap array pass (pure logic in lib/sets/search).
+  const searchDocs = useMemo(() => buildSetSearchDocs(sets, languageLabel), [sets]);
 
-  const filtersActive = searchQuery.trim() !== '' || cefrFilter !== 'all' || langFilter !== 'all';
+  const filteredSets = useMemo(
+    () =>
+      filterLibrarySets(searchDocs, {
+        query: debouncedSearch,
+        cefr: cefrFilter,
+        lang: langFilter,
+      }),
+    [searchDocs, debouncedSearch, cefrFilter, langFilter],
+  );
+
+  const filtersActive = debouncedSearch.trim() !== '' || cefrFilter !== 'all' || langFilter !== 'all';
   const filteredWords = useMemo(
     () => filteredSets.reduce((n, s) => n + s.words.length, 0),
     [filteredSets],
