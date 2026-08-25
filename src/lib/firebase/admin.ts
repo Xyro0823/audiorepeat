@@ -143,6 +143,7 @@ export function createEntitlementStore(options?: { events?: 'stripe' | 'paddle' 
         stripePriceId: data.stripePriceId ?? null,
         paddleSubscriptionId: data.paddleSubscriptionId ?? null,
         paddlePriceId: data.paddlePriceId ?? null,
+        paddleTransactionId: data.paddleTransactionId ?? null,
         status: data.status ?? 'active',
         currentPeriodEnd: data.currentPeriodEnd ?? null,
         manual: (data.manual as ManualEntitlement | null | undefined) ?? null,
@@ -172,6 +173,16 @@ export function createEntitlementStore(options?: { events?: 'stripe' | 'paddle' 
       const snap = await db
         .collection(ENTITLEMENTS_COLLECTION)
         .where('paddleSubscriptionId', '==', paddleSubscriptionId)
+        .limit(1)
+        .get();
+      if (snap.empty) return null;
+      return snap.docs[0].id;
+    },
+
+    async findUidByPaddleTransaction(paddleTransactionId) {
+      const snap = await db
+        .collection(ENTITLEMENTS_COLLECTION)
+        .where('paddleTransactionId', '==', paddleTransactionId)
         .limit(1)
         .get();
       if (snap.empty) return null;

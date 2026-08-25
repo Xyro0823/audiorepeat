@@ -8,8 +8,10 @@ import {
 import { createEntitlementStore, isAdminConfigured } from '@/lib/firebase/admin';
 import { NO_STORE_HEADERS } from '@/lib/http';
 import {
+  handlePaddleAdjustmentEvent,
   handlePaddleSubscriptionEvent,
   handlePaddleTransactionCompleted,
+  type PaddleAdjustmentLike,
   type PaddlePriceResolver,
   type PaddleSubscriptionLike,
   type PaddleTransactionLike,
@@ -104,9 +106,10 @@ export async function POST(request: Request) {
           event.occurredAt ? Date.parse(event.occurredAt) : undefined,
         );
         break;
-      // Subscription lifecycle — active/trialing grants Pro, everything else
-      // revokes. subscription.canceled/paused/past_due are the cancellation
-      // and payment-failure signals.
+      // Subscription lifecycle — active/trialing grants Pro, past_due keeps
+      // it until the paid period ends (dunning grace, enforced at read time),
+      // paused/canceled/expired revoke. subscription.canceled/paused/past_due
+      // are the cancellation and payment-failure signals.
       case 'subscription.activated':
       case 'subscription.created':
       case 'subscription.updated':
@@ -117,6 +120,17 @@ export async function POST(request: Request) {
           store,
           event.data as unknown as PaddleSubscriptionLike,
           PRICES,
+          event.occurredAt ? Date.parse(event.occurredAt) : undefined,
+        );
+        break;
+      // Refunds / chargebacks against an original purchase. Revokes a refunded
+      // Lifetime; chargebacks revoke Pro immediately (plain subscription
+      // refunds stay governed by the subscription lifecycle above).
+      case 'adjustment.created':
+      case 'adjustment.updated':
+        await handlePaddleAdjustmentEvent(
+          store,
+          event.data as unknown as PaddleAdjustmentLike,
           event.occurredAt ? Date.parse(event.occurredAt) : undefined,
         );
         break;

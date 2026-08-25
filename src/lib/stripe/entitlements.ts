@@ -58,6 +58,12 @@ export interface EntitlementRecord {
   paddleSubscriptionId?: string | null;
   /** The current Paddle price id (Paddle webhook path). Optional — Stripe records never set it. */
   paddlePriceId?: string | null;
+  /**
+   * The Paddle transaction id that created this entitlement (purchase-time
+   * capture). Lets refund/chargeback adjustments map back to the record even
+   * though adjustment payloads carry no custom data.
+   */
+  paddleTransactionId?: string | null;
   /** Stripe subscription status ('active', 'trialing', 'past_due', …) or 'active' for Lifetime. */
   status: string;
   /** Unix seconds when the current billing period ends (subscriptions only). */
@@ -87,6 +93,12 @@ export interface EntitlementStore {
    * Paddle path normally carries the uid in custom data, this is a fallback.
    */
   findUidByPaddleSubscription?(paddleSubscriptionId: string): Promise<string | null>;
+  /**
+   * Map a Paddle transaction id back to the owning uid — used by refund /
+   * chargeback adjustments whose payloads carry no custom data. Optional so
+   * in-memory test stores can omit it.
+   */
+  findUidByPaddleTransaction?(paddleTransactionId: string): Promise<string | null>;
   /** Idempotency markers for processed webhook events (collection chosen by the store). */
   isEventProcessed(eventId: string): Promise<boolean>;
   markEventProcessed(eventId: string): Promise<void>;
@@ -146,6 +158,15 @@ export interface PaddleTransactionLike {
   items?: { price?: { id?: string | null } | null }[] | null;
   /** Set when the transaction created a subscription (Pro purchases). */
   subscriptionId?: string | null;
+}
+
+/** The minimal subset of a Paddle adjustment (refund/chargeback) payload. */
+export interface PaddleAdjustmentLike {
+  id: string;
+  /** 'refund' | 'chargeback' | 'reversal' — what kind of adjustment this is. */
+  action?: string | null;
+  /** The original purchase transaction this adjustment applies to. */
+  transactionId?: string | null;
 }
 
 /** The minimal subset of a Paddle subscription webhook payload we read. */
@@ -233,7 +254,15 @@ export function computeEffectiveEntitlement(
 
   // 3) Active provider subscription (Stripe or Paddle). The flat plan is only
   //    ever 'pro' when a provider event wrote it, so this is unambiguous.
-  const providerSubActive = rec.status === 'active' || rec.status === 'trialing';
+  //    Paddle `past_due` is a *dunning* state: the subscriber keeps access
+  //    until the paid period actually ends (read-time check, fail-closed when
+  //    the period end is unknown).
+  const providerSubActive =
+    rec.status === 'active' ||
+    rec.status === 'trialing' ||
+    (rec.status === 'past_due' &&
+      typeof rec.currentPeriodEnd === 'number' &&
+      nowSec < rec.currentPeriodEnd);
   if (
     providerSubActive &&
     (Boolean(rec.paddleSubscriptionId || rec.stripeSubscriptionId) || rec.plan === 'pro')
@@ -523,6 +552,7 @@ export function computePaddleTransactionEntitlement(
       stripePriceId: null,
       paddleSubscriptionId: null,
       paddlePriceId: priceId,
+      paddleTransactionId: txn.id,
       status: 'active',
       currentPeriodEnd: null,
     };
@@ -538,6 +568,7 @@ export function computePaddleTransactionEntitlement(
     stripePriceId: null,
     paddleSubscriptionId: txn.subscriptionId ?? null,
     paddlePriceId: priceId,
+    paddleTransactionId: txn.id,
     status: 'active',
     currentPeriodEnd: null,
   };
@@ -545,9 +576,14 @@ export function computePaddleTransactionEntitlement(
 
 /**
  * Derive the entitlement patch for a Paddle subscription event
- * (`subscription.activated` / `updated` / `canceled` / `paused` / `past_due`).
- * Active/trialing keeps Pro (with refreshed period + price); every other
- * status revokes Pro back to Free.
+ * (`subscription.activated` / `created` / `updated` / `canceled` / `paused` /
+ * `past_due`).
+ *
+ * - active/trialing keeps Pro (with refreshed period + price).
+ * - past_due is recorded as Pro + `past_due`: dunning keeps access until the
+ *   paid period ends — `computeEffectiveEntitlement` enforces that at read
+ *   time and fails closed when no period end is known.
+ * - every other status (canceled/paused/expired…) revokes Pro back to Free.
  */
 export function computePaddleSubscriptionEntitlement(
   sub: PaddleSubscriptionLike,
@@ -563,7 +599,7 @@ export function computePaddleSubscriptionEntitlement(
     ? Math.floor(Date.parse(sub.currentBillingPeriod.endsAt) / 1000)
     : null;
 
-  if (PADDLE_ENTITLED_SUBSCRIPTION_STATUSES.has(status)) {
+  if (PADDLE_ENTITLED_SUBSCRIPTION_STATUSES.has(status) || status === 'past_due') {
     return {
       plan: 'pro',
       billing: prices.resolveBilling(priceId) ?? null,
@@ -608,7 +644,9 @@ export async function handlePaddleTransactionCompleted(
   if (current?.plan === 'lifetime' || current?.billing === 'lifetime') return;
   // Preserve the manual grant (if any) — a purchase never erases a gift.
   const next = { ...patch, manual: current?.manual ?? null };
-  if (patch.plan !== 'lifetime' && occurredAtMs !== undefined && store.putProviderEntitlementIfNewer) {
+  // Ordering guard applies to Lifetime too: a STALE `transaction.completed`
+  // replay must never re-grant over a newer refund/chargeback.
+  if (occurredAtMs !== undefined && Number.isFinite(occurredAtMs) && store.putProviderEntitlementIfNewer) {
     await store.putProviderEntitlementIfNewer(patch.uid, next, 'paddle', occurredAtMs);
   } else {
     await store.putEntitlement(patch.uid, next);
@@ -633,7 +671,7 @@ export async function handlePaddleSubscriptionEvent(
       : null) ?? (await store.findUidByPaddleSubscription?.(sub.id)) ?? null;
   if (!uid) return; // unknown subscription — nothing to update
 
-  const patch = computePaddleSubscriptionEntitlement(sub, prices);
+  let patch = computePaddleSubscriptionEntitlement(sub, prices);
   const current = await store.getEntitlement(uid);
   const write = async (next: Partial<EntitlementRecord>) => {
     if (occurredAtMs !== undefined && Number.isFinite(occurredAtMs) && store.putProviderEntitlementIfNewer) {
@@ -662,9 +700,90 @@ export async function handlePaddleSubscriptionEvent(
   // Nothing to revoke when the user has no record yet — a payment-failure or
   // cancellation event for an unknown subscription never creates one.
   if (!current && patch.plan === 'basic') return;
-  // Provider state (status, ids, period end) is recorded as-is, but an active
-  // manual grant keeps the effective plan — computeEffectiveEntitlement ranks
-  // the manual grant above provider state at read time, so a cancellation or
-  // payment failure can never revoke a gift.
-  await write({ ...patch, uid, manual: current?.manual ?? null });
+  // Dunning (`past_due`) keeps an EXISTING Pro grant alive until period end
+  // (read-time check) — it can never create or resurrect an entitlement:
+  // without a record it's ignored, and without a prior Pro grant it degrades
+  // to a plain revocation so no unpaid user gains access.
+  if (patch.status === 'past_due' && !current) return;
+  if (patch.status === 'past_due' && current && current.plan !== 'pro') {
+    patch = { ...patch, plan: 'basic', billing: null };
+  }
+   // Provider state (status, ids, period end) is recorded as-is, but an active
+   // manual grant keeps the effective plan — computeEffectiveEntitlement ranks
+   // the manual grant above provider state at read time, so a cancellation or
+   // payment failure can never revoke a gift.
+   await write({ ...patch, uid, manual: current?.manual ?? null });
+}
+
+/**
+ * Apply a Paddle adjustment event (`adjustment.created` / `adjustment.updated`)
+ * — refunds and chargebacks against an original purchase.
+ *
+ * - The uid is resolved via the `paddleTransactionId` captured at purchase
+ *   time (adjustment payloads carry no custom data). Unknown transactions are
+ *   ignored.
+ * - A refunded/charged-back LIFETIME purchase revokes the flat lifetime grant
+ *   (manual gifts are never touched).
+ * - A chargeback on a subscription transaction revokes Pro immediately; a
+ *   plain subscription refund is left to the subscription lifecycle events
+ *   (cancellation/dunning), which remain the source of truth there.
+ */
+export async function handlePaddleAdjustmentEvent(
+  store: EntitlementStore,
+  adjustment: PaddleAdjustmentLike,
+  occurredAtMs?: number,
+): Promise<void> {
+  const transactionId =
+    typeof adjustment.transactionId === 'string' && adjustment.transactionId.length > 0
+      ? adjustment.transactionId
+      : null;
+  if (!transactionId) return; // cannot map back to a purchase — ignore
+
+  const uid = (await store.findUidByPaddleTransaction?.(transactionId)) ?? null;
+  if (!uid) return;
+
+  const current = await store.getEntitlement(uid);
+  if (!current) return;
+  // Only the record created by THIS transaction may be adjusted — a stale or
+  // unrelated adjustment (different product/re-purchase) must not revoke.
+  if (current.paddleTransactionId !== transactionId) return;
+  // Manual grants are admin-managed — adjustments can never erase them.
+  if (current.manual && current.manual.revokedAt === null) return;
+
+  const action = adjustment.action ?? 'refund';
+  const isChargeback = action === 'chargeback' || action === 'reversal';
+  const isLifetime = current.plan === 'lifetime' || current.billing === 'lifetime';
+
+  let patch: Partial<EntitlementRecord> | null = null;
+  if (isLifetime) {
+    patch = {
+      plan: 'basic',
+      billing: null,
+      paddleTransactionId: transactionId,
+      status: isChargeback ? 'charged_back' : 'refunded',
+      currentPeriodEnd: null,
+    };
+  } else if (isChargeback) {
+    patch = {
+      plan: 'basic',
+      billing: null,
+      paddleSubscriptionId: current.paddleSubscriptionId ?? null,
+      paddlePriceId: current.paddlePriceId ?? null,
+      status: 'charged_back',
+      currentPeriodEnd: null,
+    };
+  }
+  // Plain subscription refunds fall through: the subscription lifecycle
+  // (subscription.updated/canceled/past_due) remains authoritative for Pro.
+
+  if (!patch) return;
+  if (
+    occurredAtMs !== undefined &&
+    Number.isFinite(occurredAtMs) &&
+    store.putProviderEntitlementIfNewer
+  ) {
+    await store.putProviderEntitlementIfNewer(uid, { ...patch, manual: current.manual ?? null }, 'paddle', occurredAtMs);
+  } else {
+    await store.putEntitlement(uid, { ...patch, uid, manual: current.manual ?? null });
+  }
 }
