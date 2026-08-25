@@ -38,6 +38,13 @@ export const dashboardEn = {
   'dashboard.reminder.msg.blocked': 'Notifications are blocked. Allow them in your browser settings.',
   'dashboard.reminder.msg.set': 'Daily reminder set for {time}.',
 
+  // Next-due guidance (0-due state on ReviewTodayCard + review screens)
+  'dashboard.review.nextDue.today': 'Next word comes due later today.',
+  'dashboard.review.nextDue.tomorrow': 'Next word comes due tomorrow.',
+  'dashboard.review.nextDue.days.one': 'Next word comes due in {count} day.',
+  'dashboard.review.nextDue.days.other': 'Next word comes due in {count} days.',
+  'dashboard.review.nextDue.date': 'Next word comes due {date}.',
+
   // MetricCards
   'dashboard.metric.accuracy.label': 'Listening Accuracy',
   'dashboard.metric.accuracy.hint': 'Mastered vs. review words',

@@ -50,6 +50,8 @@ import CloudSyncBadge from '@/components/dashboard/CloudSyncBadge';
 import FreeLanguageBar from '@/components/onboarding/FreeLanguageBar';
 import ChangeFreeLanguageModal from '@/components/onboarding/ChangeFreeLanguageModal';
 import { buildDueReviewQueue } from '@/lib/review/fsrs';
+import { nextDueAt } from '@/lib/review/nextDue';
+import { daysSinceLastPractice } from '@/lib/practiceStats';
 
 function Logo() {
   return (
@@ -698,6 +700,16 @@ export default function SetLibrary() {
     return { mastered, hard };
   }, [sets]);
   const reviewDueCount = useMemo(() => buildDueReviewQueue(sets).length, [sets]);
+  // Earliest future FSRS due date — read-only; powers the 0-due "come back" cue.
+  const reviewNextDueAtMs = useMemo(() => nextDueAt(sets), [sets]);
+  // Factual recovery note when the streak has lapsed (≥2 quiet days).
+  const lastPracticeAgo = useMemo(() => daysSinceLastPractice(days), [days]);
+  const streakLapsedNote =
+    streak === 0 && lastPracticeAgo !== null
+      ? t(lastPracticeAgo === 1 ? 'library.sidebar.streakLapsed.one' : 'library.sidebar.streakLapsed.other', {
+          count: lastPracticeAgo,
+        })
+      : null;
   const accuracyPct =
     masteryStats.mastered + masteryStats.hard > 0
       ? Math.round((masteryStats.mastered / (masteryStats.mastered + masteryStats.hard)) * 100)
@@ -980,6 +992,11 @@ export default function SetLibrary() {
               </dd>
             </div>
           </dl>
+          {streakLapsedNote && (
+            <p className="mt-2 text-[11px] leading-snug text-slate-500" role="note">
+              {streakLapsedNote}
+            </p>
+          )}
 
           <div className="my-4 h-px bg-white/10" />
 
@@ -1000,6 +1017,7 @@ export default function SetLibrary() {
 
           <ReviewTodayCard
             dueCount={reviewDueCount}
+            nextDueAtMs={reviewNextDueAtMs}
             reminderEnabled={settings.reminderEnabled}
             reminderTime={settings.reminderTime}
             onStart={() => {

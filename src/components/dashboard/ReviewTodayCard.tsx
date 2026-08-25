@@ -1,12 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { estimatedReviewMinutes } from '@/lib/review/fsrs';
+import {
+  classifyNextDue,
+  formatNextDueDate,
+  nextDueCopy,
+} from '@/lib/review/nextDue';
+import { currentUiLang } from '@/lib/i18n';
 import { scheduleDailyReminder } from '@/lib/reminders';
 import { useT } from '@/lib/i18n';
 
 interface Props {
   dueCount: number;
+  /** Earliest future due timestamp in the library (null = nothing scheduled). */
+  nextDueAtMs?: number | null;
   reminderEnabled: boolean;
   reminderTime: string;
   onStart: () => void;
@@ -17,6 +25,7 @@ const subscribeHydration = () => () => {};
 
 export default function ReviewTodayCard({
   dueCount,
+  nextDueAtMs,
   reminderEnabled,
   reminderTime,
   onStart,
@@ -27,6 +36,21 @@ export default function ReviewTodayCard({
   const hydrated = useSyncExternalStore(subscribeHydration, () => true, () => false);
   const notificationSupported =
     hydrated && 'Notification' in window && 'serviceWorker' in navigator;
+
+  // Next-study guidance for the caught-up state: tells the learner exactly
+  // when their queue refills, so "0 due" still carries a return cue.
+  // `nextDueAtMs` is produced by nextDueAt(), which only ever returns future
+  // timestamps, so no wall-clock check is needed here.
+  const nextDueLine = useMemo(() => {
+    if (dueCount > 0 || !hydrated || typeof nextDueAtMs !== 'number') return null;
+    const copy = nextDueCopy(classifyNextDue(nextDueAtMs));
+    return t(
+      copy.key,
+      copy.date
+        ? { ...copy.vars, date: formatNextDueDate(copy.date, currentUiLang()) }
+        : copy.vars,
+    );
+  }, [dueCount, hydrated, nextDueAtMs, t]);
 
   useEffect(() => {
     void scheduleDailyReminder(reminderEnabled, reminderTime, dueCount);
@@ -74,7 +98,7 @@ export default function ReviewTodayCard({
                     dueCount === 1 ? 'dashboard.review.due.one' : 'dashboard.review.due.other',
                     { count: dueCount, minutes: estimatedReviewMinutes(dueCount) },
                   )
-                : t('dashboard.review.caughtUp')}
+                : (nextDueLine ?? t('dashboard.review.caughtUp'))}
             </p>
           </div>
           <button

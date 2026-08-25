@@ -70,6 +70,11 @@ export const libraryEn = {
   'library.sidebar.studyTime': 'Study time',
   'library.sidebar.streak': 'Streak',
   'library.sidebar.streakDays': '🔥 {count} days',
+  // Streak recovery for lapsed returning users (factual, no gamification)
+  'library.sidebar.streakLapsed.one':
+    '{count} day since your last practice — one short session today starts a new streak.',
+  'library.sidebar.streakLapsed.other':
+    '{count} days since your last practice — one short session today starts a new streak.',
 
   // ---- Sets grid ----
   'library.grid.title': 'Language Sets & Library',

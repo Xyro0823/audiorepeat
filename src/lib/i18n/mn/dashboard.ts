@@ -41,6 +41,13 @@ export const dashboardMn: Record<DashboardKeys, string> = {
     'Мэдэгдэл хаалттай байна. Хөтчийнхөө тохиргооноос зөвшөөрөөрэй.',
   'dashboard.reminder.msg.set': 'Өдөр тутмын сануулга {time}-д тохируулагдлаа.',
 
+  // Next-due guidance (0-due state on ReviewTodayCard + review screens)
+  'dashboard.review.nextDue.today': 'Дараагийн үг өнөөдөр дотор давтахад бэлэн болно.',
+  'dashboard.review.nextDue.tomorrow': 'Дараагийн үг маргааш давтахад бэлэн болно.',
+  'dashboard.review.nextDue.days.one': 'Дараагийн үг {count} хоногийн дараа давтахад бэлэн болно.',
+  'dashboard.review.nextDue.days.other': 'Дараагийн үг {count} хоногийн дараа давтахад бэлэн болно.',
+  'dashboard.review.nextDue.date': 'Дараагийн үг {date}-нд давтахад бэлэн болно.',
+
   // MetricCards
   'dashboard.metric.accuracy.label': 'Сонсох нарийвчлал',
   'dashboard.metric.accuracy.hint': 'Эзэмшсэн болон давтах үгс',

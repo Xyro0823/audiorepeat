@@ -70,6 +70,11 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.sidebar.studyTime': 'Сурсан хугацаа',
   'library.sidebar.streak': 'Тасралтгүй',
   'library.sidebar.streakDays': '🔥 {count} хоног',
+  // Streak recovery for lapsed returning users (factual, no gamification)
+  'library.sidebar.streakLapsed.one':
+    'Сүүлийн дадлагаас хойш {count} хоног боллоо — өнөөдрийн богино дадлага шинэ цувралыг эхлүүлнэ.',
+  'library.sidebar.streakLapsed.other':
+    'Сүүлийн дадлагаас хойш {count} хоног боллоо — өнөөдрийн богино дадлага шинэ цувралыг эхлүүлнэ.',
 
   // ---- Багцын хүснэгт ----
   'library.grid.title': 'Хэлний багцууд ба сан',

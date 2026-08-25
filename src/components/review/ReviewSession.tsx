@@ -9,7 +9,7 @@ import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
 import { useLists } from '@/hooks/useLists';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
-import { useT } from '@/lib/i18n';
+import { useT, currentUiLang } from '@/lib/i18n';
 import { planHasFeature } from '@/lib/plans';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
@@ -21,6 +21,7 @@ import {
   type DueReviewItem,
   type ReviewRating,
 } from '@/lib/review/fsrs';
+import { classifyNextDue, formatNextDueDate, nextDueAt, nextDueCopy } from '@/lib/review/nextDue';
 
 const SESSION_LIMIT = 30;
 
@@ -131,6 +132,21 @@ export default function ReviewSession() {
     saveSettings({ cloudTts: true });
   }, [saveSettings]);
 
+  // Next-study guidance once the queue drains: read the earliest future FSRS
+  // due date so "done" still carries a concrete reason to come back.
+  const nextDueLine = useMemo(() => {
+    if (current || loading || !canReview) return null;
+    const ms = nextDueAt(sets);
+    if (ms === null) return null;
+    const copy = nextDueCopy(classifyNextDue(ms));
+    return t(
+      copy.key,
+      copy.date
+        ? { ...copy.vars, date: formatNextDueDate(copy.date, currentUiLang()) }
+        : copy.vars,
+    );
+  }, [canReview, current, loading, sets, t]);
+
   // Free plan: FSRS review is Pro — render the lock instead of the feature
   // (after the loading window so a Pro user's hydrating settings never flash
   // the lock on direct navigation).
@@ -168,6 +184,9 @@ export default function ReviewSession() {
             ? t('review.done.body')
             : t('review.empty.body')}
         </p>
+        {nextDueLine && (
+          <p className="mt-2 text-xs font-semibold text-neon-cyan">{nextDueLine}</p>
+        )}
         <Link
           href="/dashboard#review-today"
           className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl bg-neon-violet px-5 text-sm font-bold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-violet"

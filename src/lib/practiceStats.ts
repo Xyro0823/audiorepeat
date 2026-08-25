@@ -58,6 +58,29 @@ export function computeStreak(days: DayMap): number {
   return streak;
 }
 
+/**
+ * Whole days since the most recent day with real activity (0 = today),
+ * or null when nothing has ever been recorded. Powers the factual
+ * streak-recovery note for lapsed returning users.
+ */
+export function daysSinceLastPractice(days: DayMap, today = new Date()): number | null {
+  const toDayNum = (key: string): number => {
+    const parsed = Date.parse(`${key}T00:00:00Z`) / 86_400_000;
+    return Number.isFinite(parsed) ? Math.floor(parsed) : Number.NaN;
+  };
+  let latest: number | null = null;
+  for (const k of Object.keys(days)) {
+    const s = days[k];
+    if (!s || (s.w <= 0 && s.ms <= 0)) continue; // ignore empty placeholder days
+    const num = toDayNum(k);
+    if (!Number.isNaN(num) && (latest === null || num > latest)) latest = num;
+  }
+  if (latest === null) return null;
+  const todayNum = toDayNum(dayKey(today));
+  if (Number.isNaN(todayNum)) return null;
+  return Math.max(0, todayNum - latest);
+}
+
 /** Longest run of consecutive practiced days anywhere in the history. */
 export function bestStreak(days: DayMap): number {
   const sorted = Object.keys(days).sort();
