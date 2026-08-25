@@ -207,7 +207,11 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
       );
       await onImport({
         id: priorBatch?.id ?? `bank-${lang}-${level}-b${n}`,
-        name: `${starterLangLabel(lang)} ${level} · batch of ${n}`,
+        name: t('library.starter.setName.batch', {
+          lang: starterLangLabel(lang),
+          level,
+          count: n.toLocaleString(),
+        }),
         lang,
         nativeLang: 'en-US',
         words: picked.map(([target, translation], i) => ({
@@ -220,7 +224,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
         updatedAt: Date.now(),
       });
     },
-    [lang, level, filtered, sets, onImport, canAddLang],
+    [lang, level, filtered, sets, onImport, canAddLang, t],
   );
 
   const importFull = useCallback(async () => {
@@ -245,7 +249,11 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
     const seedLang = existing?.id.startsWith('seed-') ? existing.lang : undefined;
     await onImport({
       id: existing?.id ?? `bank-full-${lang}-${level}`,
-      name: starterLangLabel(lang) + ' ' + level + ' · full level (' + bank.length.toLocaleString() + ' words)',
+      name: t('library.starter.setName.full', {
+        lang: starterLangLabel(lang),
+        level,
+        count: bank.length.toLocaleString(),
+      }),
       lang: seedLang ?? lang,
       nativeLang: 'en-US',
       words: bank.map(([target, translation], i) => ({
@@ -256,7 +264,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
       cefr: level,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    });    }, [lang, level, bank, sets, onImport, canAddLang]);
+    });    }, [lang, level, bank, sets, onImport, canAddLang, t]);
 
   return (
     <div

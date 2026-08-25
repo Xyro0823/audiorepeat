@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useT } from '@/lib/i18n';
 import type { TTSEngineVoice } from '@/lib/tts/engine';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function VoicePicker({ label, lang, value, voices, loading, onChange }: Props) {
+  const t = useT();
   const groups = useMemo(() => {
     const map = new Map<string, TTSEngineVoice[]>();
     for (const v of voices) {
@@ -41,12 +43,12 @@ export default function VoicePicker({ label, lang, value, voices, loading, onCha
           disabled={loading}
           className="w-full appearance-none rounded-xl border border-white/10 bg-night-800/80 px-4 py-2.5 pr-10 text-sm text-white outline-none transition focus:border-neon-cyan/60 disabled:opacity-50"
         >
-          <option value="">Auto — system default for {lang}</option>
+          <option value="">{t('player.voice.auto', { lang })}</option>
           {groups.map(([group, list]) => (
             <optgroup key={group} label={group}>
               {list.map((v) => (
                 <option key={v.uri} value={v.uri}>
-                  {v.name} {v.localService ? '· offline' : '· cloud'}
+                  {v.name} {v.localService ? t('player.voice.offline') : t('player.voice.cloud')}
                 </option>
               ))}
             </optgroup>
@@ -58,7 +60,7 @@ export default function VoicePicker({ label, lang, value, voices, loading, onCha
       </div>
       {matched.length === 0 && !loading && (
         <p className="mt-1 text-[11px] text-neon-amber">
-          No voice found for {lang} on this device — the browser will fall back to its default.
+          {t('player.voice.noMatch', { lang })}
         </p>
       )}
     </label>

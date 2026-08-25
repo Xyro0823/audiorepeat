@@ -63,6 +63,13 @@ export const playerEn = {
   'player.cloudVoice.signInEnable': 'Sign in & enable cloud voice',
   'player.cloudVoice.footer': 'You can turn it off anytime in Settings.',
 
+  // VoicePicker (EN output matches the previous hardcoded strings)
+  'player.voice.auto': 'Auto — system default for {lang}',
+  'player.voice.offline': '· offline',
+  'player.voice.cloud': '· cloud',
+  'player.voice.noMatch':
+    'No voice found for {lang} on this device — the browser will fall back to its default.',
+
   // Toasts
   'player.toast.cloudEnabled': 'Cloud voice enabled. Audio will be saved for faster replay.',
   'player.toast.enableCloudVoice': 'Enable cloud voice below to hear this language clearly.',

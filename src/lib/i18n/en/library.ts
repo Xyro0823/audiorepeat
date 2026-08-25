@@ -114,6 +114,10 @@ export const libraryEn = {
   'library.starter.notYet': 'Not available yet',
   'library.starter.searchPlaceholder': 'Search {lang} words…',
   'library.starter.batch': 'Batch',
+  // Generated set names (EN output must match the previous hardcoded strings).
+  'library.starter.setName.batch': '{lang} {level} · batch of {count}',
+  'library.starter.setName.full': '{lang} {level} · full level ({count} words)',
+  'library.subtitles.setName': 'From subtitles · {name}',
   'library.starter.pickLangBody': 'Pick a language to browse its word packs.',
   'library.starter.pickLevelBody': 'Pick a level to see its words.',
   'library.starter.levelsHint':

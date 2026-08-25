@@ -112,6 +112,10 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.starter.notYet': 'Одоогоор байхгүй',
   'library.starter.searchPlaceholder': '{lang} үгс хайх…',
   'library.starter.batch': 'Түүвэр',
+  // Үүсгэсэн багцын нэрс.
+  'library.starter.setName.batch': '{lang} {level} · {count} үгийн түүвэр',
+  'library.starter.setName.full': '{lang} {level} · бүтэн түвшин ({count} үг)',
+  'library.subtitles.setName': 'Субтитрээс · {name}',
   'library.starter.pickLangBody': 'Үгийн багцуудыг үзэхийн тулд хэл сонгоно уу.',
   'library.starter.pickLevelBody': 'Үгсийг харахын тулд түвшин сонгоно уу.',
   'library.starter.levelsHint':

@@ -66,7 +66,7 @@ export default function SubtitleImportModal({ fileName, text, defaultLang, canUs
       }));
       onCreate({
         id: crypto.randomUUID(),
-        name: `From subtitles · ${baseName(fileName)}`,
+        name: t('library.subtitles.setName', { name: baseName(fileName) }),
         lang,
         nativeLang: 'en-US',
         words,

@@ -66,6 +66,13 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.cloudVoice.signInEnable': 'Нэвтэрч клауд дуу хоолойг идэвхжүүлэх',
   'player.cloudVoice.footer': 'Тохиргооноос аль ч үед унтрааж болно.',
 
+  // Дуу хоолой сонгогч
+  'player.voice.auto': 'Авто — системийн стандарт ({lang})',
+  'player.voice.offline': '· офлайн',
+  'player.voice.cloud': '· клауд',
+  'player.voice.noMatch':
+    'Энэ төхөөрөмж дээр {lang} хэлний хоолой олдсонгүй — хөтөч өөрийн стандарт хоолойг ашиглах болно.',
+
   // Toasts
   'player.toast.cloudEnabled':
     'Клауд дуу хоолой идэвхжлээ. Аудиог дараагийн удаа шууд тоглуулахад кэшлэгдэнэ.',
