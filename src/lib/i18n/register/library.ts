@@ -1,11 +1,9 @@
-// Route bundle: library translations.
+// Route bundle data: library translations.
 import { libraryEn } from '../en/library';
 import { libraryMn } from '../mn/library';
+import type { NamespacePartials } from '../dictionaries';
 
-import { registerNamespaces } from '../dictionaries';
-
-registerNamespaces({
+export const libraryBundle: NamespacePartials = {
   en: { ...libraryEn },
   mn: { ...libraryMn },
-});
-
+};

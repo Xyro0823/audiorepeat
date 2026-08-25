@@ -109,10 +109,6 @@ export const dashboardEn = {
   // PWA install extras (InstallPrompt / InstallAppButton)
 
   // PWA update prompt (UpdatePrompt — waiting service worker)
-  'dashboard.update.title': 'Update available',
-  'dashboard.update.body': 'A new version of AudioRepeat is ready.',
-  'dashboard.update.reload': 'Update now',
-  'dashboard.update.dismissAria': 'Dismiss update notice',
 
   // Error boundary extra
 } as const;

@@ -1,4 +1,7 @@
 "use client";
+import { registerRoute } from "@/lib/i18n/register/route";
+registerRoute("landing");
+
 
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";

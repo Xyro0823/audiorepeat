@@ -15,7 +15,7 @@ export const commonMn: Record<CommonKeys, string> = {
   'common.edit': 'Засах',
   'common.done': 'Болсон',
   'common.back': 'Буцах',
-  'common.next': 'Дараах',
+  'common.next': 'Дараагийн',
   'common.previous': 'Өмнөх',
   'common.start': 'Эхлэх',
   'common.retry': 'Дахин оролдох',
@@ -41,7 +41,7 @@ export const commonMn: Record<CommonKeys, string> = {
   'common.pro': 'Pro',
   'common.free': 'Үнэгүй',
   'common.guest': 'Зочин',
-  'common.account': 'Данс',
+  'common.account': 'Бүртгэл',
   'common.language': 'Хэл',
   'common.words': 'үг',
   'common.word': 'үг',
@@ -57,7 +57,7 @@ export const commonMn: Record<CommonKeys, string> = {
 export const pwaMn: Record<PwaKeys, string> = {
   'pwa.install.title': 'AudioRepeat-г суулгах',
   'pwa.install.body':
-    'AudioRepeat-г утасны үндсэн дэлгэцэнд нэмээрэй — бүтэн дэлгэцээр дадлагажиж, аудио офлайн ажиллана.',
+    'AudioRepeat-г утасныхаа үндсэн дэлгэцэд нэмээрэй. Ингэснээр бүтэн дэлгэцээр, офлайнаар ч дадлага хийхэд илүү амар болно.',
   'pwa.install.button': 'Аппыг суулгах',
   'pwa.install.later': 'Дараа',
   'pwa.install.ios': 'Хуваалцах товчийг дараад “Үндсэн дэлгэцэнд нэмэх”-ийг сонгоно уу.',
@@ -68,14 +68,19 @@ export const pwaMn: Record<PwaKeys, string> = {
   'dashboard.install.dismissAria': 'Хаах',
   'dashboard.install.menuPrefix': 'Браузерын цэсийг нээгээд сонгоно уу',
   'dashboard.install.or': 'эсвэл',
+  // Global update toast (root layout) - must resolve on ANY route.
+  'dashboard.update.title': 'Шинэчлэл бэлэн боллоо',
+  'dashboard.update.body': 'AudioRepeat-ийн шинэ хувилбар бэлэн боллоо.',
+  'dashboard.update.reload': 'Одоо шинэчлэх',
+  'dashboard.update.dismissAria': 'Шинэчлэлийн мэдэгдлийг хаах',
 };
 
 export const syncMn: Record<SyncKeys, string> = {
-  'sync.state.idle': 'Клауд синк бэлэн',
+  'sync.state.idle': 'Үүлэн синк бэлэн',
   'sync.state.syncing': 'Синк хийж байна…',
-  'sync.state.synced': 'Синк хийгдсэн',
-  'sync.state.offline': 'Офлайн — өөрчлөлтийг төхөөрөмжинд хадгалж байна',
-  'sync.state.error': 'Синкийн асуудал гарлаа — удахгүй дахин оролдоно',
+  'sync.state.synced': 'Синк хийгдлээ',
+  'sync.state.offline': 'Офлайн байна — өөрчлөлтүүд энэ төхөөрөмжид хадгалагдана',
+  'sync.state.error': 'Синк хийхэд асуудал гарлаа — дахин оролдоно уу',
   'sync.lastSynced': 'Сүүлийн синк: {time}',
 };
 

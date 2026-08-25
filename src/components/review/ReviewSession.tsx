@@ -1,4 +1,7 @@
 'use client';
+import { registerRoute } from "@/lib/i18n/register/route";
+registerRoute("review");
+
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';

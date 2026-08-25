@@ -6,14 +6,14 @@ import type { DashboardKeys } from '../en/dashboard';
 
 export const dashboardMn: Record<DashboardKeys, string> = {
   // WelcomeHero
-  'dashboard.welcome.back': 'Тавтай морил',
-  'dashboard.welcome.title': 'Чихээ сургахаар бэлэн үү?',
+  'dashboard.welcome.back': 'Тавтай морилно уу',
+  'dashboard.welcome.title': 'Сонсож сурахад бэлэн үү?',
   'dashboard.welcome.subtitle':
-    'Гараа чөлөөлөөд үг давтаж, санамжаа бэхжүүл. Өнөөдрийн богино дадлага таны тасралтгүй өдрийг амьд байлгана.',
+    'Гараа чөлөөлөөд үгээ давтаарай. Өнөөдрийн богино дадлага таны цувралыг үргэлжлүүлнэ.',
   'dashboard.welcome.startLearning': 'Сурч эхлэх',
   'dashboard.chips.wordsToday.one': 'Өнөөдөр {count} үг',
   'dashboard.chips.wordsToday.other': 'Өнөөдөр {count} үг',
-  'dashboard.chips.studied': '{time} сурсан',
+  'dashboard.chips.studied': '{time} дадлага хийсэн',
   'dashboard.chips.streakStart': 'Тасралтгүй өдрөө эхлүүлэх',
 
   // Streak day counts (hero chip + metrics card)
@@ -21,19 +21,19 @@ export const dashboardMn: Record<DashboardKeys, string> = {
   'dashboard.streakDays.other': '{count} өдөр',
 
   // ReviewTodayCard
-  'dashboard.review.memoryQueue': 'Санах ойн дараалал',
+  'dashboard.review.memoryQueue': 'Давтлагын дараалал',
   'dashboard.reviewToday': 'Өнөөдөр давтах',
   'dashboard.review.due.one': '{count} үг · ойролцоогоор {minutes} минут',
   'dashboard.review.due.other': '{count} үг · ойролцоогоор {minutes} минут',
   'dashboard.review.caughtUp':
     'Давтах зүйл байхгүй байна. Сонсохдоо хэцүү үгээ Давтах гэж тэмдэглээрэй.',
-  'dashboard.review.start': 'Давталт эхлүүлэх',
+  'dashboard.review.start': 'Давтаж эхлэх',
   'dashboard.reminder.title': 'Өдөр тутмын сануулга',
   'dashboard.reminder.timeAria': 'Өдөр тутмын сануулгын цаг',
   'dashboard.reminder.on': 'Идэвхтэй',
   'dashboard.reminder.enable': 'Идэвхжүүлэх',
   'dashboard.reminder.next': 'Дараагийн сануулга: {time}',
-  'dashboard.reminder.hint': 'Энэ цагт давтах үгийн тоогоо авна.',
+  'dashboard.reminder.hint': 'Энэ цагт давтах үгс тань бэлэн болно.',
   'dashboard.reminder.msg.off': 'Өдөр тутмын сануулга унтраагдлаа.',
   'dashboard.reminder.msg.needPwa':
     'Сануулга ашиглахын тулд аппыг мэдэгдэл дэмждэг хөтөч дээр суулгаарай.',
@@ -60,19 +60,19 @@ export const dashboardMn: Record<DashboardKeys, string> = {
   'dashboard.sync.title': 'Энэ санг нэвтэрсэн төхөөрөмжүүдийн хооронд синк хийх',
 
   // AiInsightsCard
-  'dashboard.insights.title': 'AI шинжилгээ',
-  'dashboard.insights.subtitle': 'Өнөөдрийн ухаалаг зөвлөмж',
+  'dashboard.insights.title': 'Өнөөдрийн зөвлөмж',
+  'dashboard.insights.subtitle': 'Дараагийн хийх зүйлс',
   'dashboard.insights.goalLabel': 'Өдөр тутмын аудио зорилт',
   'dashboard.insights.review.some.one': 'Өнөөдөр {count} үг давтах хэрэгтэй',
   'dashboard.insights.review.some.other': 'Өнөөдөр {count} үг давтах хэрэгтэй',
   'dashboard.insights.review.none': 'Бүгд давтагдсан — давтах зүйл алга',
-  'dashboard.insights.review.meta.some': 'Тоглогч доторх Давтах горимыг дарна уу',
+  'dashboard.insights.review.meta.some': 'Давтаж эхлээд, хэрэгтэй үгсээ сонгоорой',
   'dashboard.insights.review.meta.none': 'Маш сайн!',
   'dashboard.insights.goal.done': 'Өдөр тутмын аудио зорилт биеллээ',
   'dashboard.insights.goal.progress': 'Өдөр тутмын аудио зорилтын {pct}% биеллээ',
   'dashboard.insights.goal.meta.done': 'Гайхалтай төвлөрөлт 🎉',
   'dashboard.insights.goal.meta.left': '{pct}% үлдлээ — сонсоорой',
-  'dashboard.insights.streak.some': 'Тасралтгүй {days} өдөр — зогсооройгүй',
+  'dashboard.insights.streak.some': '{days} өдөр дараалан дадлага хийжээ — үргэлжлүүлээрэй',
   'dashboard.insights.streak.none': 'Тасралтгүй өдрөө өнөөдөр эхлүүлээрэй',
   'dashboard.insights.streak.meta.some': 'Тогтмол дадлага хамгийн чухал',
   'dashboard.insights.streak.meta.none': 'Нэг богино дадлага хангалттай',
@@ -112,10 +112,6 @@ export const dashboardMn: Record<DashboardKeys, string> = {
   // PWA install extras (InstallPrompt / InstallAppButton)
 
   // PWA update prompt (UpdatePrompt — waiting service worker)
-  'dashboard.update.title': 'Шинэчлэл бэлэн боллоо',
-  'dashboard.update.body': 'AudioRepeat-ийн шинэ хувилбар бэлэн боллоо.',
-  'dashboard.update.reload': 'Одоо шинэчлэх',
-  'dashboard.update.dismissAria': 'Шинэчлэлийн мэдэгдлийг хаах',
 
   // Error boundary extra
 };

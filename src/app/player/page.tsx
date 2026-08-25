@@ -1,7 +1,6 @@
+import { registerRoute } from "@/lib/i18n/register/route";
+registerRoute("player");
 import type { Metadata } from "next";
-import "@/lib/i18n/register/player";
-import "@/lib/i18n/register/challenge";
-import "@/lib/i18n/register/stats";
 import PlayerView from "@/components/player/PlayerView";
 
 export const metadata: Metadata = {

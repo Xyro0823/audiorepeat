@@ -8,7 +8,7 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.masteredPct': '{pct}% эзэмшсэн',
   'library.pickLanguage': 'Хэл сонгох',
   'library.preview': 'Урьдчилан харах',
-  'library.typeToSearch': 'Хайхын тулд бичиж эхлүүлээрэй',
+  'library.typeToSearch': 'Хайх зүйлээ бичиж эхлээрэй',
   'library.confirmDelete': 'Устгалыг батлах',
   'library.keepWords': 'Үгсийг хадгалах',
   'library.proFeature': 'Pro функц',
@@ -22,7 +22,7 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.cefr.C2': 'Мэргэжлийн',
 
   // ---- Дээд самбар / шинэ багцын цэс ----
-  'library.newSet.title': 'Шинэ багц үүсгэх эсвэл импортлох',
+  'library.newSet.title': 'Шинэ багц үүсгэх эсвэл файл импортлох',
   'library.newSet.newSet': 'Шинэ багц',
   'library.newSet.importJson': 'Импортлох (JSON)',
   'library.tagline': '{count} хэл · гар чөлөөтэй дадлага',
@@ -42,7 +42,7 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.featured.meta': '{target} → {native} · {count} үг',
   'library.featured.metaCefr': ' · {level} {label}',
   'library.featured.body':
-    '{lang} хэлний чухал {count} үгийг аудио давталтаар, гараар юу ч хийлгүй тогтооорой — замдаа, гэр ажилдаа, амрахдаа тохирно.',
+    '{lang} хэлний чухал {count} үгийг сонсож давтаарай. Замдаа, ажил хийж байхдаа, амарч байхдаа ч тохирно.',
   'library.featured.knownCount': '{count} үг мэддэг болсон',
   'library.featured.startLearning': 'Сурч эхлэх',
 
@@ -52,7 +52,7 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.card.downloadJson': 'JSON татах',
   'library.card.copyShareLink': 'Хуваалцах холбоосыг хуулах',
   'library.card.customSettings': ' · тохируулсан тохиргоо',
-  'library.card.toReview': '{count} давтах',
+  'library.card.toReview': '{count} үг давтах',
   'library.card.quickTestTitle': '1 минутын хурдан сорил',
   'library.card.proTestTitle': 'Хурдны сорил бол Pro функц',
   'library.card.quickTest': 'Хурдан сорил',
@@ -67,7 +67,7 @@ export const libraryMn: Record<LibraryKeys, string> = {
     'Аль ч багцаар дадлаж үзээрэй — энд хадгалагдаж, зогссон газраасаа үргэлжлүүлж болно.',
   'library.sidebar.today': 'Өнөөдөр',
   'library.sidebar.wordsListened': 'Сонссон үгс',
-  'library.sidebar.studyTime': 'Сурсан хугацаа',
+  'library.sidebar.studyTime': 'Дадлагын хугацаа',
   'library.sidebar.streak': 'Тасралтгүй',
   'library.sidebar.streakDays': '🔥 {count} хоног',
   // Streak recovery for lapsed returning users (factual, no gamification)
@@ -77,7 +77,7 @@ export const libraryMn: Record<LibraryKeys, string> = {
     'Сүүлийн дадлагаас хойш {count} хоног боллоо — өнөөдрийн богино дадлага шинэ цувралыг эхлүүлнэ.',
 
   // ---- Багцын хүснэгт ----
-  'library.grid.title': 'Хэлний багцууд ба сан',
+  'library.grid.title': 'Миний үгийн багцууд',
   'library.grid.loading': 'Багцуудаа ачаалж байна…',
   'library.grid.filteredSummary': '{shown}/{total} багц · {words} үг · {langs} хэл',
   'library.grid.summary': '{sets} багц · {words} үг · {langs} хэл',
@@ -111,7 +111,7 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.starter.chipCount': '{count} үг',
   'library.starter.notYet': 'Одоогоор байхгүй',
   'library.starter.searchPlaceholder': '{lang} үгс хайх…',
-  'library.starter.batch': 'Түүвэр',
+  'library.starter.batch': 'Сонгосон үгс',
   // Үүсгэсэн багцын нэрс.
   'library.starter.setName.batch': '{lang} {level} · {count} үгийн түүвэр',
   'library.starter.setName.full': '{lang} {level} · бүтэн түвшин ({count} үг)',
@@ -149,7 +149,7 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.editor.namePlaceholder': 'жишээ нь: Герман суурь',
   'library.editor.targetLanguage': 'Сурах хэл',
   'library.editor.targetPlaceholder': 'жишээ нь: es-ES эсвэл Испани (Испани)',
-  'library.editor.speakingHint': 'Унших хэл: {lang}',
+  'library.editor.speakingHint': 'Сонсох хэл: {lang}',
   'library.editor.nativeLanguage': 'Төрөлх хэл',
   'library.editor.nativePlaceholder': 'жишээ нь: en-US',
   'library.editor.translationsHint': 'Орчуулгын хэл: {lang}',
@@ -181,7 +181,7 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.bulk.reset': 'Буцаах',
   'library.bulk.markedKnown': '{count} үгийг Мэддэг гэж тэмдэглэлээ.',
   'library.bulk.markedReview': '{count} үгийг Давтах гэж тэмдэглэлээ.',
-  'library.bulk.markedReset': '{count} үгийг Сурч буй гэж тэмдэглэлээ.',
+  'library.bulk.markedReset': '{count} үгийг дахин сурч эхлэхээр боллоо.',
   'library.bulk.deleteQuestion': '{count} үгийг устгах уу?',
   'library.bulk.draftNote': 'Энэ нь зөвхөн одоогийн ноорогт нөлөөлнө. Багц хадгалахад хэрэгжинэ.',
   'library.bulk.deletedFromDraft': '{count} үгийг ноорогоос устгалаа.',
@@ -196,13 +196,13 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.lock.upgrade': 'Pro руу шинэчлэх',
 
   // ---- Багц хуваалах цонх ----
-  'library.share.set': 'Багц хуваалах',
+  'library.share.set': 'Багц хуваалцах',
   'library.share.privacyLine': '{count} үг · ахиц болон давталтын түүх нуугдсан хэвээр байна',
   'library.share.closeAria': 'Хуваалцах цонхыг хаах',
   'library.share.qrAlt': '{name}-н QR код',
   'library.share.qrTooLarge': 'Энэ багц QR кодонд багтахгүй. Оронд нь хуваалцах холбоосоо ашиглана уу.',
   'library.share.scanToImport': 'QR уншуулж импортлох',
-  'library.share.recipientBody': 'Хүлээн авагч өөрийн санддаа шинэ хуулбар импортлоно.',
+  'library.share.recipientBody': 'Хүлээн авагч энэ багцыг өөрийн сандаа шинэ хуулбар болгон импортлоно.',
   'library.share.nativeText': 'AudioRepeat дээр “{name}”-г дадлагажуулах',
   'library.share.promptCopy': 'Энэ хуваалцах холбоосыг хуулах:',
   'library.share.linkCopied': '✓ Холбоосыг хуулсан',
@@ -219,12 +219,12 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.importPreview.cefrLevel': '{level} түвшин',
   'library.importPreview.sampleWords': 'Жишээ үгс',
   'library.importPreview.previewOnly': 'Зөвхөн урьдчилан харалт',
-  'library.importPreview.moreWords': '+ өөр {count} үг',
+  'library.importPreview.moreWords': 'Нэмээд {count} үг',
   'library.importPreview.privacyNote':
-    'Зөвхөн үгс болон тоглуулах тохиргоо ордог. Илгээгчийн Илгээгчийн Мэддэг/Давтах тэмдэглэл, дадлагын түүх нуугдсан хэвээр байна.',
+    'Зөвхөн үгс болон тоглуулах тохиргоо орно. Илгээгчийн Мэддэг/Давтах тэмдэглэгээ, дадлагын түүх хуваалцагдахгүй.',
   'library.importPreview.duplicateTitle': 'Санд аль хэдийн байна',
   'library.importPreview.duplicateBody':
-    '“{name}” ижил хэл, үгийн агуулгатай тул давхар хуулбар үүсгэхгүй.',
+    '“{name}” ижил хэл, үгсийн агуулгатай тул давхар хуулбар үүсгэхгүй.',
   'library.importPreview.importError': 'Энэ багцыг импортлож чадсангүй. Таны сан өөрчлөгдөөгүй.',
   'library.importPreview.importing': 'Импортолж байна…',
   'library.importPreview.importSet': 'Багц импортлох',
@@ -260,5 +260,5 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.leaderboard.emptyBody': 'Багц тоглуулаад амжилтын самбарт байр эзлээрэй.',
   'library.leaderboard.rowWords': '{count} үг',
   'library.leaderboard.footerNote':
-    'AudioRepeat нь сервергүй, офлон тэргүүлсэн апп тул энэ самбар зөвхөн таны өдрийн дадлагыг хэл тус бүрээр эрэмбэлнэ. Ирээдүйд сервер нэмбэл найзуудын/нийтийн самбарт бэлэн байна.',
+    'AudioRepeat-ийн энэ самбар зөвхөн таны энэ өдрийн дадлагыг хэл тус бүрээр харуулна. Найзтайгаа өрсөлдөх нийтлэг самбар одоогоор байхгүй.',
 };

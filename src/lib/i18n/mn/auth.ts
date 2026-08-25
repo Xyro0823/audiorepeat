@@ -12,8 +12,8 @@ export const authMn: Record<AuthKeys, string> = {
 
   // AuthScreen
   'auth.subtitle.gate':
-    'Тасралтгүй өдрүүд, ахицыгаа хадгалахын тулд нэвтэрээрэй, эсвэл зочиноор шинээр эхэлээрэй.',
-  'auth.subtitle.overlay': 'Статистик, тасралтгүй дадлагаа хадгалахын тулд данс үүсгээрэй.',
+    'Ахиц, давталтын хуваариа хадгалах бол нэвтэрнэ үү. Эсвэл зочиноор үргэлжлүүлж болно.',
+  'auth.subtitle.overlay': 'Ахиц, статистикаа хадгалах бол бүртгэл үүсгээрэй.',
   'auth.firebaseNotConfigured': '🔧 Firebase тохируулаагүй байна',
   'auth.setup.intro': 'Нэвтрэлт Firebase Authentication ашигладаг. Идэвхжүүлэхийн тулд',
   'auth.setup.mid': 'файлыг',
@@ -38,13 +38,13 @@ export const authMn: Record<AuthKeys, string> = {
   'auth.continueAsGuest': 'Зочиноор үргэлжлүүлэх',
   'auth.cancel': 'Цуцлах',
   'auth.privacyNote':
-    '🔒 Firebase данс таны таних тэмдгийг онлайн синк хийдэг — үгийн багцууд, тасралтгүй өдрүүд, статистик энэ төхөөрөмжид үлдэнэ. Нэвтрэхэд интернэт шаардлагатай; сонсох нь офлайн ажиллана.',
+    '🔒 Нэвтэрсэн үед таны үгийн багц болон ахиц төхөөрөмжүүдийн хооронд синк хийгдэнэ. Зочин горимын мэдээлэл зөвхөн энэ төхөөрөмжид хадгалагдана.',
   'auth.error.passwordMismatch': 'Нууц үгс таарахгүй байна — дахин шалгана уу.',
 
   // ProfileDropdown
-  'auth.signedInAs': 'нэвтэрсэн: {name}',
-  'auth.accountAndTools': 'Данс ба хэрэгслүүд',
-  'auth.firebaseAccount': 'Firebase данс',
+  'auth.signedInAs': '{name} нэрээр нэвтэрсэн',
+  'auth.accountAndTools': 'Бүртгэл ба хэрэгслүүд',
+  'auth.firebaseAccount': 'Firebase бүртгэл',
   'auth.managePlan': 'Төлөвлөгөөг удирдах',
   'auth.switchToFreePlan': 'Үнэгүй төлөвлөгөө рүү шилжих',
   'auth.upgradeToPro': 'Pro руу шинэчлэх',
@@ -59,9 +59,9 @@ export const authMn: Record<AuthKeys, string> = {
   'auth.errorDiagnostics': 'Алдааны оношилгоо',
   'auth.signInOrCreate': 'Нэвтрэх / Бүртгүүлэх',
   'auth.signOut': 'Гарах',
-  'auth.deleteAccount': 'Данс устгах',
+  'auth.deleteAccount': 'Бүртгэл устгах',
   'auth.deleteConfirm.body':
-    'Firebase дансаа болон түүний статистикийг устгах уу? Энэ үйлдлийг буцаах боломжгүй.',
+    'Firebase бүртгэл, синк хийсэн багц болон ахицаа устгах уу? Энэ үйлдлийг буцаах боломжгүй.',
   'auth.deleteConfirm.delete': 'Устгах',
 
   // lib/authStore-оос буцах баталгаажуулалтын алдаанууд (non-react t()).
@@ -70,6 +70,6 @@ export const authMn: Record<AuthKeys, string> = {
   'auth.error.invalidEmail': 'Зөв имэйл хаяг оруулна уу.',
   'auth.error.shortPassword': 'Нууц үг дор хаяж 6 тэмдэгттэй байх ёстой.',
   'auth.error.missingCredentials': 'Имэйл хаягаа нууц үгээ оруулна уу.',
-  'auth.error.reSignInToDelete': 'Данс устгахаасаа өмнө дахин нэвтэрнэ үү.',
-  'auth.error.deleteFailed': 'Дансыг устгаж чадсангүй.',
+  'auth.error.reSignInToDelete': 'Бүртгэлээ устгахаасаа өмнө дахин нэвтэрнэ үү.',
+  'auth.error.deleteFailed': 'Бүртгэлийг устгаж чадсангүй.',
 };

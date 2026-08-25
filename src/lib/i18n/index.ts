@@ -4,11 +4,13 @@ import { DEFAULT_UI_LANG, isUiLang, UI_LANGUAGES, type UiLang } from './types';
 import { markExplicitUiLangChoice } from './choice';
 import { getSettingsSnapshot, subscribeSettings, updateSettings } from '@/lib/settingsStore';
 
-// CORE namespaces (common/auth/settings/onboarding) are part of the i18n
-// entry itself — every consumer of this module gets them synchronously.
-// Route-specific namespaces register via static imports in route entries
-// (see src/lib/i18n/register/*).
-import './register/core';
+// CORE namespaces (common/auth/settings/onboarding + global PWA surfaces)
+// are registered by the i18n entry itself — every consumer of this module
+// gets them synchronously. Route-specific namespaces register via explicit
+// `registerRoute(...)` calls in route entries (src/lib/i18n/register/route.ts).
+import { registerNamespaces } from './dictionaries';
+import { coreBundle } from './register/core';
+registerNamespaces(coreBundle);
 
 /**
  * Translation core. Pure functions live here so non-React modules (auth

@@ -1,6 +1,6 @@
+import { registerRoute } from "@/lib/i18n/register/route";
+registerRoute("checkout");
 import type { Metadata } from "next";
-import "@/lib/i18n/register/checkout";
-import "@/lib/i18n/register/landing";
 import CheckoutFlow from "@/components/checkout/CheckoutFlow";
 
 export const metadata: Metadata = {

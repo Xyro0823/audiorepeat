@@ -7,7 +7,7 @@ export const challengeMn: Record<ChallengeKeys, string> = {
   'challenge.intro.title': '1 минутын сорил',
   'challenge.intro.setMeta': '{name} · {count} үг',
   'challenge.intro.description':
-    'Үг бүрийг сонсоод, орчуулгыг нь аль болох хурдан олоорой — {seconds} секундэд хэдийг зөв хариулж чадах вэ?',
+    'Үг бүрийг сонсоод, зөв орчуулгыг нь аль болох хурдан олоорой. {seconds} секундэд хэдийг зөв хариулах вэ?',
   'challenge.intro.personalBest.one': '⚡ Дээд амжилт: {score} · {plays} тоглолт',
   'challenge.intro.personalBest.other': '⚡ Дээд амжилт: {score} · {plays} тоглолт',
   'challenge.intro.start': '▶ Эхлэх',
@@ -16,7 +16,7 @@ export const challengeMn: Record<ChallengeKeys, string> = {
   'challenge.playing.timer': '{seconds} сек',
   'challenge.playing.score': 'Оноо',
   'challenge.playing.exitAria': 'Сорилтоос гарах',
-  'challenge.playing.exitTitle': 'Гарах — энэ удаадын оноо хадгалахгүй',
+  'challenge.playing.exitTitle': 'Гарах — энэ удаагийн оноо хадгалагдахгүй',
   'challenge.playing.pickTranslation': '{index} · орчуулгыг нь ол',
   'challenge.playing.replayWord': 'Үгийг дахин тоглуулах',
 
@@ -26,7 +26,7 @@ export const challengeMn: Record<ChallengeKeys, string> = {
 
   // ---- Дуусах дэлгэц ----
   'challenge.finish.title': 'Хугацаа дууслаа!',
-  'challenge.finish.subtitle': '{seconds} секундын дотор зөв',
+  'challenge.finish.subtitle': '{seconds} секундэд зөв хариулсан нь',
   'challenge.finish.newBest': '🏆 Шинэ дээд амжилт!',
   'challenge.finish.best.one': 'Дээд амжилт: {score} · {plays} тоглолт',
   'challenge.finish.best.other': 'Дээд амжилт: {score} · {plays} тоглолт',

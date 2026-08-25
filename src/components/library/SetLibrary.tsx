@@ -1,4 +1,7 @@
 'use client';
+import { registerRoute } from "@/lib/i18n/register/route";
+registerRoute("dashboard");
+
 
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';

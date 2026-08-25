@@ -1,4 +1,4 @@
-import { registerNamespaces } from '../dictionaries';
+import type { NamespacePartials } from '../dictionaries';
 import { en as commonEnAll } from '../en/common';
 import { mn as commonMnAll } from '../mn/common';
 import { authEn } from '../en/auth';
@@ -9,12 +9,11 @@ import { onboardingEn } from '../en/onboarding';
 import { onboardingMn } from '../mn/onboarding';
 
 /**
- * CORE bundle — registered by the i18n entry itself, so every route (and any
- * non-React caller of `t()`) always has the cross-cutting namespaces:
- * shared UI verbs, auth/profile surfaces, the settings modal, and the
- * onboarding/free-language flows that can appear on any page.
+ * CORE bundle - registered by the i18n entry itself, so every route and every
+ * global/layout surface (error boundary, PWA install + update prompts, auth,
+ * settings modal, onboarding bars) can translate regardless of route.
  */
-registerNamespaces({
+export const coreBundle: NamespacePartials = {
   en: { ...commonEnAll, ...authEn, ...settingsEn, ...onboardingEn },
   mn: { ...commonMnAll, ...authMn, ...settingsMn, ...onboardingMn },
-});
+};

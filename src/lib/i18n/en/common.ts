@@ -72,6 +72,11 @@ export const pwaEn = {
   'dashboard.install.dismissAria': 'Dismiss',
   'dashboard.install.menuPrefix': 'Open your browser menu and choose',
   'dashboard.install.or': 'or',
+  // Global update toast (root layout) - must resolve on ANY route.
+  'dashboard.update.title': 'Update available',
+  'dashboard.update.body': 'A new version of AudioRepeat is ready.',
+  'dashboard.update.reload': 'Update now',
+  'dashboard.update.dismissAria': 'Dismiss update notice',
 } as const;
 export type PwaKeys = keyof typeof pwaEn;
 

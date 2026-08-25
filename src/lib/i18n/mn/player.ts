@@ -17,10 +17,10 @@ export const playerMn: Record<PlayerKeys, string> = {
 
   // Filter / mode row
   'player.filter.all': 'Бүгд',
-  'player.filter.learning': 'Сурч буй',
+  'player.filter.learning': 'Сурч байгаа',
   'player.filter.review': 'Давтах',
-  'player.filter.hintLearning': 'хараахан эзэмшээгүй үгс',
-  'player.filter.hintHard': 'давтахад тэмдэглэсэн үгс',
+  'player.filter.hintLearning': 'хараахан тогтоогоогүй үгс',
+  'player.filter.hintHard': 'дахин давтахаар тэмдэглэсэн үгс',
   'player.filter.reviewProTitle': 'Интервал давталтын шүүлтүүр нь Pro-ны давуу эрх',
   'player.filter.reviewProLabel': 'Давтах · Pro',
   'player.filter.freeLangTitle':
@@ -28,7 +28,7 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.filter.freeLangLabel': 'Үнэгүй · {limit} хэл',
   'player.filter.quiz': 'Тест',
   'player.filter.quizEmpty': 'Энэ шүүлтүүрээр тест хийх үг байхгүй',
-  'player.filter.quizHow': 'Үгийг тоглуулж сонсоод, дөрвөн сонголтоос орчуулгыг нь ол',
+  'player.filter.quizHow': 'Үгийг сонсоод, дөрвөн сонголтоос зөв орчуулгыг нь олоорой.',
   'player.filter.quizProTitle': 'Тестийн горим нь Pro-ны давуу эрх',
   'player.filter.dictation': 'Диктант',
   'player.filter.dictationEmpty': 'Энэ шүүлтүүрээр диктант хийх үг байхгүй',
@@ -40,14 +40,14 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.filter.snoozeLabel': '⏰ Сунгах {time}',
 
   // Filtered-to-empty state
-  'player.empty.title': 'Бүгд давтаж дууслаа! 🎉',
+  'player.empty.title': 'Давтах үг одоогоор алга! 🎉',
   'player.empty.hardBody':
     'Давтахад тэмдэглэсэн үг алга байна. Дадлага хийхдээ дахин давахыг хүссэн үг дээрээ «Давтах» товчийг дараарай.',
-  'player.empty.masteredBody': 'Энэ багцийн бүх үг эзэмшсэн байна.',
+  'player.empty.masteredBody': 'Энэ багцын бүх үг эзэмшигдсэн байна.',
   'player.empty.playAll': 'Бүх {count} үгийг тоглуулах',
 
   // Free daily limit banner
-  'player.limit.title': 'Өдрийн Үнэгүй хязгаарт хүрлээ',
+  'player.limit.title': 'Өнөөдрийн үнэгүй хязгаарт хүрлээ',
   'player.limit.body':
     'Үнэгүй төлөвлөгөөнд өдөрт {limit} үг багтана. Хязгаар шөнө шинэчлэгдэнэ — эсвэл Pro-гоор хязгааргүй дадлагажираарай.',
   'player.limit.upgrade': 'Pro руу шинэчлэх',
@@ -59,29 +59,29 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.resume.cta': '▶ Үргэлжлүүлэх',
 
   // Cloud voice consent
-  'player.cloudVoice.title': 'Энэ хэлийг цэвэр сонсоорой',
+  'player.cloudVoice.title': 'Энэ хэлийг илүү тод сонсоорой',
   'player.cloudVoice.body':
-    'Энэ төхөөрөмжид тохирох хоолой байхгүй байна. AudioRepeat нь дуудаад буй үг л Microsoft Azure руу аюулгүй илгээд, аудиог энэ төхөөрөмжинд хадгалж чадна.',
+    'Энэ төхөөрөмжид тохирох хоолой байхгүй байна. AudioRepeat зөвхөн тоглож буй үгийг Microsoft Azure руу илгээж, үүссэн аудиог энэ төхөөрөмжид хадгална.',
   'player.cloudVoice.enable': 'Клауд дуу хоолойг идэвхжүүлэх',
-  'player.cloudVoice.signInEnable': 'Нэвтэрч клауд дуу хоолойг идэвхжүүлэх',
+  'player.cloudVoice.signInEnable': 'Нэвтэрч үүлэн хоолойг идэвхжүүлэх',
   'player.cloudVoice.footer': 'Тохиргооноос аль ч үед унтрааж болно.',
 
   // Дуу хоолой сонгогч
-  'player.voice.auto': 'Авто — системийн стандарт ({lang})',
+  'player.voice.auto': 'Автомат — системийн стандарт ({lang})',
   'player.voice.offline': '· офлайн',
-  'player.voice.cloud': '· клауд',
+  'player.voice.cloud': '· үүлэн',
   'player.voice.noMatch':
     'Энэ төхөөрөмж дээр {lang} хэлний хоолой олдсонгүй — хөтөч өөрийн стандарт хоолойг ашиглах болно.',
 
   // Toasts
   'player.toast.cloudEnabled':
-    'Клауд дуу хоолой идэвхжлээ. Аудиог дараагийн удаа шууд тоглуулахад кэшлэгдэнэ.',
+    'Үүлэн хоолой идэвхжлээ. Аудио анх тоглосны дараа энэ төхөөрөмжид хадгалагдана.',
   'player.toast.enableCloudVoice':
-    'Энэ хэлийг цэвэр сонсохын тулд доорх клауд дуу хоолойг идэвхжүүлээрэй.',
+    'Энэ хэлийг илүү тод сонсохын тулд доорх үүлэн хоолойг идэвхжүүлээрэй.',
   'player.toast.enableCloudForQuiz':
-    'Тест эхлэхээс өмнө доорх клауд дуу хоолойг идэвхжүүлээрэй.',
+    'Тест эхлэхээс өмнө доорх үүлэн хоолойг идэвхжүүлээрэй.',
   'player.toast.enableCloudForDictation':
-    'Диктант эхлэхээс өмнө доорх клауд дуу хоолойг идэвхжүүлээрэй.',
+    'Диктант эхлэхээс өмнө доорх үүлэн хоолойг идэвхжүүлээрэй.',
   'player.toast.sleepEnded':
     '🌙 Унтах таймер дууслаа — 30 секундийн дотор Play дарвал сунгана.',
   'player.toast.freeLimit':
@@ -97,14 +97,14 @@ export const playerMn: Record<PlayerKeys, string> = {
     'Энэ хэлний дуу хоолой таны төхөөрөмжид суугдаагүй байна — аудио дуугүй гарах эсвэл буруу хэлээр тоглох магадлалтай. Тохиргооноос хоолой сонгоорой.',
   'player.card.noVoice': 'Энэ хэлний хоолой байхгүй',
   'player.card.cloudVoiceTitle':
-    'Энэ хэлэнд төхөөрөмжийн хоолой суугдаагүй тул AudioRepeat аюулгүй клауд дуу хоолойг ашиглаж, үр дүнг офлайн тоглуулалтад кэшлэж байна.',
-  'player.card.cloudVoice': 'Клауд хоолой · анхны тоглолтын дараа кэшлэгдсэн',
+    'Энэ хэлэнд төхөөрөмжийн хоолой суусангүй. AudioRepeat үүлэн хоолой ашиглаж, үүссэн аудиог офлайн сонсоход хадгална.',
+  'player.card.cloudVoice': 'Үүлэн хоолой · анх тоглосны дараа хадгалагдана',
   'player.card.repeatN': 'Давталт {current} / {total}',
   'player.card.liveAnnounce':
     '{index} / {total}: {word}. Орчуулга: {translation}.',
   'player.badge.mastered': 'эзэмшсэн',
   'player.badge.review': 'давтах',
-  'player.mastery.unmark': 'Тэмдэглэгээ авах',
+  'player.mastery.unmark': 'Тэмдэглэгээг арилгах',
   'player.mastery.markKnown': 'Мэддэг гэж тэмдэглэх',
   'player.mastery.known': 'Мэддэг',
   'player.mastery.markReview': 'Давтахад тэмдэглэх',
@@ -123,7 +123,7 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.controls.prevTitle': 'Өмнөх үг',
   'player.controls.play': 'Тоглуулах',
   'player.controls.pause': 'Түр зогсоох',
-  'player.controls.nextWord': 'Дараах үг рүү шилжих',
+  'player.controls.nextWord': 'Дараагийн үг рүү шилжих',
   'player.controls.stop': 'Зогсоох',
   'player.controls.speedAria': 'Тоглуулах хурд {speed}×',
   'player.controls.speedTitle': 'Тоглуулах хурд — дарж өөрчилнө',
@@ -133,7 +133,7 @@ export const playerMn: Record<PlayerKeys, string> = {
 
   // SettingsPanel
   'player.settings.title': 'Давталтын тохиргоо',
-  'player.settings.thisSet': 'энэ багц',
+  'player.settings.thisSet': 'энэ багцад',
   'player.settings.customizeSet': 'Энэ багцад зориулсан тохиргоо',
   'player.settings.customHintOn': 'Доорх өөрчлөлт зөвхөн энэ багцад хамаатай',
   'player.settings.customHintOff': 'Доорх өөрчлөлт бүх багцад хамаатай',
@@ -144,7 +144,7 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.settings.gapAfter': 'Орчуулгын дараах завсарлага',
   'player.settings.loopList': 'Жагсаалтыг бүтнээр нь давтах',
   'player.settings.cloudOn':
-    'Байхгүй хоолойнууд аюулгүй клаудаар тоглоод, офлайн тоглуулахад кэшлэгддэг.',
+    'Байхгүй хоолойг үүлэн хоолойгоор тоглуулж, дараа нь офлайнаар сонсоход хадгална.',
   'player.settings.cloudAvailableOff':
     'Клауд дуу хоолой боломжтой ч унтраалттай. Тохиргоо → Хэл хэсгээс идэвхжүүлээрэй.',
   'player.settings.cloudUnconfigured':
@@ -168,7 +168,7 @@ export const playerMn: Record<PlayerKeys, string> = {
     '{count} асуултыг бүгд алгассан байна. Дараагийн удаа хариулаад үзээрэй — үг бүрд шууд дүгнэлт авна.',
   'player.quiz.pctCorrect': '{pct}% зөв',
   'player.quiz.modeTitle': 'Тестийн горим',
-  'player.quiz.modeIntro': 'Тоглуулаад үгийг сонсоод, сонголтоос орчуулгыг нь ол.',
+  'player.quiz.modeIntro': 'Үгийг сонсоод, сонголтуудаас зөв орчуулгыг нь олоорой.',
   'player.quiz.questionN': 'Асуулт {current} / {total}',
   'player.quiz.pickTranslation': 'Орчуулгыг нь сонгоорой',
   'player.quiz.correct': 'Зөв! ✓',
@@ -187,8 +187,8 @@ export const playerMn: Record<PlayerKeys, string> = {
     'Тоглуулаад үгийг үсгийн дараалал нуугдсан байдлаар сонсоорой.',
   'player.dictation.itemN': 'Диктант {current} / {total}',
   'player.dictation.correctFeedback': 'Зөв бичлээ! ✓',
-  'player.dictation.wrongFeedback': '✗ Бага зэрэг буруу — дээрх зөв бичвэрийг хар',
-  'player.dictation.revealedFeedback': 'Харууллаа — үсгийн дарааллыг анзаараарай',
+  'player.dictation.wrongFeedback': '✗ Бага зэрэг зөрлөө — дээрх зөв бичвэрийг хараарай',
+  'player.dictation.revealedFeedback': 'Зөв бичвэрийг харууллаа — тогтоогоод аваарай',
   'player.dictation.placeholder': 'Сонссоноо бичээрэй…',
   'player.dictation.inputAria': 'Сонссон үгээ бичнэ үү',
   'player.dictation.check': 'Шалгах',

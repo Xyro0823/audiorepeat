@@ -1,6 +1,6 @@
+import { registerRoute } from "@/lib/i18n/register/route";
+registerRoute("stats");
 import type { Metadata } from 'next';
-import '@/lib/i18n/register/stats';
-import '@/lib/i18n/register/dashboard';
 import StatsView from '@/components/stats/StatsView';
 
 export const metadata: Metadata = {

@@ -1,10 +1,9 @@
-// Route bundle: challenge translations.
+// Route bundle data: challenge translations.
 import { challengeEn } from '../en/challenge';
 import { challengeMn } from '../mn/challenge';
+import type { NamespacePartials } from '../dictionaries';
 
-import { registerNamespaces } from '../dictionaries';
-
-registerNamespaces({
+export const challengeBundle: NamespacePartials = {
   en: { ...challengeEn },
   mn: { ...challengeMn },
-});
+};

@@ -8,18 +8,12 @@ import { DEFAULT_SETTINGS } from '@/types/app';
  * persistence of the interface language (guest / User A / User B never see
  * each other's choice; a reload restores it).
  */
-import { getDictionary } from './dictionaries';
+import { getDictionary, registerNamespaces } from './dictionaries';
+import { ALL_BUNDLES } from './register/route';
 // Register EVERY bundle: the integrity checks below double as the coverage
-// invariant for the split registry — if a registrar forgets a namespace,
-// its keys vanish from the table and these tests fail.
-import './register/core';
-import './register/landing';
-import './register/dashboard';
-import './register/library';
-import './register/player';
-import './register/review';
-import './register/stats';
-import './register/checkout';
+// invariant for the split registry — if a bundle forgets a namespace, its
+// keys vanish from the merged table and these tests fail.
+for (const bundle of ALL_BUNDLES) registerNamespaces(bundle);
 
 describe('dictionary integrity', () => {
   const enKeys = Object.keys(getDictionary('en')).sort();

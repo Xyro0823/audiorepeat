@@ -1,4 +1,7 @@
 'use client';
+import { registerRoute } from "@/lib/i18n/register/route";
+registerRoute("player");
+
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';

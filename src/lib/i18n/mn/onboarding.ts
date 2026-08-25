@@ -8,7 +8,7 @@ import type { OnboardingKeys } from '../en/onboarding';
 export const onboardingMn: Record<OnboardingKeys, string> = {
   // OnboardingFlow хүрээ
   'onboarding.aria.title': 'AudioRepeat-д тавтай морилно уу',
-  'onboarding.step.count': '{total} алхмын {step} дахь',
+  'onboarding.step.count': '{total} алхмаас {step}-р алхам',
   'onboarding.step.title.language': 'Хэлээ сонгох',
   'onboarding.step.title.level': 'Эхлэх түвшингээ сонгох',
   'onboarding.step.title.goal': 'Суралцах зорилгоо сонгох',
@@ -16,13 +16,13 @@ export const onboardingMn: Record<OnboardingKeys, string> = {
 
   // 2-р алхам — эхлэх түвшин
   'onboarding.level.heading': 'Эхлэх түвшингээ сонгоно уу',
-  'onboarding.level.sub': 'Санд чинь тохирох үгс бэлдэх болно — хожим хэзээ ч солиж болно.',
+  'onboarding.level.sub': 'Танд тохирох үгсийг бэлдэнэ. Дараа нь хүссэн үедээ сольж болно.',
   'onboarding.level.groupAria': 'Эхлэх түвшин',
 
   // 3-р алхам — суралцах зорилго
   'onboarding.goal.heading': 'Таны зорилго юу вэ?',
   'onboarding.goal.sub':
-    'Суралцах зорилгоо сонгоорой — дадлагыг түүнд нийцүүлэн тохируулна.',
+    'Зорилгоо сонгоорой. Дадлагын санал түүнд тань тохирно.',
   'onboarding.goal.groupAria': 'Суралцах зорилго',
 
   // Хамтарсан товчнууд
@@ -30,7 +30,7 @@ export const onboardingMn: Record<OnboardingKeys, string> = {
 
   // 4-р алхам — бэлэн
   'onboarding.ready.heading': 'Бүгд бэлэн боллоо!',
-  'onboarding.ready.planIntro': 'Таны дадлагын төлөвлөгөө:',
+  'onboarding.ready.planIntro': 'Таны эхлэх тохиргоо:',
   'onboarding.summary.language': 'Хэл',
   'onboarding.summary.startingLevel': 'Эхлэх түвшин',
   'onboarding.summary.goal': 'Зорилго',
@@ -52,7 +52,7 @@ export const onboardingMn: Record<OnboardingKeys, string> = {
   'onboarding.changeLang.aria': 'Сурах хэлээ солих',
   'onboarding.changeLang.title': 'Сурах хэлээ солих',
   'onboarding.changeLang.body':
-    'Одоогийн хэлний багцууд хадгалагдана — устгагдахгүй, зөвхөн нуугдана. Ахиулбал буцаж гарна.',
+    'Одоогийн хэлний багцууд устахгүй, түр нуугдана. Pro-д шилжвэл дахин харагдана.',
   'onboarding.changeLang.pickerSubtitle.one':
     'Үнэгүй төлөвлөгөөнд {limit} хэл багтана. Сурах хэлээ сонгоорой — солиход бусад багцууд нуугдана (устгагдахгүй, хадгалагдана).',
   'onboarding.changeLang.pickerSubtitle.other':
@@ -73,17 +73,17 @@ export const onboardingMn: Record<OnboardingKeys, string> = {
   'onboarding.guide.step1.eyebrow': 'Сонсох',
   'onboarding.guide.step1.title': 'Давталт өөрөө ажиллана',
   'onboarding.guide.step1.description':
-    'Нэг удаа Play дарж орхиорой. AudioRepeat очих үг болон орчуулгыг ээлжлэн тоглоод, гараа ч хүрэлгүй урагш шилжинэ.',
+    'Play-г нэг удаа дараарай. AudioRepeat үг, орчуулгыг ээлжлэн тоглоод өөрөө дараагийн үг рүү шилжинэ.',
   'onboarding.guide.step2.eyebrow': 'Шийдэх',
   'onboarding.guide.step2.title': 'Давтах үгээ аппд зааж өгөөрэй',
   'onboarding.guide.step2.description':
-    'Амархан санагдах үгээ Мэддэг гэж тэмдэглээрэй. Дахин давлах шаардлагатай үгийг Давтах гэж тэмдэглээрэй — ингэснээр өдрийн дараалалдаа хэрэгтэй үгсээ байлгана.',
+    'Амархан санагдсан үгээ Мэддэг гэж, дахин ажиллах хэрэгтэй үгээ Давтах гэж тэмдэглээрэй. Ингэвэл өдөр тутмын давтлага тань илүү хэрэгтэй болно.',
   'onboarding.guide.known': 'Мэддэг',
   'onboarding.guide.reviewSooner': 'Эхэлж давтах',
   'onboarding.guide.step3.eyebrow': 'Буцах',
   'onboarding.guide.step3.title': '“Өнөөдөр давтах” хуудастаа буцааж ирээрэй',
   'onboarding.guide.step3.description':
-    'Хэцүү үгс тань дадлага хийхэд хэрэгтэй мөчид нь дахин гарна. Өдөр бүрийн богино дадлага л хангалттай — ахиц зогсохгүй.',
+    'Хэцүү үгс хэрэгтэй үедээ дахин гарч ирнэ. Өдөр бүрийн богинохон дадлага ч ахицад хангалттай.',
   'onboarding.guide.nextSmartReview': 'Дараагийн ухаалаг давталт',
   'onboarding.guide.reviewToday': 'Өнөөдөр давтах',
 };

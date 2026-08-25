@@ -1,11 +1,9 @@
-// Route bundle: stats translations.
+// Route bundle data: stats translations.
 import { statsEn } from '../en/stats';
 import { statsMn } from '../mn/stats';
+import type { NamespacePartials } from '../dictionaries';
 
-import { registerNamespaces } from '../dictionaries';
-
-registerNamespaces({
+export const statsBundle: NamespacePartials = {
   en: { ...statsEn },
   mn: { ...statsMn },
-});
-
+};

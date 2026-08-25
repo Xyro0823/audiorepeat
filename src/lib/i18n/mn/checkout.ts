@@ -9,9 +9,9 @@ export const checkoutMn: Record<CheckoutKeys, string> = {
   'checkout.canceled': 'Төлбөрийн ажиллагаа цуцлагдлаа — танд юу ч тооцогдоогүй.',
   'checkout.nav.practice': 'Дадлага',
   'checkout.kicker': 'Төлбөр',
-  'checkout.choosePlan': 'Төлөвлөгөөгөө сонгоно уу',
+  'checkout.choosePlan': 'Өөрт тохирох эрхээ сонгоорой',
   'checkout.subtitle.paddle':
-    'Төлөвлөгөөгөө сонгоод хураангуйг харна уу — дараагийн алхамд Paddle-ээр аюулгүй төлнө.',
+    'Эрхээ сонгоод хураангуйгаа шалгаарай. Дараагийн алхамд Paddle-ээр аюулгүй төлнө.',
   'checkout.subtitle.soon':
     'Төлөвлөгөөгөө сонгоод хураангуйг харна уу — төлбөр удахгүй нээгдэнэ, өнөөдөр юу ч төлөгдөхгүй.',
   'checkout.billing.monthly': 'Сар бүр',
@@ -22,15 +22,15 @@ export const checkoutMn: Record<CheckoutKeys, string> = {
   'checkout.footer.secure': 'Аюулгүй төлбөрийг Paddle гүйцэтгэнэ',
   'checkout.footer.soon': 'Өнөөдөр төлбөр авахгүй · төлбөр удахгүй',
   'checkout.backToPlans': 'Төлөвлөгөө рүү буцах',
-  'checkout.signInGate.title': 'Төлбөр үргэлжлүүлэхийн тулд нэвтрээрэй',
+  'checkout.signInGate.title': 'Төлбөрөө үргэлжлүүлэхийн тулд нэвтэрнэ үү',
   'checkout.signInGate.selectedPrefix': 'Та',
   'checkout.signInGate.selectedSuffix': 'төлөвлөгөөг сонгосон (${price}{note}).',
   'checkout.signInGate.needAccount':
-    'Худалдан авалтыг дансанд холбохын тулд данс хэрэгтэй — эсвэл үнэгүй эрхээр үргэлжлүүлээрэй.',
+    'Худалдан авалтыг таны бүртгэлтэй холбохын тулд нэвтрэх хэрэгтэй. Эсвэл Үнэгүй эрхээр үргэлжлүүлж болно.',
   'checkout.signInGate.needAccountSoon':
     'Төлбөр нээгдэхэд худалдан авалтыг холбох данс хэрэгтэй — одоохондоо бүх зүйлийг үнэгүй ашиглаж болно.',
-  'checkout.signInCta': 'Нэвтрэх / Данс үүсгэх',
-  'checkout.continueFree': 'Үнэгүй эрхээр үргэлжлүүлэх',
+  'checkout.signInCta': 'Нэвтрэх / Бүртгүүлэх',
+  'checkout.continueFree': 'Үнэгүйгээр үргэлжлүүлэх',
 
   // PaymentStep
   'checkout.summary.title': 'Таны төлөвлөгөө',
@@ -44,10 +44,10 @@ export const checkoutMn: Record<CheckoutKeys, string> = {
     '🔒 Аюулгүй төлбөрийг Paddle гүйцэтгэнэ — картын мэдээлэл AudioRepeat-д огт хүрдэггүй.',
   'checkout.basic.title': '🎉 Basic төлөвлөгөө үнэгүй — төлбөр шаардлагагүй',
   'checkout.basic.body':
-    'Basic төлөвлөгөөний бүх давуу эрхийг одоогоос ашиглана уу. Бэлэн болмогц Pro эсвэл Lifetime руу шинэчлээрэй.',
+    'Basic эрхээ шууд ашиглаж эхлээрэй. Хэрэгцээ нэмэгдвэл дараа нь Pro эсвэл Lifetime руу шилжиж болно.',
   'checkout.soon.title': '💳 Төлбөрийн систем удахгүй',
   'checkout.soon.body':
-    'AudioRepeat одоогоор юунд ч төлбөр авдаггүй. Төлбөр нээгдсэний дараа энэ дэлгэцэнд төлбөр хийгдэх болно — өнөөдөр танд юу ч тооцогдохгүй.',
+    'AudioRepeat одоогоор төлбөр авахгүй байна. Төлбөрийн систем нээгдсэний дараа эндээс төлнө. Өнөөдөр танд юу ч тооцогдохгүй.',
   'checkout.notify.idle': 'Төлбөр нээгдэхэд надад мэдэгдээрэй',
   'checkout.notify.done': '✓ Баярлалаа — төлбөр нээгдэхэд бид танд мэдэгдье',
   'checkout.notify.error':
@@ -56,18 +56,18 @@ export const checkoutMn: Record<CheckoutKeys, string> = {
 
   // SuccessView
   'checkout.word.plan': 'төлөвлөгөө',
-  'checkout.success.welcome': '{plan} төлөвлөгөөнд тавтай морил!',
+  'checkout.success.welcome': '{plan} эрх идэвхжлээ!',
   'checkout.success.active.monthly': 'Таны {plan} төлөвлөгөө идэвхтэй (сар бүрийн төлбөр)',
   'checkout.success.active.annual': 'Таны {plan} төлөвлөгөө идэвхтэй (жил бүрийн төлбөр)',
   'checkout.success.active.lifetime': 'Таны {plan} төлөвлөгөө идэвхтэй',
-  'checkout.success.receipt': 'Төлбөрийн баримт {email} хаяг руу илгээгдэж байна.',
-  'checkout.success.startCta': 'Дадлагаа эхлүүлэх',
+  'checkout.success.receipt': 'Төлбөрийн баримтыг {email} хаяг руу илгээж байна.',
+  'checkout.success.startCta': 'Дадлаж эхлэх',
   'checkout.success.verifying': 'Таны багцыг баталгаажуулж байна…',
-  'checkout.success.activating': 'Төлбөр ирлээ — багцыг идэвхжүүлж байна',
+  'checkout.success.activating': 'Төлбөр баталгаажлаа — эрхийг идэвхжүүлж байна',
   'checkout.success.verifyingBody':
     'Таны {plan} төлөвлөгөөг төлбөрийн провайдертайгаа баталгаажуулж байна.',
   'checkout.success.activatingBody':
-    'Таны төлбөр илгээгдсэн. Төлөвлөгөө идэвхжихийг хүлээж байна — ихэвчлэн хэдхэн секунд л болно. Pro-ны бүх функц нээгдэхэд бага зэрэг хугацаа орж болно.',
+    'Таны төлбөр илгээгдлээ. Эрх идэвхжихэд ихэвчлэн хэдхэн секунд л орно. Pro функцүүд бага зэрэг хоцорч нээгдэж болно.',
   'checkout.success.goDashboard': 'Дашборд руу очих',
   'checkout.success.checkAgain': 'Дахин шалгах',
   'checkout.success.pendingTimeout': 'Таны төлөвлөгөө одоогоор баталгаажаагүй байна',
@@ -82,14 +82,14 @@ export const checkoutMn: Record<CheckoutKeys, string> = {
 
   // DowngradeModal
   'checkout.downgrade.aria': 'Үнэгүй төлөвлөгөө рүү шилжих',
-  'checkout.downgrade.title': 'Үнэгүй төлөвлөгөө рүү шилжих',
-  'checkout.downgrade.doneTitle': 'Үнэгүй төлөвлөгөө идэвхтэй',
+  'checkout.downgrade.title': 'Үнэгүй эрх рүү шилжих',
+  'checkout.downgrade.doneTitle': 'Үнэгүй эрх идэвхтэй',
   'checkout.downgrade.keptPrefix': 'Хадгалж үлдэх хэл:',
   'checkout.downgrade.hiddenLangs.one': 'бусад 1 хэл нуугдлаа',
   'checkout.downgrade.hiddenLangs.other': 'бусад {count} хэл нуугдлаа',
   'checkout.downgrade.setsWrap': ' ({sets})',
   'checkout.downgrade.hiddenNote':
-    ' — юу ч устгагдаагүй, дараа Pro руу шинэчлэвэл автомат буцаж гарна.',
+    ' — юу ч устахгүй. Дараа нь Pro-д шилжвэл дахин харагдана.',
   'checkout.downgrade.nothingHidden': 'Юу ч нуугдаагүй.',
   'checkout.downgrade.withinLimit.title': 'Хязгаарын дотор байна',
   'checkout.downgrade.withinLimit.body.one':

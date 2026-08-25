@@ -1,4 +1,7 @@
 'use client';
+import { registerRoute } from "@/lib/i18n/register/route";
+registerRoute("checkout");
+
 
 import { useState } from 'react';
 import Image from 'next/image';
