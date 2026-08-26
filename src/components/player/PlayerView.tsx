@@ -23,6 +23,13 @@ import { shouldOfferCloudVoiceConsent } from '@/lib/tts/cloudVoiceConsent';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
 import { findLanguage } from '@/lib/languages';
+import { loadWordBank } from '@/lib/vocab/wordBanks';
+import {
+  createMongolianGlossary,
+  mongolianGlossFor,
+  type MongolianGlossary,
+} from '@/lib/vocab/mongolianGlosses';
+import { translateBatchToMongolian } from '@/lib/translator/translate';
 import { applyMasteryStatus } from '@/lib/review/fsrs';
 import {
   FREE_DAILY_WORD_LIMIT,
@@ -92,6 +99,27 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // order; turning shuffle off restores the natural (filtered) order.
   const [shuffle, setShuffle] = useState(false);
   const [shuffleSeed, setShuffleSeed] = useState(0);
+  const [mongolianGlossary, setMongolianGlossary] = useState<MongolianGlossary | null>(null);
+  const [mongolianCloudCacheState, setMongolianCloudCacheState] = useState<'saving' | 'cached' | null>(null);
+  const [translationProgress, setTranslationProgress] = useState<{ done: number; total: number } | null>(null);
+
+  // The public word banks store their canonical meaning in English. When the
+  // learner chooses Mongolian explanations, reuse the shipped Mongolian A1
+  // meanings so the card AND translation audio switch together.
+  useEffect(() => {
+    let alive = true;
+    if (settings.translationLanguage !== 'mongolian') {
+      return () => { alive = false; };
+    }
+    void loadWordBank('mn', 'A1')
+      .then((bank) => {
+        if (alive) setMongolianGlossary(bank ? createMongolianGlossary(bank.words) : null);
+      })
+      .catch(() => {
+        if (alive) setMongolianGlossary(null);
+      });
+    return () => { alive = false; };
+  }, [settings.translationLanguage]);
 
   // Filtered order (natural). The 'hard' filter plays only words marked for
   // review — the "Review Hard Words Only" mode.
@@ -101,11 +129,21 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       ...w,
       lang: set.lang,
       nativeLang: set.nativeLang,
-    }));
+    })).map((word) => {
+      if (settings.translationLanguage !== 'mongolian') return word;
+      // Use the saved cloud translation first. Existing Mongolian-native sets
+      // already contain the correct meaning; the small local glossary keeps
+      // common legacy words useful until their full translation is saved.
+      const gloss = word.translationMn ??
+        (set.nativeLang.toLowerCase().startsWith('mn')
+          ? word.translation
+          : mongolianGlossary && mongolianGlossFor(mongolianGlossary, word.translation));
+      return gloss ? { ...word, translation: gloss, nativeLang: 'mn-MN' } : word;
+    });
     if (filter === 'learning') return all.filter((w) => w.mastery !== 'mastered');
     if (filter === 'hard') return all.filter((w) => w.mastery === 'hard');
     return all;
-  }, [set, filter]);
+  }, [set, filter, mongolianGlossary, settings.translationLanguage]);
 
   const words = useMemo(() => {
     if (!shuffle) return orderedWords;
@@ -169,6 +207,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const nativeLangForAudio =
     set?.nativeLang ?? (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
   const targetNeedsCloud = Boolean(set && !voicesLoading && !hasVoice(set.lang));
+  const hasMongolianTranslation = words.some((word) => word.nativeLang === 'mn-MN');
+  // Browser voice registries can report a stale/remote mn-MN voice that then
+  // produces no audio. A Mongolian explanation deliberately uses Azure on
+  // Free, so do not let that unreliable browser claim suppress the fallback.
+  const freeMongolianTranslation = Boolean(
+    hasMongolianTranslation && !planHasFeature(effective.plan, 'offlineAudio'),
+  );
   const translationNeedsCloud = Boolean(
     set && !voicesLoading && !hasVoice(nativeLangForAudio),
   );
@@ -179,7 +224,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     cloudReady: cloudTtsReady,
     cloudTts: effective.cloudTts,
     cachedAudio: effective.cachedAudio || isIOSWebKit(),
-    deviceVoiceMissing: targetNeedsCloud || translationNeedsCloud,
+    deviceVoiceMissing: targetNeedsCloud || translationNeedsCloud || freeMongolianTranslation,
+    freeMongolianTranslation,
   });
   const cloudVoiceConsentNeeded = shouldOfferCloudVoiceConsent({
     configured: cloudTtsReady && canCloudAudio,
@@ -237,10 +283,22 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // Cache misses fall back to speechSynthesis inside CachedAudioEngine.
   const engine = useMemo<TTSEngine | undefined>(() => {
     const device = new SpeechSynthesisEngine();
-    if (cloudAudioActive) return new CachedAudioEngine(new CloudTtsEngine(device));
+    if (cloudAudioActive) {
+      const paidCloudAudio = planHasFeature(effective.plan, 'offlineAudio');
+      return new CachedAudioEngine(
+        new CloudTtsEngine(
+          device,
+          (lang) => paidCloudAudio || lang.toLowerCase().startsWith('mn'),
+          // A previously saved English translation voice must not prevent the
+          // explicitly selected Mongolian explanation from reaching Azure.
+          (lang) => !paidCloudAudio && lang.toLowerCase().startsWith('mn'),
+          !paidCloudAudio ? setMongolianCloudCacheState : undefined,
+        ),
+      );
+    }
     if (effective.cachedAudio || isIOSWebKit()) return new CachedAudioEngine(device);
     return undefined;
-  }, [cloudAudioActive, effective.cachedAudio]);
+  }, [cloudAudioActive, effective.cachedAudio, effective.plan]);
 
   // Background pre-warm: generate + cache audio blobs ahead of the drill so
   // words play through <audio> (lock-screen safe). Runs on iOS by default and
@@ -370,6 +428,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     seekToWord,
     playFromWord,
     playbackError,
+    playbackErrorDetail,
   } =
     useAudioLoop({
       words,
@@ -698,6 +757,46 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     },
     [set, currentWord, saveSet],
   );
+
+  const untranslatedMongolianCount = useMemo(() => {
+    if (!set || settings.translationLanguage !== 'mongolian' || set.nativeLang.toLowerCase().startsWith('mn')) return 0;
+    return set.words.filter((word) => !word.translationMn?.trim()).length;
+  }, [set, settings.translationLanguage]);
+
+  const cacheMongolianTranslations = useCallback(async () => {
+    if (!set || untranslatedMongolianCount === 0) return;
+    if (!user) {
+      setToast(t('player.translate.signIn'));
+      return;
+    }
+    const pending = set.words.filter((word) => !word.translationMn?.trim());
+    let next = set;
+    let done = 0;
+    setTranslationProgress({ done, total: pending.length });
+    try {
+      for (let start = 0; start < pending.length; start += 25) {
+        const batch = pending.slice(start, start + 25);
+        const translations = await translateBatchToMongolian(
+          batch.map((word) => ({ id: word.id, text: word.target })),
+        );
+        next = {
+          ...next,
+          words: next.words.map((word) => {
+            const translationMn = translations.get(word.id);
+            return translationMn ? { ...word, translationMn } : word;
+          }),
+        };
+        await saveSet(next);
+        done += batch.length;
+        setTranslationProgress({ done, total: pending.length });
+      }
+      setToast(t('player.translate.complete', { count: pending.length }));
+    } catch {
+      setToast(t('player.translate.failed'));
+    } finally {
+      setTranslationProgress(null);
+    }
+  }, [set, saveSet, t, untranslatedMongolianCount, user]);
 
   // Surface silent / wrong-language words: true when the current target language
   // has no installed voice at all (the engine falls back to the browser default).
@@ -1147,6 +1246,42 @@ export default function PlayerView({ setId }: { setId: string | null }) {
                 </div>
               </section>
             )}
+            {settings.translationLanguage === 'mongolian' && untranslatedMongolianCount > 0 && (
+              <section
+                aria-labelledby="mongolian-translation-title"
+                className="mx-auto mb-7 w-full max-w-md rounded-2xl border border-neon-violet/30 bg-neon-violet/[0.07] p-4 text-left shadow-[0_14px_40px_rgba(0,0,0,0.18)] sm:p-5"
+              >
+                <div className="flex items-start gap-3.5">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neon-violet/15 text-lg text-neon-violet"
+                  >
+                    文
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 id="mongolian-translation-title" className="text-sm font-bold text-white">
+                      {t('player.translate.title')}
+                    </h2>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                      {t('player.translate.body', { count: untranslatedMongolianCount })}
+                    </p>
+                    {translationProgress ? (
+                      <p className="mt-3 text-xs font-semibold text-neon-violet" aria-live="polite">
+                        {t('player.translate.progress', translationProgress)}
+                      </p>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => void cacheMongolianTranslations()}
+                        className="mt-3 min-h-11 w-full rounded-xl bg-neon-violet px-4 text-sm font-bold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-violet focus-visible:ring-offset-2 focus-visible:ring-offset-night-950 active:scale-[0.98] sm:w-auto"
+                      >
+                        {t('player.translate.start')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
             <WordCard
               word={currentWord}
               wordIndex={progress.wordIndex}
@@ -1158,6 +1293,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               showExamples={effective.showExamples}
               noVoice={noVoiceForTarget && !cloudVoiceConsentNeeded}
               cloudVoice={cloudVoiceForTarget}
+              cloudCacheState={freeMongolianTranslation ? mongolianCloudCacheState : null}
               canMark={canReview}
               onMark={markWord}
             />
@@ -1169,7 +1305,9 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               >
                 <p className="font-semibold">{t('player.playback.error.title')}</p>
                 <p className="mt-1 text-xs leading-relaxed opacity-90">
-                  {t('player.playback.error.body')}
+                  {playbackErrorDetail === 'cloud-mongolian-voice-unavailable'
+                    ? t('player.playback.error.cloudMongolian')
+                    : t('player.playback.error.body')}
                 </p>
                 <button
                   type="button"

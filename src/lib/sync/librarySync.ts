@@ -69,6 +69,7 @@ function sanitizeWord(value: unknown): VocabWord | null {
     id,
     target,
     translation,
+    ...(cleanText(word.translationMn, 500) ? { translationMn: cleanText(word.translationMn, 500)! } : {}),
     ...(finite(word.repeats) && word.repeats >= 1 && word.repeats <= 20
       ? { repeats: Math.round(word.repeats) }
       : {}),

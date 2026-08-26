@@ -412,6 +412,26 @@ export default function SettingsModal({ onClose }: Props) {
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
+              <p className="text-sm font-semibold text-white">{t('settings.translation.language.title')}</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                {t('settings.translation.language.hint')}
+              </p>
+              <label className="mt-3 block">
+                <span className="sr-only">{t('settings.translation.language.title')}</span>
+                <select
+                  value={settings.translationLanguage}
+                  onChange={(e) => saveSettings({
+                    translationLanguage: e.target.value === 'mongolian' ? 'mongolian' : 'english',
+                  })}
+                  className="w-full appearance-none rounded-xl border border-white/10 bg-night-800/80 px-4 py-2.5 pr-10 text-sm text-white outline-none transition focus:border-neon-cyan/60"
+                >
+                  <option value="english">{t('settings.translation.language.english')}</option>
+                  <option value="mongolian">{t('settings.translation.language.mongolian')}</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-night-900/50 p-4">
               <p className="text-sm font-semibold text-white">{t('settings.practice.lang')}</p>
               <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
                 {isProPlan(settings.plan)

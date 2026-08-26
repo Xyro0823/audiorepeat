@@ -34,9 +34,9 @@ describe('LANGUAGES_UNLOCKED_BY_PRO — dashboard upgrade-notice entitlement', (
     expect(LANGUAGES_UNLOCKED_BY_PRO).toBe(SUPPORTED_LANGUAGE_COUNT - FREE_LANG_LIMIT);
   });
 
-  it('is currently 28 (29 supported languages minus the Free plan\'s 1 active language)', () => {
-    expect(LANGUAGES_UNLOCKED_BY_PRO).toBe(28);
-    expect(SUPPORTED_LANGUAGE_COUNT).toBe(29);
+  it('is currently 29 (30 supported languages minus the Free plan\'s 1 active language)', () => {
+    expect(LANGUAGES_UNLOCKED_BY_PRO).toBe(29);
+    expect(SUPPORTED_LANGUAGE_COUNT).toBe(30);
     expect(FREE_LANG_LIMIT).toBe(1);
   });
 

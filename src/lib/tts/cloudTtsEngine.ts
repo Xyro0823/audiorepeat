@@ -10,7 +10,13 @@ export class CloudTtsEngine implements TTSEngine {
   private controller: AbortController | null = null;
   private generation = 0;
 
-  constructor(fallback: TTSEngine) {
+  constructor(
+    fallback: TTSEngine,
+    private readonly canUseCloudForLanguage: (lang: string) => boolean = () => true,
+    /** Ignore a stale device-voice preference for this narrowly scoped fallback. */
+    private readonly forceCloudForLanguage: (lang: string) => boolean = () => false,
+    private readonly onCloudAudioState?: (state: 'saving' | 'cached') => void,
+  ) {
     this.fallback = fallback;
   }
 
@@ -24,7 +30,10 @@ export class CloudTtsEngine implements TTSEngine {
 
   speak(opts: SpeakOptions): void {
     // An explicit device voice selection must remain authoritative.
-    if (opts.voiceURI) {
+    if (
+      !this.canUseCloudForLanguage(opts.lang) ||
+      (opts.voiceURI && !this.forceCloudForLanguage(opts.lang))
+    ) {
       this.fallback.speak(opts);
       return;
     }
@@ -32,13 +41,23 @@ export class CloudTtsEngine implements TTSEngine {
     this.controller?.abort();
     const controller = new AbortController();
     this.controller = controller;
+    this.onCloudAudioState?.('saving');
     void fetchCloudAudioBlob(opts.text, opts.lang, controller.signal)
       .then((blob) => {
         if (gen !== this.generation) return;
+        this.onCloudAudioState?.('cached');
         this.playBlob(blob, opts, gen);
       })
       .catch(() => {
-        if (gen === this.generation) this.fallback.speak(opts);
+        if (gen !== this.generation) return;
+        // The Free Mongolian route was selected specifically because there is
+        // no compatible device voice. Falling back here only creates silence
+        // and hides a useful cloud error from the player.
+        if (this.forceCloudForLanguage(opts.lang)) {
+          opts.onError(new Error('cloud-mongolian-voice-unavailable'));
+          return;
+        }
+        this.fallback.speak(opts);
       });
   }
 
@@ -79,4 +98,3 @@ export class CloudTtsEngine implements TTSEngine {
     this.fallback.stop();
   }
 }
-

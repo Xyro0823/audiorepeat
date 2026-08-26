@@ -101,6 +101,10 @@ function sanitizeSet(raw: unknown): VocabSet | null {
         id,
         target: w.target.trim(),
         translation: w.translation.trim(),
+        translationMn:
+          typeof w.translationMn === 'string' && w.translationMn.trim().length > 0
+            ? w.translationMn.trim().slice(0, 500)
+            : undefined,
         repeats: typeof w.repeats === 'number' && w.repeats >= 1 ? Math.round(w.repeats) : undefined,
         mastery: w.mastery === 'mastered' || w.mastery === 'hard' ? w.mastery : undefined,
       };

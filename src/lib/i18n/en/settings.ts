@@ -15,6 +15,11 @@ export const settingsEn = {
   'settings.uiLang.title': 'Interface language',
   'settings.uiLang.hint':
     'Menus, buttons and messages only. The languages you learn are not affected.',
+  'settings.translation.language.title': 'Meaning language',
+  'settings.translation.language.hint':
+    'Choose the language spoken after each word. Mongolian meanings use Azure when your device has no Mongolian voice.',
+  'settings.translation.language.english': 'English',
+  'settings.translation.language.mongolian': 'Mongolian',
 
   // Learning-language section
   'settings.practice.lang': 'Practice language',

@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import { consumeDistributedRateLimit } from '@/lib/distributedRateLimit';
 import { createEntitlementStore, isAdminConfigured, verifyIdToken } from '@/lib/firebase/admin';
 import { NO_STORE_HEADERS } from '@/lib/http';
-import { planHasFeature } from '@/lib/plans';
 import { computeEffectiveEntitlement } from '@/lib/stripe/entitlements';
 import { isAzureTtsConfigured, synthesizeAzureSpeech } from '@/lib/tts/azureTts.server';
+import { cloudTtsAccessFor, FREE_MONGOLIAN_TTS_DAILY_LIMIT } from '@/lib/tts/cloudAccess';
 import {
   getCachedTtsAudio,
   storeTtsAudio,
@@ -60,18 +60,6 @@ export async function POST(request: Request) {
   if (!uid) {
     return NextResponse.json({ error: 'unauthenticated' }, { status: 401, headers: NO_STORE_HEADERS });
   }
-  // Cloud voices + offline audio packs are Pro entitlements. The check reads
-  // the server-side entitlement record (webhooks/admin grants write it) — a
-  // client toggling local settings can never unlock synthesis. Fail closed:
-  // no record / expired grant / canceled subscription → Free → rejected.
-  const entitlement = await createEntitlementStore().getEntitlement(uid);
-  const effective = computeEffectiveEntitlement(entitlement, Math.floor(Date.now() / 1000));
-  if (!planHasFeature(effective.plan, 'offlineAudio')) {
-    return NextResponse.json(
-      { error: 'pro-required', feature: 'offlineAudio' },
-      { status: 403, headers: NO_STORE_HEADERS },
-    );
-  }
   const rawBody = await request.text().catch(() => '');
   if (rawBody.length > MAX_BODY_BYTES) {
     return NextResponse.json({ error: 'body-too-large' }, { status: 413, headers: NO_STORE_HEADERS });
@@ -86,6 +74,17 @@ export async function POST(request: Request) {
   const lang = typeof body?.lang === 'string' ? body.lang.trim() : '';
   if (!text || text.length > MAX_TEXT_LENGTH || !LANG_RE.test(lang)) {
     return NextResponse.json({ error: 'invalid-input' }, { status: 400, headers: NO_STORE_HEADERS });
+  }
+  // The entitlement is read only on the server. Paid accounts retain full
+  // Azure speech; Free accounts may synthesize only Mongolian explanations.
+  const entitlement = await createEntitlementStore().getEntitlement(uid);
+  const effective = computeEffectiveEntitlement(entitlement, Math.floor(Date.now() / 1000));
+  const access = cloudTtsAccessFor(effective.plan, lang);
+  if (!access) {
+    return NextResponse.json(
+      { error: 'pro-required', feature: 'offlineAudio' },
+      { status: 403, headers: NO_STORE_HEADERS },
+    );
   }
   // Identical requests within a short window are served from the instance-local
   // replay cache: retries and duplicate jobs must not re-pay Azure (or burn
@@ -104,7 +103,7 @@ export async function POST(request: Request) {
   }
   if (
     await consumeDistributedRateLimit({
-      key: `tts-burst:${uid}`,
+      key: `tts-burst:${access}:${uid}`,
       limit: TTS_BURST_LIMIT,
       windowMs: TTS_BURST_WINDOW_MS,
     }) ===
@@ -117,8 +116,8 @@ export async function POST(request: Request) {
   }
   if (
     await consumeDistributedRateLimit({
-      key: `tts-day:${uid}`,
-      limit: TTS_DAILY_LIMIT,
+      key: `tts-day:${access}:${uid}`,
+      limit: access === 'free-mongolian' ? FREE_MONGOLIAN_TTS_DAILY_LIMIT : TTS_DAILY_LIMIT,
       windowMs: TTS_DAILY_WINDOW_MS,
     }) ===
     'limited'

@@ -29,6 +29,8 @@ export interface VocabWord {
   id: string;
   target: string;
   translation: string;
+  /** Cached Mongolian meaning generated once through the secure translator. */
+  translationMn?: string;
   repeats?: number; // per-word override; falls back to settings.repeats
   /** 'mastered' = known, 'hard' = review needed; undefined = learning. */
   mastery?: MasteryStatus;
@@ -98,6 +100,8 @@ export interface AppSettings extends LoopSettings {
    * preference, not an entitlement constraint.
    */
   defaultNewSetLang: string | null;
+  /** Language used for the spoken meaning after each target word. */
+  translationLanguage: 'english' | 'mongolian';
   /** Explicit consent to send spoken text to the server-side Azure TTS fallback. */
   cloudTts: boolean;
   cachedAudio: boolean; // prefer pre-generated cached audio (offline) when available
@@ -131,6 +135,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   hiddenLangs: [],
   selectedFreeLang: null,
   defaultNewSetLang: null,
+  translationLanguage: 'english',
   cloudTts: false,
   cachedAudio: false,
   showHints: true,

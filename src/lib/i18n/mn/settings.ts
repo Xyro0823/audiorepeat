@@ -17,6 +17,11 @@ export const settingsMn: Record<SettingsKeys, string> = {
   'settings.uiLang.title': 'Интерфэйсийн хэл',
   'settings.uiLang.hint':
     'Зөвхөн цэс, товч, тайлбарын хэл өөрчлөгдөнө. Таны сурч буй хэл өөрчлөгдөхгүй.',
+  'settings.translation.language.title': 'Орчуулга сонсох хэл',
+  'settings.translation.language.hint':
+    'Үг бүрийн дараах тайлбарыг аль хэлээр сонсохоо сонгоно. Монгол хоолой төхөөрөмжид байхгүй бол Azure ашиглана.',
+  'settings.translation.language.english': 'Англи',
+  'settings.translation.language.mongolian': 'Монгол',
 
   'settings.practice.lang': 'Сурах хэл',
   'settings.pro.lang.line':

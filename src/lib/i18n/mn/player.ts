@@ -78,6 +78,17 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.playback.error.body':
     'Хоолой хэд хэдэн удаа амжилтгүй боллоо. Үг алгасахын оронд дасгал зогсоов — дахин оролдохын тулд үргэлжлүүлэх дарна уу.',
   'player.playback.error.retry': 'Дууг үргэлжлүүлэх',
+  'player.playback.error.cloudMongolian':
+    'Монгол үүлэн хоолойд холбогдож чадсангүй. Интернэтээ шалгаад, гараад дахин нэвтэрсний дараа дахин оролдоорой.',
+
+  // Хадгалах Монгол орчуулга
+  'player.translate.title': 'Монгол орчуулгыг багцад нэмэхэд бэлэн',
+  'player.translate.body': 'Үлдсэн {count} үгийг нэг удаа Монгол хэл рүү хөрвүүлж, энэ багцад хадгална. Зөвхөн үгсийг Microsoft Azure руу аюулгүй илгээнэ.',
+  'player.translate.start': 'Монгол орчуулга нэмэх',
+  'player.translate.progress': 'Монгол орчуулгыг хадгалж байна… {done}/{total}',
+  'player.translate.complete': '{count} үгийн Монгол орчуулга хадгалагдлаа.',
+  'player.translate.failed': 'Монгол орчуулгыг хадгалж чадсангүй. Интернэтээ шалгаад дахин оролдоно уу.',
+  'player.translate.signIn': 'Монгол орчуулгыг энэ багцад аюулгүй хадгалахын тулд нэвтэрнэ үү.',
 
   // Toasts
   'player.toast.cloudEnabled':
@@ -105,6 +116,8 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.card.cloudVoiceTitle':
     'Энэ хэлэнд төхөөрөмжийн хоолой суусангүй. AudioRepeat үүлэн хоолой ашиглаж, үүссэн аудиог офлайн сонсоход хадгална.',
   'player.card.cloudVoice': 'Үүлэн хоолой · анх тоглосны дараа хадгалагдана',
+  'player.card.cloudCaching': 'Монгол үүлэн дууг төхөөрөмжид хадгалж байна…',
+  'player.card.cloudCached': 'Монгол үүлэн дуу · энэ төхөөрөмжид хадгалагдсан',
   'player.card.repeatN': 'Давталт {current} / {total}',
   'player.card.liveAnnounce':
     '{index} / {total}: {word}. Орчуулга: {translation}.',

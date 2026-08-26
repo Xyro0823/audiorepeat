@@ -95,7 +95,7 @@ describe('/api/tts', () => {
     expect(response.status).toBe(429);
     expect(response.headers.get('Retry-After')).toBe('60');
     expect(h.consume).toHaveBeenCalledTimes(1);
-    expect(h.consume).toHaveBeenCalledWith(expect.objectContaining({ key: 'tts-burst:uid-1' }));
+    expect(h.consume).toHaveBeenCalledWith(expect.objectContaining({ key: 'tts-burst:pro:uid-1' }));
     expect(h.synthesize).not.toHaveBeenCalled();
   });
 
@@ -107,7 +107,7 @@ describe('/api/tts', () => {
     expect(response.status).toBe(429);
     expect(await response.json()).toMatchObject({ error: 'rate-limited', scope: 'daily' });
     expect(response.headers.get('Retry-After')).toBe('86400');
-    expect(h.consume).toHaveBeenCalledWith(expect.objectContaining({ key: 'tts-day:uid-1' }));
+    expect(h.consume).toHaveBeenCalledWith(expect.objectContaining({ key: 'tts-day:pro:uid-1' }));
     expect(h.synthesize).not.toHaveBeenCalled();
   });
 
@@ -127,6 +127,19 @@ describe('/api/tts', () => {
     // A different text is a different key and synthesizes again.
     await POST(request({ text: 'adiós', lang: 'es-ES' }, 'token'));
     expect(h.synthesize).toHaveBeenCalledTimes(2);
+  });
+
+  it('lets a Free account synthesize Mongolian explanations only', async () => {
+    h.entitlement = { uid: 'uid-1', plan: 'basic', billing: 'none', status: 'active' };
+    const allowed = await POST(request({ text: 'сайн байна уу', lang: 'mn-MN' }, 'token'));
+    expect(allowed.status).toBe(200);
+    expect(h.consume).toHaveBeenCalledWith(
+      expect.objectContaining({ key: 'tts-day:free-mongolian:uid-1', limit: 10 }),
+    );
+
+    const blocked = await POST(request({ text: 'hello', lang: 'en-US' }, 'token'));
+    expect(blocked.status).toBe(403);
+    expect(await blocked.json()).toMatchObject({ error: 'pro-required' });
   });
 
   it('fails closed when Azure or server authentication is unconfigured', async () => {

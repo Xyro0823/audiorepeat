@@ -54,10 +54,11 @@ describe('feature gates use the canonical entitlement matrix', () => {
 });
 
 describe('server-side enforcement', () => {
-  it('/api/tts rejects non-Pro entitlements before synthesis', () => {
+  it('/api/tts limits Free synthesis to the explicit Mongolian fallback', () => {
     const route = src('app', 'api', 'tts', 'route.ts');
     expect(route).toContain('computeEffectiveEntitlement');
-    expect(route).toContain("planHasFeature(effective.plan, 'offlineAudio')");
+    expect(route).toContain('cloudTtsAccessFor(effective.plan, lang)');
+    expect(route).toContain('FREE_MONGOLIAN_TTS_DAILY_LIMIT');
     expect(route).toContain("'pro-required'");
     expect(route).toContain('403');
   });

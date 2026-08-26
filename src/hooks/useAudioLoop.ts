@@ -99,6 +99,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
   const [progress, setProgress] = useState<Cursor>({ ...IDLE_CURSOR });
   /** Set when TTS keeps failing — playback is paused and the user is told. */
   const [playbackError, setPlaybackError] = useState(false);
+  const [playbackErrorDetail, setPlaybackErrorDetail] = useState<string | null>(null);
 
   useEffect(() => {
     onWordChangeRef.current = onWordChange;
@@ -249,6 +250,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
           altVoiceRef.current = undefined;
           retriedRef.current = false;
           setPlaybackError(false);
+          setPlaybackErrorDetail(null);
           syncMediaSession('playing');
           onWordChangeRef.current?.(
             wordsRef.current[cursorRef.current.wordIndex],
@@ -289,6 +291,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
           syncMediaSession('paused');
           releaseWakeLock();
           setPlaybackError(true);
+          setPlaybackErrorDetail(err instanceof Error ? err.message : null);
         },
       });
     },
@@ -360,6 +363,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
     altVoiceRef.current = undefined;
     retriedRef.current = false;
     setPlaybackError(false);
+    setPlaybackErrorDetail(null);
 
     if (!resuming) cursorRef.current = { ...IDLE_CURSOR };
     statusRef.current = 'playing';
@@ -393,6 +397,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
     altVoiceRef.current = undefined;
     retriedRef.current = false;
     setPlaybackError(false);
+    setPlaybackErrorDetail(null);
     cursorRef.current = { ...IDLE_CURSOR };
     statusRef.current = 'idle';
     setStatus('idle');
@@ -537,6 +542,7 @@ export function useAudioLoop({ words, settings = {}, engine, volume = 1, onWordC
     isPaused: status === 'paused',
     /** True when TTS kept failing: playback paused with a visible message. */
     playbackError,
+    playbackErrorDetail,
     play,
     pause,
     stop,

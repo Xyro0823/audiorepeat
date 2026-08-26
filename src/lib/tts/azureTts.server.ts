@@ -3,6 +3,7 @@ import 'server-only';
 const VOICES_TTL_MS = 60 * 60_000;
 const OUTPUT_FORMAT = 'audio-24khz-48kbitrate-mono-mp3';
 const REGION_RE = /^[a-z0-9-]{2,32}$/;
+const MONGOLIAN_VOICE: AzureVoice = { ShortName: 'mn-MN-YesuiNeural', Locale: 'mn-MN', VoiceType: 'Neural' };
 
 interface AzureVoice {
   ShortName: string;
@@ -74,8 +75,13 @@ export interface AzureSpeechResult {
 
 export async function synthesizeAzureSpeech(text: string, lang: string): Promise<AzureSpeechResult> {
   const { key, region } = config();
-  const voices = await listVoices(key, region);
-  const voice = pickVoice(voices, lang);
+  // Avoid a voices/list round-trip for the Mongolian fallback. It is the
+  // latency-sensitive Free path, and Yesui is a supported Azure Neural voice
+  // in the configured resource region. Other languages retain dynamic voice
+  // discovery so their region-specific availability stays accurate.
+  const voice = lang.toLowerCase().split('-')[0] === 'mn'
+    ? MONGOLIAN_VOICE
+    : pickVoice(await listVoices(key, region), lang);
   if (!voice) throw new Error('azure-voice-unavailable');
   const ssml = `<speak version="1.0" xml:lang="${escapeSsmlText(voice.Locale)}"><voice name="${escapeSsmlText(voice.ShortName)}">${escapeSsmlText(text)}</voice></speak>`;
   const response = await fetch(

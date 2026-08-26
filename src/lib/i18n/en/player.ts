@@ -75,6 +75,17 @@ export const playerEn = {
   'player.playback.error.body':
     'Speech failed repeatedly, so practice is paused instead of skipping words. Press resume to try again.',
   'player.playback.error.retry': 'Resume audio',
+  'player.playback.error.cloudMongolian':
+    'The Mongolian cloud voice could not be reached. Check your connection, then sign out and sign in again before retrying.',
+
+  // Saved Mongolian meaning generation
+  'player.translate.title': 'Mongolian meanings are ready to add',
+  'player.translate.body': 'Translate {count} remaining words once and save them in this set. Only the words are sent securely to Microsoft Azure.',
+  'player.translate.start': 'Add Mongolian meanings',
+  'player.translate.progress': 'Saving Mongolian meanings… {done}/{total}',
+  'player.translate.complete': 'Mongolian meanings saved for {count} words.',
+  'player.translate.failed': 'Could not save Mongolian meanings. Check your connection and try again.',
+  'player.translate.signIn': 'Sign in to save Mongolian meanings securely to this set.',
 
   // Toasts
   'player.toast.cloudEnabled': 'Cloud voice enabled. Audio will be saved for faster replay.',
@@ -98,6 +109,8 @@ export const playerEn = {
   'player.card.cloudVoiceTitle':
     'No device voice is installed for this language, so AudioRepeat is using its secure cloud voice and saving the result for offline replay.',
   'player.card.cloudVoice': 'Cloud voice · cached after first play',
+  'player.card.cloudCaching': 'Saving Mongolian cloud voice on this device…',
+  'player.card.cloudCached': 'Mongolian cloud voice · saved on this device',
   'player.card.repeatN': 'repeat {current} / {total}',
   'player.card.liveAnnounce':
     '{index} / {total}: {word}. Translation: {translation}.',

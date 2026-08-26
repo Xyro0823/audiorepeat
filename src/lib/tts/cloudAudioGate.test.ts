@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { cloudAudioActiveFor } from '@/lib/tts/cloudAudioGate';
 
-describe('cloudAudioActiveFor — no client-side bypass of the cloud-audio entitlement', () => {
-  it('never activates cloud audio for a Free plan, whatever the local toggles say', () => {
+describe('cloudAudioActiveFor — cloud-audio entitlement', () => {
+  it('keeps full cloud audio off for Free plans', () => {
     // A user editing local settings (cloudTts/cachedAudio both on, cloud
     // configured, missing device voices) still gets device voices only.
     expect(
@@ -12,6 +12,21 @@ describe('cloudAudioActiveFor — no client-side bypass of the cloud-audio entit
         cloudTts: true,
         cachedAudio: true,
         deviceVoiceMissing: true,
+      }),
+    ).toBe(false);
+  });
+
+  it('allows only the on-demand Mongolian explanation fallback for Free', () => {
+    expect(
+      cloudAudioActiveFor({
+        plan: 'basic', cloudReady: true, cloudTts: false, cachedAudio: false,
+        deviceVoiceMissing: true, freeMongolianTranslation: true,
+      }),
+    ).toBe(true);
+    expect(
+      cloudAudioActiveFor({
+        plan: 'basic', cloudReady: false, cloudTts: true, cachedAudio: true,
+        deviceVoiceMissing: true, freeMongolianTranslation: true,
       }),
     ).toBe(false);
   });

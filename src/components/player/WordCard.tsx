@@ -19,6 +19,8 @@ interface Props {
   noVoice?: boolean;
   /** True when the server cloud voice covers a missing device voice. */
   cloudVoice?: boolean;
+  /** Progress of the Free Mongolian Azure voice cache for this translation. */
+  cloudCacheState?: 'saving' | 'cached' | null;
   /** False hides the mastery (spaced-repetition) buttons behind a Pro link. */
   canMark?: boolean;
   onMark: (status: MasteryStatus | undefined) => void;
@@ -35,6 +37,7 @@ export default function WordCard({
   showExamples,
   noVoice = false,
   cloudVoice = false,
+  cloudCacheState = null,
   canMark = true,
   onMark,
 }: Props) {
@@ -130,6 +133,21 @@ export default function WordCard({
           className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 px-3 py-1 text-[11px] font-semibold text-neon-cyan"
         >
           <span aria-hidden>☁</span> {t('player.card.cloudVoice')}
+        </span>
+      )}
+
+      {isTranslation && cloudCacheState && (
+        <span
+          role="status"
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 px-3 py-1 text-[11px] font-semibold text-neon-cyan"
+        >
+          {cloudCacheState === 'saving' && (
+            <span className="h-3 w-3 animate-spin rounded-full border border-neon-cyan/30 border-t-neon-cyan" />
+          )}
+          <span aria-hidden>{cloudCacheState === 'saving' ? '☁' : '✓'}</span>
+          {cloudCacheState === 'saving'
+            ? t('player.card.cloudCaching')
+            : t('player.card.cloudCached')}
         </span>
       )}
 

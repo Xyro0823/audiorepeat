@@ -53,22 +53,22 @@ describe('FREE_LANG_OPTIONS', () => {
     }
   });
 
-  it('exposes exactly the 29 unique supported languages (no phantom 30th option)', () => {
+  it('exposes exactly the 30 unique supported languages', () => {
     // The product historically ships 29 seedable languages (13 full-pack
     // STARTER_LANGS + 16 curated-only seeds). STARTER_LANGS all have seeds, so
     // the picker dedupes to the same 29 — an extra regional entry or a seed
-    // without a pack label would surface here as a 30th option.
+    // without a pack label would surface here as a duplicate option.
     const keys = FREE_LANG_OPTIONS.map((o) => o.key);
-    expect(keys.length).toBe(29);
-    expect(new Set(keys).size).toBe(29);
+    expect(keys.length).toBe(30);
+    expect(new Set(keys).size).toBe(30);
   });
 
   it('is the count the dashboard dock must display — not the raw TTS catalog', () => {
     // Regression: the signed-in dashboard header previously rendered
     // `LANGUAGES.length`, the BCP-47 TTS catalog of every official language
     // plus regional variants (~254 entries, e.g. two dozen Arabic dialects).
-    // The user-facing supported-language count is FREE_LANG_OPTIONS (29).
-    expect(FREE_LANG_OPTIONS.length).toBe(29);
+    // The user-facing supported-language count is FREE_LANG_OPTIONS (30).
+    expect(FREE_LANG_OPTIONS.length).toBe(30);
     expect(LANGUAGES.length).toBeGreaterThan(FREE_LANG_OPTIONS.length);
     // Every supported option still resolves to a real catalog entry for its
     // friendly label (mirrors findLanguage: exact code, else base tag) — the
@@ -86,9 +86,9 @@ describe('FREE_LANG_OPTIONS', () => {
 });
 
 describe('SUPPORTED_LANGUAGE_COUNT — canonical customer-facing count', () => {
-  it('is exactly the FREE_LANG_OPTIONS product set (29)', () => {
+  it('is exactly the FREE_LANG_OPTIONS product set (30)', () => {
     expect(SUPPORTED_LANGUAGE_COUNT).toBe(FREE_LANG_OPTIONS.length);
-    expect(SUPPORTED_LANGUAGE_COUNT).toBe(29);
+    expect(SUPPORTED_LANGUAGE_COUNT).toBe(30);
   });
 
   it('is never the raw BCP-47 TTS voice catalog size', () => {

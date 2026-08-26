@@ -184,7 +184,7 @@ describe('pickVoiceForLang', () => {
 describe('FREE_LANG_OPTIONS product codes', () => {
   it('contains exactly SUPPORTED_LANGUAGE_COUNT entries', () => {
     expect(FREE_LANG_OPTIONS.length).toBe(SUPPORTED_LANGUAGE_COUNT);
-    expect(SUPPORTED_LANGUAGE_COUNT).toBe(29);
+    expect(SUPPORTED_LANGUAGE_COUNT).toBe(30);
   });
 
   it('every entry has a non-empty code and key', () => {
@@ -237,11 +237,11 @@ describe('FREE_LANG_OPTIONS product codes', () => {
 
 describe('source-of-truth guards', () => {
   it('SUPPORTED_LANGUAGE_COUNT is the canonical product-language count', () => {
-    expect(SUPPORTED_LANGUAGE_COUNT).toBe(29);
+    expect(SUPPORTED_LANGUAGE_COUNT).toBe(30);
   });
 
   it('FREE_LANG_OPTIONS is the canonical list of product languages', () => {
-    expect(FREE_LANG_OPTIONS.length).toBe(29);
+    expect(FREE_LANG_OPTIONS.length).toBe(30);
   });
 });
 
