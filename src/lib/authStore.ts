@@ -26,6 +26,12 @@ let state: AuthState = { status: 'loading', user: null };
 let hydrated = false;
 const listeners = new Set<() => void>();
 
+// A network-restricted device (for example a phone opening the local dev
+// server by Wi-Fi IP) can occasionally leave Firebase's first auth callback
+// pending. The app must remain usable as a guest instead of showing its
+// loading screen forever.
+const AUTH_INITIAL_STATE_TIMEOUT_MS = 4_000;
+
 function emit(): void {
   for (const l of [...listeners]) l();
 }
@@ -165,6 +171,21 @@ export async function hydrateAuth(): Promise<void> {
     setState({ status: 'guest', user: null });
     return;
   }
+  // Start this before importing Firebase. On a phone opening a local dev
+  // server, the SDK import itself may be stalled by the network; a timeout
+  // created afterwards would never get a chance to rescue the UI.
+  const continueAsGuestAfterTimeout = () => {
+    if (state.status !== 'loading') return;
+    activateSetOwner(null);
+    activateSettingsOwner(null);
+    resetLocalEntitlement();
+    void hydrateSettings();
+    setState({ status: 'guest', user: null });
+  };
+  const initialStateTimeout = globalThis.setTimeout(
+    continueAsGuestAfterTimeout,
+    AUTH_INITIAL_STATE_TIMEOUT_MS,
+  );
   try {
     const { getFirebaseAuth, onFirebaseAuthChange, firebaseUserToAuthUser } = await loadClient();
     const auth = getFirebaseAuth();
@@ -178,6 +199,7 @@ export async function hydrateAuth(): Promise<void> {
     }
     // Stays 'loading' until the first callback resolves the session.
     onFirebaseAuthChange(auth, (fbUser) => {
+      globalThis.clearTimeout(initialStateTimeout);
       if (fbUser) {
         const user = firebaseUserToAuthUser(fbUser);
         // A brand-new account (creationTime ≈ now) must see onboarding. This
@@ -202,6 +224,7 @@ export async function hydrateAuth(): Promise<void> {
       }
     });
   } catch {
+    globalThis.clearTimeout(initialStateTimeout);
     activateSetOwner(null);
     activateSettingsOwner(null);
     resetLocalEntitlement();

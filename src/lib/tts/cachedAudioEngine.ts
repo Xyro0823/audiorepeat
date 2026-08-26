@@ -72,10 +72,17 @@ export class CachedAudioEngine implements TTSEngine {
       this.audio = null;
       opts.onEnd();
     };
-    audio.onerror = (e) => {
+    audio.onerror = () => {
       if (gen !== this.generation) return;
       this.audio = null;
-      opts.onError(e);
+      // A stale/corrupt Cache API blob must not stop an entire listening loop.
+      // Match the rejected-play fallback below: discard the bad cached attempt
+      // and let the device/cloud engine speak this one item instead.
+      if (this.objectUrl) {
+        URL.revokeObjectURL(this.objectUrl);
+        this.objectUrl = null;
+      }
+      this.fallback.speak(opts);
     };
     audio.play().catch(() => {
       // autoplay policy or decode failure -> fall back to speech synthesis

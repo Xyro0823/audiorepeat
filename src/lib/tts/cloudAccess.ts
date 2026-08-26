@@ -1,7 +1,11 @@
 import { planHasFeature, type PlanId } from '@/lib/plans';
 
-/** Free accounts can generate a small number of Mongolian explanations each day. */
-export const FREE_MONGOLIAN_TTS_DAILY_LIMIT = 10;
+/**
+ * Free learners may hear a complete starter lesson in Mongolian. Audio is
+ * cached after the first request, so this caps genuinely new daily phrases
+ * while matching the product's 300-word Free practice allowance.
+ */
+export const FREE_MONGOLIAN_TTS_DAILY_LIMIT = 300;
 
 export type CloudTtsAccess = 'pro' | 'free-mongolian';
 

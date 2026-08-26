@@ -69,6 +69,12 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.cloudVoice.signInEnable': 'Нэвтэрч үүлэн хоолойг идэвхжүүлэх',
   'player.cloudVoice.footer': 'Тохиргооноос аль ч үед унтрааж болно.',
 
+  // Үнэгүй Монгол тайлбарын дуу
+  'player.mongolianVoice.signInTitle': 'Монгол дуу хоолойг сонсохын тулд нэвтэрнэ үү',
+  'player.mongolianVoice.signInBody':
+    'Төхөөрөмжийн дуу хоолойгоор бусад хэлийг нэвтрэхгүйгээр сонсож болно. Харин Монгол үүлэн дууг энэ хичээлд аюулгүй үүсгэж, хадгалахын тулд нэвтэрнэ үү.',
+  'player.mongolianVoice.signInAction': 'Нэвтэрч үргэлжлүүлэх',
+
   // Дуу хоолой сонгогч
   'player.voice.auto': 'Автомат — системийн стандарт ({lang})',
   'player.voice.offline': '· офлайн',
@@ -147,6 +153,8 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.controls.pause': 'Түр зогсоох',
   'player.controls.nextWord': 'Дараагийн үг рүү шилжих',
   'player.controls.stop': 'Зогсоох',
+  'player.controls.shuffle': 'Холих',
+  'player.controls.more': 'Нэмэлт тоглуулах сонголтууд',
   'player.controls.speedAria': 'Тоглуулах хурд {speed}×',
   'player.controls.speedTitle': 'Тоглуулах хурд — дарж өөрчилнө',
   'player.controls.shuffleOn': 'Холих горим асаалттай — унтраах бол дар',

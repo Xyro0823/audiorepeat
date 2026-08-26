@@ -268,11 +268,19 @@ export class SpeechSynthesisEngine implements TTSEngine {
 
   speak(opts: SpeakOptions): void {
     const token = ++this.speakToken;
+    // Calling cancel() after an utterance has naturally ended is a Chromium
+    // footgun: Chrome can silently discard the next utterance until the user
+    // stops and starts again. Only interrupt an actually active queue.
+    const shouldCancelActiveSpeech = Boolean(this.synth?.speaking || this.synth?.pending);
     this.stopped = false;
-    void this.speakAsync(opts, token);
+    void this.speakAsync(opts, token, shouldCancelActiveSpeech);
   }
 
-  private async speakAsync(opts: SpeakOptions, token: number): Promise<void> {
+  private async speakAsync(
+    opts: SpeakOptions,
+    token: number,
+    shouldCancelActiveSpeech: boolean,
+  ): Promise<void> {
     const synth = this.synth;
     if (!synth) {
       opts.onError(new Error('SpeechSynthesis is unavailable in this browser'));
@@ -280,7 +288,7 @@ export class SpeechSynthesisEngine implements TTSEngine {
     }
     // Clean cancel-before-speak: never queue a new utterance behind one that
     // is still speaking — overlapping utterances silently drop in Chromium.
-    synth.cancel();
+    if (shouldCancelActiveSpeech) synth.cancel();
     // Wait for voices to populate before the first utterance (silent-drop /
     // wrong-default-voice fix). Timeout-guarded, so headless/empty registries
     // still proceed and let the browser try u.lang.

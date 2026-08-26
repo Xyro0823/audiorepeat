@@ -134,7 +134,7 @@ describe('/api/tts', () => {
     const allowed = await POST(request({ text: 'сайн байна уу', lang: 'mn-MN' }, 'token'));
     expect(allowed.status).toBe(200);
     expect(h.consume).toHaveBeenCalledWith(
-      expect.objectContaining({ key: 'tts-day:free-mongolian:uid-1', limit: 10 }),
+      expect.objectContaining({ key: 'tts-day:free-mongolian:uid-1', limit: 300 }),
     );
 
     const blocked = await POST(request({ text: 'hello', lang: 'en-US' }, 'token'));

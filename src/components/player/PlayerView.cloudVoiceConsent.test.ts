@@ -17,7 +17,9 @@ describe('PlayerView cloud voice consent', () => {
 
   it('enables cloud voice after a successful sign-in from the prompt', () => {
     expect(source).toContain('onSuccess={enableCloudVoice}');
-    expect(source).toContain('changeSettings({ cloudTts: true })');
+    // Consent belongs to the account, not an optional per-set snapshot.
+    // Otherwise a learner would need to re-enable cloud voice in every set.
+    expect(source).toContain('saveSettings({ cloudTts: true })');
   });
 
   it('blocks ordinary playback until the missing-voice consent is handled', () => {

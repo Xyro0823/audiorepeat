@@ -19,6 +19,7 @@ import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
 import { cloudAudioActiveFor } from '@/lib/tts/cloudAudioGate';
+import { isMongolianLocale } from '@/lib/tts/cloudAccess';
 import { shouldOfferCloudVoiceConsent } from '@/lib/tts/cloudVoiceConsent';
 import { prewarmKey, requestSetPrewarm } from '@/lib/tts/cloudTts';
 import { isIOSWebKit, SpeechSynthesisEngine } from '@/lib/tts/speechSynthesisEngine';
@@ -202,6 +203,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     () => ({
       ...settings,
       ...set?.settings,
+      // A set snapshot may contain old settings from before the learner
+      // upgraded. Account entitlements and the secure-cloud consent always
+      // belong to the current account, never to a vocabulary set.
+      plan: settings.plan,
+      planBilling: settings.planBilling,
+      planSource: settings.planSource,
+      cloudTts: settings.cloudTts,
       targetGapMs: Math.min(5000, Math.max(1000, set?.settings?.targetGapMs ?? settings.targetGapMs)),
     }),
     [settings, set],
@@ -225,21 +233,44 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // Browser voice registries can report a stale/remote mn-MN voice that then
   // produces no audio. A Mongolian explanation deliberately uses Azure on
   // Free, so do not let that unreliable browser claim suppress the fallback.
-  const freeMongolianTranslation = Boolean(
-    hasMongolianTranslation && !planHasFeature(effective.plan, 'offlineAudio'),
+  // The Free cloud allowance applies to Mongolian speech, whether it is the
+  // explanation or the target language being learned. The server enforces the
+  // same language-only rule and its daily cap.
+  const freeMongolianVoice = Boolean(
+    !planHasFeature(effective.plan, 'offlineAudio') &&
+    (hasMongolianTranslation || (set && isMongolianLocale(set.lang))),
   );
+  const signedInMongolianCloud = Boolean(user && freeMongolianVoice);
+  const mongolianCloudSignInRequired = freeMongolianVoice && !user;
   const translationNeedsCloud = Boolean(
     set && !voicesLoading && !hasVoice(nativeLangForAudio),
   );
+  // The server is the authority for Pro/Lifetime access. Keeping an already
+  // signed-in learner on device speech while their local entitlement mirror is
+  // still refreshing makes paid cloud audio look broken (especially on mobile
+  // browsers whose native voices silently fail). A server rejection still
+  // falls back safely, so this never grants cloud synthesis client-side.
+  // `/api/tts` itself is the authoritative availability and entitlement
+  // check. The lightweight status probe can be stale/blocked on a local
+  // Wi-Fi origin, so it must never force a signed-in opted-in learner back to
+  // a native voice that has already failed to start.
+  const authenticatedCloudEnabled = Boolean(user && effective.cloudTts);
   // Plan-gated cloud audio: user toggles alone can never turn this on for a
   // Free plan, and /api/tts re-enforces the same entitlement server-side.
-  const cloudAudioActive = cloudAudioActiveFor({
+  const cloudAudioActive = authenticatedCloudEnabled || cloudAudioActiveFor({
     plan: effective.plan,
-    cloudReady: cloudTtsReady,
+    // Azure audio is account-protected on the server. A guest has no Firebase
+    // token, so sending a Mongolian request would always fail and interrupt
+    // playback with a misleading "voice unavailable" error.
+    // A signed-in learner with Mongolian content may use the narrow Free
+    // Azure path immediately. Do not let a failed /api/tts *status* probe
+    // silently drop them back to a browser voice which has already reported
+    // itself unusable; the protected synthesis request remains authoritative.
+    cloudReady: (cloudTtsReady && Boolean(user)) || signedInMongolianCloud,
     cloudTts: effective.cloudTts,
     cachedAudio: effective.cachedAudio || isIOSWebKit(),
-    deviceVoiceMissing: targetNeedsCloud || translationNeedsCloud || freeMongolianTranslation,
-    freeMongolianTranslation,
+    deviceVoiceMissing: targetNeedsCloud || translationNeedsCloud || freeMongolianVoice,
+    freeMongolianTranslation: freeMongolianVoice,
   });
   const cloudVoiceConsentNeeded = shouldOfferCloudVoiceConsent({
     configured: cloudTtsReady && canCloudAudio,
@@ -265,9 +296,11 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   );
 
   const enableCloudVoice = useCallback(() => {
-    changeSettings({ cloudTts: true });
+    // Cloud consent is account-wide. Saving it onto just one custom set would
+    // leave other sets (and old snapshots) incorrectly routed to native TTS.
+    saveSettings({ cloudTts: true });
     setToast(t('player.toast.cloudEnabled'));
-  }, [changeSettings, t]);
+  }, [saveSettings, t]);
 
   const requestCloudVoice = useCallback(() => {
     if (!canCloudAudio) {
@@ -302,7 +335,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       return new CachedAudioEngine(
         new CloudTtsEngine(
           device,
-          (lang) => paidCloudAudio || lang.toLowerCase().startsWith('mn'),
+          // The API verifies the real entitlement for every request. This
+          // avoids a stale local plan downgrading an active Lifetime owner to
+          // a failing device voice before the entitlement mirror catches up.
+          (lang) => authenticatedCloudEnabled || paidCloudAudio || lang.toLowerCase().startsWith('mn'),
           // A previously saved English translation voice must not prevent the
           // explicitly selected Mongolian explanation from reaching Azure.
           (lang) => !paidCloudAudio && lang.toLowerCase().startsWith('mn'),
@@ -312,7 +348,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     }
     if (effective.cachedAudio || isIOSWebKit()) return new CachedAudioEngine(device);
     return undefined;
-  }, [cloudAudioActive, effective.cachedAudio, effective.plan]);
+  }, [authenticatedCloudEnabled, cloudAudioActive, effective.cachedAudio, effective.plan]);
 
   // Background pre-warm: generate + cache audio blobs ahead of the drill so
   // words play through <audio> (lock-screen safe). Runs on iOS by default and
@@ -342,8 +378,18 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   useEffect(() => {
     const s = setRef.current;
     if (!s || s.words.length === 0) return;
-    if (!canCloudAudio || !cloudTtsReady || !effective.cloudTts) return;
-    if (!effective.cachedAudio && !isIOSWebKit() && !targetNeedsCloud && !translationNeedsCloud) return;
+    if (!canCloudAudio && !authenticatedCloudEnabled) return;
+    // Lifetime / Pro cloud playback deliberately uses <audio> for every
+    // language, not only when the browser claims a voice is missing. Begin
+    // warming immediately so the second and following words do not wait for
+    // a network round trip after Play.
+    if (
+      !authenticatedCloudEnabled &&
+      !effective.cachedAudio &&
+      !isIOSWebKit() &&
+      !targetNeedsCloud &&
+      !translationNeedsCloud
+    ) return;
     const nativeLang =
       s.nativeLang ?? (typeof navigator !== 'undefined' ? navigator.language : undefined);
     let revealed = false;
@@ -386,7 +432,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     });
     return () => {
       unsubscribe();
-      handle.cancel();
+      // Do not abort a deliberate cache warm-up just because the learner
+      // briefly returns to the library. The shared run stays alive in this
+      // tab, so reopening the same set adopts its current progress instead
+      // of restarting at 0 and downloading the remaining audio again.
       setPrewarm(null);
       setPrewarmSummary(null);
       if (summaryTimer !== undefined) window.clearTimeout(summaryTimer);
@@ -399,6 +448,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     set?.lang,
     set?.nativeLang,
     canCloudAudio,
+    authenticatedCloudEnabled,
     effective.cachedAudio,
     effective.targetVoiceURI,
     effective.translationVoiceURI,
@@ -834,12 +884,12 @@ export default function PlayerView({ setId }: { setId: string | null }) {
 
   // Surface silent / wrong-language words: true when the current target language
   // has no installed voice at all (the engine falls back to the browser default).
-  const noVoiceForTarget =
-    !!currentWord && !voicesLoading && !hasVoice(currentWord.lang) &&
-    (!canCloudAudio || !cloudTtsReady || !effective.cloudTts);
   const cloudVoiceForTarget =
     !!currentWord && !voicesLoading && !hasVoice(currentWord.lang) &&
-    canCloudAudio && cloudTtsReady && effective.cloudTts;
+    cloudAudioActive && (canCloudAudio || isMongolianLocale(currentWord.lang));
+  const noVoiceForTarget =
+    !!currentWord && !voicesLoading && !hasVoice(currentWord.lang) &&
+    !cloudVoiceForTarget;
 
   // keyboard shortcuts: Space play/pause · ← previous · → next · S stop
   useEffect(() => {
@@ -967,7 +1017,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const currentRepeats = currentWord?.repeats ?? effective.repeats;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-64 pt-5 sm:px-5 sm:pb-52 sm:pt-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-28 pt-5 sm:px-5 sm:pb-52 sm:pt-6">
       {toast && (
         <div className="animate-fade-up mb-4 rounded-xl border border-neon-amber/40 bg-neon-amber/10 px-4 py-3 text-sm text-neon-amber">
           {toast}
@@ -1289,6 +1339,36 @@ export default function PlayerView({ setId }: { setId: string | null }) {
                 </div>
               </section>
             )}
+            {mongolianCloudSignInRequired && (
+              <section
+                aria-labelledby="mongolian-cloud-sign-in-title"
+                className="mx-auto mb-7 w-full max-w-md rounded-2xl border border-neon-violet/30 bg-neon-violet/[0.07] p-4 text-left shadow-[0_14px_40px_rgba(0,0,0,0.18)] sm:p-5"
+              >
+                <div className="flex items-start gap-3.5">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-neon-violet/15 text-lg text-neon-violet"
+                  >
+                    ☁
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h2 id="mongolian-cloud-sign-in-title" className="text-sm font-bold text-white">
+                      {t('player.mongolianVoice.signInTitle')}
+                    </h2>
+                    <p className="mt-1 text-xs leading-relaxed text-slate-400">
+                      {t('player.mongolianVoice.signInBody')}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setCloudAuthOpen(true)}
+                      className="mt-3 min-h-11 w-full rounded-xl bg-neon-violet px-4 text-sm font-bold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-violet focus-visible:ring-offset-2 focus-visible:ring-offset-night-950 active:scale-[0.98] sm:w-auto"
+                    >
+                      {t('player.mongolianVoice.signInAction')}
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
             {settings.translationLanguage === 'mongolian' && untranslatedMongolianCount > 0 && (
               <section
                 aria-labelledby="mongolian-translation-title"
@@ -1337,7 +1417,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               showExamples={effective.showExamples}
               noVoice={noVoiceForTarget && !cloudVoiceConsentNeeded}
               cloudVoice={cloudVoiceForTarget}
-              cloudCacheState={freeMongolianTranslation ? mongolianCloudCacheState : null}
+              cloudCacheState={freeMongolianVoice ? mongolianCloudCacheState : null}
               canMark={canReview}
               onMark={markWord}
             />

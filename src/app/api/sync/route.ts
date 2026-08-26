@@ -95,6 +95,11 @@ export async function POST(request: Request) {
         ...payload.tombstones.map((entry) => ({ id: entry.id, kind: 'deleted' as const, entry })),
       ];
       const snapshots = await Promise.all(incoming.map((item) => tx.get(collection.doc(item.id))));
+      // Firestore transactions require every read to finish before the first
+      // write. Progress shares this transaction with library records, so load
+      // it here rather than after the set/meta writes below.
+      const progressRef = progress ? db.doc(`users/${uid}/sync/progress`) : null;
+      const progressSnap = progressRef ? await tx.get(progressRef) : null;
       let activeCount = 0;
       let wordCount = 0;
       let recordCount = 0;
@@ -172,9 +177,7 @@ export async function POST(request: Request) {
       // stats reset or restore cannot resurrect from stored history.
       if (progress) {
         const now = Date.now();
-        const progressRef = db.doc(`users/${uid}/sync/progress`);
-        const progressSnap = await tx.get(progressRef);
-        const stored = sanitizeMergedProgress(progressSnap.data()) ?? {
+        const stored = sanitizeMergedProgress(progressSnap?.data()) ?? {
           days: {},
           bestScores: {},
           resetAt: 0,
@@ -182,7 +185,7 @@ export async function POST(request: Request) {
         mergedProgress = progress.replace
           ? replaceWithProgress(progress, now)
           : mergeProgress(stored, { ...progress }, now);
-        tx.set(progressRef, { ...mergedProgress, syncedAt: now });
+        tx.set(progressRef!, { ...mergedProgress, syncedAt: now });
       }
     });
 

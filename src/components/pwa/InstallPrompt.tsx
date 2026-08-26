@@ -44,10 +44,10 @@ function wasDismissed(): boolean {
  */
 export default function InstallPrompt() {
   const t = useT();
-  const [showIosHint, setShowIosHint] = useState(() => {
-    if (isStandalone()) return false;
-    return isIOS() && !wasDismissed();
-  });
+  // The server cannot inspect the device. Starting from a stable `false`
+  // keeps the SSR and first client render identical; the browser-only check
+  // below then enables the iOS hint after hydration when appropriate.
+  const [showIosHint, setShowIosHint] = useState(false);
   const [installed, setInstalled] = useState(false);
   const dismissedRef = useRef(false);
   const pathname = usePathname();
@@ -55,6 +55,7 @@ export default function InstallPrompt() {
   useEffect(() => {
     if (isStandalone()) return;
     dismissedRef.current = wasDismissed();
+    setShowIosHint(isIOS() && !dismissedRef.current);
 
     const onPrompt = (event: Event) => {
       event.preventDefault();

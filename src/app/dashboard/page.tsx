@@ -6,8 +6,9 @@ import Hero from "@/components/Hero";
 export default function DashboardPage() {
   return (
     <>
-      {/* Listening-first hero at the top of the practice dashboard. */}
-      <div id="hero" className="relative bg-[#05060a]">
+      {/* The cinematic hero is useful on a wide dashboard, but it crowds out
+          the mobile app's focused Home / Review / Library tabs. */}
+      <div id="hero" className="relative hidden bg-[#05060a] md:block">
         <Hero />
         {/* Soft theme-aware fade from the hero into the page background —
             replaces the hard black edge (night-950 is the page background in

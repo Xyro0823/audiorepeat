@@ -66,6 +66,12 @@ export const playerEn = {
   'player.cloudVoice.signInEnable': 'Sign in & enable cloud voice',
   'player.cloudVoice.footer': 'You can turn it off anytime in Settings.',
 
+  // Free Mongolian explanation voice
+  'player.mongolianVoice.signInTitle': 'Sign in to hear the Mongolian voice',
+  'player.mongolianVoice.signInBody':
+    'Device voices still work without an account. Sign in to generate and save the Mongolian cloud voice securely for this lesson.',
+  'player.mongolianVoice.signInAction': 'Sign in to continue',
+
   // VoicePicker (EN output matches the previous hardcoded strings)
   'player.voice.auto': 'Auto — system default for {lang}',
   'player.voice.offline': '· offline',
@@ -140,6 +146,8 @@ export const playerEn = {
   'player.controls.pause': 'Pause',
   'player.controls.nextWord': 'Skip to next word',
   'player.controls.stop': 'Stop',
+  'player.controls.shuffle': 'Shuffle',
+  'player.controls.more': 'More playback options',
   'player.controls.speedAria': 'Playback speed {speed}×',
   'player.controls.speedTitle': 'Playback speed — tap to change',
   'player.controls.shuffleOn': 'Shuffle on — tap to turn off',

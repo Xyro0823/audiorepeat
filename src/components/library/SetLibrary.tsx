@@ -540,6 +540,7 @@ export default function SetLibrary() {
   const [cefrFilter, setCefrFilter] = useState<CefrLevel | 'all'>('all');
   const [langFilter, setLangFilter] = useState<string>('all');
   const [changingLang, setChangingLang] = useState(false);
+  const [mobileTab, setMobileTab] = useState<'home' | 'review' | 'library'>('home');
 
   // PlayerView returns to `/dashboard` through a normal route navigation, so
   // the browser does not retain this page's vertical position by itself. Read
@@ -909,34 +910,40 @@ export default function SetLibrary() {
         }}
       />
 
-      <WelcomeHero
-        wordsToday={wordsToday}
-        msToday={msToday}
-        streak={streak}
-        onStart={featured ? () => playSet(featured) : undefined}
-      />
+      <div className={mobileTab === 'home' ? '' : 'max-md:hidden'}>
+        <WelcomeHero
+          wordsToday={wordsToday}
+          msToday={msToday}
+          streak={streak}
+          onStart={featured ? () => playSet(featured) : undefined}
+        />
+      </div>
 
-      <GettingStartedChecklist
-        languageReady={Boolean(freeLangKey || settings.defaultNewSetLang || sets.length > 0)}
-        setReady={sets.length > 0}
-        practiceReady={hasEverPracticed}
-        canPlay={Boolean(featured)}
-        onChooseLanguage={() => setChangingLang(true)}
-        onBrowse={() => setBrowse(true)}
-        onPlay={() => {
-          if (featured) playSet(featured);
-        }}
-      />
+      <div className="hidden md:block">
+        <GettingStartedChecklist
+          languageReady={Boolean(freeLangKey || settings.defaultNewSetLang || sets.length > 0)}
+          setReady={sets.length > 0}
+          practiceReady={hasEverPracticed}
+          canPlay={Boolean(featured)}
+          onChooseLanguage={() => setChangingLang(true)}
+          onBrowse={() => setBrowse(true)}
+          onPlay={() => {
+            if (featured) playSet(featured);
+          }}
+        />
+      </div>
 
-      <FreeLanguageBar langKey={freeLangKey} pro={canUseAllLangs} onChange={() => setChangingLang(true)} />
+      <div className="hidden md:block">
+        <FreeLanguageBar langKey={freeLangKey} pro={canUseAllLangs} onChange={() => setChangingLang(true)} />
+      </div>
 
-      <FreePlanNotice pro={canUseAllLangs} />
+      <div className="hidden md:block"><FreePlanNotice pro={canUseAllLangs} /></div>
 
       <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[300px_minmax(0,1fr)]">
         {/* ------------------------------------------------------------ */}
         {/* Left sidebar — featured languages + continue practice        */}
         {/* ------------------------------------------------------------ */}
-        <aside className="glass animate-fade-up rounded-3xl p-4 lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto">
+        <aside className="glass animate-fade-up hidden rounded-3xl p-4 md:block lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
             {t('library.sidebar.featuredLanguages')}
           </h2>
@@ -1069,36 +1076,43 @@ export default function SetLibrary() {
         {/* Main column — spotlight + library grid                       */}
         {/* ------------------------------------------------------------ */}
         <div className="min-w-0 space-y-6">
-          <MetricCards
-            accuracyPct={accuracyPct}
-            masteredCount={masteryStats.mastered}
-            streak={streak}
-          />
+          <div className="hidden md:block">
+            <MetricCards
+              accuracyPct={accuracyPct}
+              masteredCount={masteryStats.mastered}
+              streak={streak}
+            />
+          </div>
 
-          <ReviewTodayCard
-            dueCount={reviewDueCount}
-            nextDueAtMs={reviewNextDueAtMs}
-            reminderEnabled={settings.reminderEnabled}
-            reminderTime={settings.reminderTime}
-            onStart={() => {
-              // FSRS review is a Pro entitlement — Free goes to the upgrade
-              // flow (direct /review navigation hits the same gate).
-              if (canReview) void router.push('/review');
-              else void router.push('/checkout?plan=pro');
-            }}
-            onSettingsChange={saveSettings}
-          />
+          <div className={mobileTab === 'review' ? '' : 'max-md:hidden'}>
+            <ReviewTodayCard
+              dueCount={reviewDueCount}
+              nextDueAtMs={reviewNextDueAtMs}
+              reminderEnabled={settings.reminderEnabled}
+              reminderTime={settings.reminderTime}
+              onStart={() => {
+                // FSRS review is a Pro entitlement — Free goes to the upgrade
+                // flow (direct /review navigation hits the same gate).
+                if (canReview) void router.push('/review');
+                else void router.push('/checkout?plan=pro');
+              }}
+              onSettingsChange={saveSettings}
+            />
+          </div>
 
           {featured && (
-            <FeaturedCard
-              set={featured}
-              bookmarked={favorites.includes(featured.id)}
-              onBookmark={() => toggleFavorite(featured.id)}
-              onPlay={() => playSet(featured)}
-            />
+            <div className={mobileTab === 'home' ? '' : 'max-md:hidden'}>
+              <FeaturedCard
+                set={featured}
+                bookmarked={favorites.includes(featured.id)}
+                onBookmark={() => toggleFavorite(featured.id)}
+                onPlay={() => playSet(featured)}
+              />
+            </div>
           )}
 
           {importMsg && (
+            <div className={mobileTab === 'library' ? '' : 'max-md:hidden'}>
             <div
               className={`animate-fade-up rounded-xl border px-4 py-3 text-sm ${
                 importMsg.kind === 'ok'
@@ -1108,10 +1122,11 @@ export default function SetLibrary() {
             >
               {importMsg.text}
             </div>
+            </div>
           )}
 
           {/* Library grid — floating glass panel */}
-          <section id="vocab-grid" className="glass animate-fade-up scroll-mt-28 rounded-3xl p-5 md:scroll-mt-6">
+          <section id="vocab-grid" className={`glass animate-fade-up scroll-mt-28 rounded-3xl p-5 md:scroll-mt-6 ${mobileTab === 'library' ? '' : 'max-md:hidden'}`}>
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold tracking-tight text-white">
@@ -1380,6 +1395,11 @@ export default function SetLibrary() {
       <AiAssistantButton onOpen={openAiInsights} />
       <MobileDashboardNav
         resumeAvailable={Boolean(featured)}
+        activeTab={mobileTab}
+        onTabChange={(tab) => {
+          setMobileTab(tab);
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        }}
         onResume={() => {
           if (featured) playSet(featured);
           else setBrowse(true);

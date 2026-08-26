@@ -41,3 +41,34 @@ describe('speech voice loading', () => {
     expect(fake.removeEventListener).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('speech queue continuity', () => {
+  it('does not cancel an idle queue before the next word starts', async () => {
+    class FakeUtterance {
+      lang = '';
+      rate = 1;
+      volume = 1;
+      voice: SpeechSynthesisVoice | null = null;
+      onstart: (() => void) | null = null;
+      onend: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      constructor(readonly text: string) {}
+    }
+    vi.stubGlobal('SpeechSynthesisUtterance', FakeUtterance);
+    vi.stubGlobal('window', { setTimeout, clearTimeout, setInterval, clearInterval });
+    const fake = {
+      ...synth([voice]),
+      speaking: false,
+      pending: false,
+      cancel: vi.fn(),
+      speak: vi.fn(),
+    };
+    const engine = new SpeechSynthesisEngine(fake as unknown as SpeechSynthesis);
+    engine.speak({ text: 'good morning', lang: 'en-US', rate: 1, onEnd: vi.fn(), onError: vi.fn() });
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(fake.cancel).not.toHaveBeenCalled();
+    expect(fake.speak).toHaveBeenCalledTimes(1);
+  });
+});

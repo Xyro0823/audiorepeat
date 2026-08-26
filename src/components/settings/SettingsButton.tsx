@@ -4,7 +4,7 @@ import { useState } from 'react';
 import SettingsModal from './SettingsModal';
 
 /** Gear icon button opening the app-wide settings modal. */
-export default function SettingsButton() {
+export default function SettingsButton({ className }: { className?: string }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -13,7 +13,7 @@ export default function SettingsButton() {
         onClick={() => setOpen(true)}
         aria-label="Settings"
         title="Settings"
-        className="btn-toolbar-ghost flex h-11 w-11 items-center justify-center rounded-xl text-slate-300"
+        className={className ?? 'btn-toolbar-ghost flex h-11 w-11 items-center justify-center rounded-xl text-slate-300'}
       >
         <svg
           viewBox="0 0 24 24"

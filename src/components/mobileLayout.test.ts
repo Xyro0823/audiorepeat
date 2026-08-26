@@ -12,9 +12,17 @@ describe('mobile layout guardrails', () => {
     expect(source).toContain('env(safe-area-inset-bottom)');
   });
 
-  it('reserves enough vertical space for the two-row mobile player dock', () => {
+  it('reserves enough vertical space for the compact one-row mobile player dock', () => {
     const source = read('src/components/player/PlayerView.tsx');
-    expect(source).toContain('px-4 pb-64 pt-5 sm:px-5 sm:pb-52 sm:pt-6');
+    expect(source).toContain('px-4 pb-28 pt-5 sm:px-5 sm:pb-52 sm:pt-6');
+  });
+
+  it('keeps large primary player controls on one phone row', () => {
+    const source = read('src/components/player/PlayerControls.tsx');
+    expect(source).toContain('flex-row items-center justify-center gap-1 px-2 py-2');
+    expect(source).toContain('h-[52px] w-[52px]');
+    expect(source).toContain('h-16 w-16');
+    expect(source).toContain('relative sm:hidden');
   });
 
   it('wraps long target words and translations instead of overflowing on phones', () => {

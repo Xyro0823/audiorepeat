@@ -82,11 +82,16 @@ export default function NewsletterForm() {
     <div>
       <form
         noValidate
+        // Some browser extensions inject tracking/autofill attributes into
+        // forms before React hydrates. This form is otherwise deterministic,
+        // so ignore those third-party attribute-only differences.
+        suppressHydrationWarning
         onSubmit={handleSubmit}
         className="mt-4 flex items-center rounded-full border border-white/10 bg-white/[0.03] py-1.5 pl-4 pr-1.5 transition focus-within:border-cyan-400/50"
       >
         <input
           type="email"
+          suppressHydrationWarning
           name="email"
           required
           autoComplete="email"

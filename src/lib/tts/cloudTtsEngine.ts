@@ -48,7 +48,7 @@ export class CloudTtsEngine implements TTSEngine {
         this.onCloudAudioState?.('cached');
         this.playBlob(blob, opts, gen);
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (gen !== this.generation) return;
         // The Free Mongolian route was selected specifically because there is
         // no compatible device voice. Falling back here only creates silence
@@ -57,7 +57,10 @@ export class CloudTtsEngine implements TTSEngine {
           opts.onError(new Error('cloud-mongolian-voice-unavailable'));
           return;
         }
-        this.fallback.speak(opts);
+        // This request was intentionally routed to Azure. Do not disguise a
+        // cloud failure as a later native-speech failure — some mobile
+        // browsers then wait for the watchdog and report the wrong problem.
+        opts.onError(error);
       });
   }
 
