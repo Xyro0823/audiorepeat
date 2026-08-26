@@ -14,7 +14,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { useQuizMode } from '@/hooks/useQuizMode';
 import { useDictationMode } from '@/hooks/useDictationMode';
-import { useLists } from '@/hooks/useLists';
+import { usePlayerSet } from '@/hooks/usePlayerSet';
 import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 import { CachedAudioEngine } from '@/lib/tts/cachedAudioEngine';
 import { CloudTtsEngine } from '@/lib/tts/cloudTtsEngine';
@@ -61,8 +61,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const router = useRouter();
   const t = useT();
   const { user } = useAuth();
-  const { sets, loading, settings, saveSettings, saveSet } = useLists();
-  const set = sets.find((s) => s.id === setId) ?? null;
+  // Player-scoped load: only the requested set is read from IndexedDB — the
+  // full-library hydration (useLists) stays on the dashboard.
+  const { set: loadedSet, loading, settings, saveSettings, saveSet } = usePlayerSet(setId);
+  const set = loadedSet;
 
   // Playlist filter: 'all' = every word, 'learning' = not yet mastered
   // (covers unmarked + review-needed), 'hard' = only words flagged for review.

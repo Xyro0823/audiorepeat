@@ -87,6 +87,16 @@ export async function getAllSets(): Promise<VocabSet[]> {
   return sets.sort((a, b) => b.updatedAt - a.updatedAt);
 }
 
+/**
+ * Targeted single-set read (keyed lookup — no full-library deserialization).
+ * Same owner-scoped database as getAllSets; returns null for missing ids.
+ */
+export async function getSetById(id: string): Promise<VocabSet | null> {
+  const db = await getSetDb();
+  const set = await db.get('sets', id);
+  return set ?? null;
+}
+
 export async function putSet(set: VocabSet): Promise<void> {
   const db = await getSetDb();
   const tx = db.transaction(['sets', 'tombstones', 'syncQueue'], 'readwrite');
