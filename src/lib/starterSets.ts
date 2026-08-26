@@ -76,6 +76,34 @@ export const STARTER_LANGS = [
   'mn',
 ] as const;
 
+/**
+ * Languages that currently ship a complete, curated A1 foundation. These are
+ * deliberately separate from `STARTER_LANGS`: the latter promises every CEFR
+ * level through C2, while this list is the first no-paywall expansion stage.
+ */
+export const A1_STARTER_LANGS = [
+  'en-US',
+  'fa',
+  'nl',
+  'sv',
+  'pl',
+  'el',
+  'he',
+  'vi',
+  'th',
+  'id',
+  'sw',
+  'uk',
+  'cs',
+  'fi',
+  'nb-NO',
+  'da',
+  'fil',
+] as const;
+
+/** Every language that has at least one vocabulary bank in the Library. */
+export const LIBRARY_LANGS = [...STARTER_LANGS, ...A1_STARTER_LANGS] as const;
+
 /** BCP-47 tag → word-pack code (2-letter manifest key / JSON prefix). */
 export const PACK_LANG: Record<string, string> = {
   'es-ES': 'es',
@@ -91,6 +119,23 @@ export const PACK_LANG: Record<string, string> = {
   hi: 'hi',
   tr: 'tr',
   mn: 'mn',
+  'en-US': 'en',
+  fa: 'fa',
+  nl: 'nl',
+  sv: 'sv',
+  pl: 'pl',
+  el: 'el',
+  he: 'he',
+  vi: 'vi',
+  th: 'th',
+  id: 'id',
+  sw: 'sw',
+  uk: 'uk',
+  cs: 'cs',
+  fi: 'fi',
+  'nb-NO': 'nb',
+  da: 'da',
+  fil: 'fil',
 };
 
 /** Pack code (e.g. "es") → display label (e.g. "Spanish (Spain)"). */
@@ -103,6 +148,6 @@ export function starterLangLabel(lang: string): string {
  * "French (France)". Needed for topic packs, whose languages are pack codes.
  */
 export function packLangLabel(pack: string): string {
-  const bcp = STARTER_LANGS.find((code) => PACK_LANG[code] === pack);
+  const bcp = LIBRARY_LANGS.find((code) => PACK_LANG[code] === pack);
   return bcp ? starterLangLabel(bcp) : (findLanguage(pack)?.label ?? pack);
 }

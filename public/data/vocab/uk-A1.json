@@ -1,0 +1,1006 @@
+{
+  "lang": "uk",
+  "level": "A1",
+  "words": [
+    [
+      "Давайте щось спробуємо!",
+      "Let's try something."
+    ],
+    [
+      "Маю піти спати.",
+      "I have to go to sleep."
+    ],
+    [
+      "Пароль - \"Muiriel\".",
+      "The password is \"Muiriel\"."
+    ],
+    [
+      "Я скоро повернуся.",
+      "I will be back soon."
+    ],
+    [
+      "Це ніколи не скінчиться.",
+      "This is never going to end."
+    ],
+    [
+      "Я просто і не знаю, що сказати.",
+      "I just don't know what to say."
+    ],
+    [
+      "То був злий крілик.",
+      "That was an evil bunny."
+    ],
+    [
+      "Освіта у цьому світі мене розчаровує.",
+      "Education in this world disappoints me."
+    ],
+    [
+      "Сумую без тебе.",
+      "I miss you."
+    ],
+    [
+      "Тобі краще поспати.",
+      "You should sleep."
+    ],
+    [
+      "Я піду.",
+      "I'm going to go."
+    ],
+    [
+      "Ти такий нетерплячий зі мною.",
+      "You're so impatient with me."
+    ],
+    [
+      "Я не можу так жити.",
+      "I can't live that kind of life."
+    ],
+    [
+      "Мені ніколи не подобалася біологія.",
+      "I never liked biology."
+    ],
+    [
+      "Ні, не я, а ти!",
+      "No I'm not; you are!"
+    ],
+    [
+      "Ти впевнена?",
+      "Are you sure?"
+    ],
+    [
+      "Дивись, метелик!",
+      "Oh, there's a butterfly!"
+    ],
+    [
+      "Швидше!",
+      "Hurry up."
+    ],
+    [
+      "Це в тебе такі жарти?!",
+      "Are you freaking kidding me?!"
+    ],
+    [
+      "Я хочу стати королем, коли виросту.",
+      "When I grow up, I want to be a king."
+    ],
+    [
+      "Я такий гладкий.",
+      "I'm so fat."
+    ],
+    [
+      "Ну то що?",
+      "So what?"
+    ],
+    [
+      "Я не справжня риба, я лишень плюшева іграшка.",
+      "I'm not a real fish, I'm just a mere plushy."
+    ],
+    [
+      "Мені завжди було цікаво як це - мати братів та сестер.",
+      "I've always wondered what it'd be like to have siblings."
+    ],
+    [
+      "Мені знадобиться вічність, щоб все пояснити.",
+      "It would take forever for me to explain everything."
+    ],
+    [
+      "Я думав, тобі подобається вивчати нові речі.",
+      "I thought you liked to learn new things."
+    ],
+    [
+      "Якщо б я міг надіслати тобі зефір, Чанг, я б це зробив.",
+      "If I could send you a marshmallow, Trang, I would."
+    ],
+    [
+      "А чому Ви питаєте?",
+      "Why do you ask?"
+    ],
+    [
+      "Завжди, коли я знаходжу щось, що мені подобається, воно занадто дороге.",
+      "Whenever I find something I like, it's too expensive."
+    ],
+    [
+      "Чи довго ви там були?",
+      "How long did you stay?"
+    ],
+    [
+      "Ти просто тікаєш від життєвих проблем.",
+      "You're just running away from life's problems."
+    ],
+    [
+      "Тут є проблема, якої ти не бачиш.",
+      "There's a problem there that you don't see."
+    ],
+    [
+      "Ти це можеш!",
+      "You can do it."
+    ],
+    [
+      "Дякую за пояснення.",
+      "Thanks for your explanation."
+    ],
+    [
+      "Теоретично, я займаюся математикою.",
+      "Theoretically, I'm doing math."
+    ],
+    [
+      "Ти хотів розказати мені про свободу?",
+      "You wanted to tell me about freedom?"
+    ],
+    [
+      "Чи можна це перефразувати якось інакше?",
+      "Can it be phrased in another way?"
+    ],
+    [
+      "Мені подобається світло свічок.",
+      "I like candlelight."
+    ],
+    [
+      "Я можу тільки чекати.",
+      "I can only wait."
+    ],
+    [
+      "Я люблю тебе.",
+      "I love you."
+    ],
+    [
+      "Ти мені більше не подобаєшся.",
+      "I don't like you anymore."
+    ],
+    [
+      "Мені цікаво.",
+      "I am curious."
+    ],
+    [
+      "Вітаю!",
+      "Congratulations!"
+    ],
+    [
+      "Чого ти до нас приходиш?",
+      "Why don't you come visit us?"
+    ],
+    [
+      "Я теж не можу це пояснити.",
+      "I can't explain it either."
+    ],
+    [
+      "Це лише показує, що ти не робот.",
+      "It only shows you're not a robot."
+    ],
+    [
+      "Як я можу бути роботом? Роботи не бачать снів.",
+      "How could I be a robot? Robots don't dream."
+    ],
+    [
+      "Я недостатньо добре говорю французькою!",
+      "I don't speak French well enough!"
+    ],
+    [
+      "Як ти знайдеш їжу в космосі?",
+      "How do you find food in outer space?"
+    ],
+    [
+      "Життя жорстке, але я жорсткіший.",
+      "Life is hard, but I am harder."
+    ],
+    [
+      "Я не розмовляю японською.",
+      "I don't speak Japanese."
+    ],
+    [
+      "Ніхто мене не розуміє.",
+      "Nobody understands me."
+    ],
+    [
+      "Я навчився жити без неї.",
+      "I learned to live without her."
+    ],
+    [
+      "Немає сенсу продовжувати розмірковувати.",
+      "It's useless to keep on thinking any more."
+    ],
+    [
+      "Я лише хотів перевірити свою скриньку електронної пошти.",
+      "I just wanted to check my email."
+    ],
+    [
+      "Ви маєте на увазі мене?",
+      "Are you referring to me?"
+    ],
+    [
+      "Неможливо!",
+      "It can't be!"
+    ],
+    [
+      "\"У чому справа?\" - запитав маленький білий кролик.",
+      "\"What's the matter?\" asked the little white rabbit."
+    ],
+    [
+      "Е... Як це працює?",
+      "Uh... How's that working?"
+    ],
+    [
+      "«Дякую за допомогу.» «Нема за що.»",
+      "\"Thank you for helping me.\" \"Don't mention it.\""
+    ],
+    [
+      "Будь ласка, не плач.",
+      "Please don't cry."
+    ],
+    [
+      "Стрілець вбив оленя.",
+      "The archer killed the deer."
+    ],
+    [
+      "Якщо не їсти, то помреш.",
+      "If you don't eat, you die."
+    ],
+    [
+      "Чому ми не йдемо додому?",
+      "Why don't we go home?"
+    ],
+    [
+      "Вибачте, я не можу залишитися надовго.",
+      "I'm sorry, I can't stay long."
+    ],
+    [
+      "Мої білі штани! І вони ж були нові.",
+      "Oh, my white pants! And they were new."
+    ],
+    [
+      "Ти сумував за мною?",
+      "Did you miss me?"
+    ],
+    [
+      "Дуже дякую!",
+      "Thank you very much!"
+    ],
+    [
+      "Скажіть, будь ласка, де яйця?",
+      "Where are the eggs, please?"
+    ],
+    [
+      "Це гарна ідея!",
+      "That's a good idea!"
+    ],
+    [
+      "Шкода, коли хтось помирає.",
+      "It's a pity when somebody dies."
+    ],
+    [
+      "Кажуть, що любов сліпа.",
+      "They say love is blind."
+    ],
+    [
+      "Кажуть, що \"Гамлет\" - найцікавіша з усіх будь-коли написаних п'єс.",
+      "It is said that \"Hamlet\" is the most interesting play ever written."
+    ],
+    [
+      "Було б цікаво подивитися, як усе міняється протягом років.",
+      "It would be fun to see how things change over the years."
+    ],
+    [
+      "Ти мене коли-небудь забудеш.",
+      "You'll forget about me someday."
+    ],
+    [
+      "Цікаво, як довго це триватиме.",
+      "I wonder how long it's going to take."
+    ],
+    [
+      "Я не можу жити без телевізора.",
+      "I can't live without a TV."
+    ],
+    [
+      "Життя без любові не має сенсу.",
+      "Life without love is just totally pointless."
+    ],
+    [
+      "Ми не можемо спати через шум.",
+      "We can't sleep because of the noise."
+    ],
+    [
+      "Ти маєш презерватив?",
+      "Do you have a condom?"
+    ],
+    [
+      "\"Так, будь ласка помаранчовий сік,\" сказав Майк.",
+      "\"Yes, orange juice please,\" says Mike."
+    ],
+    [
+      "Що вам треба?",
+      "What do you want?"
+    ],
+    [
+      "У мене є мрія.",
+      "I have a dream."
+    ],
+    [
+      "Але все ж таки, супротивне також завжди істинно.",
+      "And yet, the contrary is always true as well."
+    ],
+    [
+      "Мені це дуже подобається.",
+      "I like it very much."
+    ],
+    [
+      "Ми зустрічаємося завтра?",
+      "We're meeting up tomorrow?"
+    ],
+    [
+      "Як це сказати італійською?",
+      "How do you say that in Italian?"
+    ],
+    [
+      "Мушу йти за покупками, повернуся за годину.",
+      "I have to go shopping. I'll be back in an hour."
+    ],
+    [
+      "Це далеко звідси?",
+      "Is it far from here?"
+    ],
+    [
+      "Ці речі не мої!",
+      "These things aren't mine!"
+    ],
+    [
+      "Дякую, це все.",
+      "Thanks, that's all."
+    ],
+    [
+      "Можете набрати мені номер? Для мене телефон зависоко.",
+      "Could you dial for me? The telephone is too high."
+    ],
+    [
+      "Я загубив гаманець.",
+      "I have lost my wallet."
+    ],
+    [
+      "Я такий злий... Тепер щоразу як вмикаю комп'ютер, це цілий головний біль!",
+      "So annoying... Now I get a headache whenever I use the computer!"
+    ],
+    [
+      "Дивись на мене, коли я з тобою розмовляю!",
+      "Look at me when I talk to you!"
+    ],
+    [
+      "Коли ми прибуваємо?",
+      "When do we arrive?"
+    ],
+    [
+      "І що будемо тепер робити?",
+      "And what are we going to do?"
+    ],
+    [
+      "У мене болить голова.",
+      "I have a headache."
+    ],
+    [
+      "Як ти? Сподобалася подорож?",
+      "How are you? Did you have a good trip?"
+    ],
+    [
+      "Викличте поліцію!",
+      "Call the police!"
+    ],
+    [
+      "Це задорого!",
+      "It's too expensive!"
+    ],
+    [
+      "Моï черевики дуже малi. Менi потрiбнi новi.",
+      "My shoes are too small. I need new ones."
+    ],
+    [
+      "Веселого Різдва!",
+      "Merry Christmas!"
+    ],
+    [
+      "Не питайте, що вони думають. Питайте, що вони роблять.",
+      "Don't ask what they think. Ask what they do."
+    ],
+    [
+      "Світ змінює комунікація, а не інформація.",
+      "What changes the world is communication, not information."
+    ],
+    [
+      "Чому ви не їсте овочі?",
+      "Why don't you eat vegetables?"
+    ],
+    [
+      "Чому люди йдуть в кіно?",
+      "Why do people go to the movies?"
+    ],
+    [
+      "Я роздягаюся.",
+      "I'm undressing."
+    ],
+    [
+      "Автомобіль розбився об стіну.",
+      "The car crashed into the wall."
+    ],
+    [
+      "Вітер вщух.",
+      "The wind calmed down."
+    ],
+    [
+      "Я не хочу освідчуватися тобі.",
+      "I don't want to propose to you!"
+    ],
+    [
+      "Там, де воля, там і шлях.",
+      "Where there's a will, there's a way."
+    ],
+    [
+      "Чому кажуть «Добрий день» тоді, коли день не добрий?",
+      "Why does one say \"Good day\" when the day is not good?"
+    ],
+    [
+      "Це був найкращий день мого життя.",
+      "That was the best day of my life."
+    ],
+    [
+      "Я не розумію німецької.",
+      "I don't understand German."
+    ],
+    [
+      "Маємо папу.",
+      "We have a Pope."
+    ],
+    [
+      "Візьми книгу та прочитай її!",
+      "Take a book and read it."
+    ],
+    [
+      "Він уже чоловік.",
+      "He's already a man."
+    ],
+    [
+      "Відпустка вже скінчилася.",
+      "The vacation is over now."
+    ],
+    [
+      "Холодно.",
+      "It's cold."
+    ],
+    [
+      "Я хочу пити.",
+      "I'm thirsty."
+    ],
+    [
+      "Ти навмисно це зробив!",
+      "You did this intentionally!"
+    ],
+    [
+      "Я згоден, але в мене є одна умова.",
+      "I accept, but only under one condition."
+    ],
+    [
+      "Посмiхнись зараз, поплачеш потiм!",
+      "Smile now, cry later!"
+    ],
+    [
+      "Життя прекрасне.",
+      "Life is beautiful."
+    ],
+    [
+      "Ну-мо, поглянь, мавпа з трьома головами!",
+      "Hey, look, a three-headed monkey!"
+    ],
+    [
+      "Що для тебе найкраще джерело натхнення?",
+      "What is your greatest source of inspiration?"
+    ],
+    [
+      "Між нами все скінчено. Віддай мені перстень!",
+      "It's over between us. Give me back my ring!"
+    ],
+    [
+      "Йде дощ.",
+      "It is raining."
+    ],
+    [
+      "Вчора я ходив до зоопарку.",
+      "I went to the zoo yesterday."
+    ],
+    [
+      "Ми виграли битву.",
+      "We won the battle."
+    ],
+    [
+      "Гей! Ти ще тут?",
+      "Hello? Are you still here?"
+    ],
+    [
+      "Я готую обід щодня.",
+      "I make lunch every day."
+    ],
+    [
+      "Ми поїхали до Лондона минулого року.",
+      "We went to London last year."
+    ],
+    [
+      "Це не має ніякого значення!",
+      "It doesn't mean anything!"
+    ],
+    [
+      "Якщо немає рішення, то нема й проблеми.",
+      "If there's no solution, then there's no problem."
+    ],
+    [
+      "Мій молодший брат дивиться телевізор.",
+      "My little brother is watching TV."
+    ],
+    [
+      "Так, це трапляється час від часу.",
+      "Yes, it happens from time to time."
+    ],
+    [
+      "Мати ідеали - це добре, .. як гадаєш?",
+      "It is good to have ideals... don't you think?"
+    ],
+    [
+      "Це залежить від того, що ви називаєте \"вірою\" у бога.",
+      "It depends what you mean by \"believe\" in God."
+    ],
+    [
+      "Тим - великий прихильник сатиричної комедії.",
+      "Tim is a huge fan of satirical comedy."
+    ],
+    [
+      "Я дуже люблю свою роботу.",
+      "I like my job very much."
+    ],
+    [
+      "Ти мені снилася.",
+      "I dreamt about you."
+    ],
+    [
+      "Але ж ти ніколи мені про це не розповідала!",
+      "But you've never told me about this!"
+    ],
+    [
+      "В тебе було повно часу.",
+      "You had plenty of time."
+    ],
+    [
+      "Припини мене критикувати!",
+      "Stop criticizing me!"
+    ],
+    [
+      "Я майже закінчив.",
+      "I'm almost done."
+    ],
+    [
+      "Візьми інший стілець!",
+      "Take the other chair!"
+    ],
+    [
+      "Скільки канапок лишилось?",
+      "How many sandwiches are there left?"
+    ],
+    [
+      "З вікна нам було видно захід сонця.",
+      "We could see the sunset from the window."
+    ],
+    [
+      "Що сталося? Вода по всій хаті!",
+      "What happened? There's water all over the apartment."
+    ],
+    [
+      "Я застарий для цього світу.",
+      "I am too old for this world."
+    ],
+    [
+      "Життя починається тоді, коли ви готові його жити.",
+      "Life begins when you're ready to live it."
+    ],
+    [
+      "Вчитися ніколи не пізно.",
+      "It is never too late to learn."
+    ],
+    [
+      "Він розповів мені історію свого життя.",
+      "He told me the story of his life."
+    ],
+    [
+      "Не можу в це повірити!",
+      "I can't believe it!"
+    ],
+    [
+      "«Дякую», — «Нема за що».",
+      "\"Thank you.\" \"You're welcome.\""
+    ],
+    [
+      "Він багатий. Йому не потрібні гроші!",
+      "He's rich. He doesn't need money!"
+    ],
+    [
+      "Він спить як немовля.",
+      "He's sleeping like a baby."
+    ],
+    [
+      "Вони надто шумлять, я не можу сконцентруватися.",
+      "They're making too much noise. I can't concentrate."
+    ],
+    [
+      "Кожен хотів би вірити, що мрії можуть збутися.",
+      "Everyone would like to believe that dreams can come true."
+    ],
+    [
+      "Світ повний дурнів.",
+      "The world is full of fools."
+    ],
+    [
+      "Ну то й що, що я голубий? Це що, злочин?",
+      "So what if I am gay? Is it a crime?"
+    ],
+    [
+      "Я не хочу потерпіти невдачу на іспитах.",
+      "I don't want to fail my exams."
+    ],
+    [
+      "Я не хочу більше чути жодних скарг.",
+      "I don't want to hear any more of your complaining."
+    ],
+    [
+      "Математика - це не лише запам'ятовування формул.",
+      "Mathematics is not just the memorization of formulas."
+    ],
+    [
+      "Де туалет?",
+      "Where is the bathroom?"
+    ],
+    [
+      "Сутність свободи — у математиці.",
+      "The essence of liberty is mathematics."
+    ],
+    [
+      "Як ти думаєш, люди колись колонізують Місяць?",
+      "Do you think mankind will someday colonize the Moon?"
+    ],
+    [
+      "Життя у в'язниці є гіршим за життя тварини.",
+      "Life in prison is worse than the life of an animal."
+    ],
+    [
+      "Я пишаюся тим, що я - частина цього проекту.",
+      "I am proud to be a part of this project."
+    ],
+    [
+      "Де ти?",
+      "Where are you?"
+    ],
+    [
+      "Він нещодавно опублікував низку цікавих статей.",
+      "He has just published an interesting series of articles."
+    ],
+    [
+      "Ти мене бісиш!",
+      "You piss me off!"
+    ],
+    [
+      "Ні в якому разі!",
+      "No way!"
+    ],
+    [
+      "Вона на межі нервового зриву.",
+      "She is on the verge of a nervous breakdown."
+    ],
+    [
+      "Слони - найбільші наземні тварини, що існують у наші дні.",
+      "Elephants are the largest land animals alive today."
+    ],
+    [
+      "Я зазвичай приймаю душ ввечері.",
+      "I usually take a shower in the evening."
+    ],
+    [
+      "Добраніч! Приємних снів!",
+      "Good night. Sweet dreams."
+    ],
+    [
+      "Не забувай про нас.",
+      "Don't forget about us!"
+    ],
+    [
+      "Час минув дуже швидко.",
+      "Time has passed very fast."
+    ],
+    [
+      "Скільки чайових зазвичай залишають у Іспанії?",
+      "How much do you leave for a tip in Spain?"
+    ],
+    [
+      "Він аргентинець і він дає уроки тенісу.",
+      "He's Argentinean and he gives tennis lessons."
+    ],
+    [
+      "Кран тече.",
+      "The tap is running."
+    ],
+    [
+      "Я на четвертому місяці вагітності.",
+      "I am four months pregnant."
+    ],
+    [
+      "Чи не могли б ви це повторити, будь ласка?",
+      "Could you please repeat that?"
+    ],
+    [
+      "Збирай свої речі та йди геть",
+      "Pick up your things and go away."
+    ],
+    [
+      "Гарно сміється той, хто сміється останній.",
+      "He laughs best who laughs last."
+    ],
+    [
+      "Він помер у глибокій старості.",
+      "He died at a very old age."
+    ],
+    [
+      "Я його не знаю.",
+      "I don't know him."
+    ],
+    [
+      "Вона купається в грошах.",
+      "She's rolling in money."
+    ],
+    [
+      "Не важливо.",
+      "It's not important."
+    ],
+    [
+      "Мені байдуже.",
+      "I don't care."
+    ],
+    [
+      "Люди мають зрозуміти, що світ міняється.",
+      "People should understand that the world is changing."
+    ],
+    [
+      "Слово - срібло, мовчання - золото.",
+      "Speech is silver, but silence is golden."
+    ],
+    [
+      "П'ятдесят два відсотки британських жінок надають перевагу шоколаду перед сексом.",
+      "Fifty-two per cent of British women prefer chocolate to sex."
+    ],
+    [
+      "Краще пізно, ніж ніколи.",
+      "Better late than never."
+    ],
+    [
+      "Який батько - такий син.",
+      "Like father, like son."
+    ],
+    [
+      "Хто рано встає, тому бог дає.",
+      "The early bird catches the worm."
+    ],
+    [
+      "Я очікував це!",
+      "I was expecting it!"
+    ],
+    [
+      "Я нічого від тебе не очікую.",
+      "I don't expect anything from you."
+    ],
+    [
+      "Смачного!",
+      "Enjoy your meal!"
+    ],
+    [
+      "Немає кохання без ревнощів.",
+      "There's no love without jealousy."
+    ],
+    [
+      "Стіни мають вуха.",
+      "The walls have ears."
+    ],
+    [
+      "Не слухай його, він верзе якісь дурниці.",
+      "Don't listen to him, he's talking nonsense."
+    ],
+    [
+      "Не знаю, чи зробив би він це для мене.",
+      "I don't know if he would have done it for me."
+    ],
+    [
+      "Хочете прийти?",
+      "Would you like to come?"
+    ],
+    [
+      "Я сходив попити пивка з друзями.",
+      "I went to drink a beer with friends."
+    ],
+    [
+      "Мені вдалося ввійти.",
+      "I managed to get in."
+    ],
+    [
+      "Скільки це коштує?",
+      "How much is it?"
+    ],
+    [
+      "Не забудь квиток.",
+      "Don't forget the ticket."
+    ],
+    [
+      "Ситуація гірша, ніж нам здавалося.",
+      "The situation is worse than we believed."
+    ],
+    [
+      "Я хочу, щоб ти мені сказав правду.",
+      "I want you to tell me the truth."
+    ],
+    [
+      "Ти прийшов в ту саму мить, коли я пішов.",
+      "You arrived at the moment I left."
+    ],
+    [
+      "Останнім часом Мюріел любить мене злити.",
+      "Muiriel likes to annoy me lately."
+    ],
+    [
+      "Я хочу знати, хто піде з нами.",
+      "I want to know who is coming with us."
+    ],
+    [
+      "Флоренція - найгарніше місто в Італії.",
+      "Florence is the most beautiful city in Italy."
+    ],
+    [
+      "Ти сильно змінився.",
+      "You changed a lot."
+    ],
+    [
+      "Це важче, ніж ти думаєш.",
+      "It's more difficult than you think."
+    ],
+    [
+      "Хто такі ті хлопці?",
+      "Who are those guys?"
+    ],
+    [
+      "Мені здається, що потяг запізнюється.",
+      "It seems to me that the train is late."
+    ],
+    [
+      "Вовки звичайно не нападають на людей.",
+      "Wolves won't usually attack people."
+    ],
+    [
+      "Сподіваюся, він зможе прийти! Я хотів би його побачити.",
+      "I hope he'll be able to come! I'd like to see him."
+    ],
+    [
+      "Як ви насмілюєтеся мені таке казати?",
+      "How dare you say such a thing to me?"
+    ],
+    [
+      "Ти такий саме високий, як я.",
+      "You are as tall as I am."
+    ],
+    [
+      "У якій папці ти зберіг файл?",
+      "In which folder did you save the file?"
+    ],
+    [
+      "Ти не зобов'язаний приходити завтра.",
+      "You don't have to come tomorrow."
+    ],
+    [
+      "Я повинен вживати ліки.",
+      "I have to take medicine."
+    ],
+    [
+      "Будь ласка, не фотографуйте тут.",
+      "Please do not take photos here."
+    ],
+    [
+      "Де ви були?",
+      "Where have you been?"
+    ],
+    [
+      "Чи не могли б Ви, будьте ласкаві, включити світло?",
+      "Could you turn on the light, please?"
+    ],
+    [
+      "Я маю написати листа. У тебе є папір?",
+      "I have to write a letter. Do you have some paper?"
+    ],
+    [
+      "Ти вмієш вести бухгалтерію?",
+      "Can you do bookkeeping?"
+    ],
+    [
+      "Ви повинні платити орендну плату авансом.",
+      "You should pay your rent in advance."
+    ],
+    [
+      "Хіба ти не втомився?",
+      "Are you not tired?"
+    ],
+    [
+      "Ти можешь на нього покластися.",
+      "You can rely on him."
+    ],
+    [
+      "Ти можеш на неї покластися.",
+      "You can rely on her."
+    ],
+    [
+      "Ти мусиш їй допомогти, і швидко!",
+      "You must help her, and soon!"
+    ],
+    [
+      "Одну хвилину.",
+      "Just a minute."
+    ],
+    [
+      "Ти закохався у неї з першого погляду?",
+      "Did you fall in love with her at first sight?"
+    ],
+    [
+      "Де ти бачив, що вона танцювала з ним?",
+      "When did you see her dancing with him?"
+    ],
+    [
+      "Тобі треба враховувати його вік.",
+      "You must take his age into account."
+    ],
+    [
+      "Ви за чи проти його ідеї?",
+      "Are you for or against his idea?"
+    ],
+    [
+      "Ти можеш скористатися його бібліотекою.",
+      "You may make use of his library."
+    ],
+    [
+      "Ти повинен був сказати йому правду.",
+      "You should have told him the truth."
+    ],
+    [
+      "Ти повинен йому подякувати.",
+      "You ought to thank him."
+    ],
+    [
+      "Ти знаєш, хто він такий?",
+      "Do you know who he is?"
+    ],
+    [
+      "Ти колись бачила, як він плаває?",
+      "Have you ever seen him swimming?"
+    ],
+    [
+      "Ти вмієш їздити верхи?",
+      "Can you ride a horse?"
+    ],
+    [
+      "Ти ведеш щоденник?",
+      "Do you keep a diary?"
+    ]
+  ]
+}

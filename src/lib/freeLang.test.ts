@@ -99,18 +99,19 @@ describe('SUPPORTED_LANGUAGE_COUNT — canonical customer-facing count', () => {
     expect(LANGUAGES.length).not.toBe(SUPPORTED_LANGUAGE_COUNT);
   });
 
-  it('is not the word-bank manifest size (13 full-pack languages)', () => {
-    // The manifest only advertises languages with full A1–C2 packs; the app
-    // can seed content for all 29. Marketing copy must show the product
-    // count, not the smaller bank subset.
+  it('distinguishes all A1 foundations from the 13 complete A1–C2 packs', () => {
+    // Every supported language now has an A1 foundation. Only 13 currently
+    // have all six CEFR levels, so marketing must use the product count — not
+    // either implementation detail.
     const bankLangs = Object.keys(vocabManifest);
-    expect(bankLangs.length).toBeLessThan(SUPPORTED_LANGUAGE_COUNT);
-    expect(bankLangs.length).toBe(13);
-    // ...but every full-pack language is a supported product language.
+    const completePacks = Object.values(vocabManifest).filter((levels) => Object.keys(levels).length === 6);
+    expect(bankLangs.length).toBe(SUPPORTED_LANGUAGE_COUNT);
+    expect(completePacks.length).toBe(13);
+    // Every available foundation is a supported product language.
     for (const lang of bankLangs) {
       expect(
         FREE_LANG_OPTIONS.some((o) => o.key === lang),
-        `full-pack language ${lang} must be supported`,
+        `bank language ${lang} must be supported`,
       ).toBe(true);
     }
   });

@@ -1,0 +1,1006 @@
+{
+  "lang": "he",
+  "level": "A1",
+  "words": [
+    [
+      "בוא ננסה משהו!",
+      "Let's try something."
+    ],
+    [
+      "אני צריך ללכת לישון.",
+      "I have to go to sleep."
+    ],
+    [
+      "הסיסמה היא \"Muiriel\".",
+      "The password is \"Muiriel\"."
+    ],
+    [
+      "מיד אשוב.",
+      "I will be back soon."
+    ],
+    [
+      "אין לי מילים.",
+      "I'm at a loss for words."
+    ],
+    [
+      "זה לא ייגמר לעולם.",
+      "This is never going to end."
+    ],
+    [
+      "לא יודע מה לומר.",
+      "I just don't know what to say."
+    ],
+    [
+      "הייתי בהרים.",
+      "I was in the mountains."
+    ],
+    [
+      "זו תמונה חדשה?",
+      "Is it a recent picture?"
+    ],
+    [
+      "החינוך בעולם מאכזב אותי.",
+      "Education in this world disappoints me."
+    ],
+    [
+      "אתה בכושר טוב ממני.",
+      "You're in better shape than I am."
+    ],
+    [
+      "אתה מפריע לי!",
+      "You are in my way."
+    ],
+    [
+      "אני עשוי לוותר בקרוב ולנמנם בִּמְקום.",
+      "I may give up soon and just nap instead."
+    ],
+    [
+      "זה בגלל שאינך רוצה להיות לבד.",
+      "It's because you don't want to be alone."
+    ],
+    [
+      "זה לא יקרה.",
+      "That won't happen."
+    ],
+    [
+      "לפעמים הוא יכול להיות מאוד מוזר.",
+      "Sometimes he can be a strange guy."
+    ],
+    [
+      "אשתדל לא להפריע לך ללמוד.",
+      "I'll do my best not to disturb your studying."
+    ],
+    [
+      "תמיהני אם זה אותו דבר לכולם.",
+      "I can only wonder if this is the same for everyone else."
+    ],
+    [
+      "מתגעגע אלייך.",
+      "I miss you."
+    ],
+    [
+      "אתקשר אליהם מחר כשאחזור.",
+      "I'll call them tomorrow when I come back."
+    ],
+    [
+      "תמיד העדפתי טיפוסים מיסתוריים.",
+      "I always liked mysterious characters more."
+    ],
+    [
+      "אתה צריך לישון.",
+      "You should sleep."
+    ],
+    [
+      "אני אלך.",
+      "I'm going to go."
+    ],
+    [
+      "אמרתי להם לשלוח לי כרטיס אחר.",
+      "I told them to send me another ticket."
+    ],
+    [
+      "אתה חסר סבלנות אלי.",
+      "You're so impatient with me."
+    ],
+    [
+      "לא יכול לחיות כך.",
+      "I can't live that kind of life."
+    ],
+    [
+      "בזמנו, רציתי להיות אסטרופיזיקאי.",
+      "I once wanted to be an astrophysicist."
+    ],
+    [
+      "אף פעם לא אהבתי ביולוגיה.",
+      "I never liked biology."
+    ],
+    [
+      "האדם האחרון שסיפרתי לו את הרעיון שלי, חשב שאני דפוק.",
+      "The last person I told my idea to thought I was nuts."
+    ],
+    [
+      "לצערי, זה נכון.",
+      "It is unfortunately true."
+    ],
+    [
+      "רוב האנשים חושבים שאני משוגע.",
+      "Most people think I'm crazy."
+    ],
+    [
+      "לא אני, אתה!",
+      "No I'm not; you are!"
+    ],
+    [
+      "זו השורה שלי!",
+      "That's MY line!"
+    ],
+    [
+      "הוא בועט בי!",
+      "He's kicking me!"
+    ],
+    [
+      "אתה בטוח?",
+      "Are you sure?"
+    ],
+    [
+      "אז יש בעיה...",
+      "Then there is a problem..."
+    ],
+    [
+      "הו, הנה פרפר!",
+      "Oh, there's a butterfly!"
+    ],
+    [
+      "תזדרז!",
+      "Hurry up."
+    ],
+    [
+      "לא מפתיע אותי.",
+      "It doesn't surprise me."
+    ],
+    [
+      "תלוי בהקשר.",
+      "It depends on the context."
+    ],
+    [
+      "אתה צוחק עלי, לעזאזל?!",
+      "Are you freaking kidding me?!"
+    ],
+    [
+      "זה בדבר הכי מטופש שאמרתי אי פעם.",
+      "That's the stupidest thing I've ever said."
+    ],
+    [
+      "לא רוצה להיות עלוב, רוצה להיות גנוב!",
+      "I don't want to be lame; I want to be cool!!"
+    ],
+    [
+      "אני רוצה להיות מלך כשאגדל.",
+      "When I grow up, I want to be a king."
+    ],
+    [
+      "אני כל כך שמן.",
+      "I'm so fat."
+    ],
+    [
+      "אז מה?",
+      "So what?"
+    ],
+    [
+      "אני אירה בו.",
+      "I'm gonna shoot him."
+    ],
+    [
+      "אני רק אומר!",
+      "I'm just saying!"
+    ],
+    [
+      "כנראה שזה מה שהשפיע על ההחלטה שלהם.",
+      "That was probably what influenced their decision."
+    ],
+    [
+      "זה מה שאני הייתי אומר.",
+      "This is what I would have said."
+    ],
+    [
+      "יקח עידן ועידנים להסביר את הכל.",
+      "It would take forever for me to explain everything."
+    ],
+    [
+      "זה משום שאת בת.",
+      "That's because you're a girl."
+    ],
+    [
+      "זוהי מילה שהייתי מעוניין למצוא לה תחליף.",
+      "It's a word I'd like to find a substitute for."
+    ],
+    [
+      "כמה חברים קרובים יש לך?",
+      "How many close friends do you have?"
+    ],
+    [
+      "כדי לעשות את זה, עלך ליטול סיכונים.",
+      "In order to do that, you have to take risks."
+    ],
+    [
+      "למה את שואלת?",
+      "Why do you ask?"
+    ],
+    [
+      "בכל פעם שאני מוצאת פריט שמוצא חן בעיני, הוא יקר מדי.",
+      "Whenever I find something I like, it's too expensive."
+    ],
+    [
+      "כמה זמן נשארת?",
+      "How long did you stay?"
+    ],
+    [
+      "אני משער שיש לי סברה בעניין זה.",
+      "I think I have a theory about that."
+    ],
+    [
+      "זה מסקרן.",
+      "That is intriguing."
+    ],
+    [
+      "לא אהבתי את זה.",
+      "I didn't like it."
+    ],
+    [
+      "למורה לפיזיקה שלי לא אכפת אם אני מחסיר שיעורים.",
+      "My physics teacher doesn't care if I skip classes."
+    ],
+    [
+      "הלוואי והייתי יכול לנסוע ליפן.",
+      "I wish I could go to Japan."
+    ],
+    [
+      "אני חייב ללכת לישון.",
+      "I have to go to bed."
+    ],
+    [
+      "עלול להיות כפור בשבוע הבא.",
+      "It may freeze next week."
+    ],
+    [
+      "המשטרה תכריח אתכם למצוא את הקליעים.",
+      "The police will get you to find the bullets."
+    ],
+    [
+      "זו לא היתה הכוונה שלי.",
+      "That wasn't my intention."
+    ],
+    [
+      "תודה על ההסבר.",
+      "Thanks for your explanation."
+    ],
+    [
+      "אינני יודע מה כוונתך.",
+      "I don't know what you mean."
+    ],
+    [
+      "רצית לספר לי על החירות?",
+      "You wanted to tell me about freedom?"
+    ],
+    [
+      "הממ, עכשיו זה באמת מוזר...",
+      "Uh, now it's really weird..."
+    ],
+    [
+      "את באמת לא טיפשה.",
+      "You're really not stupid."
+    ],
+    [
+      "אני צריך לשאול אותך שאלה מטופשת.",
+      "I need to ask you a silly question."
+    ],
+    [
+      "אינני יודע כיצד להסביר דבר כה ברור.",
+      "I don't know how to demonstrate it, since it's too obvious!"
+    ],
+    [
+      "לא האמנתי שיום יבוא ואעיין בערך \"וויאגרה\" בוויקיפדיה.",
+      "I wouldn't have thought I would someday look up \"Viagra\" in Wikipedia."
+    ],
+    [
+      "איש לא יידע.",
+      "No one will know."
+    ],
+    [
+      "לי זה נראה מעניין!",
+      "It seems interesting to me."
+    ],
+    [
+      "אני אוהב אור נרות.",
+      "I like candlelight."
+    ],
+    [
+      "לא, הוא לא החבר החדש שלי.",
+      "No, he's not my new boyfriend."
+    ],
+    [
+      "זאת לא ממש הפתעה, מה?",
+      "It's not much of a surprise, is it?"
+    ],
+    [
+      "אני אוהב אותך.",
+      "I love you."
+    ],
+    [
+      "אני סקרן.",
+      "I am curious."
+    ],
+    [
+      "ברכות!",
+      "Congratulations!"
+    ],
+    [
+      "למה אתה לא מגיע לבקר אצלנו?",
+      "Why don't you come visit us?"
+    ],
+    [
+      "אבל האפשרות נראית בלתי סבירה.",
+      "But the possibility seems unlikely."
+    ],
+    [
+      "לא הייתי צריך להתנתק.",
+      "I shouldn't have logged off."
+    ],
+    [
+      "אני שונא כימיה.",
+      "I hate chemistry."
+    ],
+    [
+      "לא רציתי שזה יקרה.",
+      "I didn't want this to happen."
+    ],
+    [
+      "אבל אתה בוודאי יכול לנחש מה קורה.",
+      "You can probably guess what happens though."
+    ],
+    [
+      "לפני שאתה יודע מה קורה אתך, אתה כבר בעיתונים.",
+      "Next thing you know, you'll be in the papers."
+    ],
+    [
+      "אין לי משהו יותר טוב לעשות.",
+      "I have nothing better to do."
+    ],
+    [
+      "אף אני לא יכול להסביר את זה.",
+      "I can't explain it either."
+    ],
+    [
+      "מה אתה חושב עשיתי?",
+      "What do you think I've been doing?"
+    ],
+    [
+      "אל תזלזל בכוח שלי.",
+      "Don't underestimate my power."
+    ],
+    [
+      "אמי לא דוברת אנגלית טובה מאד.",
+      "My mom doesn't speak English very well."
+    ],
+    [
+      "אינני דובר צרפתית טובה מספיק.",
+      "I don't speak French well enough!"
+    ],
+    [
+      "מדוע אתה מתנצל על דבר שלא עשית?",
+      "Why are you sorry for something you haven't done?"
+    ],
+    [
+      "מה גורם לך להיות עדיין ער מאוחר כל כך?",
+      "What keeps you up so late?"
+    ],
+    [
+      "אין לי אף אחד שייסע אתי.",
+      "I don't have anyone who'd travel with me."
+    ],
+    [
+      "החיים קשים אבל אני קשוח יותר.",
+      "Life is hard, but I am harder."
+    ],
+    [
+      "מחר הוא ינחת על הירח.",
+      "Tomorrow, he will land on the moon."
+    ],
+    [
+      "אני לא מדבר יפנית.",
+      "I don't speak Japanese."
+    ],
+    [
+      "זה משחק מילים.",
+      "This is a pun."
+    ],
+    [
+      "אף אחד לא מבין אותי.",
+      "Nobody understands me."
+    ],
+    [
+      "למדתי לחיות בלעדיה.",
+      "I learned to live without her."
+    ],
+    [
+      "אין תועלת להגות בדבר שום זמן נוסף.",
+      "It's useless to keep on thinking any more."
+    ],
+    [
+      "רק רציתי לבדוק את האימייל שלי.",
+      "I just wanted to check my email."
+    ],
+    [
+      "אתה פונה אליי?",
+      "Are you referring to me?"
+    ],
+    [
+      "\"מתי תחזרו?\" \"הכול תלוי במזג האוויר.\"",
+      "\"When will you be back?\" \"It all depends on the weather.\""
+    ],
+    [
+      "ייתכן שהתקשורת שלהם יותר מורכבת משחשבנו.",
+      "Their communication may be much more complex than we thought."
+    ],
+    [
+      "\"תודה על עזרתך.\" \"על לא דבר.\"",
+      "\"Thank you for helping me.\" \"Don't mention it.\""
+    ],
+    [
+      "אל תבכי בבקשה.",
+      "Please don't cry."
+    ],
+    [
+      "תגיד לי אם יש משהו שאוכל לעשות.",
+      "Let me know if there is anything I can do."
+    ],
+    [
+      "הלימודים לא מתחילים עד שמונה וחצי.",
+      "Class doesn't begin until eight-thirty."
+    ],
+    [
+      "\"מתחשק לי לשחק קלפים.\" \"גם לי.\"",
+      "\"I feel like playing cards.\" \"So do I.\""
+    ],
+    [
+      "יפני אף פעם לא היה עושה דבר כזה.",
+      "A Japanese would never do such a thing."
+    ],
+    [
+      "אלן משורר.",
+      "Allen is a poet."
+    ],
+    [
+      "אם אתה רואה טעות, תקן אותה בבקשה.",
+      "If you see a mistake, then please correct it."
+    ],
+    [
+      "למה אנחנו לא הולכים הביתה?",
+      "Why don't we go home?"
+    ],
+    [
+      "מיליון איש איבדו את חייהם במלחמה.",
+      "One million people lost their lives in the war."
+    ],
+    [
+      "זה בכלל לא נדיר לחיות יותר מתשעים שנה.",
+      "It is not rare at all to live over ninety years."
+    ],
+    [
+      "עם כל כך הרבה אנשים בסביבה הוא כמובן נהייה עצבני במקצת.",
+      "With so many people around he naturally became a bit nervous."
+    ],
+    [
+      "כשיצאתי מהתחנה, ראיתי בן אדם.",
+      "When I left the train station, I saw a man."
+    ],
+    [
+      "אתה מלאך!",
+      "You're an angel!"
+    ],
+    [
+      "אנשים ממדריד מוזרים.",
+      "People from Madrid are weird."
+    ],
+    [
+      "אתה בר מזל על כך שהוא לא נשך אותך.",
+      "You're lucky because he didn't bite you."
+    ],
+    [
+      "התגעגעת אליי?",
+      "Did you miss me?"
+    ],
+    [
+      "הם כולם זהים?",
+      "Are they all the same?"
+    ],
+    [
+      "תודה רבה!",
+      "Thank you very much!"
+    ],
+    [
+      "זאת הפתעה.",
+      "It's a surprise."
+    ],
+    [
+      "זה רעיון טוב!",
+      "That's a good idea!"
+    ],
+    [
+      "כבס לפני לבישה ראשונה.",
+      "Wash before first wearing."
+    ],
+    [
+      "אומרים שהאהבה עיוורת.",
+      "They say love is blind."
+    ],
+    [
+      "מתמטיקה היא כמו אהבה - רעיון פשוט שעלול להסתבך.",
+      "Math is like love: a simple idea, but it can get complicated."
+    ],
+    [
+      "התשובות השימושיות היחידות הן תשובות המעוררות שאלות חדשות.",
+      "The only useful answers are those that raise new questions."
+    ],
+    [
+      "להטיל ספק בעצמך זה הסימן הראשון לתבונה.",
+      "To have doubts about oneself is the first sign of intelligence."
+    ],
+    [
+      "אתם מדברים איטלקית?",
+      "Do you speak Italian?"
+    ],
+    [
+      "אומרים ש\"המלט\" הוא המחזה המעניין ביותר שנכתב אי פעם.",
+      "It is said that \"Hamlet\" is the most interesting play ever written."
+    ],
+    [
+      "אפשר לשאול שאלה?",
+      "May I ask a question?"
+    ],
+    [
+      "אף פעם לא הייתי מנחש.",
+      "I would never have guessed that."
+    ],
+    [
+      "יום אחד תשכחי אותי.",
+      "You'll forget about me someday."
+    ],
+    [
+      "זה די לא צפוי.",
+      "That is rather unexpected."
+    ],
+    [
+      "אני תוהה כמה זמן זה יימשך.",
+      "I wonder how long it's going to take."
+    ],
+    [
+      "אני לא יכול לחיות בלי טלוויזיה.",
+      "I can't live without a TV."
+    ],
+    [
+      "לא יכולתי לעשות זאת בלעדיך. תודה לך.",
+      "I couldn't have done it without you. Thank you."
+    ],
+    [
+      "תודיע לי אם יש צורך שאעשה שינויים כלשהם.",
+      "Let me know if I need to make any changes."
+    ],
+    [
+      "אנחנו לא יכולים לישון בגלל הרעש.",
+      "We can't sleep because of the noise."
+    ],
+    [
+      "יש לך קונדום?",
+      "Do you have a condom?"
+    ],
+    [
+      "תעשה כל מה שהוא יאמר לך לעשות.",
+      "Do whatever he tells you."
+    ],
+    [
+      "אפשר לדבר עם גב' בראון?",
+      "May I talk to Ms. Brown?"
+    ],
+    [
+      "מה אתה רוצה?",
+      "What do you want?"
+    ],
+    [
+      "יש לי דין ודברים איתך.",
+      "I have a bone to pick with you."
+    ],
+    [
+      "אתה צריך כסף ממני?",
+      "Do you need me to give you some money?"
+    ],
+    [
+      "פריז זו העיר היפה ביותר בעולם.",
+      "Paris is the most beautiful city in the world."
+    ],
+    [
+      "זו חברתי רייצ'ל, למדנו יחד בתיכון.",
+      "This is my friend Rachel. We went to high school together."
+    ],
+    [
+      "ולמרות זאת, ההפך גם הוא תמיד נכון.",
+      "And yet, the contrary is always true as well."
+    ],
+    [
+      "אתה לידי, הכל בסדר עכשיו.",
+      "You're by my side; everything's fine now."
+    ],
+    [
+      "אתה נראה טיפש.",
+      "You look stupid."
+    ],
+    [
+      "אני חושב שאלך לישון.",
+      "I think I'm gonna go to sleep."
+    ],
+    [
+      "אני מאוד אוהב את זה.",
+      "I like it very much."
+    ],
+    [
+      "איך אומרים את זה באיטלקית?",
+      "How do you say that in Italian?"
+    ],
+    [
+      "זה רחוק מכאן?",
+      "Is it far from here?"
+    ],
+    [
+      "הדברים האלה לא שלי!",
+      "These things aren't mine!"
+    ],
+    [
+      "תרצי לרקוד אתי?",
+      "Would you like to dance with me?"
+    ],
+    [
+      "יש כאן אכסניית נוער בקרבת מקום?",
+      "Is there a youth hostel near here?"
+    ],
+    [
+      "איפה המקלחות?",
+      "Where are the showers?"
+    ],
+    [
+      "זה רציני?",
+      "Is it bad?"
+    ],
+    [
+      "איבדתי את הארנק שלי.",
+      "I have lost my wallet."
+    ],
+    [
+      "אהבה אי אפשר לבזבז.",
+      "Love is never wasted."
+    ],
+    [
+      "החיים הם מה שקורה לך כשאתה עסוק בתוכניות אחרות.",
+      "Life is what happens to you while you're busy making other plans."
+    ],
+    [
+      "לא לרצות משמעו שיש לך.",
+      "Not wanting is the same as having."
+    ],
+    [
+      "\"תעביר לי את המלח, בבקשה\". \"בבקשה\".",
+      "\"Pass me the salt, please.\" \"Here you are.\""
+    ],
+    [
+      "יש יותר מדי דברים לעשות!",
+      "There are too many things to do!"
+    ],
+    [
+      "חם מאד היום!",
+      "It is very hot today."
+    ],
+    [
+      "אף אחד לא בא.",
+      "Nobody came."
+    ],
+    [
+      "תסתכל עליי כשאני מדבר אליך!",
+      "Look at me when I talk to you!"
+    ],
+    [
+      "ניסיתי להרוג את הזמן.",
+      "I was trying to kill time."
+    ],
+    [
+      "אני עייף.",
+      "I'm tired."
+    ],
+    [
+      "מי רוצה שוקו חם?",
+      "Who wants some hot chocolate?"
+    ],
+    [
+      "מתי נגיע?",
+      "When do we arrive?"
+    ],
+    [
+      "חשבון, בבקשה.",
+      "The check, please."
+    ],
+    [
+      "יש לי כאב ראש.",
+      "I have a headache."
+    ],
+    [
+      "איפה אפשר להתקשר?",
+      "Where can one make a phone call?"
+    ],
+    [
+      "מה שלומך? האם הנסיעה עברה בשלום?",
+      "How are you? Did you have a good trip?"
+    ],
+    [
+      "אני לא מרגיש טוב.",
+      "I don't feel well."
+    ],
+    [
+      "תקרא למשטרה!",
+      "Call the police!"
+    ],
+    [
+      "זה מדי יקר!",
+      "It's too expensive!"
+    ],
+    [
+      "הנעליים שלי קטנות מדי. אני צריך נעליים חדשות.",
+      "My shoes are too small. I need new ones."
+    ],
+    [
+      "אנחנו נוטשים את המקום. השוטרים מגיעים.",
+      "We're getting out of here. The cops are coming."
+    ],
+    [
+      "חג מולד שמח!",
+      "Merry Christmas!"
+    ],
+    [
+      "במה זה כרוך?",
+      "What does it involve?"
+    ],
+    [
+      "אופניים הם דרך לקיימות עירונית.",
+      "Bicycles are tools for urban sustainability."
+    ],
+    [
+      "הוא היה שמח לשמוע את זה.",
+      "He would be glad to hear that."
+    ],
+    [
+      "מה אתה מאמין שנכון אף על פי שאינך יכול להוכיח זאת?",
+      "What do you believe is true even though you cannot prove it?"
+    ],
+    [
+      "אל תשאל מה הם חושבים, שאל מה הם עושים.",
+      "Don't ask what they think. Ask what they do."
+    ],
+    [
+      "למרות חשיבותה של השינה, מטרתה היא בגדר מיסתורין.",
+      "Despite the importance of sleep, its purpose is a mystery."
+    ],
+    [
+      "תשוקה יוצרת סבל.",
+      "Passion creates suffering."
+    ],
+    [
+      "הרכבת מז'נבה תיכנס לתחנה.",
+      "The train from Geneva will arrive at the station."
+    ],
+    [
+      "הייתי רוצה לתת לו מתנה ליום ההולדת.",
+      "I would like to give him a present for his birthday."
+    ],
+    [
+      "אני מת מרעב!",
+      "I'm starving!"
+    ],
+    [
+      "אני נשואה ויש לי שני ילדים.",
+      "I am married and have two children."
+    ],
+    [
+      "הוא מנגן על הפסנתר טוב מאוד.",
+      "He plays the piano very well."
+    ],
+    [
+      "אני רואה את זה לעתים רחוקות.",
+      "I see it rarely."
+    ],
+    [
+      "אני רוצה ללמוד בפאריז.",
+      "I'd like to study in Paris."
+    ],
+    [
+      "אני מתפשט.",
+      "I'm undressing."
+    ],
+    [
+      "בריאתנות היא מדע מדומה.",
+      "Creationism is a pseudo-science."
+    ],
+    [
+      "מי שמחפש, מוצא.",
+      "Who searches, finds."
+    ],
+    [
+      "רומא לא נבנתה ביום אחד.",
+      "Rome wasn't built in a day."
+    ],
+    [
+      "זה היה היום הטוב ביותר בחיי.",
+      "That was the best day of my life."
+    ],
+    [
+      "אני לא מבין גרמנית.",
+      "I don't understand German."
+    ],
+    [
+      "החלטתי.",
+      "I made my decision."
+    ],
+    [
+      "אני נותן לך את המילה שלי.",
+      "I give you my word."
+    ],
+    [
+      "יש לנו אפיפיור.",
+      "We have a Pope."
+    ],
+    [
+      "דונט וורי, בי האפי!",
+      "Don't worry, be happy!"
+    ],
+    [
+      "לדעתי שפות זרות הן מאד מעניינות.",
+      "I find foreign languages very interesting."
+    ],
+    [
+      "התמודד עם החיים בחיוך!",
+      "Face life with a smile!"
+    ],
+    [
+      "הוא כבר גבר.",
+      "He's already a man."
+    ],
+    [
+      "זאת האמת המוחלטת.",
+      "That's the absolute truth."
+    ],
+    [
+      "קר.",
+      "It's cold."
+    ],
+    [
+      "אני צמא.",
+      "I'm thirsty."
+    ],
+    [
+      "אתה לא אמרת לו שום דבר?",
+      "You didn't tell him anything?"
+    ],
+    [
+      "אתה הטיפוס שלי.",
+      "You're my type."
+    ],
+    [
+      "קשה לעמוד בפניך.",
+      "You're irresistible."
+    ],
+    [
+      "חייך עכשיו, תבכה אחר-כך!",
+      "Smile now, cry later!"
+    ],
+    [
+      "החיים יפים.",
+      "Life is beautiful."
+    ],
+    [
+      "אם לא יכולים להיות לך ילדים משלך, תמיד אפשר לאמץ.",
+      "If you can't have children, you could always adopt."
+    ],
+    [
+      "הי, הבט, קוף בעל שלושה ראשים!",
+      "Hey, look, a three-headed monkey!"
+    ],
+    [
+      "בואו נודה על האמת, זה בלתי אפשרי. אף פעם לא נצליח.",
+      "Let's face it, it's impossible. We're never gonna make it."
+    ],
+    [
+      "אל תישאר במיטה אלא אם אתה יכול להרוויח בה כסף.",
+      "Don't stay in bed, unless you can make money in bed."
+    ],
+    [
+      "קראתי מחדש את המכתבים ששלחת לי.",
+      "I was rereading the letters you sent to me."
+    ],
+    [
+      "אני לא רוצה ללכת לבית ספר.",
+      "I don't want to go to school."
+    ],
+    [
+      "יורד גשם.",
+      "It is raining."
+    ],
+    [
+      "מחר אלמד בספרייה.",
+      "Tomorrow, I'm going to study at the library."
+    ],
+    [
+      "מאוחר מדי.",
+      "Too late."
+    ],
+    [
+      "הלכתי אתמול לגן חיות.",
+      "I went to the zoo yesterday."
+    ],
+    [
+      "צפיתי בטלוויזיה הבוקר.",
+      "I watched TV this morning."
+    ],
+    [
+      "קראתי ספר בזמן שאכלתי.",
+      "I read a book while eating."
+    ],
+    [
+      "אנחנו נסענו ללונדון בשנה שעברה.",
+      "We went to London last year."
+    ],
+    [
+      "היא לא רוצה לדבר על כך.",
+      "She doesn't want to talk about it."
+    ],
+    [
+      "זה לא אומר שום דבר!",
+      "It doesn't mean anything!"
+    ],
+    [
+      "אוי, התקלקל לי המחשב!",
+      "Aaah!! My computer is broken!"
+    ],
+    [
+      "כשאני חוטף מיגרנה, אקמול לא מזיז לי.",
+      "When I have migraines, aspirin doesn't alleviate the pain for me."
+    ],
+    [
+      "אני מאד אוהב את העבודה שלי.",
+      "I like my job very much."
+    ],
+    [
+      "הרוצח הורשע ונדון למאסר עולם.",
+      "The murderer was convicted and sentenced to life in prison."
+    ],
+    [
+      "הוא עדיין כעס על התאונה למרות מילות הפיוס של אשתו.",
+      "He was still mad about the accident despite his wife's conciliatory words."
+    ],
+    [
+      "חלמתי עליךְ.",
+      "I dreamt about you."
+    ],
+    [
+      "אני לא אפסיד!",
+      "I won't lose!"
+    ],
+    [
+      "היום הזה היה פשוט בזבוז זמן וכסף.",
+      "This day was just a waste of time and money."
+    ],
+    [
+      "מצטער, אני לא חושב שאוכל.",
+      "Sorry, I don't think I'm gonna be able to."
+    ],
+    [
+      "היה לך המון זמן.",
+      "You had plenty of time."
+    ]
+  ]
+}

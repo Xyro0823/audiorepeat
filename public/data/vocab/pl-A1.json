@@ -1,0 +1,1006 @@
+{
+  "lang": "pl",
+  "level": "A1",
+  "words": [
+    [
+      "Spróbujmy coś.",
+      "Let's try something."
+    ],
+    [
+      "Muszę iść spać.",
+      "I have to go to sleep."
+    ],
+    [
+      "Hasło brzmi „Muiriel”.",
+      "The password is \"Muiriel\"."
+    ],
+    [
+      "Zaraz wracam.",
+      "I will be back soon."
+    ],
+    [
+      "To nigdy się nie skończy.",
+      "This is never going to end."
+    ],
+    [
+      "Po prostu nie wiem, co powiedzieć.",
+      "I just don't know what to say."
+    ],
+    [
+      "Byłem w górach.",
+      "I was in the mountains."
+    ],
+    [
+      "Nie wiem, czy mam czas.",
+      "I don't know if I have the time."
+    ],
+    [
+      "Edukacja na tym świecie zawodzi mnie.",
+      "Education in this world disappoints me."
+    ],
+    [
+      "Jesteś w lepszej formie niż ja.",
+      "You're in better shape than I am."
+    ],
+    [
+      "To dlatego, że nie chcesz być samotny.",
+      "It's because you don't want to be alone."
+    ],
+    [
+      "To się nie zdarzy.",
+      "That won't happen."
+    ],
+    [
+      "On czasami jest dziwny.",
+      "Sometimes he can be a strange guy."
+    ],
+    [
+      "Postaram się Ci nie przeszkadzać w nauce.",
+      "I'll do my best not to disturb your studying."
+    ],
+    [
+      "Tęsknię za Tobą.",
+      "I miss you."
+    ],
+    [
+      "Zadzwonię do nich jutro kiedy wrócę.",
+      "I'll call them tomorrow when I come back."
+    ],
+    [
+      "Powinieneś spać.",
+      "You should sleep."
+    ],
+    [
+      "Zamierzam iść.",
+      "I'm going to go."
+    ],
+    [
+      "Kiedyś chciałem być astrofizykiem.",
+      "I once wanted to be an astrophysicist."
+    ],
+    [
+      "Nigdy nie lubiłem biologii.",
+      "I never liked biology."
+    ],
+    [
+      "To niestety prawda.",
+      "It is unfortunately true."
+    ],
+    [
+      "Większość ludzi sądzi, że jestem szalony.",
+      "Most people think I'm crazy."
+    ],
+    [
+      "Nie ja, tylko ty!",
+      "No I'm not; you are!"
+    ],
+    [
+      "To jest MOJA kwestia!",
+      "That's MY line!"
+    ],
+    [
+      "On mnie kopie!",
+      "He's kicking me!"
+    ],
+    [
+      "Jesteś pewien?",
+      "Are you sure?"
+    ],
+    [
+      "Pośpiesz się!",
+      "Hurry up."
+    ],
+    [
+      "To mnie nie zaskakuje.",
+      "It doesn't surprise me."
+    ],
+    [
+      "Zależy od kontekstu.",
+      "It depends on the context."
+    ],
+    [
+      "To najgłupsza rzecz, jaką kiedykolwiek powiedziałem.",
+      "That's the stupidest thing I've ever said."
+    ],
+    [
+      "Kiedy dorosnę, chcę być królem.",
+      "When I grow up, I want to be a king."
+    ],
+    [
+      "No i co?",
+      "So what?"
+    ],
+    [
+      "Zastrzelę go.",
+      "I'm gonna shoot him."
+    ],
+    [
+      "Zawsze zastanawiałem się, jak to jest mieć rodzeństwo.",
+      "I've always wondered what it'd be like to have siblings."
+    ],
+    [
+      "To jest to, co bym powiedział.",
+      "This is what I would have said."
+    ],
+    [
+      "Potrzebna wieczność, żeby wszystko wytłumaczyć.",
+      "It would take forever for me to explain everything."
+    ],
+    [
+      "To dlatego, że jesteś dziewczyną.",
+      "That's because you're a girl."
+    ],
+    [
+      "Czasami nie potrafię się powstrzymać przed okazaniem emocji.",
+      "Sometimes I can't help showing emotions."
+    ],
+    [
+      "Nie mam zamiaru być samolubny.",
+      "I don't intend to be selfish."
+    ],
+    [
+      "Rozważmy, co może się wydarzyć najgorszego.",
+      "Let's consider the worst that could happen."
+    ],
+    [
+      "Ilu masz bliskich przyjaciół?",
+      "How many close friends do you have?"
+    ],
+    [
+      "Obudziwszy się, byłem smutny.",
+      "When I woke up, I was sad."
+    ],
+    [
+      "Pomyślałem, że będziesz się chciał nauczyć czegoś nowego.",
+      "I thought you liked to learn new things."
+    ],
+    [
+      "Większość osób pisze o swoim codziennym życiu.",
+      "Most people write about their daily life."
+    ],
+    [
+      "Czemu pytasz?",
+      "Why do you ask?"
+    ],
+    [
+      "Nie jestem artystą. Nigdy nie miałem do tego zacięcia.",
+      "I am not an artist. I never had the knack for it."
+    ],
+    [
+      "Cokolwiek znajdę, co mi się podoba, jest za drogie.",
+      "Whenever I find something I like, it's too expensive."
+    ],
+    [
+      "Jak długo stoisz?",
+      "How long did you stay?"
+    ],
+    [
+      "Może będzie mu zupełnie wszystko jedno.",
+      "Maybe it will be exactly the same for him."
+    ],
+    [
+      "Niewinność to piękna rzecz.",
+      "Innocence is a beautiful thing."
+    ],
+    [
+      "Myślę, że mam teorię na ten temat.",
+      "I think I have a theory about that."
+    ],
+    [
+      "To intrygujące.",
+      "That is intriguing."
+    ],
+    [
+      "Nie mam konta na tym forum.",
+      "I do not have an account in these forums."
+    ],
+    [
+      "To nieważne.",
+      "This is not important."
+    ],
+    [
+      "Nie lubiłem tego.",
+      "I didn't like it."
+    ],
+    [
+      "Pyta jak to możliwe.",
+      "She's asking how that's possible."
+    ],
+    [
+      "Po prostu uciekasz od życiowych problemów.",
+      "You're just running away from life's problems."
+    ],
+    [
+      "Jeśli przyjrzysz się słowom, to one naprawdę nie znaczą wiele.",
+      "If you look at the lyrics, they don't really mean much."
+    ],
+    [
+      "To jest problem, którego nie widzisz.",
+      "There's a problem there that you don't see."
+    ],
+    [
+      "Możesz to zrobić.",
+      "You can do it."
+    ],
+    [
+      "Nienawidzę kiedy tam jest dużo ludzi.",
+      "I hate it when there are a lot of people."
+    ],
+    [
+      "Nie miałem takiego zamiaru.",
+      "That wasn't my intention."
+    ],
+    [
+      "Dziękuję za wyjaśnienie.",
+      "Thanks for your explanation."
+    ],
+    [
+      "Teorytycznie, robię matematykę.",
+      "Theoretically, I'm doing math."
+    ],
+    [
+      "Nie wiem, co masz na myśli.",
+      "I don't know what you mean."
+    ],
+    [
+      "Jest wiele słów, których nie rozumiem.",
+      "There are many words that I don't understand."
+    ],
+    [
+      "Naprawdę nie jesteś głupi.",
+      "You're really not stupid."
+    ],
+    [
+      "Muszę ci zadać głupie pytanie.",
+      "I need to ask you a silly question."
+    ],
+    [
+      "Nie wiem, jak to udowodnić, ponieważ to zbyt oczywiste!",
+      "I don't know how to demonstrate it, since it's too obvious!"
+    ],
+    [
+      "Czy można to ująć inaczej?",
+      "Can it be phrased in another way?"
+    ],
+    [
+      "Nikt się nie dowie.",
+      "No one will know."
+    ],
+    [
+      "Wydaje się interesujące dla mnie!",
+      "It seems interesting to me."
+    ],
+    [
+      "Co odpowiedziałeś?",
+      "What did you answer?"
+    ],
+    [
+      "Nie, to nie jest mój nowy chłopak.",
+      "No, he's not my new boyfriend."
+    ],
+    [
+      "Gdzie jest problem?",
+      "Where is the problem?"
+    ],
+    [
+      "Mogę tylko poczekać.",
+      "I can only wait."
+    ],
+    [
+      "Kocham cię.",
+      "I love you."
+    ],
+    [
+      "Już Cię nie lubię.",
+      "I don't like you anymore."
+    ],
+    [
+      "Bardzo jestem ciekaw.",
+      "I am curious."
+    ],
+    [
+      "Nie chcę czekać aż tak długo.",
+      "I don't want to wait that long."
+    ],
+    [
+      "Już nie wiem, co robić.",
+      "I don't know what to do anymore."
+    ],
+    [
+      "Nienawidzę chemii.",
+      "I hate chemistry."
+    ],
+    [
+      "Nie chciałem, żeby to się stało.",
+      "I didn't want this to happen."
+    ],
+    [
+      "Jakie mam inne opcje?",
+      "What other options do I have?"
+    ],
+    [
+      "Nie jestem typem podróżnika.",
+      "I am not much of a traveller."
+    ],
+    [
+      "Nie mam nic lepszego do roboty.",
+      "I have nothing better to do."
+    ],
+    [
+      "Też nie potrafię tego wyjaśnić.",
+      "I can't explain it either."
+    ],
+    [
+      "Każdy ma swoje mocne i słabe strony.",
+      "Everyone has strengths and weaknesses."
+    ],
+    [
+      "To pokazuje tylko, że nie jesteś robotem.",
+      "It only shows you're not a robot."
+    ],
+    [
+      "Jak mógłbym być robotem? Roboty nie śnią.",
+      "How could I be a robot? Robots don't dream."
+    ],
+    [
+      "To nie jest coś, co każdy może zrobić.",
+      "It's not something anyone can do."
+    ],
+    [
+      "Nie wiem, czy nadal to mam.",
+      "I don't know if I still have it."
+    ],
+    [
+      "Nie lekceważ mojej mocy.",
+      "Don't underestimate my power."
+    ],
+    [
+      "Moja mama nie mówi zbyt dobrze po angielsku.",
+      "My mom doesn't speak English very well."
+    ],
+    [
+      "Zastanawiałem się, czy się dziś pojawisz.",
+      "I was wondering if you were going to show up today."
+    ],
+    [
+      "Jak znajdziesz żywność w przestrzeni kosmicznej?",
+      "How do you find food in outer space?"
+    ],
+    [
+      "Wszyscy chcą cię poznać. Jesteś sławny!",
+      "Everyone wants to meet you. You're famous!"
+    ],
+    [
+      "Dlaczego przeprasza za coś, czego nie zrobiłeś?",
+      "Why are you sorry for something you haven't done?"
+    ],
+    [
+      "Zdziwiłbyś się, czego można się nauczyć w ciągu tygodnia.",
+      "You'd be surprised what you can learn in a week."
+    ],
+    [
+      "Nie mam nikogo, kto mógłby podróżować ze mną.",
+      "I don't have anyone who'd travel with me."
+    ],
+    [
+      "Nie jesteś wystarczająco szybki.",
+      "You're not fast enough."
+    ],
+    [
+      "Przestań! Sprawiasz, że czuje się niezręcznie!",
+      "Stop it! You're making her feel uncomfortable!"
+    ],
+    [
+      "Jutro wyląduje on na księżycu.",
+      "Tomorrow, he will land on the moon."
+    ],
+    [
+      "Nie mówię po japońsku.",
+      "I don't speak Japanese."
+    ],
+    [
+      "To jest gra słów.",
+      "This is a pun."
+    ],
+    [
+      "Nikt nie rozumie mnie.",
+      "Nobody understands me."
+    ],
+    [
+      "Nauczyłem się żyć bez niej.",
+      "I learned to live without her."
+    ],
+    [
+      "Mam ostatnio zbyt wiele rzeczy na głowie.",
+      "I have too many things on my mind these days."
+    ],
+    [
+      "Chciałem tylko sprawdzić pocztę.",
+      "I just wanted to check my email."
+    ],
+    [
+      "Czy koniecznie musisz zadać pytanie, by znać odpowiedź?",
+      "Do you really need to ask the question to know the answer?"
+    ],
+    [
+      "Nie możesz oczekiwać, że zawsze będę o wszystkim myśleć!",
+      "You can't expect me to always think of everything!"
+    ],
+    [
+      "Nie oczekuj, że inni będą myśleć za ciebie!",
+      "Don't expect others to think for you!"
+    ],
+    [
+      "Nigdy nie masz czasu na ważne rzeczy.",
+      "You never have time for important things!"
+    ],
+    [
+      "Odnosisz się do mnie?",
+      "Are you referring to me?"
+    ],
+    [
+      "Nie może być!",
+      "It can't be!"
+    ],
+    [
+      "Chcesz coś do picia?",
+      "Would you like something to drink?"
+    ],
+    [
+      "„Kto to jest?” „To jest twoja matka.”",
+      "\"Who is it?\" \"It's your mother.\""
+    ],
+    [
+      "„Kiedy wrócisz?” „Wszystko zależy od pogody.”",
+      "\"When will you be back?\" \"It all depends on the weather.\""
+    ],
+    [
+      "Yyy… Jak to działa?",
+      "Uh... How's that working?"
+    ],
+    [
+      "„Zaufaj mi”, powiedział.",
+      "\"Trust me,\" he said."
+    ],
+    [
+      "„To jest to, czego szukałem!”, wykrzynął.",
+      "\"This is what I was looking for!\" he exclaimed."
+    ],
+    [
+      "„Telefon dzwoni.” „Odbiorę.”",
+      "\"The phone is ringing.\" \"I'll get it.\""
+    ],
+    [
+      "„Dziękuję za pomoc.” „Nie ma za co.”",
+      "\"Thank you for helping me.\" \"Don't mention it.\""
+    ],
+    [
+      "Pewnego dnia będę pędzić jak wiatr.",
+      "Someday I'll run like the wind."
+    ],
+    [
+      "„Ona lubi muzykę.” „I ja też.”",
+      "\"She likes music.\" \"So do I.\""
+    ],
+    [
+      "Nie płacz, proszę.",
+      "Please don't cry."
+    ],
+    [
+      "Daj mi znać, jeśli jest coś, co mogę zrobić.",
+      "Let me know if there is anything I can do."
+    ],
+    [
+      "Chcę łódź, która mnie zabierze stąd z dala.",
+      "I want a boat that will take me far away from here."
+    ],
+    [
+      "„Mam ochotę zagrać w karty.” „Ja też.”",
+      "\"I feel like playing cards.\" \"So do I.\""
+    ],
+    [
+      "„Czy my się już nie widzieliśmy?”, zapytał student.",
+      "\"Haven't we met somewhere before?\" asked the student."
+    ],
+    [
+      "Japończyk nigdy nie zrobiłby czegoś takiego.",
+      "A Japanese would never do such a thing."
+    ],
+    [
+      "Allen jest poetą.",
+      "Allen is a poet."
+    ],
+    [
+      "Łucznik zabił jelenia.",
+      "The archer killed the deer."
+    ],
+    [
+      "Jeśli widzisz błąd, to popraw proszę.",
+      "If you see a mistake, then please correct it."
+    ],
+    [
+      "Jak nie będziesz jeść, umrzesz.",
+      "If you don't eat, you die."
+    ],
+    [
+      "Dlaczego nie pójdziemy do domu?",
+      "Why don't we go home?"
+    ],
+    [
+      "Przepraszam, nie mogę dłużej stać.",
+      "I'm sorry, I can't stay long."
+    ],
+    [
+      "„Dlaczego nie idziesz?” „Bo nie chcę.”",
+      "\"Why aren't you going?\" \"Because I don't want to.\""
+    ],
+    [
+      "W wojnie zginęło milion osób.",
+      "One million people lost their lives in the war."
+    ],
+    [
+      "To nie byłem ja, komisarzu!",
+      "It wasn't me, commissioner!"
+    ],
+    [
+      "Och, moje białe spodnie! A były one nowe.",
+      "Oh, my white pants! And they were new."
+    ],
+    [
+      "Kiedy wyszłam ze stacji kolejowej, zobaczyłam mężczyznę.",
+      "When I left the train station, I saw a man."
+    ],
+    [
+      "Jesteś aniołem!",
+      "You're an angel!"
+    ],
+    [
+      "Masz szczęście, ponieważ nie ugryzł Ciebie.",
+      "You're lucky because he didn't bite you."
+    ],
+    [
+      "Tęskniłeś za mną?",
+      "Did you miss me?"
+    ],
+    [
+      "Bardzo dziękuję!",
+      "Thank you very much!"
+    ],
+    [
+      "To jest niespodzianka.",
+      "It's a surprise."
+    ],
+    [
+      "To jest dobry pomysł!",
+      "That's a good idea!"
+    ],
+    [
+      "W obie strony? Nie, tylko w jedną.",
+      "Round trip? Only one-way."
+    ],
+    [
+      "Szkoda, gdy ktoś umiera.",
+      "It's a pity when somebody dies."
+    ],
+    [
+      "Stali z otwartymi ustami.",
+      "They were left speechless."
+    ],
+    [
+      "Cholera! Nie jest źle!",
+      "Damn! It's not bad!"
+    ],
+    [
+      "Mówi się, że miłość jest ślepa.",
+      "They say love is blind."
+    ],
+    [
+      "Och, przepraszam.",
+      "Oh, I'm sorry."
+    ],
+    [
+      "Jedynymi pożytecznymi odpowiedziami są takie, które przynoszą nowe pytania.",
+      "The only useful answers are those that raise new questions."
+    ],
+    [
+      "Jak długo zajmuje dojście do stacji?",
+      "How long does it take to get to the station?"
+    ],
+    [
+      "Czy mówi pan po włosku?",
+      "Do you speak Italian?"
+    ],
+    [
+      "Uważa się, że \"Hamlet\" jest najciekawszą sztuką, jaką kiedykolwiek napisano.",
+      "It is said that \"Hamlet\" is the most interesting play ever written."
+    ],
+    [
+      "Mogę zadać pytanie?",
+      "May I ask a question?"
+    ],
+    [
+      "Nigdy bym tego nie zgadł.",
+      "I would never have guessed that."
+    ],
+    [
+      "Ciekawe jak długo to potrwa.",
+      "I wonder how long it's going to take."
+    ],
+    [
+      "Nie mogę żyć bez telewizji.",
+      "I can't live without a TV."
+    ],
+    [
+      "Nie mógłbym zrobić tego bez Ciebie. Dziękuję.",
+      "I couldn't have done it without you. Thank you."
+    ],
+    [
+      "Nic nie jest możliwe bez wysiłku.",
+      "Nothing is achieved without effort."
+    ],
+    [
+      "Nie możemy spać z powodu hałasu.",
+      "We can't sleep because of the noise."
+    ],
+    [
+      "Jest już jedenasta.",
+      "It is already eleven."
+    ],
+    [
+      "Czy mogę rozmawiać z panią Brown?",
+      "May I talk to Ms. Brown?"
+    ],
+    [
+      "Mam z Tobą na pieńku.",
+      "I have a bone to pick with you."
+    ],
+    [
+      "Paryż jest najpiękniejszym miastem na świecie.",
+      "Paris is the most beautiful city in the world."
+    ],
+    [
+      "Ale wszechświat jest nieskończony.",
+      "But the universe is infinite."
+    ],
+    [
+      "Znalazłeś mnie, gdzie nikt inny nie szukał.",
+      "You found me where no one else was looking."
+    ],
+    [
+      "Myślę, że pójdę spać.",
+      "I think I'm gonna go to sleep."
+    ],
+    [
+      "Bardzo to lubię.",
+      "I like it very much."
+    ],
+    [
+      "Spotkamy się jutro?",
+      "We're meeting up tomorrow?"
+    ],
+    [
+      "Muszę iść po zakupy, będę za godzinę.",
+      "I have to go shopping. I'll be back in an hour."
+    ],
+    [
+      "Dziękuję, to wszystko.",
+      "Thanks, that's all."
+    ],
+    [
+      "Czy chciałbyś ze mną zatańczyć?",
+      "Would you like to dance with me?"
+    ],
+    [
+      "To nie moja wina!",
+      "It's not my fault!"
+    ],
+    [
+      "Chciałbym zostać na jedną noc.",
+      "I'd like to stay for one night."
+    ],
+    [
+      "Gdzie są prysznice?",
+      "Where are the showers?"
+    ],
+    [
+      "Otwórz usta!",
+      "Open your mouth!"
+    ],
+    [
+      "Zgubiłem portfel.",
+      "I have lost my wallet."
+    ],
+    [
+      "Nie chcieć oznacza mieć.",
+      "Not wanting is the same as having."
+    ],
+    [
+      "On jest bardzo sexy.",
+      "He's very sexy."
+    ],
+    [
+      "\"Podaj mi sól, proszę.\" \"Proszę bardzo.\"",
+      "\"Pass me the salt, please.\" \"Here you are.\""
+    ],
+    [
+      "Jest za dużo rzeczy do zrobienia!",
+      "There are too many things to do!"
+    ],
+    [
+      "Nawet nie myśl o zjedzeniu mojej czekolady!",
+      "Don't you even think of eating my chocolate!"
+    ],
+    [
+      "Przez Ciebie straciłem apetyt.",
+      "Thanks to you I've lost my appetite."
+    ],
+    [
+      "Muszę komuś przywalić.",
+      "I really need to hit somebody."
+    ],
+    [
+      "Moi rodzice stale kłócą się o drobnostki. To takie irytujące!",
+      "My parents keep arguing about stupid things. It's so annoying!"
+    ],
+    [
+      "Dzisiaj jest bardzo gorąco.",
+      "It is very hot today."
+    ],
+    [
+      "Nikt nie przyszedł.",
+      "Nobody came."
+    ],
+    [
+      "Nigdy nie widziałem czerwonej lodówki.",
+      "I never saw a red fridge."
+    ],
+    [
+      "Patrz na mnie, gdy mówię do Ciebie!",
+      "Look at me when I talk to you!"
+    ],
+    [
+      "Nie wiem co powiedzieć, byś poczuł się lepiej.",
+      "I don't know what to say to make you feel better."
+    ],
+    [
+      "To nie mój typ.",
+      "This is not my type."
+    ],
+    [
+      "Próbowałem zabić czas.",
+      "I was trying to kill time."
+    ],
+    [
+      "Jestem zmęczony.",
+      "I'm tired."
+    ],
+    [
+      "Kto chce gorącej czekolady?",
+      "Who wants some hot chocolate?"
+    ],
+    [
+      "Proszę, mów wolniej!",
+      "Speak more slowly, please!"
+    ],
+    [
+      "Kiedy dojedziemy?",
+      "When do we arrive?"
+    ],
+    [
+      "I co zrobimy?",
+      "And what are we going to do?"
+    ],
+    [
+      "Boli mnie głowa.",
+      "I have a headache."
+    ],
+    [
+      "Muszę wam się przyznać, że chrapię...",
+      "I must admit that I snore."
+    ],
+    [
+      "Wieczorem idziemy do kościoła.",
+      "Tonight we're going to church."
+    ],
+    [
+      "Jak się masz? Miałeś dobrą podróż?",
+      "How are you? Did you have a good trip?"
+    ],
+    [
+      "Nie czuję się dobrze.",
+      "I don't feel well."
+    ],
+    [
+      "Zawołajcie policję!",
+      "Call the police!"
+    ],
+    [
+      "To za drogo!",
+      "It's too expensive!"
+    ],
+    [
+      "Ona udaje, że śpi. Dlatego nie chrapie.",
+      "She's faking sleep. That's why she's not snoring."
+    ],
+    [
+      "Moje buty są za małe. Potrzebuję nowych.",
+      "My shoes are too small. I need new ones."
+    ],
+    [
+      "Wynosimy się stąd. Gliny nadchodzą.",
+      "We're getting out of here. The cops are coming."
+    ],
+    [
+      "Byłoby wspaniale, gdybym potrafił mówić w dziesięciu językach.",
+      "It would be so cool if I could speak ten languages!"
+    ],
+    [
+      "Powinieneś był mnie posłuchać.",
+      "You should have listened to me."
+    ],
+    [
+      "To kompletny bałagan i działa mi na nerwy.",
+      "It's a complete mess, and it's getting on my nerves."
+    ],
+    [
+      "Ci wybrani będą musieli być poddani obszernym testom medycznym i psychologicznym.",
+      "Those selected will have to face extensive medical and psychological tests."
+    ],
+    [
+      "Pół miliona dzieci w Nigerii nadal dotyka niedożywienie.",
+      "Half a million children still face malnutrition in Niger."
+    ],
+    [
+      "Komputery ogłupiają ludzi.",
+      "Computers make people stupid."
+    ],
+    [
+      "Nie pytaj, co myślą, pytaj, co robią.",
+      "Don't ask what they think. Ask what they do."
+    ],
+    [
+      "Większość odkryć naukowych to nic innego, jak tylko głoszenie oczywistości.",
+      "Most scientific breakthroughs are nothing else than the discovery of the obvious."
+    ],
+    [
+      "Czemu życie jest tak pełne cierpienia?",
+      "Why is life so full of suffering?"
+    ],
+    [
+      "Sen jest ważny, ale po co istnieje - to stanowi zagadkę.",
+      "Despite the importance of sleep, its purpose is a mystery."
+    ],
+    [
+      "Chciałbym dać mu prezent na urodziny.",
+      "I would like to give him a present for his birthday."
+    ],
+    [
+      "Chciałbym studiować w Paryżu.",
+      "I'd like to study in Paris."
+    ],
+    [
+      "Czemu nie jesz warzyw?",
+      "Why don't you eat vegetables?"
+    ],
+    [
+      "Rozbieram się.",
+      "I'm undressing."
+    ],
+    [
+      "Samochód rozbił się o ścianę.",
+      "The car crashed into the wall."
+    ],
+    [
+      "Wiatr się uspokoił.",
+      "The wind calmed down."
+    ],
+    [
+      "Kto szuka, ten znajdzie.",
+      "Who searches, finds."
+    ],
+    [
+      "Nie od razu Kraków zbudowano.",
+      "Rome wasn't built in a day."
+    ],
+    [
+      "Milczenie oznacza zgodę.",
+      "Silence gives consent."
+    ],
+    [
+      "\"Skończyłeś?\" \"Przeciwnie, jeszcze nie zacząłem.\"",
+      "\"Have you finished?\" \"On the contrary, I have not even begun yet.\""
+    ],
+    [
+      "To był najlepszy dzień mojego życia.",
+      "That was the best day of my life."
+    ],
+    [
+      "Nie rozumiem niemieckiego.",
+      "I don't understand German."
+    ],
+    [
+      "Podjąłem decyzję.",
+      "I made my decision."
+    ],
+    [
+      "Daję Ci moje słowo.",
+      "I give you my word."
+    ],
+    [
+      "Całość to więcej niż suma jej składników.",
+      "The whole is greater than the sum of the parts."
+    ],
+    [
+      "Matematyczna prawda nie jest ani łatwa, ani skomplikowana; po prostu jest.",
+      "A mathematical truth is neither simple nor complicated; it is."
+    ],
+    [
+      "Nie myślę, więc mnie nie ma.",
+      "I don't think, therefore I am not."
+    ],
+    [
+      "Nie martw się, bądź szczęśliwy!",
+      "Don't worry, be happy!"
+    ],
+    [
+      "Weź książkę i przeczytaj ją!",
+      "Take a book and read it."
+    ],
+    [
+      "Stawiaj czoła życiu z uśmiechem!",
+      "Face life with a smile!"
+    ],
+    [
+      "On jest już mężczyzną.",
+      "He's already a man."
+    ],
+    [
+      "Jest zimno.",
+      "It's cold."
+    ],
+    [
+      "Jestem spragniony.",
+      "I'm thirsty."
+    ],
+    [
+      "Daj mu palec, a weźmie całą rękę.",
+      "Give him an inch and he'll take a yard."
+    ],
+    [
+      "Zrobiłeś to celowo!",
+      "You did this intentionally!"
+    ],
+    [
+      "Jesteś w moim typie.",
+      "You're my type."
+    ],
+    [
+      "Z kim rozmawiam?",
+      "Who am I talking with?"
+    ],
+    [
+      "Zgadzam się, ale pod jednym warunkiem.",
+      "I accept, but only under one condition."
+    ]
+  ]
+}

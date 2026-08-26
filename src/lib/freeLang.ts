@@ -2,7 +2,7 @@ import type { VocabSet } from '@/types/app';
 import { findLanguage } from '@/lib/languages';
 import { langLimitKey } from '@/lib/planGate';
 import { hydrateSeedWords, seedSetForLang, SEED_SETS } from '@/lib/seedSets';
-import { PACK_LANG, STARTER_LANGS } from '@/lib/starterSets';
+import { LIBRARY_LANGS, PACK_LANG, STARTER_LANGS } from '@/lib/starterSets';
 
 /**
  * Free-plan language selection + migration helpers (pure, unit-tested).
@@ -48,7 +48,7 @@ export const FREE_LANG_OPTIONS: readonly FreeLangOption[] = (() => {
       hasFullPack,
     });
   };
-  for (const code of STARTER_LANGS) push(code, true);
+  for (const code of LIBRARY_LANGS) push(code, STARTER_LANGS.includes(code as (typeof STARTER_LANGS)[number]));
   for (const s of SEED_SETS) push(s.lang, false);
   return options;
 })();
@@ -63,7 +63,7 @@ export const FREE_LANG_OPTIONS: readonly FreeLangOption[] = (() => {
  *     dozen Arabic dialects) and must stay a voice source, not a product
  *     count.
  *   - NOT the word-bank manifest size: only 13 languages ship full A1–C2
- *     packs, while the app can seed content for all 29 supported languages.
+ *     packs, while the app can seed content for every supported language.
  */
 export const SUPPORTED_LANGUAGE_COUNT = FREE_LANG_OPTIONS.length;
 

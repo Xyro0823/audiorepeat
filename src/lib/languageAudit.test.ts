@@ -5,7 +5,7 @@ import { flagFor } from '@/components/LanguageBadge';
 import { findLanguage } from '@/lib/languages';
 import { DEFAULT_ALLOWED_LANG, canUseLang, langLimitKey } from '@/lib/planGate';
 import { SEED_SETS } from '@/lib/seedSets';
-import { PACK_LANG, STARTER_LANGS, starterLangLabel } from '@/lib/starterSets';
+import { A1_STARTER_LANGS, PACK_LANG, STARTER_LANGS, starterLangLabel } from '@/lib/starterSets';
 import {
   B1_OVERLAP_MAX,
   CROSS_LEVEL_PAIR_MAX,
@@ -184,6 +184,16 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
       for (const lvl of CEFR_LEVELS) {
         expect(manifest[pack]?.[lvl], `${code}: ${lvl} count`).toBeGreaterThan(0);
       }
+    }
+  });
+
+  it('every first-stage language ships a substantial A1 foundation', () => {
+    for (const code of A1_STARTER_LANGS) {
+      const pack = PACK_LANG[code];
+      expect(pack, `${code}: PACK_LANG entry`).toBeTruthy();
+      expect(Object.keys(manifest[pack] ?? {}), `${code}: A1-only foundation`).toEqual(['A1']);
+      expect(manifest[pack]?.A1, `${code}: A1 word count`).toBeGreaterThanOrEqual(250);
+      expect(SEED_SETS.some((seed) => seed.lang === code), `${code}: seed set`).toBe(true);
     }
   });
 

@@ -14,7 +14,7 @@ const manifest = {};
 const files = readdirSync(DIR).filter((f) => f.endsWith('.json') && f !== 'manifest.json');
 
 for (const file of files) {
-  const m = /^([a-z]{2})-([A-C][12])\.json$/.exec(file);
+  const m = /^([a-z]{2,3})-([A-C][12])\.json$/.exec(file);
   if (!m) {
     console.warn(`Skipping ${file}: unexpected name`);
     continue;

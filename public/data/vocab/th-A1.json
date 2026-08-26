@@ -1,0 +1,1006 @@
+{
+  "lang": "th",
+  "level": "A1",
+  "words": [
+    [
+      "ลองทำดู!",
+      "Let's try something."
+    ],
+    [
+      "ฉันจะกลับมาเร็วๆ นี้",
+      "I will be back soon."
+    ],
+    [
+      "ถึงเขาจะขอโทษ ฉันก็ยังโกรธ",
+      "Even though he apologized, I'm still furious."
+    ],
+    [
+      "ไม่มีใครเข้าใจฉัน",
+      "Nobody understands me."
+    ],
+    [
+      "คุณควรศึกษาเพิ่ม",
+      "You must study more."
+    ],
+    [
+      "แล้วคุณล่ะ",
+      "How about you?"
+    ],
+    [
+      "คุณกำลังทำอะไรอยู่",
+      "What are you doing?"
+    ],
+    [
+      "ผมรักคุณมากกว่าที่คุณรักผม",
+      "I love you more than you love me."
+    ],
+    [
+      "ท้องของฉันบิดด้วยความหิวกระหาย",
+      "My stomach is clenched with hunger."
+    ],
+    [
+      "อากาศนั้นนุ่มและดินนั้นชื้น",
+      "The air is soft, the soil moist."
+    ],
+    [
+      "มันเป็นการยากที่จะยึดความสนใจไปที่การผ่อนคลายกฎระเบียบ",
+      "It is difficult to peg the direction of interest deregulation."
+    ],
+    [
+      "เช็ดเหงื่อออกจากหน้าผาก",
+      "Wipe the sweat from your brow."
+    ],
+    [
+      "ฉันค่อนข้างอยากอยู่บ้านมากกว่าที่จะออกไป",
+      "I would rather stay home than go out."
+    ],
+    [
+      "ผมไม่มีแผนเลย",
+      "I have no plans whatever."
+    ],
+    [
+      "ฉันขอโทษ ฉันไม่สามารถไป",
+      "I'm sorry I can't go."
+    ],
+    [
+      "ฉันรู้สึกกับคุณแบบลึกซึ้ง",
+      "I feel for you deeply."
+    ],
+    [
+      "ถ้าพรุ่งนี้คุณไม่ไปตกปลา ผมก็จะไม่ไปเหมือนกัน",
+      "If you do not go fishing tomorrow, I will not either."
+    ],
+    [
+      "ถึงเวลาไปนอนหลับ",
+      "It's time to go to bed."
+    ],
+    [
+      "อะไรทำให้คุณมาตั้งแต่เช้าเนี่ย",
+      "What has brought you here so early?"
+    ],
+    [
+      "งานใด ๆ อาจทำให้ระทมทุกข์",
+      "Any task may become painful."
+    ],
+    [
+      "ดูเหมือนว่าฉันติดหวัดแล้ว",
+      "I seem to have caught a cold."
+    ],
+    [
+      "อย่าเสียเวลาของคุณกับเรื่องไร้สาระ",
+      "Don't waste your time on trifles."
+    ],
+    [
+      "ฉันคิดว่ามันเป็นวิธีที่ดีที่สุด",
+      "I think it's the best way."
+    ],
+    [
+      "ห้องมีหน้าต่างสองบาน",
+      "The room has two windows."
+    ],
+    [
+      "เส้นผ่าศูนย์กลางของรูใหญ่กว่านิดหน่อย",
+      "The diameter of the hole was slightly larger."
+    ],
+    [
+      "พินัยกรรมถูกตัดสินเป็นโมฆะโดยศาล",
+      "The will was declared void by the court."
+    ],
+    [
+      "มีร้านหนังสือหนึ่งแห่งอยู่หน้าห้างสรรพสินค้า",
+      "There is a bookstore in front of the department store."
+    ],
+    [
+      "รถเมล์มาแล้ว",
+      "Here comes the bus."
+    ],
+    [
+      "นี่คือปากกา",
+      "This is a pen."
+    ],
+    [
+      "กรุณาเปิดกล่องใบนี้ด้วย",
+      "Please open this box."
+    ],
+    [
+      "แหวนวงนี้แพง ขอดูวงถูกๆหน่อย",
+      "This ring is expensive. Show me some cheap ones."
+    ],
+    [
+      "บ้านนี้มีห้องน้ำสองห้อง",
+      "This house has two bathrooms."
+    ],
+    [
+      "ฉันไม่สามารถกินเนื้อ",
+      "I can't eat meat."
+    ],
+    [
+      "คุณมีดินสอไหม",
+      "Do you have a pencil?"
+    ],
+    [
+      "ป๊ะ",
+      "Let's go!"
+    ],
+    [
+      "ตอนเย็นนี้ผมว่าง",
+      "I'm free tonight."
+    ],
+    [
+      "เมื่อวานอากาศโคตรร้อนเลย",
+      "It was hot yesterday."
+    ],
+    [
+      "ห้องของฉันมีหน้าต่างสองบาน",
+      "My room has two windows."
+    ],
+    [
+      "ผมอ่านเดอะนิวยอร์กไทมส์",
+      "I read The New York Times."
+    ],
+    [
+      "ผมชอบกินแอปเปิ้ล",
+      "I like to eat apples."
+    ],
+    [
+      "ฉันสนุกมากจนเต็มอิ่ม",
+      "I have enjoyed myself to the full."
+    ],
+    [
+      "เราไปนั่งเรือข้ามแม่น้ำมา",
+      "We crossed the river by boat."
+    ],
+    [
+      "นาฬิกามีมือสองข้าง",
+      "A clock has two hands."
+    ],
+    [
+      "ฉันทำงานด้านอุปโภคบริโภค",
+      "I am in the grocery line."
+    ],
+    [
+      "ผู้ใหญ่สองคนค่ะ/ครับ",
+      "Two adults, please."
+    ],
+    [
+      "พวกเราต้องไปอย่างระมัดระวัง",
+      "We'll have to go about it with care."
+    ],
+    [
+      "ขอยืมใช้โทรศัพท์ของคุณได้ไหมครับ",
+      "Will you let me use your telephone, please?"
+    ],
+    [
+      "ช่วงนี้เราสองคนไม่เจอกันบ่อยคงดีกว่า",
+      "For the time being we two had better not meet too often."
+    ],
+    [
+      "ในประเทศญี่ปุ่น ประชาชนบรรลุนิติภาวะเมื่ออายุยี่สิบปี",
+      "In Japan, people become legally of age at twenty."
+    ],
+    [
+      "ภูมิอากาศของประเทศญี่ปุ่นอ่อนกว่าประเทศอังกฤษ",
+      "The climate of Japan is milder than that of England."
+    ],
+    [
+      "ประเทศญี่ปุ่นอยู่ในเอเชียตะวันออก",
+      "Japan is in eastern Asia."
+    ],
+    [
+      "คุณชอบกินอาหารญี่ปุ่นไหมครับ",
+      "Do you like Japanese food?"
+    ],
+    [
+      "เขาไม่มีลูก",
+      "He has no children."
+    ],
+    [
+      "ผมลืมชื่อของเขา",
+      "I forget his name."
+    ],
+    [
+      "วันพรุ่งนี้เขาจะเดินทางออกจากชิคาโก้",
+      "He is leaving Chicago tomorrow."
+    ],
+    [
+      "เขาบอกอะไรกับคุณบ้างไหม?",
+      "Did he tell you anything?"
+    ],
+    [
+      "เขาอยู่ที่ไหนครับ",
+      "Where does he live?"
+    ],
+    [
+      "เขาแหงนหน้ามองท้องฟ้า",
+      "He looked up at the sky."
+    ],
+    [
+      "เขาภูมิใจที่เป็นจิตกร",
+      "He is proud that he is an artist."
+    ],
+    [
+      "เขาซื้อรถใหม่แล้ว",
+      "He has bought a new car."
+    ],
+    [
+      "พวกนั้นมีชีวิตอยู่อย่างหาเช้ากินค่ำ",
+      "They live from hand to mouth."
+    ],
+    [
+      "พวกเขาบังคับให้เขาลงนามในสัญญา",
+      "They made him sign the contract."
+    ],
+    [
+      "พวกเขานมัสการทุกวันอาทิตย์",
+      "They worship every Sunday."
+    ],
+    [
+      "เธอไม่ค่อยมีเพื่อนที่เกียวโต",
+      "She does not have many friends in Kyoto."
+    ],
+    [
+      "เธอนับถือเจ้านายของเธอเหมือนกับพ่อ",
+      "She thinks of her boss as a father."
+    ],
+    [
+      "เธอเติบโตเป็นผู้หญิงที่เพรียบพร้อม",
+      "She had matured into an excellent woman."
+    ],
+    [
+      "เธอดูตื่นเต้นสุดๆเลย",
+      "She seemed to be very surprised."
+    ],
+    [
+      "ฉันจะลองทำอาหารดู",
+      "I'll try my hand at cooking."
+    ],
+    [
+      "สวัสดี ชิคาโก",
+      "Hello, Chicago!"
+    ],
+    [
+      "สวัสดีปีใหม่",
+      "Happy New Year!"
+    ],
+    [
+      "กินข้าวรึยัง",
+      "Have you eaten yet?"
+    ],
+    [
+      "ผมชอบนักร้องคนนั้นมาก",
+      "I like that singer a lot."
+    ],
+    [
+      "สวัสดีชาวโลก",
+      "Hello, world!"
+    ],
+    [
+      "เขาหล่อมาก",
+      "He is very handsome."
+    ],
+    [
+      "คุณแต่งงานแล้วหรือยัง",
+      "Are you married?"
+    ],
+    [
+      "ครั้งหนึ่ง เคยมีสะพานที่นี่",
+      "At one time, there was a bridge here."
+    ],
+    [
+      "หัวหอมโลละเท่าไหร่ครับ",
+      "How much does a kilo of onions cost?"
+    ],
+    [
+      "หยุด",
+      "Stop!"
+    ],
+    [
+      "ขอบคุณ",
+      "Thanks!"
+    ],
+    [
+      "คุณกินกาแฟไหม",
+      "Do you drink coffee?"
+    ],
+    [
+      "ฉันเป็นโรคเบาหวาน",
+      "I'm a diabetic."
+    ],
+    [
+      "เขาเมา",
+      "He is drunk."
+    ],
+    [
+      "ฉันคิดว่าเขาเป็นพี่ชายของฉัน",
+      "I thought he was my brother."
+    ],
+    [
+      "ฉันไปโรงเรียน",
+      "I go to school."
+    ],
+    [
+      "ภาษาไทยเป็นภาษาราชการในประเทศไทย",
+      "Thai is the official language in Thailand."
+    ],
+    [
+      "ฉันชอบไปดูหนัง",
+      "I love to go to the movies."
+    ],
+    [
+      "เขาพึมพำอะไรสักอย่าง",
+      "He's mumbling something."
+    ],
+    [
+      "ซุปเป็นสิ่งที่ร้อนเกินไป ฉันไม่สามารถกินมัน",
+      "The soup's too hot, I can't eat it."
+    ],
+    [
+      "สวัสดี",
+      "Hi."
+    ],
+    [
+      "หายใจลำบาก เมื่อความชื้นสูง",
+      "It's difficult to breathe when humidity is high."
+    ],
+    [
+      "ฉันอ่านหนังสือการ์ตูนตอนเวลาเหลือ ที่ทำงานบ่อยๆ",
+      "I often read comic books in my spare time at work."
+    ],
+    [
+      "เราเป็นลูกเขา",
+      "We are his children."
+    ],
+    [
+      "คุณมีนมสวย",
+      "You have lovely breasts."
+    ],
+    [
+      "เด็กพ่นหิน",
+      "The boy throws a stone."
+    ],
+    [
+      "พี่สาวของฉันอวดนาฬิกาใหม่ให้ฉันดู",
+      "My sister showed a new watch to me."
+    ],
+    [
+      "ภาษาเดียวไม่เคยพอ",
+      "One language is never enough."
+    ],
+    [
+      "แม่ผมบ้าไปแล้ว",
+      "My mother is crazy."
+    ],
+    [
+      "ผมกำลังอยู่ที่คุนหมิง",
+      "I'm living in Kunming at the moment."
+    ],
+    [
+      "กรุงเทพมหานครเป็นเมืองหลวงของประเทศไทย",
+      "Bangkok is the capital of Thailand."
+    ],
+    [
+      "ฉันมีจักรยานใหม่",
+      "I have a new bicycle."
+    ],
+    [
+      "เปิดประตูให้ความรัก",
+      "Open the door for love."
+    ],
+    [
+      "ความผิดพลาดเกิดขึ้นเมื่อไหร่",
+      "When did the error occur?"
+    ],
+    [
+      "สังเกตพบความผิดพลาดได้ยังไง",
+      "How is the error observed?"
+    ],
+    [
+      "ความผิดพลาดเกิดขึ้นเป็นประจำ หรือนานๆ ครั้ง เป็นความผิดพลาดซ้ำอย่างเดิมหรือเปล่า",
+      "Does the error occur regularly or sporadically? Is the error reproducible?"
+    ],
+    [
+      "ผมไม่กินเม็ดแอปเปิ้ล",
+      "I don't eat the core of an apple."
+    ],
+    [
+      "หล่อนชื่ออะไรครับ",
+      "What's her name?"
+    ],
+    [
+      "เขาเชื่อว่าพวกเขาได้ทำลายมัน",
+      "He believed they were destroying it."
+    ],
+    [
+      "เขาตัดสินใจที่จะเป็นนักบิน",
+      "He decided to become a pilot."
+    ],
+    [
+      "เขาเสียชีวิตเมื่อสามปีก่อน",
+      "He died three years ago."
+    ],
+    [
+      "เธอโดนเขา แบล็คเมล์",
+      "She was blackmailed by him."
+    ],
+    [
+      "เมื่อไหร่จะมีการนำเที่ยวอีก",
+      "When is the next guided tour?"
+    ],
+    [
+      "นี้เป็นม้า",
+      "This is a horse."
+    ],
+    [
+      "เธอมีเงินพอไหม",
+      "Do you have enough money?"
+    ],
+    [
+      "คุณเฉินไม่ใช่นักธุรกิจครับ",
+      "Chen is not a businessperson."
+    ],
+    [
+      "รถของคุณแพงกว่ารถของผม",
+      "Your car is more expensive than mine."
+    ],
+    [
+      "นี่เป็นดอกไม้รึเปล่า",
+      "Is this a flower?"
+    ],
+    [
+      "เธอท้อง",
+      "She's pregnant."
+    ],
+    [
+      "เธอไม่ขี้อายอย่างเคย",
+      "She's not as shy as she used to be."
+    ],
+    [
+      "ฉันไม่สามารถกินช็อคโกแลต",
+      "I can't eat chocolate!"
+    ],
+    [
+      "ผมโสด",
+      "I am single."
+    ],
+    [
+      "ฉันหวังว่าครูของฉันจะกระตือรือร้นที่จะทำงาน",
+      "I would hope that my teachers were eager to work."
+    ],
+    [
+      "คุณเคยถูบ้านหรือยัง",
+      "Have you ever mopped your house?"
+    ],
+    [
+      "ฉันนิยมอาหารที่ออสเตรเลีย",
+      "I am fond of Australian food."
+    ],
+    [
+      "ฉันต้องการความรักของคุณ",
+      "I want your love."
+    ],
+    [
+      "ได้โปรดอย่าร้องไห้อีก",
+      "Please don't cry again."
+    ],
+    [
+      "เมื่อวานฉันกินแกงกะหรี่",
+      "I ate curry yesterday."
+    ],
+    [
+      "พวกเรามีปัญหาเหมือนกัน",
+      "We have the same problem."
+    ],
+    [
+      "สองคูณสองเท่ากับสี่",
+      "Two times two is four."
+    ],
+    [
+      "พระเจ้า ฉันคัดค้าน",
+      "Lord! I object."
+    ],
+    [
+      "เขามาหรือยัง",
+      "Has he come?"
+    ],
+    [
+      "อาหารเที่ยงของฉันคือ แอปเปิ้ล แพร์ และทับทิม",
+      "My lunch was an apple and pears and pomegranate."
+    ],
+    [
+      "พวกคุณอยากดื่มน้ำชาหรือกาแฟครับ",
+      "Do you want to drink tea or coffee?"
+    ],
+    [
+      "รถไฟมาแล้ว",
+      "The train is here."
+    ],
+    [
+      "คุณง่วงหรือยัง",
+      "Are you sleepy yet?"
+    ],
+    [
+      "มีบางอย่างที่ฉันต้องรู้",
+      "There is something I must know."
+    ],
+    [
+      "มีบางอย่างที่เธอต้องรู้",
+      "There is something you must know."
+    ],
+    [
+      "ทางนั้น",
+      "That way!"
+    ],
+    [
+      "ที่นี่มีคนที่พูดภาษาจีนได้ไหม",
+      "Is there anyone who can speak Chinese here?"
+    ],
+    [
+      "ฉันรู้",
+      "I know!"
+    ],
+    [
+      "ฉันชอบอาหารจีน",
+      "I like Chinese food."
+    ],
+    [
+      "ฉันจะไม่ตาย",
+      "I won't die."
+    ],
+    [
+      "หล่อนต่อสู้จนถึงที่สุด",
+      "She fought until the end."
+    ],
+    [
+      "เขาตาย แล้ววิญญาณของเขาตกนรก",
+      "He died and his soul went to hell."
+    ],
+    [
+      "เมื่อวานอากาศดีมาก",
+      "Yesterday, the weather was very nice."
+    ],
+    [
+      "ฉันหวังว่าเขาคงจะสบายดี",
+      "I hope he's all right."
+    ],
+    [
+      "ฉันไม่สามารถกินนี้",
+      "I can't eat this."
+    ],
+    [
+      "ฉันไม่สามารถกินเนื้อหมู",
+      "I can't eat pork."
+    ],
+    [
+      "ฉันไม่สามารถกินไก่",
+      "I can't eat chicken."
+    ],
+    [
+      "ฉันไม่สามารถกิน",
+      "I can't eat."
+    ],
+    [
+      "ฉันไม่สามารถไป",
+      "I can't go."
+    ],
+    [
+      "โทโทโร่พูดว่า โทโทโร่พูดภาษาจีนไม่ได้",
+      "Totoro says: \"I can't speak Chinese.\""
+    ],
+    [
+      "ฉันรักพ่อนะ",
+      "Daddy, I love you!"
+    ],
+    [
+      "ฉันกำลังพักอยู่",
+      "I'm staying."
+    ],
+    [
+      "เด็กชายสองคนกำลังหาบนํ้า",
+      "Two young boys are carrying a load of water on a pole."
+    ],
+    [
+      "คุณกินพริกหรือเปล่าครับ",
+      "Do you eat chilies?"
+    ],
+    [
+      "ผู้หญิงมีแก้มสวย",
+      "Women have beautiful cheeks."
+    ],
+    [
+      "ผมเป็นซอมบี้ครับ",
+      "I'm a zombie!"
+    ],
+    [
+      "แม่คุณอยู่ที่บ้านไหม",
+      "Is your mum at home?"
+    ],
+    [
+      "นี่คอมพิวเตอร์ของฉัน",
+      "This is my computer."
+    ],
+    [
+      "ฉันทิ้งโทรศัพท์ไว้ในรถ",
+      "I left my phone in the car."
+    ],
+    [
+      "ฉันมีแมวสองตัว",
+      "I have two cats."
+    ],
+    [
+      "ผลข้างเคียงของการผ่าตัดตาคือตาแห้ง",
+      "A side effect of the eye surgery is dry eyes."
+    ],
+    [
+      "ฉันจะรับรองให้สำหรับคุณ",
+      "I'll vouch for you."
+    ],
+    [
+      "มีข้อผิดพลาดในประโยค",
+      "There is a mistake in the sentence."
+    ],
+    [
+      "ฉันไม่เป็นคุณหมอ",
+      "I'm not a doctor."
+    ],
+    [
+      "คุณรักเขาหรือเปล่า",
+      "Do you love her?"
+    ],
+    [
+      "ฉันไม่ร้องเพลง",
+      "I do not sing."
+    ],
+    [
+      "ฉันเป็นนักข่าว",
+      "I'm a journalist."
+    ],
+    [
+      "ฉันกำลังว่ายในมหาสมุทร",
+      "I'm swimming in the ocean."
+    ],
+    [
+      "ผมคือคนไทย",
+      "I'm Thai."
+    ],
+    [
+      "พระเจ้ารักคุณ",
+      "God loves you."
+    ],
+    [
+      "เรารักคุณ",
+      "We love you."
+    ],
+    [
+      "คุณพูดภาษาอังกฤษ",
+      "You speak English."
+    ],
+    [
+      "เขาแปลบทกวี",
+      "She translated a poem."
+    ],
+    [
+      "เอมิลี่เขียนประโยค",
+      "Emily wrote the sentence."
+    ],
+    [
+      "เราไปชายหาด",
+      "We went to the beach."
+    ],
+    [
+      "คุณลืมเงินของคุณเป็นประจำ",
+      "You always forget your money."
+    ],
+    [
+      "คุณต้องดื่มน้ำ",
+      "You have to drink water."
+    ],
+    [
+      "ฉันกำลังดื่มน้ำในครัว",
+      "I'm drinking water in the kitchen."
+    ],
+    [
+      "ฉันต้องการเล่น",
+      "I want to play."
+    ],
+    [
+      "เหรียญเป็นเงิน",
+      "The coin is silver."
+    ],
+    [
+      "กล่องจดหมายของฉันเป็นที่เต็ม",
+      "My inbox is full."
+    ],
+    [
+      "ฉันมีคำถาม",
+      "I have questions."
+    ],
+    [
+      "ฉันจะไปโรงเรียน",
+      "I'll go to school."
+    ],
+    [
+      "ฉันมีสิทธิที่จะวิพากษ์วิจารณ์",
+      "I have the right to criticise."
+    ],
+    [
+      "กรุณาส่งเอกสารนี้ก่อนสิ้นเดือน",
+      "Please send this document before the end of the month."
+    ],
+    [
+      "พวกเขาเปิดประตู",
+      "They open the door."
+    ],
+    [
+      "ผมชอบสาวญี่ปุ่น",
+      "I like Japanese girls."
+    ],
+    [
+      "ทารกของฉันต้องการที่จะพูดคุย",
+      "My baby wants to talk."
+    ],
+    [
+      "ทั้งๆที่เขาใช้ความพยายามทั้งหมด เขาก็ยังล้มเหลวในการสอบ",
+      "In spite of all his efforts, he failed the exam."
+    ],
+    [
+      "คุณรู้จักผมไหม — ไม่ ฉันไม่รู้จักคุณ",
+      "\"Do you know me?\" \"No, I do not know you.\""
+    ],
+    [
+      "ฝนตกไหม",
+      "Is it raining?"
+    ],
+    [
+      "พี่สาวของผมสวย",
+      "My older sister is beautiful."
+    ],
+    [
+      "ผมไม่มีแมว",
+      "I don't have a cat."
+    ],
+    [
+      "ทุกเช้าฉันออกไปชอปปิ้ง",
+      "I go shopping every morning."
+    ],
+    [
+      "แพงจังเลยนะ",
+      "It's so expensive!"
+    ],
+    [
+      "ผมจะไม่พูดภาษาฝรั่งเศสกับคุณอีกที",
+      "I will not speak French with you again."
+    ],
+    [
+      "นี้เป็นแมว",
+      "This is a cat."
+    ],
+    [
+      "คุณไม่เคยมาที่นี่ก่อนใช่ไหม?",
+      "You haven't been here before, have you?"
+    ],
+    [
+      "ฉันกำลังเรียนภาษาพม่าอยู่",
+      "I'm learning Burmese."
+    ],
+    [
+      "หมายความว่าอะไร",
+      "What does that mean?"
+    ],
+    [
+      "คุณกำลังทำให้ฉันเบื่อ!",
+      "You're boring me!"
+    ],
+    [
+      "จริงๆ ก็อยากเรียนภาษาญี่ปุ่นอยู่เหมือนกัน",
+      "Honestly, I also want to learn Japanese."
+    ],
+    [
+      "กรุณาเข้ามา ประตูเปิดอยู่",
+      "Please, do come in. The door is open."
+    ],
+    [
+      "ไม่ต้องกังวล ฉันจะปกป้องเธอเอง",
+      "Don't worry, I will protect her."
+    ],
+    [
+      "เขาทำตามสัญญา",
+      "He kept his promise."
+    ],
+    [
+      "ก็ไม่มีใครชวนผม",
+      "Well, no one invited me."
+    ],
+    [
+      "ฉันไม่เข้าใจ",
+      "I don't understand."
+    ],
+    [
+      "ล็อคประตูเสมอ",
+      "Always lock the door."
+    ],
+    [
+      "ผมคิดว่าทุกคนควรเรียนภาษาอื่น",
+      "I think everybody should learn another language."
+    ],
+    [
+      "มีเกาะมากมายในทะเล",
+      "There are islands in the sea."
+    ],
+    [
+      "ฉันเป็นกล้วย",
+      "I am a banana."
+    ],
+    [
+      "บุรจญ์เคาะลีฟะฮ์ปัจจุบันเป็นตึกระฟ้าที่สูงที่สุดในโลก",
+      "Burj Khalifa is currently the tallest skyscraper in the world."
+    ],
+    [
+      "ซานต้าอยู่ที่ขั้วโลกเหนือ",
+      "Santa lives at the North Pole."
+    ],
+    [
+      "น้ำแกงเค็มเกินไป",
+      "The soup is too salty."
+    ],
+    [
+      "คุณรู้จักผมนานเท่าไรครับ",
+      "How long have you known me?"
+    ],
+    [
+      "พบกันใหม่",
+      "I'll see you later."
+    ],
+    [
+      "นกอยู่บนฟ้า",
+      "The bird is in the sky."
+    ],
+    [
+      "กรีซเป็นประเทศเก่าแก่",
+      "Greece is an old country."
+    ],
+    [
+      "หนังสือไม่ใหม่",
+      "The book isn't new."
+    ],
+    [
+      "ผมสะอึกบ่อยๆ",
+      "I hiccup a lot."
+    ],
+    [
+      "คุณควรจะนอน",
+      "You should sleep."
+    ],
+    [
+      "ฉันต้องไปนอนแล้ว",
+      "I have to go to sleep."
+    ],
+    [
+      "คุณชอบเบียร์เยอรมันมั้ย?",
+      "Do you like German beers?"
+    ],
+    [
+      "ฉันจะปล่อยสิ่งต่างๆไปอย่างที่มันเป็นเพื่อหลีกหนีปัญหา",
+      "I'd leave things as they are to avoid problems."
+    ],
+    [
+      "เว้นระยะห่างจากรถบรรทุกและพาหนะคันอื่นๆระหว่างขับรถ",
+      "Keep distance from trucks and other vehicles when driving."
+    ],
+    [
+      "คุณรู้หรือเปล่าว่าใครทำกระจกแตก?",
+      "Do you know who broke the window?"
+    ],
+    [
+      "คำศัพท์เป็นรากฐานของภาษา",
+      "Vocabulary is the basis of language."
+    ],
+    [
+      "ยิ่งมีมาก ก็ยิ่งต้องเสียมาก",
+      "The more you have, the more you have to lose."
+    ],
+    [
+      "ฉันจะไม่กินมันหรอกถ้าฉันเป็นคุณ",
+      "I wouldn't eat that if I were you."
+    ],
+    [
+      "ฉันจะไม่ดื่มมันหรอกถ้าฉันเป็นคุณ",
+      "I wouldn't drink that if I were you."
+    ],
+    [
+      "ฉันไม่รู้ว่าหล่อนอายุมากขนาดนั้น",
+      "I didn't know she was that old."
+    ],
+    [
+      "ฉันเห็นเป้าหมายแล้ว",
+      "I can see the target."
+    ],
+    [
+      "บอกหล่อนว่าฉันจะโทรกลับไปทีหลัง",
+      "Tell her I'll call back later."
+    ],
+    [
+      "พวกเธอต้องไม่เชื่อแน่ๆ!",
+      "You guys are not going to believe this!"
+    ],
+    [
+      "นี่คุณสิ้นหวังขนาดนั้นเลยเหรอ?",
+      "Are you really that desperate?"
+    ],
+    [
+      "เราควรที่จะทำแบบนี้มั้ยเนี่ย?",
+      "Are we supposed to be doing this?"
+    ],
+    [
+      "ถ้าคุณสนใจก็บอกฉันนะ แล้วฉันจะให้เบอร์ของเขาแก่คุณ",
+      "If you're interested, let me know and I'll give you his number."
+    ],
+    [
+      "ในที่สุดอาหารก็มาถึงบนโต๊ะแล้ว",
+      "Food finally arrived on the table."
+    ],
+    [
+      "อาหารมาถึงบนโต๊ะแล้ว",
+      "Food arrived on the table."
+    ],
+    [
+      "ถ้าคุณพลาดในการวางแผน คุณก็วางแผนที่จะพลาด",
+      "If you fail to plan, you plan to fail."
+    ],
+    [
+      "นอนลงบนโซฟา",
+      "Lay down on the couch."
+    ],
+    [
+      "นั่นมันเสียงอะไร?",
+      "What is that noise?"
+    ],
+    [
+      "นี่มันความโมโหล้วนๆ!",
+      "This is complete madness!"
+    ],
+    [
+      "ฉันอยากไปเดินเล่นในชนบท",
+      "I want to go for a walk in the countryside."
+    ],
+    [
+      "ฉันคงจะขายหมาตัวนี้ถ้ามันตัวสูงกว่านี้",
+      "I would sell this dog if it was taller."
+    ],
+    [
+      "ผู้สูบบุหรี่มีความเสี่ยงในการแท้งลูกเพิ่มมากขึ้น",
+      "Smokers have an increased risk of miscarriage."
+    ],
+    [
+      "ฉันเกลียดการออกกำลังกาย แต่ฉันก็รู้ว่ามันดีต่อสุขภาพ",
+      "I hate working out, but I know it’s good for one's health."
+    ],
+    [
+      "ไมค์ออกกำลังกายในยิมสองถึงสามครั้งต่อสัปดาห์",
+      "Mike works out in the gym two or three times a week."
+    ],
+    [
+      "โทรทัศน์เครื่องนั้นราคาเท่าไหร่คะ?",
+      "How much is that TV over there, please?"
+    ]
+  ]
+}

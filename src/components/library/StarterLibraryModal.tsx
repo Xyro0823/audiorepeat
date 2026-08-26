@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import LanguageLock from './LanguageLock';
-import { CEFR_META, PACK_LANG, STARTER_LANGS, starterLangLabel } from '@/lib/starterSets';
+import { CEFR_META, LIBRARY_LANGS, PACK_LANG, starterLangLabel } from '@/lib/starterSets';
 import {
   getWordBankManifest,
   loadWordBank,
@@ -114,7 +114,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
       .then((m) => {
         if (!alive) return;
         setManifest(m);
-        const first = STARTER_LANGS.map((code) => PACK_LANG[code]).find((code) => m[code]);
+        const first = LIBRARY_LANGS.map((code) => PACK_LANG[code]).find((code) => m[code]);
         if (first) setLang(first);
       })
       .catch(() => {
@@ -347,7 +347,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                 <option value="" disabled>
                   {t('library.pickLanguage')}
                 </option>
-                {STARTER_LANGS.map((code) => {
+                {LIBRARY_LANGS.map((code) => {
                   const pack = PACK_LANG[code];
                   const count = manifest[pack]
                     ? Object.values(manifest[pack]).reduce((a, n) => a + (n ?? 0), 0)

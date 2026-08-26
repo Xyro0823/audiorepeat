@@ -33,7 +33,9 @@ describe('langLimitKey', () => {
 
   it('falls back to the original code for unknown/custom codes', () => {
     expect(langLimitKey('zz-ZZ')).toBe('zz-ZZ');
-    expect(langLimitKey('en-US')).toBe('en-US');
+    // English is now a real vocabulary-pack language, not an arbitrary UI
+    // locale, so it normalizes alongside the other available packs.
+    expect(langLimitKey('en-US')).toBe('en');
     expect(langLimitKey('made-up')).toBe('made-up');
   });
 
