@@ -27,7 +27,7 @@ describe('feature gates use the canonical entitlement matrix', () => {
     expect(player).toContain('dailyLimitReached');
   });
 
-  it('the /review route locks Free users out of the FSRS session', () => {
+  it('the /review route reads its access from the canonical feature matrix', () => {
     const review = src('components', 'review', 'ReviewSession.tsx');
     expect(review).toContain("planHasFeature(settings.plan, 'fsrsReview')");
     expect(review).toContain('ProFeatureLock');

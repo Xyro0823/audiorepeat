@@ -23,9 +23,9 @@ const ALL_FEATURES: FeatureKey[] = [
 const PAID_PLANS: PlanId[] = ['pro', 'lifetime'];
 
 describe('planHasFeature — the canonical entitlement matrix', () => {
-  it('denies every paid feature on the Free plan', () => {
+  it('includes Review Today on the Free plan and keeps paid extras locked', () => {
     for (const feature of ALL_FEATURES) {
-      expect(planHasFeature('basic', feature), feature).toBe(false);
+      expect(planHasFeature('basic', feature), feature).toBe(feature === 'fsrsReview');
     }
   });
 
@@ -40,15 +40,17 @@ describe('planHasFeature — the canonical entitlement matrix', () => {
   it('keeps the matrix exhaustive — a new FeatureKey must be classified', () => {
     const declared = new Set([...PLAN_FEATURES.basic, ...PLAN_FEATURES.pro, ...PLAN_FEATURES.lifetime]);
     for (const feature of ALL_FEATURES) expect(declared.has(feature)).toBe(true);
-    expect(PLAN_FEATURES.basic).toEqual([]);
+    expect(PLAN_FEATURES.basic).toEqual(['fsrsReview']);
     expect(PLAN_FEATURES.lifetime).toEqual(PLAN_FEATURES.pro);
   });
 
-  it('agrees with isProPlan for every feature', () => {
+  it('keeps only the explicitly free review feature independent from Pro status', () => {
     const plans: PlanId[] = ['basic', 'pro', 'lifetime'];
     for (const plan of plans) {
       for (const feature of ALL_FEATURES) {
-        expect(planHasFeature(plan, feature)).toBe(isProPlan(plan));
+        expect(planHasFeature(plan, feature)).toBe(
+          feature === 'fsrsReview' ? true : isProPlan(plan),
+        );
       }
     }
   });
@@ -59,6 +61,7 @@ describe('freeDailyLimitReached — Free 300 words/day boundary', () => {
     expect(FREE_DAILY_WORD_LIMIT).toBe(300);
     // The public pricing copy must derive from the same constant.
     expect(PLANS.basic.features(0)).toContain(`${FREE_DAILY_WORD_LIMIT} words / day`);
+    expect(PLANS.basic.features(0)).toContain('Smart Review Today sessions');
   });
 
   it('lets Free practice up to (but not at) the limit', () => {

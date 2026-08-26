@@ -50,9 +50,10 @@ const PRO_FEATURES: FeatureKey[] = [
   'offlineAudio',
 ];
 
-/** Feature entitlements per plan: Free gets none, Pro/Lifetime get all. */
+/** Feature entitlements per plan. Review Today is a core learning loop; paid
+ * plans retain the extra practice modes, cloud audio, stats and all languages. */
 export const PLAN_FEATURES: Record<PlanId, FeatureKey[]> = {
-  basic: [],
+  basic: ['fsrsReview'],
   pro: PRO_FEATURES,
   lifetime: PRO_FEATURES,
 };
@@ -151,6 +152,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
       `${FREE_LANG_LIMIT} active language${FREE_LANG_LIMIT === 1 ? '' : 's'}`,
       'Standard TTS audio',
       `${FREE_DAILY_WORD_LIMIT} words / day`,
+      'Smart Review Today sessions',
     ],
   },
   pro: {
@@ -167,7 +169,7 @@ export const PLANS: Record<PlanId, PlanDef> = {
       `All ${langCount} languages`,
       'Pronunciation practice tools',
       'Offline audio packs',
-      'Spaced repetition + quiz mode',
+      'Quiz mode',
       'Speed challenges & stats',
     ],
   },
