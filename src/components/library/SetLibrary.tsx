@@ -468,9 +468,10 @@ function PortraitCard({
           <ProgressBar pct={pct} className="mt-1.5" />
         </div>
 
-        {/* Full-width rows on mobile: MN labels ("Тоглуулах") clip inside the
-            narrow 2-col split; sm+ restores the side-by-side layout. */}
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
+        {/* These cards stay compact even in a wide grid. Stack the actions so
+            translated labels never compete for a narrow half-card column;
+            the bright Play action remains the clear primary choice. */}
+        <div className="mt-3 grid grid-cols-1 gap-2">
           <button
             onClick={onPlay}
             className="btn-primary flex h-9 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold text-white"
