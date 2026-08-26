@@ -58,6 +58,7 @@ import AiInsightsCard from '@/components/dashboard/AiInsightsCard';
 import FreePlanNotice from '@/components/dashboard/FreePlanNotice';
 import MetricCards from '@/components/dashboard/MetricCards';
 import WelcomeHero from '@/components/dashboard/WelcomeHero';
+import MobileDashboardNav from '@/components/dashboard/MobileDashboardNav';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import ReviewTodayCard from '@/components/dashboard/ReviewTodayCard';
 import CloudSyncBadge from '@/components/dashboard/CloudSyncBadge';
@@ -844,7 +845,7 @@ export default function SetLibrary() {
   };
 
   return (
-    <main className="relative mx-auto w-full max-w-7xl flex-1 px-5 pb-20 pt-3">
+    <main id="dashboard-top" className="relative mx-auto w-full max-w-7xl flex-1 px-5 pb-28 pt-3 md:pb-20">
       {/* Ambient violet/blue glow — carries the hero palette into the dashboard
           background behind the dock and welcome card. The radial's peak sits a
           short way BELOW the top edge (at 50% 24%) so it fades in gradually —
@@ -872,9 +873,9 @@ export default function SetLibrary() {
           </p>
         </div>
         <div className="nav-actions ml-auto flex w-full items-center justify-between gap-0.5 rounded-2xl p-1 sm:w-auto sm:justify-start">
-          <SettingsButton />
-          <StreakBadge streak={streak} />
-          <InstallAppButton />
+          <div className="hidden md:block"><SettingsButton /></div>
+          <div className="hidden md:block"><StreakBadge streak={streak} /></div>
+          <div className="hidden md:block"><InstallAppButton /></div>
           <ProfileDropdown
             onLeaderboard={() => setLeaderboardOpen(true)}
             onSubtitles={() => subtitleInputRef.current?.click()}
@@ -1110,7 +1111,7 @@ export default function SetLibrary() {
           )}
 
           {/* Library grid — floating glass panel */}
-          <section id="vocab-grid" className="glass animate-fade-up scroll-mt-6 rounded-3xl p-5">
+          <section id="vocab-grid" className="glass animate-fade-up scroll-mt-28 rounded-3xl p-5 md:scroll-mt-6">
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold tracking-tight text-white">
@@ -1377,6 +1378,13 @@ export default function SetLibrary() {
       )}
 
       <AiAssistantButton onOpen={openAiInsights} />
+      <MobileDashboardNav
+        resumeAvailable={Boolean(featured)}
+        onResume={() => {
+          if (featured) playSet(featured);
+          else setBrowse(true);
+        }}
+      />
     </main>
   );
 }

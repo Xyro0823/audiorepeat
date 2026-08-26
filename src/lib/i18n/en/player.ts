@@ -35,6 +35,9 @@ export const playerEn = {
   'player.filter.snoozeTitle':
     'Tap Play within 30s to restart the timer, or tap here to dismiss',
   'player.filter.snoozeLabel': '⏰ Snooze {time}',
+  'player.focus.enter': 'Focus',
+  'player.focus.exit': 'Exit focus',
+  'player.focus.exitAria': 'Exit focus mode',
 
   // Filtered-to-empty state
   'player.empty.title': 'All caught up! 🎉',

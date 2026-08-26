@@ -342,12 +342,13 @@ export default function SettingsModal({ onClose }: Props) {
   const modal = (
     <div
       ref={dialogRef}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-night-950/80 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-night-950/80 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-label={t('settings.aria.label')}
     >
-      <div className="glass animate-fade-up max-h-[85vh] w-full max-w-xl overflow-y-auto rounded-3xl p-6">
+      <div className="glass animate-fade-up max-h-[92dvh] w-full max-w-xl overflow-y-auto rounded-t-3xl px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 sm:max-h-[85vh] sm:rounded-3xl sm:p-6">
+        <div aria-hidden className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/15 sm:hidden" />
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-white">{t('settings.title')}</h2>
           <button

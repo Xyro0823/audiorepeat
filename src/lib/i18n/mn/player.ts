@@ -38,6 +38,9 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.filter.snoozeTitle':
     '30 секундийн дотор Play дарвал таймер дахин эхэлнэ, эсвэл энд дарж хаана',
   'player.filter.snoozeLabel': '⏰ Сунгах {time}',
+  'player.focus.enter': 'Төвлөрөх',
+  'player.focus.exit': 'Горимоос гарах',
+  'player.focus.exitAria': 'Төвлөрөх горимоос гарах',
 
   // Filtered-to-empty state
   'player.empty.title': 'Давтах үг одоогоор алга! 🎉',

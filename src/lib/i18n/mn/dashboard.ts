@@ -16,6 +16,14 @@ export const dashboardMn: Record<DashboardKeys, string> = {
   'dashboard.chips.studied': '{time} дадлага хийсэн',
   'dashboard.chips.streakStart': 'Тасралтгүй өдрөө эхлүүлэх',
 
+  // MobileDashboardNav
+  'dashboard.mobileNav.aria': 'Дашбордын цэс',
+  'dashboard.mobileNav.home': 'Эхлэл',
+  'dashboard.mobileNav.review': 'Давтах',
+  'dashboard.mobileNav.resume': 'Үргэлжлүүлэх',
+  'dashboard.mobileNav.library': 'Сан',
+  'dashboard.mobileNav.settings': 'Тохиргоо',
+
   // Streak day counts (hero chip + metrics card)
   'dashboard.streakDays.one': '{count} өдөр',
   'dashboard.streakDays.other': '{count} өдөр',

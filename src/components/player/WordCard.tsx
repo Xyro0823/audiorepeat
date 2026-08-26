@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { emojiForText } from '@/lib/emoji';
 import { useT } from '@/lib/i18n';
+import { haptic } from '@/lib/haptics';
 import type { MasteryStatus } from '@/types/app';
 import type { LoopWord } from '@/types/loop';
 
@@ -94,14 +95,14 @@ export default function WordCard({
       )}
 
       <p
-        className={`text-5xl font-bold tracking-tight sm:text-6xl ${
+        className={`max-w-full break-words px-2 text-4xl font-bold leading-tight tracking-tight sm:px-0 sm:text-6xl ${
           isTranslation ? 'text-neon-violet' : 'text-neon-cyan'
         }`}
       >
         {isTranslation ? word.translation : word.target}
       </p>
 
-      <p className="mt-5 text-2xl text-slate-400">
+      <p className="mt-5 max-w-full break-words px-2 text-xl leading-snug text-slate-400 sm:px-0 sm:text-2xl">
         {isTranslation ? word.target : word.translation}
       </p>
 
@@ -178,7 +179,7 @@ export default function WordCard({
       {canMark ? (
         <div className="mt-8 flex items-center gap-3">
           <button
-            onClick={() => onMark(word.mastery === 'mastered' ? undefined : 'mastered')}
+            onClick={() => { haptic('confirm'); onMark(word.mastery === 'mastered' ? undefined : 'mastered'); }}
             aria-pressed={word.mastery === 'mastered'}
             title={word.mastery === 'mastered' ? t('player.mastery.unmark') : t('player.mastery.markKnown')}
             className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-95 ${
@@ -201,7 +202,7 @@ export default function WordCard({
             {t('player.mastery.known')}
           </button>
           <button
-            onClick={() => onMark(word.mastery === 'hard' ? undefined : 'hard')}
+            onClick={() => { haptic('confirm'); onMark(word.mastery === 'hard' ? undefined : 'hard'); }}
             aria-pressed={word.mastery === 'hard'}
             title={word.mastery === 'hard' ? t('player.mastery.unmark') : t('player.mastery.markReview')}
             className={`flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-semibold transition active:scale-95 ${

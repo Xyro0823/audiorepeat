@@ -78,7 +78,7 @@ export default function ReviewTodayCard({
   return (
     <section
       id="review-today"
-      className="glass animate-fade-up scroll-mt-6 overflow-hidden rounded-3xl border border-neon-violet/20"
+      className="glass animate-fade-up scroll-mt-28 overflow-hidden rounded-3xl border border-neon-violet/20 md:scroll-mt-6"
       aria-labelledby="review-today-title"
     >
       <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_220px]">

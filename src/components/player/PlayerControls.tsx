@@ -1,6 +1,7 @@
 'use client';
 
 import { useT } from '@/lib/i18n';
+import { haptic } from '@/lib/haptics';
 
 const SPEED_OPTIONS = [0.75, 1, 1.25, 1.5];
 
@@ -42,10 +43,10 @@ export default function PlayerControls({
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/5 bg-night-950/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl">
       {/* Mobile: two stacked rows so all six controls fit 320–438px without
           squashing the round buttons; sm+ restores the single centered dock. */}
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-2 px-4 py-4 sm:flex-row sm:justify-center sm:gap-5 sm:py-5">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-2 px-3 py-3 sm:flex-row sm:justify-center sm:gap-5 sm:px-4 sm:py-5">
         <div className="flex items-center justify-center gap-4 sm:gap-5">
         <button
-          onClick={onBack}
+          onClick={() => { haptic(); onBack(); }}
           aria-label={backAction === 'previous' ? t('player.controls.prevAria') : t('player.controls.replayAria')}
           title={backAction === 'previous' ? t('player.controls.prevTitle') : t('player.controls.replayAria')}
           className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition hover:border-neon-cyan/50 hover:text-neon-cyan active:scale-90"
@@ -74,7 +75,7 @@ export default function PlayerControls({
         </button>
 
         <button
-          onClick={onPlayPause}
+          onClick={() => { haptic(); onPlayPause(); }}
           aria-label={isPlaying ? t('player.controls.pause') : t('player.controls.play')}
           className={`relative flex h-20 w-20 items-center justify-center rounded-full text-night-950 transition active:scale-90 ${
             isPlaying
@@ -106,7 +107,7 @@ export default function PlayerControls({
         </button>
 
         <button
-          onClick={onSkipNext}
+          onClick={() => { haptic(); onSkipNext(); }}
           aria-label={t('player.controls.nextWord')}
           title={t('player.controls.nextWord')}
           className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-200 transition hover:border-neon-cyan/50 hover:text-neon-cyan active:scale-90"
@@ -121,7 +122,7 @@ export default function PlayerControls({
         {/* Secondary transport — own row on mobile, inline on sm+ */}
         <div className="flex items-center justify-center gap-4 sm:gap-5">
           <button
-            onClick={onStop}
+          onClick={() => { haptic(); onStop(); }}
             aria-label={t('player.controls.stop')}
             title={t('player.controls.stop')}
             className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-white/5 text-slate-300 transition hover:border-neon-magenta/50 hover:text-neon-magenta active:scale-90"
@@ -132,7 +133,7 @@ export default function PlayerControls({
           </button>
 
         <button
-          onClick={cycleSpeed}
+          onClick={() => { haptic(); cycleSpeed(); }}
           aria-label={t('player.controls.speedAria', { speed })}
           title={t('player.controls.speedTitle')}
           className={`flex h-14 shrink-0 flex-col items-center justify-center gap-1 rounded-full border px-4 transition active:scale-90 ${
@@ -156,7 +157,7 @@ export default function PlayerControls({
         </button>
 
         <button
-          onClick={onShuffleToggle}
+          onClick={() => { haptic(); onShuffleToggle(); }}
           aria-pressed={shuffle}
           aria-label={shuffle ? t('player.controls.shuffleOn') : t('player.controls.shuffleOff')}
           title={shuffle ? t('player.controls.shuffleOn') : t('player.controls.shuffleOff')}

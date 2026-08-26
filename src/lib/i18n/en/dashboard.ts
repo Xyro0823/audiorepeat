@@ -15,6 +15,14 @@ export const dashboardEn = {
   'dashboard.chips.studied': '{time} studied',
   'dashboard.chips.streakStart': 'Start a streak',
 
+  // MobileDashboardNav
+  'dashboard.mobileNav.aria': 'Dashboard navigation',
+  'dashboard.mobileNav.home': 'Home',
+  'dashboard.mobileNav.review': 'Review',
+  'dashboard.mobileNav.resume': 'Continue',
+  'dashboard.mobileNav.library': 'Library',
+  'dashboard.mobileNav.settings': 'Settings',
+
   // Streak day counts (hero chip + metrics card)
   'dashboard.streakDays.one': '{count} day',
   'dashboard.streakDays.other': '{count} days',

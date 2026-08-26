@@ -5,7 +5,7 @@ registerRoute("player");
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import ProfileDropdown from '@/components/auth/ProfileDropdown';
 import AuthScreen from '@/components/auth/AuthScreen';
 import StreakBadge from '@/components/StreakBadge';
@@ -89,8 +89,10 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // (covers unmarked + review-needed), 'hard' = only words flagged for review.
   const [filter, setFilter] = useState<WordFilter>('all');
   const [navigatorOpen, setNavigatorOpen] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
   const [resumeWordId, setResumeWordId] = useState<string | null>(null);
   const lastSavedPositionRef = useRef<string | null>(null);
+  const swipeStartRef = useRef<{ x: number; y: number; interactive: boolean } | null>(null);
 
   // ---------- sleep timer (transient, not persisted) ----------
   const [sleepMinutes, setSleepMinutes] = useState<number | null>(null);
@@ -746,6 +748,26 @@ export default function PlayerView({ setId }: { setId: string | null }) {
     }
   }, [dictationOn, quizOn, cloudVoiceConsentNeeded, stop, dictation, quiz, startDictation, t]);
 
+  const goPrevious = useCallback(() => {
+    if (dictationOn) dictation.replay(); else if (quizOn) quiz.replay(); else skipPrevious();
+  }, [dictation, dictationOn, quiz, quizOn, skipPrevious]);
+  const goNext = useCallback(() => {
+    if (dictationOn) dictation.skip(); else if (quizOn) quiz.skip(); else skipNext();
+  }, [dictation, dictationOn, quiz, quizOn, skipNext]);
+  const onWordPointerDown = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement;
+    swipeStartRef.current = { x: event.clientX, y: event.clientY, interactive: Boolean(target.closest('button, a, input, select, textarea, label')) };
+  }, []);
+  const onWordPointerUp = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start || start.interactive) return;
+    const horizontal = event.clientX - start.x;
+    const vertical = event.clientY - start.y;
+    if (Math.abs(horizontal) < 72 || Math.abs(horizontal) < Math.abs(vertical) * 1.5) return;
+    if (horizontal > 0) goPrevious(); else goNext();
+  }, [goNext, goPrevious]);
+
   // Count each quiz/dictation question as a word listened (keeps streak/stats honest).
   useEffect(() => {
     if (quizOn && quiz.question) recordWords(1, set?.lang);
@@ -945,13 +967,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const currentRepeats = currentWord?.repeats ?? effective.repeats;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-5 pb-52 pt-6">
+    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-64 pt-5 sm:px-5 sm:pb-52 sm:pt-6">
       {toast && (
         <div className="animate-fade-up mb-4 rounded-xl border border-neon-amber/40 bg-neon-amber/10 px-4 py-3 text-sm text-neon-amber">
           {toast}
         </div>
       )}
-      <header className="animate-fade-up relative z-50 flex items-center gap-2">
+      <header className={`animate-fade-up relative z-50 flex items-center gap-2 ${focusMode ? 'max-md:hidden' : ''}`}>
         <Link
           href={LIBRARY_HREF}
           scroll={false}
@@ -980,7 +1002,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         />
       </header>
 
-      <div className="animate-fade-up mt-4 flex flex-wrap items-center gap-1.5">
+      <div className={`animate-fade-up mt-4 flex flex-wrap items-center gap-1.5 ${focusMode ? 'max-md:hidden' : ''}`}>
         {(
           [
             { key: 'all', label: t('player.filter.all'), count: set.words.length },
@@ -1121,7 +1143,12 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             {t('player.filter.snoozeLabel', { time: formatCountdown(snoozeRemaining) })}
           </button>
         )}
+        <button type="button" onClick={() => setFocusMode(true)} className="inline-flex min-h-10 items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-400 md:hidden">
+          {t('player.focus.enter')}
+        </button>
       </div>
+
+      {focusMode && <button type="button" onClick={() => setFocusMode(false)} aria-label={t('player.focus.exitAria')} className="fixed right-4 top-[calc(0.75rem+env(safe-area-inset-top))] z-50 flex h-11 items-center rounded-full border border-white/10 bg-night-900/90 px-3 text-xs font-semibold text-slate-200 shadow-lg backdrop-blur md:hidden">{t('player.focus.exit')}</button>}
 
       <div className="flex flex-1 flex-col justify-center py-8">
         {words.length === 0 ? (
@@ -1298,6 +1325,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
                 </div>
               </section>
             )}
+            <div onPointerDown={onWordPointerDown} onPointerUp={onWordPointerUp} className="touch-pan-y">
             <WordCard
               word={currentWord}
               wordIndex={progress.wordIndex}
@@ -1353,11 +1381,12 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               onSeek={selectWord}
               onOpenNavigator={() => setNavigatorOpen(true)}
             />
+            </div>
           </>
         )}
       </div>
 
-      <SettingsPanel
+      {!focusMode && <SettingsPanel
         settings={effective}
         onChange={changeSettings}
         customMode={customMode}
@@ -1373,7 +1402,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         prewarm={prewarm}
         prewarmSummary={prewarmSummary}
         cloudTtsReady={cloudTtsReady}
-      />
+      />}
 
       <WordNavigator
         open={navigatorOpen}
@@ -1411,8 +1440,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
                 : startPlayback
         }
         onStop={stopPlayback}
-        onSkipNext={dictationOn ? dictation.skip : quizOn ? quiz.skip : skipNext}
-        onBack={dictationOn ? dictation.replay : quizOn ? quiz.replay : skipPrevious}
+        onSkipNext={goNext}
+        onBack={goPrevious}
         backAction={dictationOn || quizOn ? 'replay' : 'previous'}
         speed={effective.speed}
         onSpeedChange={(speed) => changeSettings({ speed })}
