@@ -76,15 +76,34 @@ export function getDb(): Promise<IDBPDatabase<AudioRepeatDB>> {
   return globalDbPromise;
 }
 
-function getSetDb(): Promise<IDBPDatabase<AudioRepeatDB>> {
-  setDbPromise ??= openNamedDb(setDatabaseNameForOwner(activeOwner));
+function getSetDb(owner: string | null | undefined = activeOwner): Promise<IDBPDatabase<AudioRepeatDB>> {
+  // A sync may finish after the user has switched accounts. Such a request
+  // must keep its captured owner rather than resolving the *current* DB.
+  // Non-active owners use a one-shot connection; ordinary UI operations keep
+  // the active-owner cache.
+  if ((owner ?? null) !== activeOwner) return openNamedDb(setDatabaseNameForOwner(owner));
+  setDbPromise ??= openNamedDb(setDatabaseNameForOwner(owner));
   return setDbPromise;
 }
 
-export async function getAllSets(): Promise<VocabSet[]> {
-  const db = await getSetDb();
-  const sets = await db.getAll('sets');
-  return sets.sort((a, b) => b.updatedAt - a.updatedAt);
+async function withSetDbForOwner<T>(
+  owner: string | null | undefined,
+  operation: (db: IDBPDatabase<AudioRepeatDB>) => Promise<T>,
+): Promise<T> {
+  const temporary = (owner ?? null) !== activeOwner;
+  const db = await getSetDb(owner);
+  try {
+    return await operation(db);
+  } finally {
+    if (temporary) db.close();
+  }
+}
+
+export async function getAllSets(owner: string | null | undefined = activeOwner): Promise<VocabSet[]> {
+  return withSetDbForOwner(owner, async (db) => {
+    const sets = await db.getAll('sets');
+    return sets.sort((a, b) => b.updatedAt - a.updatedAt);
+  });
 }
 
 /**
@@ -303,73 +322,88 @@ export async function migrateLegacySetsToOwner(owner: string): Promise<boolean> 
 export async function mergeRemoteLibrary(
   remoteSets: VocabSet[],
   remoteTombstones: SetTombstone[],
+  owner: string | null | undefined = activeOwner,
 ): Promise<VocabSet[]> {
-  const db = await getSetDb();
-  const tx = db.transaction(['sets', 'tombstones'], 'readwrite');
-  const localSets = new Map((await tx.objectStore('sets').getAll()).map((set) => [set.id, set]));
-  const localDeleted = new Map(
-    (await tx.objectStore('tombstones').getAll()).map((entry) => [entry.id, entry]),
-  );
-  for (const set of remoteSets) {
-    const local = localSets.get(set.id);
-    const deleted = localDeleted.get(set.id);
-    if ((local?.updatedAt ?? 0) > set.updatedAt || (deleted?.deletedAt ?? 0) >= set.updatedAt) continue;
-    await tx.objectStore('sets').put(set);
-    await tx.objectStore('tombstones').delete(set.id);
-  }
-  for (const deleted of remoteTombstones) {
-    const local = localSets.get(deleted.id);
-    const previous = localDeleted.get(deleted.id);
-    if ((local?.updatedAt ?? 0) > deleted.deletedAt) continue;
-    await tx.objectStore('sets').delete(deleted.id);
-    await tx.objectStore('tombstones').put({
-      id: deleted.id,
-      deletedAt: Math.max(previous?.deletedAt ?? 0, deleted.deletedAt),
-    });
-  }
-  await tx.done;
-  return getAllSets();
+  await withSetDbForOwner(owner, async (db) => {
+    const tx = db.transaction(['sets', 'tombstones'], 'readwrite');
+    const localSets = new Map((await tx.objectStore('sets').getAll()).map((set) => [set.id, set]));
+    const localDeleted = new Map(
+      (await tx.objectStore('tombstones').getAll()).map((entry) => [entry.id, entry]),
+    );
+    for (const set of remoteSets) {
+      const local = localSets.get(set.id);
+      const deleted = localDeleted.get(set.id);
+      if ((local?.updatedAt ?? 0) > set.updatedAt || (deleted?.deletedAt ?? 0) >= set.updatedAt) continue;
+      await tx.objectStore('sets').put(set);
+      await tx.objectStore('tombstones').delete(set.id);
+    }
+    for (const deleted of remoteTombstones) {
+      const local = localSets.get(deleted.id);
+      const previous = localDeleted.get(deleted.id);
+      if ((local?.updatedAt ?? 0) > deleted.deletedAt) continue;
+      await tx.objectStore('sets').delete(deleted.id);
+      await tx.objectStore('tombstones').put({
+        id: deleted.id,
+        deletedAt: Math.max(previous?.deletedAt ?? 0, deleted.deletedAt),
+      });
+    }
+    await tx.done;
+  });
+  return getAllSets(owner);
 }
 
-export async function getPendingSyncPayload(): Promise<{
+export async function getPendingSyncPayload(owner: string | null | undefined = activeOwner): Promise<{
   sets: VocabSet[];
   tombstones: SetTombstone[];
   entries: SyncQueueEntry[];
 }> {
-  const db = await getSetDb();
-  const entries = await db.getAll('syncQueue');
-  const sets: VocabSet[] = [];
-  const tombstones: SetTombstone[] = [];
-  for (const entry of entries) {
-    if (entry.kind === 'set') {
-      const set = await db.get('sets', entry.id);
-      if (set) sets.push(set);
-    } else {
-      const deleted = await db.get('tombstones', entry.id);
-      if (deleted) tombstones.push(deleted);
+  return withSetDbForOwner(owner, async (db) => {
+    const entries = await db.getAll('syncQueue');
+    const sets: VocabSet[] = [];
+    const tombstones: SetTombstone[] = [];
+    for (const entry of entries) {
+      if (entry.kind === 'set') {
+        const set = await db.get('sets', entry.id);
+        if (set) sets.push(set);
+      } else {
+        const deleted = await db.get('tombstones', entry.id);
+        if (deleted) tombstones.push(deleted);
+      }
     }
-  }
-  return { sets, tombstones, entries };
+    return { sets, tombstones, entries };
+  });
 }
 
-export async function acknowledgeSync(entries: SyncQueueEntry[]): Promise<void> {
-  const db = await getSetDb();
-  const tx = db.transaction('syncQueue', 'readwrite');
-  for (const sent of entries) {
-    const current = await tx.store.get(sent.id);
-    if (
-      current &&
-      current.kind === sent.kind &&
-      current.changedAt === sent.changedAt
-    ) await tx.store.delete(sent.id);
-  }
-  await tx.done;
+export async function acknowledgeSync(
+  entries: SyncQueueEntry[],
+  owner: string | null | undefined = activeOwner,
+): Promise<void> {
+  await withSetDbForOwner(owner, async (db) => {
+    const tx = db.transaction('syncQueue', 'readwrite');
+    for (const sent of entries) {
+      const current = await tx.store.get(sent.id);
+      if (
+        current &&
+        current.kind === sent.kind &&
+        current.changedAt === sent.changedAt
+      ) await tx.store.delete(sent.id);
+    }
+    await tx.done;
+  });
 }
 
-export async function getSyncCursor(): Promise<number> {
-  return (await (await getSetDb()).get('syncState', 'serverCursor'))?.value ?? 0;
+export async function getSyncCursor(owner: string | null | undefined = activeOwner): Promise<number> {
+  return withSetDbForOwner(
+    owner,
+    async (db) => (await db.get('syncState', 'serverCursor'))?.value ?? 0,
+  );
 }
 
-export async function setSyncCursor(value: number): Promise<void> {
-  await (await getSetDb()).put('syncState', { key: 'serverCursor', value });
+export async function setSyncCursor(
+  value: number,
+  owner: string | null | undefined = activeOwner,
+): Promise<void> {
+  await withSetDbForOwner(owner, async (db) => {
+    await db.put('syncState', { key: 'serverCursor', value });
+  });
 }

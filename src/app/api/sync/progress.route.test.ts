@@ -10,6 +10,11 @@
 
 const h = vi.hoisted(() => {
   const progressDoc = { exists: false, data: () => undefined as unknown };
+  const query = {
+    where: vi.fn(),
+    get: vi.fn(async () => ({ docs: [] as unknown[] })),
+  };
+  query.where.mockImplementation(() => query);
   const tx = {
     get: vi.fn(async (ref: { __kind?: string }) => {
       if (ref.__kind === 'progress') return progressDoc;
@@ -23,12 +28,12 @@ const h = vi.hoisted(() => {
     })),
     collection: vi.fn(() => ({
       doc: vi.fn(() => ({})),
-      where: vi.fn(() => ({ get: async () => ({ docs: [] }) })),
+      where: query.where,
       get: async () => ({ docs: [], size: 0 }),
     })),
     runTransaction: vi.fn(async (fn: (t: typeof tx) => Promise<void>) => fn(tx)),
   };
-  return { configured: true, verify: vi.fn(), rate: vi.fn(), db, tx, progressDoc };
+  return { configured: true, verify: vi.fn(), rate: vi.fn(), db, tx, progressDoc, query };
 });
 
 vi.mock('@/lib/firebase/admin', () => ({
@@ -58,6 +63,8 @@ beforeEach(() => {
   h.progressDoc.exists = false;
   h.progressDoc.data = () => undefined;
   h.tx.set.mockClear();
+  h.query.where.mockClear();
+  h.query.get.mockClear();
 });
 
 const BASE = { sets: [], tombstones: [], since: 0 };
@@ -134,6 +141,14 @@ describe('POST /api/sync - learning progress', () => {
     await POST(request(BASE, 'token'));
     const written = h.tx.set.mock.calls.filter(([ref]) => ref.__kind === 'progress');
     expect(written).toHaveLength(0);
+  });
+
+  it('returns a transaction-owned pull fence, excluding commits after the fence', async () => {
+    const res = await POST(request(BASE, 'token'));
+    const body = await res.json() as { syncedAt: number };
+    expect(body.syncedAt).toBeGreaterThan(0);
+    expect(h.query.where).toHaveBeenNthCalledWith(1, 'syncedAt', '>', 0);
+    expect(h.query.where).toHaveBeenNthCalledWith(2, 'syncedAt', '<=', body.syncedAt);
   });
 
   it('scopes the write by the VERIFIED token uid, never client input', async () => {

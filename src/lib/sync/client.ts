@@ -21,7 +21,7 @@ export interface LibrarySyncSnapshot {
 }
 
 let snapshot: LibrarySyncSnapshot = { phase: 'idle', lastSyncedAt: null };
-let inFlight: Promise<VocabSet[]> | null = null;
+const inFlightByUid = new Map<string, Promise<VocabSet[]>>();
 let timer: number | null = null;
 /**
  * One-shot flag: the next sync pushes progress with REPLACE semantics
@@ -102,13 +102,20 @@ export function getLibrarySyncSnapshot(): LibrarySyncSnapshot {
   return snapshot;
 }
 
+function isCurrentSyncOwner(uid: string): boolean {
+  return getAuthSnapshot().user?.id === uid;
+}
+
 /** Push local changes and pull the merged remote library in one round trip. */
 export async function syncLibraryNow(): Promise<VocabSet[]> {
-  if (inFlight) return inFlight;
-  inFlight = (async () => {
-    const local = await getAllSets();
-    const uid = getAuthSnapshot().user?.id;
-    if (!uid) return local;
+  const uid = getAuthSnapshot().user?.id;
+  if (!uid) return getAllSets();
+  const existing = inFlightByUid.get(uid);
+  if (existing) return existing;
+
+  const task = (async () => {
+    const local = await getAllSets(uid);
+    if (!isCurrentSyncOwner(uid)) return local;
     // Account switching must never inherit the previous account's backoff.
     if (lastSyncedUid !== undefined && lastSyncedUid !== uid) resetRetries();
     lastSyncedUid = uid;
@@ -117,7 +124,7 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
       return local;
     }
     const token = await getAuthIdToken().catch(() => null);
-    if (!token) {
+    if (!token || !isCurrentSyncOwner(uid)) {
       update({ ...snapshot, phase: 'offline' });
       return local;
     }
@@ -128,7 +135,8 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
     // reads/merges stay outside so a queued tab never merges stale state.
     const attempt = async (): Promise<VocabSet[]> => {
     try {
-      const pending = await getPendingSyncPayload();
+      const pending = await getPendingSyncPayload(uid);
+      if (!isCurrentSyncOwner(uid)) return local;
       // Learning progress rides the same authenticated round trip (state
       // based + idempotent); the merged truth comes back on the response.
       const progress = buildProgressPayload(uid, replaceProgressOnce);
@@ -139,7 +147,7 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
         body: JSON.stringify({
           sets: pending.sets,
           tombstones: pending.tombstones,
-          since: await getSyncCursor(),
+          since: await getSyncCursor(uid),
           ...(progress ? { progress } : {}),
         }),
         signal: controller.signal,
@@ -154,6 +162,10 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
         update({ ...snapshot, phase: 'error' });
         return local;
       }
+      // The request belongs to the identity captured at its start. A response
+      // received after logout/account switch must never touch the new owner's
+      // IndexedDB, progress, cursor, or visible-library event.
+      if (!isCurrentSyncOwner(uid)) return local;
       // Apply the account's merged learning progress before anything else —
       // a late response after an account switch is dropped by the guard.
       let progressChanged = false;
@@ -170,10 +182,12 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
           /* eventing unavailable */
         }
       }
-      const merged = await mergeRemoteLibrary(remote.sets, remote.tombstones);
-      await acknowledgeSync(pending.entries);
+      const merged = await mergeRemoteLibrary(remote.sets, remote.tombstones, uid);
+      if (!isCurrentSyncOwner(uid)) return local;
+      await acknowledgeSync(pending.entries, uid);
       const cursor = (body as { syncedAt?: unknown }).syncedAt;
-      if (typeof cursor === 'number' && Number.isFinite(cursor)) await setSyncCursor(cursor);
+      if (typeof cursor === 'number' && Number.isFinite(cursor)) await setSyncCursor(cursor, uid);
+      if (!isCurrentSyncOwner(uid)) return local;
       update({ phase: 'synced', lastSyncedAt: Date.now() });
       // The merge wrote directly to IndexedDB; let any mounted library
       // re-read it so the visible cards match the merged result.
@@ -195,10 +209,11 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
     else scheduleRetry();
     return result;
   })();
+  inFlightByUid.set(uid, task);
   try {
-    return await inFlight;
+    return await task;
   } finally {
-    inFlight = null;
+    if (inFlightByUid.get(uid) === task) inFlightByUid.delete(uid);
   }
 }
 

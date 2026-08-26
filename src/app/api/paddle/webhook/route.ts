@@ -18,6 +18,7 @@ import {
   type WebhookFailureKind,
   type WebhookFailureStage,
 } from '@/lib/errorMonitoring/webhookFailures';
+import { pruneExpiredDiagnostics } from '@/lib/errorMonitoring/retention';
 import {
   handlePaddleSubscriptionEvent,
   handlePaddleTransactionCompleted,
@@ -56,7 +57,8 @@ async function recordWebhookFailure(
   try {
     if (!isAdminConfigured()) return;
     const record = buildWebhookFailureRecord({ kind, stage, error, eventType });
-    await getAdminDb()
+    const db = getAdminDb();
+    await db
       .collection(FAILURE_COLLECTION)
       .doc(failureDocId(kind, eventId, stage))
       .set(
@@ -64,11 +66,13 @@ async function recordWebhookFailure(
           ...record,
           count: FieldValue.increment(1),
           updatedAt: Timestamp.now(),
-          // Ready for a Firestore TTL policy; nothing relies on deletion.
           expiresAt: Timestamp.fromMillis(Date.now() + RETENTION_MS),
         },
         { merge: true },
       );
+    // Billing-free fallback for TTL. Never let this best-effort cleanup alter
+    // Paddle's webhook response or retry behavior.
+    await pruneExpiredDiagnostics(db, FAILURE_COLLECTION).catch(() => {});
   } catch {
     // Observability must never alter the webhook contract.
   }

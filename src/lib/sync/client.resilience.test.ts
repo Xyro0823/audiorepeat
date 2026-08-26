@@ -28,16 +28,18 @@ describe('sync reconnect resilience', () => {
     expect(source).toContain("'audiorepeat-library-sync'");
     // Fallback: without Web Locks the callback runs directly.
     expect(source).toMatch(/if \(typeof navigator === 'undefined' \|\| !navigator\.locks\?\.request\) return fn\(\);/);
-    // The in-flight promise dedupe still guards same-tab races.
-    expect(source).toContain('if (inFlight) return inFlight;');
+    // Same-account requests dedupe, but different accounts never share an
+    // in-flight result across a logout/account switch.
+    expect(source).toContain('const inFlightByUid = new Map<string, Promise<VocabSet[]>>();');
+    expect(source).toContain('const existing = inFlightByUid.get(uid);');
   });
 
   it('preserves the offline queue/cursor/LWW merge flow', () => {
     for (const call of [
-      'getPendingSyncPayload()',
+      'getPendingSyncPayload(uid)',
       'mergeRemoteLibrary(',
-      'acknowledgeSync(pending.entries)',
-      'getSyncCursor()',
+      'acknowledgeSync(pending.entries, uid)',
+      'getSyncCursor(uid)',
       'setSyncCursor(',
     ]) {
       expect(source).toContain(call);
@@ -48,5 +50,12 @@ describe('sync reconnect resilience', () => {
     expect(source).toMatch(/lastSyncedUid !== uid\) resetRetries\(\)/);
     // The uid is captured per attempt and used for progress application.
     expect(source).toContain('applyMergedProgress(uid,');
+  });
+
+  it('drops a late response after logout or account switch before it can merge', () => {
+    const ownerGuard = source.indexOf('if (!isCurrentSyncOwner(uid)) return local;');
+    const merge = source.indexOf('await mergeRemoteLibrary(remote.sets, remote.tombstones, uid)');
+    expect(ownerGuard).toBeGreaterThan(-1);
+    expect(merge).toBeGreaterThan(ownerGuard);
   });
 });

@@ -6,6 +6,16 @@ export const MAX_SYNC_RECORDS = 400;
 export const MAX_WORDS_PER_SET = 5_000;
 export const MAX_TOTAL_SYNC_WORDS = 80_000;
 export const MAX_SYNC_BODY_BYTES = 5_000_000;
+
+/**
+ * Produce a per-account cursor that never moves backwards, even when several
+ * Firestore transactions commit in the same millisecond. It is used as a
+ * pull fence: a response only advances a client through records at or below
+ * this value, leaving later commits for the next round trip.
+ */
+export function nextServerSyncCursor(previous: number, now = Date.now()): number {
+  return Math.max(now, previous + 1);
+}
 export const MAX_SYNC_SET_BYTES = 800_000;
 
 const ID_RE = /^[A-Za-z0-9._:-]{1,160}$/;

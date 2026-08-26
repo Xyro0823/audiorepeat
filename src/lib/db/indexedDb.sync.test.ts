@@ -129,6 +129,20 @@ describe('account isolation', () => {
     const sets = await getAllSets();
     expect(sets.map((set) => set.id)).toEqual(['user-a-set']);
   });
+
+  it('merges a late sync response into its captured owner, never the active owner', async () => {
+    await putSet(makeSet('user-a-set', 10));
+    activateSetOwner('uid-other');
+    await putSet(makeSet('user-b-set', 10));
+
+    // Simulates a User A request completing after the browser switched to
+    // User B. The sync client passes its captured uid explicitly.
+    await mergeRemoteLibrary([makeSet('remote-a-set', 20)], [], 'uid-test');
+
+    expect((await getAllSets()).map((set) => set.id)).toEqual(['user-b-set']);
+    expect((await getAllSets('uid-test')).map((set) => set.id).sort())
+      .toEqual(['remote-a-set', 'user-a-set']);
+  });
 });
 
 describe('sync cursor', () => {

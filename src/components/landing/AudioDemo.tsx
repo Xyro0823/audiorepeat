@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ChevronLeft, ChevronRight, Square, Volume2 } from "lucide-react";
 import { useT, type TKey, type TVars } from "@/lib/i18n";
+import { getSettingsSnapshot, subscribeSettings } from "@/lib/settingsStore";
 import { AUDIO_SAMPLES } from "./landingContent";
 
 type DemoStatus = "idle" | "playing" | "error";
@@ -22,6 +23,11 @@ function matchingVoice(voices: SpeechSynthesisVoice[], lang: string) {
 
 export default function AudioDemo() {
   const t = useT();
+  const uiLang = useSyncExternalStore(
+    subscribeSettings,
+    () => (getSettingsSnapshot().uiLang === 'mn' ? 'mn' : 'en'),
+    () => 'en' as const,
+  );
   const [selectedKey, setSelectedKey] = useState<(typeof AUDIO_SAMPLES)[number]["key"]>(AUDIO_SAMPLES[0].key);
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [slow, setSlow] = useState(false);
@@ -112,7 +118,11 @@ export default function AudioDemo() {
         <div className="grid items-center gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t("landing.demo.kicker")}</p>
-            <h2 className="mt-3 text-balance text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl">
+            <h2
+              className={uiLang === 'mn'
+                ? 'mt-3 max-w-xl text-balance text-3xl font-extrabold leading-[1.14] tracking-tight text-white sm:text-[2rem] lg:text-[2.5rem]'
+                : 'mt-3 text-balance text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl'}
+            >
               {t("landing.demo.title")}
             </h2>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-400">

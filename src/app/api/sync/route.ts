@@ -8,6 +8,7 @@ import {
   MAX_SYNC_RECORDS,
   MAX_SYNC_SETS,
   MAX_TOTAL_SYNC_WORDS,
+  nextServerSyncCursor,
   newerLibraryRecord,
   sanitizeSyncPayload,
   sanitizeSyncSet,
@@ -86,6 +87,7 @@ export async function POST(request: Request) {
     const collection = db.collection(`users/${uid}/sets`);
     const metaRef = db.doc(`users/${uid}/sync/library`);
     let mergedProgress: MergedProgress | null = null;
+    let syncCursor = 0;
     await db.runTransaction(async (tx) => {
       const metaSnap = await tx.get(metaRef);
       const incoming = [
@@ -97,10 +99,18 @@ export async function POST(request: Request) {
       let wordCount = 0;
       let recordCount = 0;
       if (metaSnap.exists) {
-        const meta = metaSnap.data() as { activeCount?: number; wordCount?: number; recordCount?: number };
+        const meta = metaSnap.data() as {
+          activeCount?: number;
+          wordCount?: number;
+          recordCount?: number;
+          syncCursor?: number;
+        };
         activeCount = typeof meta.activeCount === 'number' ? meta.activeCount : 0;
         wordCount = typeof meta.wordCount === 'number' ? meta.wordCount : 0;
         recordCount = typeof meta.recordCount === 'number' ? meta.recordCount : 0;
+        syncCursor = nextServerSyncCursor(
+          typeof meta.syncCursor === 'number' && Number.isFinite(meta.syncCursor) ? meta.syncCursor : 0,
+        );
       } else {
         const existing = await tx.get(collection);
         recordCount = existing.size;
@@ -111,6 +121,7 @@ export async function POST(request: Request) {
             wordCount += Array.isArray(data.data?.words) ? data.data.words.length : 0;
           }
         }
+        syncCursor = nextServerSyncCursor(0);
       }
 
       const writes: Array<{ ref: DocumentReference; data: Record<string, unknown> }> = [];
@@ -143,8 +154,8 @@ export async function POST(request: Request) {
         writes.push({
           ref: collection.doc(item.id),
           data: item.kind === 'set'
-            ? { kind: 'set', data: item.set, updatedAt: item.set.updatedAt, syncedAt: Date.now() }
-            : { kind: 'deleted', deletedAt: item.entry.deletedAt, syncedAt: Date.now() },
+            ? { kind: 'set', data: item.set, updatedAt: item.set.updatedAt, syncedAt: syncCursor }
+            : { kind: 'deleted', deletedAt: item.entry.deletedAt, syncedAt: syncCursor },
         });
       });
       if (
@@ -153,7 +164,7 @@ export async function POST(request: Request) {
         recordCount > MAX_SYNC_RECORDS
       ) throw new Error('library-sync-quota');
       for (const write of writes) tx.set(write.ref, write.data);
-      tx.set(metaRef, { activeCount, wordCount, recordCount, updatedAt: Date.now() });
+      tx.set(metaRef, { activeCount, wordCount, recordCount, syncCursor, updatedAt: Date.now() });
 
       // Learning progress: transactional max-merge into the account's single
       // progress doc. Schema/quota validation already happened in the
@@ -175,9 +186,14 @@ export async function POST(request: Request) {
       }
     });
 
-    const snapshot = payload.since > 0
-      ? await collection.where('syncedAt', '>=', payload.since).get()
-      : await collection.get();
+    // `syncCursor` is allocated in the same transaction as the writes. Only
+    // return records through that fixed fence: a later commit gets a strictly
+    // larger cursor and will be included on the next pull instead of being
+    // silently skipped between this query and the response.
+    const snapshot = await collection
+      .where('syncedAt', '>', payload.since)
+      .where('syncedAt', '<=', syncCursor)
+      .get();
     const sets = [];
     const tombstones = [];
     for (const doc of snapshot.docs) {
@@ -194,7 +210,7 @@ export async function POST(request: Request) {
       {
         sets,
         tombstones,
-        syncedAt: Date.now(),
+        syncedAt: syncCursor,
         ...(mergedProgress ? { progress: mergedProgress } : {}),
       },
       { headers: NO_STORE_HEADERS },

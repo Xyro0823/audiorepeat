@@ -5,6 +5,7 @@ import { consumeDistributedRateLimit, rateLimitClientKey } from '@/lib/distribut
 import { validateClientErrorReport } from '@/lib/errorMonitoring/schema';
 import { getAdminDb, isAdminConfigured, verifyIdToken } from '@/lib/firebase/admin';
 import { NO_STORE_HEADERS } from '@/lib/http';
+import { pruneExpiredDiagnostics } from '@/lib/errorMonitoring/retention';
 
 export const runtime = 'nodejs';
 
@@ -102,7 +103,8 @@ export async function POST(request: Request) {
     .slice(0, 24);
   const now = Date.now();
   try {
-    await getAdminDb().collection(ERROR_COLLECTION).add({
+    const db = getAdminDb();
+    await db.collection(ERROR_COLLECTION).add({
       source: report.source,
       area: report.area,
       errorName: report.errorName,
@@ -111,9 +113,11 @@ export async function POST(request: Request) {
       fingerprint,
       release: safeRelease(),
       createdAt: Timestamp.fromMillis(now),
-      // Ready for a Firestore TTL policy; the UI/API never relies on deletion.
       expiresAt: Timestamp.fromMillis(now + RETENTION_MS),
     });
+    // TTL requires billing. Until it is enabled, prune a small expired batch
+    // opportunistically without allowing housekeeping to reject a report.
+    await pruneExpiredDiagnostics(db, ERROR_COLLECTION).catch(() => {});
   } catch {
     // Do not log the request/report or underlying exception: either may carry
     // infrastructure details. The bounded public error is enough for clients.

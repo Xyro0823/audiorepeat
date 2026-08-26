@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   newerLibraryRecord,
+  nextServerSyncCursor,
   sanitizeSyncPayload,
   sanitizeSyncSet,
   transitionLibraryQuota,
@@ -17,6 +18,12 @@ const validSet = {
 };
 
 describe('library sync validation', () => {
+  it('creates a strictly monotonic server cursor for concurrent sync rounds', () => {
+    expect(nextServerSyncCursor(0, 100)).toBe(100);
+    expect(nextServerSyncCursor(100, 100)).toBe(101);
+    expect(nextServerSyncCursor(101, 99)).toBe(102);
+  });
+
   it('accepts valid set content and FSRS progress', () => {
     const set = sanitizeSyncSet({
       ...validSet,

@@ -6,8 +6,8 @@ const source = readFileSync(join(process.cwd(), 'src/lib/sync/client.ts'), 'utf8
 
 describe('sync client merge notification', () => {
   it('notifies the app after a successful merge so visible cards can refresh', () => {
-    const merge = source.indexOf('await mergeRemoteLibrary(remote.sets, remote.tombstones)');
-    const cursor = source.indexOf('await setSyncCursor(cursor)');
+    const merge = source.indexOf('await mergeRemoteLibrary(remote.sets, remote.tombstones, uid)');
+    const cursor = source.indexOf('await setSyncCursor(cursor, uid)');
     const syncedPhase = source.indexOf("update({ phase: 'synced'", merge);
     const notify = source.indexOf(
       "window.dispatchEvent(new CustomEvent('audiorepeat:library-synced'))",

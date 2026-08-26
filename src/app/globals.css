@@ -39,6 +39,41 @@ html {
   scroll-padding-top: 5rem;
 }
 
+/* Mongolian copy is often substantially longer than its English equivalent.
+   Treat the selected interface locale as a layout input: compact only the
+   marketing display type and all-caps utility labels, never the vocabulary
+   being studied in the player. */
+html[lang='mn'] .uppercase {
+  letter-spacing: 0.045em;
+  text-transform: none;
+}
+
+html[lang='mn'] #landing nav a,
+html[lang='mn'] #landing nav button {
+  line-height: 1.2;
+  white-space: normal;
+}
+
+@media (max-width: 639px) {
+  html[lang='mn'] #landing nav > div {
+    gap: 0.5rem;
+    padding-inline: 0.75rem;
+  }
+
+  html[lang='mn'] #landing nav a,
+  html[lang='mn'] #landing nav button {
+    min-height: 2.5rem;
+    padding-inline: 0.7rem;
+    font-size: 0.75rem;
+  }
+
+  html[lang='mn'] #landing nav a[href='/dashboard'] {
+    max-width: 6.5rem;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
 #landing a:focus-visible,
 #landing button:focus-visible,
 #landing summary:focus-visible,

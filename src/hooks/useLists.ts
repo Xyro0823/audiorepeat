@@ -217,6 +217,7 @@ export function useLists() {
     let alive = true;
     (async () => {
       const uid = getAuthSnapshot().user?.id ?? null;
+      const isCurrentOwner = () => (getAuthSnapshot().user?.id ?? null) === uid;
       activateSetOwner(uid);
       activateSettingsOwner(uid);
       if (uid && await migrateLegacySetsToOwner(uid)) {
@@ -232,14 +233,19 @@ export function useLists() {
           /* hydration below loads whatever this account already has */
         }
       }
+      if (!alive || !isCurrentOwner()) return;
       let list = await getAllSets();
       // Offline-first: an existing local library renders immediately while a
       // signed-in account checks for remote changes in the background.
-      if (uid && list.length > 0 && alive) {
+      if (uid && list.length > 0 && alive && isCurrentOwner()) {
         setSets(list);
         setLoading(false);
       }
       if (uid) list = await syncLibraryNow();
+      // The auth subscription owns a newer account now. Stop this initial
+      // hydration before it can seed, persist settings, or render the
+      // previous owner's list into the new session.
+      if (!alive || !isCurrentOwner()) return;
       // Hydrate the shared settings store FIRST so the seed merge below can
       // honor the purchased plan: Free seeds only one language, Pro seeds all.
       await hydrateSettings();
@@ -386,7 +392,7 @@ export function useLists() {
         const r = await seedDeferredSeeds(now, uid);
         if (r.seeded > 0) list = await getAllSets();
       }
-      if (alive) {
+      if (alive && isCurrentOwner()) {
         setSets(list);
         setLoading(false);
       }

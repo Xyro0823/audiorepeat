@@ -28,6 +28,16 @@ describe('useLists auth owner switching', () => {
     expect(switchCall).toBeGreaterThan(guard);
   });
 
+  it('stops an initial hydration if another account signs in before it finishes', () => {
+    const ownerGuard = source.indexOf('const isCurrentOwner = () =>');
+    const postSyncGuard = source.indexOf('if (!alive || !isCurrentOwner()) return;', ownerGuard);
+    const settingsHydration = source.indexOf('await hydrateSettings();', postSyncGuard);
+
+    expect(ownerGuard).toBeGreaterThan(-1);
+    expect(postSyncGuard).toBeGreaterThan(ownerGuard);
+    expect(settingsHydration).toBeGreaterThan(postSyncGuard);
+  });
+
   it('refreshes the visible library after a cloud sync without scheduling another sync', () => {
     const listener = source.indexOf(
       "window.addEventListener('audiorepeat:library-synced', reload);",

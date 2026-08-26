@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
 import { autoDetectUiLang } from '@/lib/i18n/detect';
+import { getSettingsSnapshot, subscribeSettings } from '@/lib/settingsStore';
 
 /**
  * First-visit browser-locale detection (mn → Монгол). Mounted once in the
@@ -10,11 +11,24 @@ import { autoDetectUiLang } from '@/lib/i18n/detect';
  * mismatches.
  */
 export default function UiLangGate() {
+  const uiLang = useSyncExternalStore(
+    subscribeSettings,
+    () => getSettingsSnapshot().uiLang === 'mn' ? 'mn' : 'en',
+    () => 'en' as const,
+  );
+
   useEffect(() => {
     void autoDetectUiLang().catch(() => {
       /* detection is best-effort — English default always stands */
     });
   }, []);
+
+  // The document language is more than metadata: it lets shared CSS give
+  // longer Mongolian labels room to breathe without changing the learning
+  // content or shrinking the entire app for English users.
+  useEffect(() => {
+    document.documentElement.lang = uiLang;
+  }, [uiLang]);
 
   return null;
 }

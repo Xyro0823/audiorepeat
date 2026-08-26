@@ -324,12 +324,32 @@ export default function LandingPage() {
   const [annual, setAnnual] = useState(true);
   const { status } = useAuth();
   const t = useT();
+  const uiLang = useSyncExternalStore(
+    subscribeSettings,
+    () => (getSettingsSnapshot().uiLang === 'mn' ? 'mn' : 'en'),
+    () => 'en' as const,
+  );
   const [showAuth, setShowAuth] = useState(false);
   const landingAction = landingAuthAction(status);
   const langCount = SUPPORTED_LANGUAGE_COUNT;
   const heroRef = useRef<HTMLDivElement | null>(null);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // These are deliberately component-level rather than document-level CSS:
+  // the landing page can react immediately to the language picker, including
+  // while persisted settings are still hydrating.
+  const heroHeadingClass = uiLang === 'mn'
+    ? 'mx-auto mt-5 max-w-2xl text-balance text-3xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-4xl lg:text-5xl'
+    : 'mx-auto mt-5 max-w-3xl text-balance text-3xl font-extrabold leading-tight tracking-tight text-white md:text-5xl lg:text-6xl';
+  const sectionHeadingClass = uiLang === 'mn'
+    ? 'mx-auto mt-3 max-w-3xl text-balance text-3xl font-extrabold leading-[1.14] tracking-tight text-white sm:text-4xl lg:text-[2.75rem]'
+    : 'mt-3 text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl';
+  const noMarginSectionHeadingClass = uiLang === 'mn'
+    ? 'mx-auto max-w-3xl text-balance text-3xl font-extrabold leading-[1.14] tracking-tight text-white sm:text-4xl lg:text-[2.75rem]'
+    : 'text-4xl font-extrabold tracking-tight text-white md:text-5xl';
+  const compactHeadingClass = uiLang === 'mn'
+    ? 'mt-3 max-w-2xl text-balance text-3xl font-extrabold leading-[1.14] tracking-tight text-white sm:text-4xl'
+    : 'mt-3 text-balance text-3xl font-extrabold tracking-tight text-white md:text-4xl';
 
   // Single source of pricing truth (shared with /checkout) — the shape below
   // keeps the pricing JSX unchanged while prices live in src/lib/plans.ts.
@@ -389,7 +409,7 @@ export default function LandingPage() {
 
       {/* Fixed top navbar */}
       <nav className="fixed inset-x-0 top-0 z-50 border-b border-white/5 bg-[#0a0a0a]/70 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6 lg:px-12">
+        <div className="mx-auto flex min-h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 py-2 sm:gap-4 sm:px-6 lg:px-12">
           <Link href="/" aria-label={t('landing.nav.home')} className="flex min-h-11 items-center gap-2.5 rounded-xl">
             <LogoMark />
             {/* Wordmark hidden on ultra-narrow screens so the logo mark +
@@ -399,7 +419,7 @@ export default function LandingPage() {
             </span>
           </Link>
 
-          <div className="hidden items-center gap-5 lg:flex">
+          <div className="hidden items-center gap-5 xl:flex">
             {NAV_LINKS.map((l) => (
               <a
                 key={l.href}
@@ -482,7 +502,7 @@ export default function LandingPage() {
                 {t('landing.hero.badge')}
               </p>
 
-              <h1 className="mx-auto mt-5 max-w-3xl text-balance text-3xl font-extrabold leading-tight tracking-tight text-white md:text-5xl lg:text-6xl">
+              <h1 className={heroHeadingClass}>
                 {t('landing.hero.titlePrefix')}{" "}
                 <span className="bg-gradient-to-r from-[#22d3ee] via-[#06b6d4] to-[#3b82f6] bg-clip-text text-transparent">
                   {t('landing.hero.titleAccent')}
@@ -538,14 +558,14 @@ export default function LandingPage() {
       <section id="how-it-works" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-24 pt-28 lg:px-12">
         <div className="text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.how.kicker')}</p>
-          <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+          <h2 className={sectionHeadingClass}>
             {t('landing.how.title')}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
             {t('landing.how.sub')}
           </p>
         </div>
-        <ol className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
+        <ol className="mt-12 grid grid-cols-1 gap-5 lg:grid-cols-3">
           {HOW_IT_WORKS.map((item) => (
             <li key={item.step} className="glass-neural rounded-3xl p-6">
               <span className="font-mono text-xs font-bold tracking-[0.2em] text-cyan-400">{item.step}</span>
@@ -564,7 +584,7 @@ export default function LandingPage() {
       <section id="features" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-24 pt-28 lg:px-12">
         <div className="text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.features.kicker')}</p>
-          <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+          <h2 className={sectionHeadingClass}>
             {t('landing.features.title')}
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
@@ -594,7 +614,7 @@ export default function LandingPage() {
       {/* ------------------------------------------------------------ */}
       <section id="languages" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-28 lg:px-12">
         <div className="glass-neural rounded-[2rem] p-8 text-center md:p-12">
-          <h2 className="text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+          <h2 className={noMarginSectionHeadingClass}>
             {t('landing.languages.titlePrefix', { count: langCount })}{" "}
             <span className="bg-gradient-to-r from-[#22d3ee] to-[#3b82f6] bg-clip-text text-transparent">{t('landing.languages.titleAccent')}</span>
           </h2>
@@ -637,13 +657,13 @@ export default function LandingPage() {
         <div className="grid items-center gap-8 rounded-[2rem] border border-cyan-400/20 bg-gradient-to-br from-cyan-500/10 via-white/[0.035] to-blue-500/10 p-7 sm:p-9 lg:grid-cols-[1fr_auto] lg:p-12">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.install.kicker')}</p>
-            <h2 className="mt-3 text-balance text-3xl font-extrabold tracking-tight text-white md:text-4xl">
+            <h2 className={compactHeadingClass}>
               {t('landing.install.title')}
             </h2>
             <p className="mt-4 max-w-2xl text-sm leading-relaxed text-slate-400">
               {t('landing.install.body')}
             </p>
-            <ul className="mt-6 grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
+            <ul className="mt-6 grid gap-3 text-sm text-slate-300 md:grid-cols-3">
               <li className="flex items-center gap-2"><Smartphone className="h-4 w-4 text-cyan-300" aria-hidden /> {t('landing.install.bullet1')}</li>
               <li className="flex items-center gap-2"><Download className="h-4 w-4 text-cyan-300" aria-hidden /> {t('landing.install.bullet2')}</li>
               <li className="flex items-center gap-2"><Headphones className="h-4 w-4 text-cyan-300" aria-hidden /> {t('landing.install.bullet3')}</li>
@@ -664,7 +684,7 @@ export default function LandingPage() {
       <section id="pricing" className="mx-auto w-full max-w-6xl scroll-mt-28 px-6 pb-28 lg:px-12">
         <div className="text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.pricing.kicker')}</p>
-          <h2 className="mt-3 text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+          <h2 className={sectionHeadingClass}>
             {t('landing.pricing.title')}
           </h2>
 
@@ -693,13 +713,13 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {plans.map((p) => (
             <div
               key={p.name}
               className={`glass-neural relative flex flex-col rounded-[2rem] p-8 ${
                 p.popular
-                  ? "border-cyan-400/50 shadow-[0_0_60px_rgba(6,182,212,0.15)] md:-mt-4 md:mb-4"
+                  ? "border-cyan-400/50 shadow-[0_0_60px_rgba(6,182,212,0.15)] lg:-mt-4 lg:mb-4"
                   : ""
               }`}
             >
@@ -748,7 +768,7 @@ export default function LandingPage() {
       <section className="mx-auto w-full max-w-6xl px-6 pb-28 lg:px-12">
         <div className="text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.audio.kicker')}</p>
-          <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+          <h2 className={sectionHeadingClass}>
             {t('landing.audio.title')}
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
@@ -756,7 +776,7 @@ export default function LandingPage() {
           </p>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-5 md:grid-cols-3">
+        <div className="mt-12 grid grid-cols-1 gap-5 lg:grid-cols-3">
           {[
             { icon: Headphones, titleKey: "landing.audio.card1.title" as const, textKey: "landing.audio.card1.text" as const },
             { icon: Repeat, titleKey: "landing.audio.card2.title" as const, textKey: "landing.audio.card2.text" as const },
@@ -779,7 +799,7 @@ export default function LandingPage() {
       <section id="faq" className="mx-auto w-full max-w-4xl scroll-mt-28 px-6 pb-28 lg:px-12">
         <div className="text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-cyan-400">{t('landing.faq.kicker')}</p>
-          <h2 className="mt-3 text-balance text-4xl font-extrabold tracking-tight text-white md:text-5xl">
+          <h2 className={sectionHeadingClass}>
             {t('landing.faq.title')}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
