@@ -42,7 +42,9 @@ import {
 
 // Bump this whenever new starter sets are added, so existing installs receive
 // them exactly once (a user who deletes a seed set keeps it deleted).
-const SEED_VERSION = 6;
+// v7 delivers the English-for-Mongolians starter set to accounts which had
+// already completed the v6 merge before that set was introduced.
+const SEED_VERSION = 7;
 const SEED_VERSION_KEY = 'audiorepeat-seed-version';
 
 // Word ids of the original 5-word starter sets, used to detect copies the user
