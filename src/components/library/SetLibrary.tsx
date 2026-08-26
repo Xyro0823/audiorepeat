@@ -4,7 +4,7 @@ registerRoute("dashboard");
 
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Search } from 'lucide-react';
 import ActivityHeatmap from '@/components/ActivityHeatmap';
 import { flagFor } from '@/components/LanguageBadge';
@@ -71,6 +71,10 @@ import {
   filterLibrarySets,
 } from '@/lib/sets/search';
 import { useDebouncedSearchQuery } from '@/hooks/useDebouncedSearchQuery';
+import {
+  saveDashboardScrollPosition,
+  takeDashboardScrollPosition,
+} from '@/lib/libraryScrollPosition';
 
 function Logo() {
   return (
@@ -535,6 +539,20 @@ export default function SetLibrary() {
   const [langFilter, setLangFilter] = useState<string>('all');
   const [changingLang, setChangingLang] = useState(false);
 
+  // PlayerView returns to `/dashboard` through a normal route navigation, so
+  // the browser does not retain this page's vertical position by itself. Read
+  // the one-time value only after the library is populated, preventing a jump
+  // to a position that has not rendered yet.
+  useLayoutEffect(() => {
+    if (loading) return;
+    const top = takeDashboardScrollPosition();
+    if (top === null) return;
+    // PlayerView's return links use `scroll={false}`, so Next will not race
+    // this restoration. useLayoutEffect runs before the dashboard is painted:
+    // the hero never flashes briefly before the previous position appears.
+    window.scrollTo({ top, behavior: 'auto' });
+  }, [loading]);
+
   // Feature entitlements — all gates flow through the canonical matrix in
   // src/lib/plans.ts. The 1-Min speed challenge, FSRS review entry and
   // cloud/offline audio are Pro features; the language gate keeps using
@@ -795,6 +813,7 @@ export default function SetLibrary() {
 
   const playSet = (set: VocabSet) => {
     warmIfNeeded(set);
+    saveDashboardScrollPosition(window.scrollY);
     router.push(`/player?id=${set.id}`);
   };
 
@@ -1264,6 +1283,7 @@ export default function SetLibrary() {
           onSave={async (set) => {
             const saved = await saveSet(set);
             warmIfNeeded(saved); // Save & play — warm the fresh set too
+            saveDashboardScrollPosition(window.scrollY);
             router.push(`/player?id=${saved.id}`);
           }}
         />

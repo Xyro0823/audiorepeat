@@ -8,5 +8,7 @@ describe('PlayerView library navigation', () => {
   it('routes every library back-link to the dashboard rather than the landing page', () => {
     expect(source).toContain("const LIBRARY_HREF = '/dashboard';");
     expect(source.match(/href=\{LIBRARY_HREF\}/g)).toHaveLength(2);
+    expect(source.match(/scroll=\{false\}/g)?.length).toBeGreaterThanOrEqual(2);
+    expect(source).toContain('router.back();');
   });
 });

@@ -45,6 +45,7 @@ import {
   readPlaybackPosition,
   savePlaybackPosition,
 } from '@/lib/playbackPosition';
+import { hasDashboardScrollPosition } from '@/lib/libraryScrollPosition';
 import type { TTSEngine } from '@/lib/tts/engine';
 import type { AppSettings, MasteryStatus } from '@/types/app';
 import type { LoopWord } from '@/types/loop';
@@ -72,6 +73,17 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // full-library hydration (useLists) stays on the dashboard.
   const { set: loadedSet, loading, settings, saveSettings, saveSet } = usePlayerSet(setId);
   const set = loadedSet;
+
+  // A normal player launch comes from the library. Going back through browser
+  // history preserves the already-rendered dashboard and its scroll position,
+  // avoiding the visible top-of-page flash from mounting `/dashboard` again.
+  // Direct/shared player links have no saved return position and keep the
+  // regular dashboard fallback instead.
+  const returnToLibrary = useCallback((event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!hasDashboardScrollPosition()) return;
+    event.preventDefault();
+    router.back();
+  }, [router]);
 
   // Playlist filter: 'all' = every word, 'learning' = not yet mastered
   // (covers unmarked + review-needed), 'hard' = only words flagged for review.
@@ -920,6 +932,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         <p className="text-sm text-slate-400">{t('player.state.setNotFoundBody')}</p>
         <Link
           href={LIBRARY_HREF}
+          scroll={false}
+          onClick={returnToLibrary}
           className="mt-2 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110"
         >
           {t('player.state.backToLibrary')}
@@ -940,6 +954,8 @@ export default function PlayerView({ setId }: { setId: string | null }) {
       <header className="animate-fade-up relative z-50 flex items-center gap-2">
         <Link
           href={LIBRARY_HREF}
+          scroll={false}
+          onClick={returnToLibrary}
           className="flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm text-slate-400 transition hover:bg-white/5 hover:text-white"
           aria-label={t('player.header.libraryAria')}
         >
