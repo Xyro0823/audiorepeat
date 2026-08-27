@@ -1,0 +1,104 @@
+{
+  "sourceId": "tatoeba",
+  "generatedAt": "2026-08-27T09:35:37.156Z",
+  "sourceUrl": "https://tatoeba.org/en/downloads",
+  "license": "CC BY 2.0 FR",
+  "licenseUrl": "https://creativecommons.org/licenses/by/2.0/fr/deed.en",
+  "attribution": "Sentences from Tatoeba.org, licensed under CC BY 2.0 FR.",
+  "selection": {
+    "targetPairsPerLanguage": 250,
+    "maxCharactersPerSide": 64,
+    "maxEnglishWords": 8,
+    "exclusions": [
+      "numbers",
+      "URLs",
+      "markup",
+      "quotes",
+      "common personal names",
+      "unsafe topics"
+    ],
+    "ranking": "Prioritises short sentences made from common beginner English words."
+  },
+  "generatedBanks": [
+    {
+      "lang": "fa",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "nl",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "sv",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "pl",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "el",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "he",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "vi",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "th",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "id",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "sw",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "uk",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "cs",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "fi",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "nb",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "da",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "fil",
+      "level": "A1",
+      "pairs": 250
+    }
+  ]
+}

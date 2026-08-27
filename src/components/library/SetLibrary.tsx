@@ -100,6 +100,20 @@ function hueFor(code: string): number {
   return h % 360;
 }
 
+/** Converts the existing Unicode flag mapping into a FlagCDN country code.
+ * The cover keeps its gradient-only fallback for languages without a country flag. */
+function flagCountryCodeFor(code: string): string | null {
+  const flag = flagFor(code);
+  const parts = flag ? [...flag] : [];
+  if (parts.length !== 2) return null;
+  const letters = parts.map((part) => {
+    const point = part.codePointAt(0);
+    if (!point || point < 0x1f1e6 || point > 0x1f1ff) return null;
+    return String.fromCharCode(65 + point - 0x1f1e6);
+  });
+  return letters[0] && letters[1] ? `${letters[0]}${letters[1]}`.toLowerCase() : null;
+}
+
 function masteryPct(set: VocabSet): number {
   const total = set.words.length;
   if (total === 0) return 0;
@@ -307,6 +321,7 @@ function PortraitCard({
 
   const pct = masteryPct(set);
   const hard = hardCount(set);
+  const flagCountryCode = flagCountryCodeFor(set.lang);
 
   // Close the menu on outside click.
   useEffect(() => {
@@ -347,9 +362,14 @@ function PortraitCard({
         className="cover-art relative aspect-[4/3] overflow-hidden rounded-t-2xl"
         style={{ '--cover-hue': hueFor(set.lang) } as CSSProperties}
       >
-        <span className="absolute inset-0 flex items-center justify-center text-6xl drop-shadow-lg">
-          {flagFor(set.lang) ?? '🌐'}
-        </span>
+        {flagCountryCode && (
+          <div
+            className="pointer-events-none absolute inset-7 bg-contain bg-center bg-no-repeat opacity-[0.24] mix-blend-screen"
+            style={{ backgroundImage: `url(https://flagcdn.com/w320/${flagCountryCode}.png)` }}
+            aria-hidden
+          />
+        )}
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(145deg,rgba(8,12,23,0.12),rgba(8,12,23,0.58))]" aria-hidden />
 
         {set.cefr && (
           <span className="absolute left-3 top-3">

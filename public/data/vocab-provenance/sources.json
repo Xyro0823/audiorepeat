@@ -1,0 +1,54 @@
+{
+  "sources": [
+    {
+      "id": "tatoeba",
+      "name": "Tatoeba Project",
+      "license": "CC BY 2.0 FR",
+      "licenseUrl": "https://creativecommons.org/licenses/by/2.0/fr/deed.en",
+      "sourceUrl": "https://tatoeba.org/en/downloads",
+      "attribution": "Sentences from Tatoeba.org, licensed under CC BY 2.0 FR.",
+      "importStatus": "approved",
+      "use": "Short, curated parallel example sentences"
+    },
+    {
+      "id": "kaikki-wiktionary",
+      "name": "Kaikki.org Wiktionary extracts",
+      "license": "CC BY-SA / GFDL, per source entry",
+      "licenseUrl": "https://en.wiktionary.org/wiki/Wiktionary:Copyrights",
+      "sourceUrl": "https://kaikki.org/",
+      "attribution": "Derived from Wiktionary data via Kaikki.org; preserve the original attribution and ShareAlike terms.",
+      "importStatus": "review-required",
+      "use": "Headwords and senses only after per-entry attribution is retained"
+    },
+    {
+      "id": "wordnet-3",
+      "name": "Princeton WordNet 3.0",
+      "license": "WordNet License",
+      "licenseUrl": "https://wordnet.princeton.edu/license-and-commercial-use",
+      "sourceUrl": "https://wordnetcode.princeton.edu/3.0/",
+      "attribution": "This product includes WordNet data from Princeton University.",
+      "importStatus": "approved",
+      "use": "English definitions, senses, and semantic relations"
+    },
+    {
+      "id": "cefr-frequency-lists",
+      "name": "Open CEFR and frequency lists",
+      "license": "Verify each list before import",
+      "licenseUrl": "",
+      "sourceUrl": "",
+      "attribution": "Record the exact source and license in the generated provenance file.",
+      "importStatus": "review-required",
+      "use": "Level and frequency ranking; not a translation source by itself"
+    },
+    {
+      "id": "publisher-lists",
+      "name": "Publisher coursebook lists",
+      "license": "Not cleared for import",
+      "licenseUrl": "",
+      "sourceUrl": "",
+      "attribution": "",
+      "importStatus": "blocked",
+      "use": "Do not import Oxford, Goethe, Hueber, Klett, or similar publisher lists without written permission"
+    }
+  ]
+}

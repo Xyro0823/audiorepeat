@@ -13,3 +13,12 @@ for beginning practice; the original archive files are not committed.
 
 [Tatoeba Project]: https://tatoeba.org/en/downloads
 [CC BY 2.0 FR]: https://creativecommons.org/licenses/by/2.0/fr/deed.en
+
+## Vocabulary provenance policy
+
+Every newly generated vocabulary bank must have an identified source, license,
+source URL, and attribution. The machine-readable registry lives at
+`public/data/vocab-provenance/sources.json`; generated imports record their
+exact source and selection rules alongside it. Publisher-owned coursebook and
+word lists are not imported unless their redistribution terms are explicitly
+cleared.
