@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { nextRetryDelayMs } from './client';
+import { MIN_AUTOMATIC_SYNC_INTERVAL_MS, nextAutomaticSyncDelayMs, nextRetryDelayMs } from './client';
 
 const source = readFileSync(join(process.cwd(), 'src/lib/sync/client.ts'), 'utf8');
 
@@ -13,6 +13,20 @@ describe('sync reconnect resilience', () => {
     expect(nextRetryDelayMs(10)).toBe(60_000);
     expect(source).toMatch(/MAX_RETRY_ATTEMPTS\s*=\s*\d+/);
     expect(source).toMatch(/retryAttempts >= MAX_RETRY_ATTEMPTS/);
+  });
+
+  it('limits automatic background pushes during continuous practice', () => {
+    // A sync that began "now" must not be followed by another automatic push
+    // for 30 seconds, even when a word-progress write asks for a short delay.
+    const now = Date.now();
+    expect(nextAutomaticSyncDelayMs(now, 900, now)).toBe(MIN_AUTOMATIC_SYNC_INTERVAL_MS);
+    expect(source).toContain('lastAutomaticSyncStartedAt = Date.now()');
+    expect(source).toContain('const delay = nextAutomaticSyncDelayMs(Date.now(), delayMs);');
+  });
+
+  it('honors the server retry window after a rate limit response', () => {
+    expect(source).toContain("response.status === 429 ? retryAfterMs(response) : 0");
+    expect(source).toContain('else scheduleRetry(retryDelay);');
   });
 
   it('resyncs automatically when the browser comes back online', () => {

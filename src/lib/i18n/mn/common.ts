@@ -80,6 +80,7 @@ export const syncMn: Record<SyncKeys, string> = {
   'sync.state.syncing': 'Синк хийж байна…',
   'sync.state.synced': 'Синк хийгдлээ',
   'sync.state.offline': 'Офлайн байна — өөрчлөлтүүд энэ төхөөрөмжид хадгалагдана',
+  'sync.state.rateLimited': 'Синк түр хязгаарлагдлаа — автоматаар дахин оролдоно',
   'sync.state.error': 'Синк хийхэд асуудал гарлаа — дахин оролдоно уу',
   'sync.lastSynced': 'Сүүлийн синк: {time}',
 };

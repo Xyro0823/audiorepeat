@@ -13,7 +13,7 @@ import { sanitizeSyncPayload } from '@/lib/sync/librarySync';
 import { applyMergedProgress, buildProgressPayload } from '@/lib/sync/progressClient';
 import type { VocabSet } from '@/types/app';
 
-export type LibrarySyncPhase = 'idle' | 'syncing' | 'synced' | 'offline' | 'error';
+export type LibrarySyncPhase = 'idle' | 'syncing' | 'synced' | 'offline' | 'rate-limited' | 'error';
 
 export interface LibrarySyncSnapshot {
   phase: LibrarySyncPhase;
@@ -39,10 +39,16 @@ const SYNC_LOCK_NAME = 'audiorepeat-library-sync';
 const MAX_RETRY_ATTEMPTS = 5;
 const BASE_RETRY_DELAY_MS = 2_000;
 const MAX_RETRY_DELAY_MS = 60_000;
+// Playing a long set updates local progress often. Those writes still need to
+// reach another device, but sending one network request per word can exhaust
+// the server-side per-account limit. Thirty seconds keeps sync feeling prompt
+// while staying comfortably below that limit during continuous practice.
+export const MIN_AUTOMATIC_SYNC_INTERVAL_MS = 30_000;
 
 let retryAttempts = 0;
 let retryTimer: number | null = null;
 let lastSyncedUid: string | null | undefined;
+let lastAutomaticSyncStartedAt = 0;
 
 /**
  * Pure exponential backoff with a hard cap, exported for tests. Attempts are
@@ -60,15 +66,33 @@ function clearRetryTimer(): void {
 }
 
 /** Schedule the next retry unless the cap is exhausted. */
-function scheduleRetry(): void {
+function scheduleRetry(minDelayMs = 0): void {
   if (retryAttempts >= MAX_RETRY_ATTEMPTS) return;
-  const delay = nextRetryDelayMs(retryAttempts);
+  const delay = Math.max(nextRetryDelayMs(retryAttempts), minDelayMs);
   retryAttempts += 1;
   clearRetryTimer();
   retryTimer = window.setTimeout(() => {
     retryTimer = null;
     void syncLibraryNow();
   }, delay);
+}
+
+/**
+ * Keep automatic pushes below the account rate limit while letting explicit
+ * button presses use syncLibraryNow immediately.
+ */
+export function nextAutomaticSyncDelayMs(
+  now: number,
+  requestedDelayMs: number,
+  lastStartedAt = lastAutomaticSyncStartedAt,
+): number {
+  const remaining = Math.max(0, MIN_AUTOMATIC_SYNC_INTERVAL_MS - (now - lastStartedAt));
+  return Math.max(requestedDelayMs, remaining);
+}
+
+function retryAfterMs(response: Response): number {
+  const seconds = Number(response.headers.get('Retry-After'));
+  return Number.isFinite(seconds) && seconds > 0 ? Math.round(seconds * 1_000) : 0;
 }
 
 function resetRetries(): void {
@@ -131,6 +155,7 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
     update({ ...snapshot, phase: 'syncing' });
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 12_000);
+    let retryDelay = 0;
     // The lock only serializes the network round trip across tabs: local
     // reads/merges stay outside so a queued tab never merges stale state.
     const attempt = async (): Promise<VocabSet[]> => {
@@ -153,7 +178,11 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
         signal: controller.signal,
       });
       if (!response.ok) {
-        update({ ...snapshot, phase: response.status >= 500 ? 'offline' : 'error' });
+        retryDelay = response.status === 429 ? retryAfterMs(response) : 0;
+        update({
+          ...snapshot,
+          phase: response.status === 429 ? 'rate-limited' : response.status >= 500 ? 'offline' : 'error',
+        });
         return local;
       }
       const body = await response.json() as unknown;
@@ -206,7 +235,7 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
     };
     const result = await withSyncLock(attempt);
     if (snapshot.phase === 'synced') resetRetries();
-    else scheduleRetry();
+    else scheduleRetry(retryDelay);
     return result;
   })();
   inFlightByUid.set(uid, task);
@@ -221,10 +250,12 @@ export async function syncLibraryNow(): Promise<VocabSet[]> {
 export function scheduleLibrarySync(delayMs = 900): void {
   if (!getAuthSnapshot().user) return;
   if (timer !== null) window.clearTimeout(timer);
+  const delay = nextAutomaticSyncDelayMs(Date.now(), delayMs);
   timer = window.setTimeout(() => {
     timer = null;
+    lastAutomaticSyncStartedAt = Date.now();
     void syncLibraryNow();
-  }, delayMs);
+  }, delay);
 }
 
 // Reconnect: a browser "online" event always means connectivity changed, so

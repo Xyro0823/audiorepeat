@@ -86,6 +86,7 @@ export const syncEn = {
   'sync.state.syncing': 'Syncing…',
   'sync.state.synced': 'Synced',
   'sync.state.offline': 'Offline — changes are saved locally',
+  'sync.state.rateLimited': 'Sync paused briefly — retrying automatically',
   'sync.state.error': 'Sync problem — retrying soon',
   'sync.lastSynced': 'Last synced {time}',
 } as const;

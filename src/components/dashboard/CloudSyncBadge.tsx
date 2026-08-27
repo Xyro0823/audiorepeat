@@ -14,6 +14,7 @@ export default function CloudSyncBadge() {
     syncing: t('sync.state.syncing'),
     synced: t('sync.state.synced'),
     offline: t('sync.state.offline'),
+    'rate-limited': t('sync.state.rateLimited'),
     error: t('sync.state.error'),
   }[phase];
   return (
@@ -32,6 +33,8 @@ export default function CloudSyncBadge() {
               ? 'animate-pulse bg-neon-cyan'
               : phase === 'error'
                 ? 'bg-neon-magenta'
+                : phase === 'rate-limited'
+                  ? 'bg-amber-400'
                 : 'bg-slate-500'
         }`}
         aria-hidden
