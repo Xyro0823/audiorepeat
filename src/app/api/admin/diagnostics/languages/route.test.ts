@@ -84,8 +84,8 @@ describe('GET /api/admin/diagnostics/languages — admin success', () => {
       totalTopicPairs: number;
     };
     expect(counts.packLanguages).toBe(13);
-    // 13 complete A1–C2 packs (78 files) plus 17 new A1 foundations.
-    expect(counts.bankFiles).toBe(95);
+    // 14 complete A1–C2 packs (84 files) plus 16 new A1 foundations.
+    expect(counts.bankFiles).toBe(100);
     expect(counts.totalVocabPairs).toBe(34_716);
     expect(counts.topics).toBe(19);
     expect(counts.topicLanguages).toBe(15);

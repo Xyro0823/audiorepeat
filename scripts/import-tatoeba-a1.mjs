@@ -86,13 +86,3 @@ for (const [pack, code] of Object.entries(LANGUAGES)) {
   writeFileSync(file, JSON.stringify({ lang: pack, level: 'A1', words }, null, 2) + '\n');
   console.log(`${pack}: wrote ${words.length} A1 pairs`);
 }
-
-// English learners use the already curated Mongolian A1 vocabulary in reverse:
-// target = English; meaning = Mongolian. This contains no third-party data.
-const mongolian = JSON.parse(readFileSync(join(outputDir, 'mn-A1.json'), 'utf8'));
-const englishWords = mongolian.words.map(([mongolianWord, englishWord]) => [englishWord, mongolianWord]);
-writeFileSync(
-  join(outputDir, 'en-A1.json'),
-  JSON.stringify({ lang: 'en', level: 'A1', words: englishWords }, null, 2) + '\n',
-);
-console.log(`en: wrote ${englishWords.length} A1 pairs from the Mongolian curriculum`);

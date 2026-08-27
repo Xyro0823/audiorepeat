@@ -2,7 +2,7 @@ import type { VocabSet } from '@/types/app';
 import { findLanguage } from '@/lib/languages';
 import { langLimitKey } from '@/lib/planGate';
 import { hydrateSeedWords, seedSetForLang, SEED_SETS } from '@/lib/seedSets';
-import { LIBRARY_LANGS, PACK_LANG, STARTER_LANGS } from '@/lib/starterSets';
+import { FULL_LIBRARY_LANGS, LIBRARY_LANGS, PACK_LANG } from '@/lib/starterSets';
 
 /**
  * Free-plan language selection + migration helpers (pure, unit-tested).
@@ -48,7 +48,7 @@ export const FREE_LANG_OPTIONS: readonly FreeLangOption[] = (() => {
       hasFullPack,
     });
   };
-  for (const code of LIBRARY_LANGS) push(code, STARTER_LANGS.includes(code as (typeof STARTER_LANGS)[number]));
+  for (const code of LIBRARY_LANGS) push(code, FULL_LIBRARY_LANGS.includes(code as (typeof FULL_LIBRARY_LANGS)[number]));
   for (const s of SEED_SETS) push(s.lang, false);
   return options;
 })();

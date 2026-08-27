@@ -1,0 +1,1430 @@
+{
+  "lang": "en",
+  "level": "B2",
+  "words": [
+    [
+      "to analyse",
+      "шинжлэх"
+    ],
+    [
+      "to apply",
+      "хэрэглэх"
+    ],
+    [
+      "to evaluate",
+      "үнэлэх"
+    ],
+    [
+      "to examine",
+      "шалгах"
+    ],
+    [
+      "to investigate",
+      "судалгаа хийх"
+    ],
+    [
+      "to measure",
+      "хэмжих"
+    ],
+    [
+      "to compare",
+      "харьцуулах"
+    ],
+    [
+      "to classify",
+      "ангилах"
+    ],
+    [
+      "to define",
+      "тодорхойлох"
+    ],
+    [
+      "to explain",
+      "тайлбарлах"
+    ],
+    [
+      "to describe",
+      "дүрслэх"
+    ],
+    [
+      "to express",
+      "илэрхийлэх"
+    ],
+    [
+      "to communicate",
+      "дамжуулах"
+    ],
+    [
+      "to propose",
+      "санал тавих"
+    ],
+    [
+      "to recommend",
+      "зөвлөх"
+    ],
+    [
+      "to approve",
+      "зөвшөөрөх"
+    ],
+    [
+      "to reject",
+      "татгалзах"
+    ],
+    [
+      "to forbid",
+      "хориглох"
+    ],
+    [
+      "to require / to demand",
+      "шаардах"
+    ],
+    [
+      "to provide",
+      "хангах"
+    ],
+    [
+      "to support",
+      "дэмжих"
+    ],
+    [
+      "to ensure",
+      "баталгаажуулах"
+    ],
+    [
+      "to maintain",
+      "хадгалах"
+    ],
+    [
+      "to improve",
+      "сайжруулах"
+    ],
+    [
+      "to enhance",
+      "дээшлүүлэх"
+    ],
+    [
+      "to develop",
+      "хөгжүүлэх"
+    ],
+    [
+      "to grow",
+      "өсөх"
+    ],
+    [
+      "to expand",
+      "тэлэх"
+    ],
+    [
+      "to reduce",
+      "багасгах"
+    ],
+    [
+      "to decrease",
+      "бууруулах"
+    ],
+    [
+      "to increase",
+      "нэмэгдүүлэх"
+    ],
+    [
+      "to change",
+      "өөрчлөх"
+    ],
+    [
+      "to convert / to transform",
+      "хувиргах"
+    ],
+    [
+      "to introduce",
+      "нэвтрүүлэх"
+    ],
+    [
+      "to integrate",
+      "нэгтгэх"
+    ],
+    [
+      "to separate",
+      "тусгаарлах"
+    ],
+    [
+      "to connect",
+      "холбох"
+    ],
+    [
+      "to influence",
+      "нөлөөлөх"
+    ],
+    [
+      "to cause",
+      "шалтгаан болох"
+    ],
+    [
+      "to prevent",
+      "урьдчилан сэргийлэх"
+    ],
+    [
+      "to avoid",
+      "зайлсхийх"
+    ],
+    [
+      "to resolve",
+      "шийдвэрлэх"
+    ],
+    [
+      "to decide",
+      "шийдвэр гаргах"
+    ],
+    [
+      "to predict",
+      "урьдчилан таамаглах"
+    ],
+    [
+      "to anticipate",
+      "хүлээх"
+    ],
+    [
+      "to estimate",
+      "тооцоолох"
+    ],
+    [
+      "to assume",
+      "таамаглах"
+    ],
+    [
+      "to infer",
+      "дүгнэлт гаргах"
+    ],
+    [
+      "to recognize",
+      "таних"
+    ],
+    [
+      "to perceive",
+      "мэдрэх"
+    ],
+    [
+      "to understand",
+      "ойлгох"
+    ],
+    [
+      "to assert / to claim",
+      "мэдэгдэх"
+    ],
+    [
+      "to argue",
+      "маргах"
+    ],
+    [
+      "to object",
+      "эсэргүүцэх"
+    ],
+    [
+      "to defend",
+      "хамгаалах"
+    ],
+    [
+      "to criticise",
+      "шүүмжлэх"
+    ],
+    [
+      "to denounce",
+      "буруушаах"
+    ],
+    [
+      "to praise",
+      "магтах"
+    ],
+    [
+      "to emphasize",
+      "онцлох"
+    ],
+    [
+      "to point out",
+      "зааж өгөх"
+    ],
+    [
+      "to clarify",
+      "тодруулах"
+    ],
+    [
+      "to justify",
+      "зөвтгөх"
+    ],
+    [
+      "to prove",
+      "батлах"
+    ],
+    [
+      "to observe",
+      "ажиглах"
+    ],
+    [
+      "to detect",
+      "илрүүлэх"
+    ],
+    [
+      "to distinguish",
+      "ялгах"
+    ],
+    [
+      "to constitute",
+      "бүрдүүлэх"
+    ],
+    [
+      "to include / to contain",
+      "оруулах"
+    ],
+    [
+      "to exclude",
+      "хасах"
+    ],
+    [
+      "to generate",
+      "бий болгох"
+    ],
+    [
+      "to create",
+      "бүтээх"
+    ],
+    [
+      "to build / to establish",
+      "байгуулах"
+    ],
+    [
+      "to manage",
+      "удирдах"
+    ],
+    [
+      "to control",
+      "хянах"
+    ],
+    [
+      "to organise",
+      "зохион байгуулах"
+    ],
+    [
+      "to plan",
+      "төлөвлөх"
+    ],
+    [
+      "to implement",
+      "хэрэгжүүлэх"
+    ],
+    [
+      "to carry out",
+      "гүйцэтгэх"
+    ],
+    [
+      "to achieve",
+      "хүрэх"
+    ],
+    [
+      "to participate",
+      "оролцох"
+    ],
+    [
+      "to contribute",
+      "хувь нэмэр оруулах"
+    ],
+    [
+      "to cooperate",
+      "хамтран ажиллах"
+    ],
+    [
+      "to negotiate",
+      "хэлэлцээр хийх"
+    ],
+    [
+      "to sign",
+      "гарын үсэг зурах"
+    ],
+    [
+      "to regulate",
+      "зохицуулах"
+    ],
+    [
+      "to restrict",
+      "хязгаарлах"
+    ],
+    [
+      "to encourage",
+      "урамшуулах"
+    ],
+    [
+      "to motivate",
+      "өдөөх"
+    ],
+    [
+      "to ignore",
+      "үл тоомсорлох"
+    ],
+    [
+      "to underestimate",
+      "дутуу үнэлэх"
+    ],
+    [
+      "to utilise",
+      "ашиглах"
+    ],
+    [
+      "to prioritise",
+      "тэргүүлэх"
+    ],
+    [
+      "to concentrate",
+      "төвлөрүүлэх"
+    ],
+    [
+      "to focus on",
+      "анхаарлаа төвлөрүүлэх"
+    ],
+    [
+      "to imply",
+      "далд утгаар илэрхийлэх"
+    ],
+    [
+      "to reveal",
+      "илчлэх"
+    ],
+    [
+      "to conceal",
+      "нуух"
+    ],
+    [
+      "to shift",
+      "шилжүүлэх"
+    ],
+    [
+      "to reverse",
+      "эргүүлэх"
+    ],
+    [
+      "analysis",
+      "шинжилгээ"
+    ],
+    [
+      "application",
+      "хэрэглээ"
+    ],
+    [
+      "evaluation",
+      "үнэлгээ"
+    ],
+    [
+      "investigation",
+      "шалгалт"
+    ],
+    [
+      "research",
+      "судалгаа"
+    ],
+    [
+      "verification",
+      "баталгаажуулалт"
+    ],
+    [
+      "comparison",
+      "харьцуулалт"
+    ],
+    [
+      "classification",
+      "ангилал"
+    ],
+    [
+      "definition",
+      "тодорхойлолт"
+    ],
+    [
+      "explanation",
+      "тайлбар"
+    ],
+    [
+      "expression",
+      "илэрхийлэл"
+    ],
+    [
+      "communication",
+      "харилцаа холбоо"
+    ],
+    [
+      "proposal",
+      "санал"
+    ],
+    [
+      "approval / permission",
+      "зөвшөөрөл"
+    ],
+    [
+      "rejection",
+      "татгалзал"
+    ],
+    [
+      "requirement",
+      "шаардлага"
+    ],
+    [
+      "provision",
+      "хангамж"
+    ],
+    [
+      "support",
+      "дэмжлэг"
+    ],
+    [
+      "maintenance",
+      "засвар үйлчилгээ"
+    ],
+    [
+      "improvement",
+      "сайжруулалт"
+    ],
+    [
+      "development",
+      "хөгжил"
+    ],
+    [
+      "growth",
+      "өсөлт"
+    ],
+    [
+      "expansion",
+      "тэлэлт"
+    ],
+    [
+      "reduction / decrease",
+      "бууралт"
+    ],
+    [
+      "change",
+      "өөрчлөлт"
+    ],
+    [
+      "transformation",
+      "хувиргалт"
+    ],
+    [
+      "integration",
+      "нэгтгэл"
+    ],
+    [
+      "separation",
+      "тусгаарлалт"
+    ],
+    [
+      "connection / relationship",
+      "холбоо"
+    ],
+    [
+      "influence",
+      "нөлөө"
+    ],
+    [
+      "cause",
+      "шалтгаан"
+    ],
+    [
+      "result / consequence",
+      "үр дүн"
+    ],
+    [
+      "resolution / solution",
+      "шийдэл"
+    ],
+    [
+      "decision",
+      "шийдвэр"
+    ],
+    [
+      "prediction",
+      "урьдчилсан таамаг"
+    ],
+    [
+      "expectation",
+      "хүлээлт"
+    ],
+    [
+      "estimate",
+      "тооцоо"
+    ],
+    [
+      "assumption",
+      "таамаг"
+    ],
+    [
+      "understanding / awareness",
+      "ойлголт"
+    ],
+    [
+      "claim",
+      "мэдэгдэл"
+    ],
+    [
+      "criticism",
+      "шүүмжлэл"
+    ],
+    [
+      "denunciation",
+      "буруушаалт"
+    ],
+    [
+      "praise",
+      "магтаал"
+    ],
+    [
+      "emphasis",
+      "онцлог"
+    ],
+    [
+      "justification",
+      "зөвтгөл"
+    ],
+    [
+      "evidence",
+      "нотолгоо"
+    ],
+    [
+      "confirmation",
+      "баталгаа"
+    ],
+    [
+      "observation",
+      "ажиглалт"
+    ],
+    [
+      "characteristic",
+      "шинж чанар"
+    ],
+    [
+      "structure / composition",
+      "бүтэц"
+    ],
+    [
+      "inclusion / participation",
+      "оролцоо"
+    ],
+    [
+      "exclusion",
+      "хасалт"
+    ],
+    [
+      "creation",
+      "бүтээл"
+    ],
+    [
+      "establishment",
+      "байгуулалт"
+    ],
+    [
+      "management",
+      "удирдлага"
+    ],
+    [
+      "control",
+      "хяналт"
+    ],
+    [
+      "organisation",
+      "зохион байгуулалт"
+    ],
+    [
+      "plan",
+      "төлөвлөгөө"
+    ],
+    [
+      "implementation",
+      "хэрэгжилт"
+    ],
+    [
+      "achievement",
+      "амжилт"
+    ],
+    [
+      "contribution",
+      "хувь нэмэр"
+    ],
+    [
+      "cooperation",
+      "хамтын ажиллагаа"
+    ],
+    [
+      "negotiation",
+      "хэлэлцээр"
+    ],
+    [
+      "agreement",
+      "гэрээ"
+    ],
+    [
+      "regulation",
+      "зохицуулалт"
+    ],
+    [
+      "restriction",
+      "хязгаарлалт"
+    ],
+    [
+      "encouragement / motivation",
+      "урам зориг"
+    ],
+    [
+      "utilisation",
+      "ашиглалт"
+    ],
+    [
+      "priority",
+      "тэргүүлэх чиглэл"
+    ],
+    [
+      "focus",
+      "анхаарлын төв"
+    ],
+    [
+      "implication",
+      "далд утга"
+    ],
+    [
+      "premise / basis",
+      "үндэслэл"
+    ],
+    [
+      "theory",
+      "онол"
+    ],
+    [
+      "hypothesis",
+      "таамаглал"
+    ],
+    [
+      "principle",
+      "зарчим"
+    ],
+    [
+      "standard",
+      "стандарт"
+    ],
+    [
+      "indicator",
+      "үзүүлэлт"
+    ],
+    [
+      "means",
+      "арга хэрэгсэл"
+    ],
+    [
+      "method",
+      "арга"
+    ],
+    [
+      "technique",
+      "техник"
+    ],
+    [
+      "policy",
+      "бодлого"
+    ],
+    [
+      "strategy",
+      "стратеги"
+    ],
+    [
+      "system",
+      "систем"
+    ],
+    [
+      "process",
+      "процесс"
+    ],
+    [
+      "stage / phase",
+      "үе шат"
+    ],
+    [
+      "aspect",
+      "тал"
+    ],
+    [
+      "field / domain",
+      "салбар"
+    ],
+    [
+      "scope / range",
+      "хүрээ"
+    ],
+    [
+      "scale / size",
+      "хэмжээ"
+    ],
+    [
+      "level / standard",
+      "түвшин"
+    ],
+    [
+      "degree",
+      "зэрэг"
+    ],
+    [
+      "trend",
+      "хандлага"
+    ],
+    [
+      "situation",
+      "нөхцөл байдал"
+    ],
+    [
+      "state / condition",
+      "төлөв"
+    ],
+    [
+      "environment",
+      "орчин"
+    ],
+    [
+      "condition",
+      "нөхцөл"
+    ],
+    [
+      "element",
+      "элемент"
+    ],
+    [
+      "factor",
+      "хүчин зүйл"
+    ],
+    [
+      "challenge",
+      "сорилт"
+    ],
+    [
+      "problem / issue",
+      "асуудал"
+    ],
+    [
+      "possibility / opportunity",
+      "боломж"
+    ],
+    [
+      "necessity",
+      "зайлшгүй шаардлага"
+    ],
+    [
+      "importance",
+      "ач холбогдол"
+    ],
+    [
+      "value",
+      "үнэ цэнэ"
+    ],
+    [
+      "quality",
+      "чанар"
+    ],
+    [
+      "efficiency",
+      "үр ашиг"
+    ],
+    [
+      "effectiveness",
+      "үр дүнтэй байдал"
+    ],
+    [
+      "cost",
+      "зардал"
+    ],
+    [
+      "budget",
+      "төсөв"
+    ],
+    [
+      "resource",
+      "нөөц"
+    ],
+    [
+      "ability / capability",
+      "чадвар"
+    ],
+    [
+      "skill",
+      "ур чадвар"
+    ],
+    [
+      "knowledge",
+      "мэдлэг"
+    ],
+    [
+      "information",
+      "мэдээлэл"
+    ],
+    [
+      "data",
+      "өгөгдөл"
+    ],
+    [
+      "fact",
+      "баримт"
+    ],
+    [
+      "truth",
+      "үнэн"
+    ],
+    [
+      "reality",
+      "бодит байдал"
+    ],
+    [
+      "future",
+      "ирээдүй"
+    ],
+    [
+      "past",
+      "өнгөрсөн"
+    ],
+    [
+      "present",
+      "одоо"
+    ],
+    [
+      "society",
+      "нийгэм"
+    ],
+    [
+      "culture",
+      "соёл"
+    ],
+    [
+      "institution",
+      "байгууллага"
+    ],
+    [
+      "enterprise",
+      "аж ахуйн нэгж"
+    ],
+    [
+      "industry",
+      "аж үйлдвэр"
+    ],
+    [
+      "economy",
+      "эдийн засаг"
+    ],
+    [
+      "market",
+      "зах зээл"
+    ],
+    [
+      "law",
+      "хууль"
+    ],
+    [
+      "regulation / rules",
+      "журам"
+    ],
+    [
+      "right",
+      "эрх"
+    ],
+    [
+      "responsibility",
+      "хариуцлага"
+    ],
+    [
+      "obligation",
+      "үүрэг"
+    ],
+    [
+      "safety / security",
+      "аюулгүй байдал"
+    ],
+    [
+      "protection",
+      "хамгаалалт"
+    ],
+    [
+      "sustainability",
+      "тогтвортой байдал"
+    ],
+    [
+      "progress",
+      "дэвшил"
+    ],
+    [
+      "innovation",
+      "инноваци"
+    ],
+    [
+      "technology",
+      "технологи"
+    ],
+    [
+      "science",
+      "шинжлэх ухаан"
+    ],
+    [
+      "specialist",
+      "мэргэжилтэн"
+    ],
+    [
+      "function",
+      "функц"
+    ],
+    [
+      "purpose / goal",
+      "зорилго"
+    ],
+    [
+      "objective",
+      "зорилт"
+    ],
+    [
+      "absolute",
+      "үнэмлэхүй"
+    ],
+    [
+      "abstract",
+      "хийсвэр"
+    ],
+    [
+      "appropriate",
+      "тохиромжтой"
+    ],
+    [
+      "comprehensive",
+      "цогц"
+    ],
+    [
+      "complex",
+      "төвөгтэй"
+    ],
+    [
+      "concrete / specific",
+      "тодорхой"
+    ],
+    [
+      "consistent / stable",
+      "тогтвортой"
+    ],
+    [
+      "constant / regular",
+      "тогтмол"
+    ],
+    [
+      "contemporary / modern",
+      "орчин үеийн"
+    ],
+    [
+      "detailed",
+      "нарийвчилсан"
+    ],
+    [
+      "direct",
+      "шууд"
+    ],
+    [
+      "diverse",
+      "олон янзын"
+    ],
+    [
+      "dominant",
+      "давамгай"
+    ],
+    [
+      "effective",
+      "үр дүнтэй"
+    ],
+    [
+      "efficient",
+      "үр ашигтай"
+    ],
+    [
+      "essential / important",
+      "чухал"
+    ],
+    [
+      "external",
+      "гадаад"
+    ],
+    [
+      "extreme",
+      "хэт"
+    ],
+    [
+      "flexible",
+      "уян хатан"
+    ],
+    [
+      "fundamental",
+      "үндсэн"
+    ],
+    [
+      "overall",
+      "ерөнхий"
+    ],
+    [
+      "global",
+      "дэлхийн"
+    ],
+    [
+      "gradual",
+      "аажмаар"
+    ],
+    [
+      "immense",
+      "асар их"
+    ],
+    [
+      "independent",
+      "бие даасан"
+    ],
+    [
+      "indirect",
+      "шууд бус"
+    ],
+    [
+      "inevitable",
+      "зайлшгүй"
+    ],
+    [
+      "initial",
+      "анхны"
+    ],
+    [
+      "intellectual",
+      "оюуны"
+    ],
+    [
+      "intense",
+      "хүчтэй"
+    ],
+    [
+      "internal",
+      "дотоод"
+    ],
+    [
+      "international",
+      "олон улсын"
+    ],
+    [
+      "legal",
+      "хууль ёсны"
+    ],
+    [
+      "logical",
+      "логик"
+    ],
+    [
+      "maximum",
+      "хамгийн их"
+    ],
+    [
+      "minimum",
+      "хамгийн бага"
+    ],
+    [
+      "moderate",
+      "дунд зэргийн"
+    ],
+    [
+      "mutual",
+      "харилцан"
+    ],
+    [
+      "negative",
+      "сөрөг"
+    ],
+    [
+      "neutral",
+      "төвийг сахисан"
+    ],
+    [
+      "objective",
+      "объектив"
+    ],
+    [
+      "obscure / ambiguous",
+      "тодорхойгүй"
+    ],
+    [
+      "official",
+      "албан ёсны"
+    ],
+    [
+      "optimal",
+      "оновчтой"
+    ],
+    [
+      "permanent",
+      "байнгын"
+    ],
+    [
+      "relevant",
+      "холбогдох"
+    ],
+    [
+      "plausible",
+      "илүүдэлтэй"
+    ],
+    [
+      "positive",
+      "эерэг"
+    ],
+    [
+      "potential",
+      "боломжит"
+    ],
+    [
+      "precise",
+      "нарийн"
+    ],
+    [
+      "preliminary",
+      "урьдчилсан"
+    ],
+    [
+      "predictable",
+      "урьдчилан таамаглах боломжтой"
+    ],
+    [
+      "primary",
+      "анхан шатны"
+    ],
+    [
+      "private",
+      "хувийн"
+    ],
+    [
+      "probable",
+      "магадлалтай"
+    ],
+    [
+      "progressive",
+      "дэвшилтэт"
+    ],
+    [
+      "provisional / temporary",
+      "түр"
+    ],
+    [
+      "public",
+      "нийтийн"
+    ],
+    [
+      "radical",
+      "эрс"
+    ],
+    [
+      "rapid",
+      "хурдан"
+    ],
+    [
+      "reasonable",
+      "боломжийн"
+    ],
+    [
+      "recent",
+      "сүүлийн үеийн"
+    ],
+    [
+      "relative",
+      "харьцангуй"
+    ],
+    [
+      "rigorous / strict",
+      "хатуу"
+    ],
+    [
+      "secondary",
+      "хоёрдогч"
+    ],
+    [
+      "sensitive",
+      "мэдрэмжтэй"
+    ],
+    [
+      "simultaneous",
+      "нэгэн зэрэг"
+    ],
+    [
+      "subjective",
+      "субъектив"
+    ],
+    [
+      "sufficient",
+      "хангалттай"
+    ],
+    [
+      "superior",
+      "илүү"
+    ],
+    [
+      "additional",
+      "нэмэлт"
+    ],
+    [
+      "surprising",
+      "гайхалтай"
+    ],
+    [
+      "symbolic",
+      "бэлгэдлийн"
+    ],
+    [
+      "theoretical",
+      "онолын"
+    ],
+    [
+      "traditional",
+      "уламжлалт"
+    ],
+    [
+      "transparent",
+      "ил тод"
+    ],
+    [
+      "final",
+      "эцсийн"
+    ],
+    [
+      "unique",
+      "онцгой"
+    ],
+    [
+      "universal",
+      "бүх нийтийн"
+    ],
+    [
+      "urgent",
+      "яаралтай"
+    ],
+    [
+      "valid",
+      "хүчинтэй"
+    ],
+    [
+      "extensive / broad",
+      "өргөн"
+    ],
+    [
+      "virtual",
+      "виртуал"
+    ],
+    [
+      "vital",
+      "амь чухал"
+    ],
+    [
+      "voluntary",
+      "сайн дурын"
+    ],
+    [
+      "absolutely",
+      "туйлын"
+    ],
+    [
+      "currently",
+      "одоогоор"
+    ],
+    [
+      "therefore",
+      "тиймээс"
+    ],
+    [
+      "however",
+      "гэхдээ"
+    ],
+    [
+      "moreover",
+      "цаашлаад"
+    ],
+    [
+      "in fact",
+      "үнэндээ"
+    ],
+    [
+      "as a result",
+      "үр дүнд"
+    ],
+    [
+      "on the other hand",
+      "нөгөө талаас"
+    ],
+    [
+      "especially",
+      "ялангуяа"
+    ],
+    [
+      "obviously",
+      "илэрхий"
+    ],
+    [
+      "generally",
+      "ерөнхийдөө"
+    ],
+    [
+      "probably",
+      "магадгүй"
+    ],
+    [
+      "rarely",
+      "ховор"
+    ],
+    [
+      "often",
+      "байнга"
+    ],
+    [
+      "apparently",
+      "бололтой"
+    ],
+    [
+      "possibly",
+      "боломжтой"
+    ],
+    [
+      "finally",
+      "эцэст нь"
+    ],
+    [
+      "precisely",
+      "нарийвчлан"
+    ],
+    [
+      "overall",
+      "нийтдээ"
+    ],
+    [
+      "predominantly",
+      "голчлон"
+    ],
+    [
+      "on the contrary",
+      "эсрэгээр"
+    ],
+    [
+      "in any case",
+      "ямар ч тохиолдолд"
+    ],
+    [
+      "in principle",
+      "зарчмын хувьд"
+    ],
+    [
+      "increasingly",
+      "улам бүр"
+    ],
+    [
+      "approximately",
+      "ойролцоогоор"
+    ],
+    [
+      "entirely",
+      "бүрэн"
+    ],
+    [
+      "partially",
+      "хэсэгчлэн"
+    ],
+    [
+      "undoubtedly",
+      "эргэлзээгүйгээр"
+    ]
+  ]
+}

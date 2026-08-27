@@ -42,10 +42,10 @@ import {
 
 // Bump this whenever new starter sets are added, so existing installs receive
 // them exactly once (a user who deletes a seed set keeps it deleted).
-// v8 upgrades every existing starter card to its new A1 foundation. v7
-// delivered English only; this pass also reaches the other newly expanded
-// languages without restoring cards a learner deliberately deleted.
-const SEED_VERSION = 8;
+// v9 refreshes the English seed with its complete A1–C2-derived A1 bank. The
+// prior version delivered all language foundations without restoring cards a
+// learner deliberately deleted.
+const SEED_VERSION = 9;
 const SEED_VERSION_KEY = 'audiorepeat-seed-version';
 
 // Word ids of the original 5-word starter sets, used to detect copies the user

@@ -1,0 +1,3178 @@
+{
+  "lang": "en",
+  "level": "C2",
+  "words": [
+    [
+      "abstraction",
+      "хийсвэрлэл"
+    ],
+    [
+      "absurdity",
+      "утгагүй байдал"
+    ],
+    [
+      "authority",
+      "эрх мэдэл"
+    ],
+    [
+      "autonomy",
+      "өөртөө засах эрх"
+    ],
+    [
+      "adaptation",
+      "дасан зохицол"
+    ],
+    [
+      "adequacy",
+      "тохиромжтой байдал"
+    ],
+    [
+      "administration",
+      "захиргаа"
+    ],
+    [
+      "allegory",
+      "сургаалт зүйрлэл"
+    ],
+    [
+      "altruism",
+      "өөртөө туслалцаа"
+    ],
+    [
+      "ambivalence",
+      "хоёрдмол байдал"
+    ],
+    [
+      "ambition",
+      "амбиц"
+    ],
+    [
+      "analogy",
+      "зүйрлэл"
+    ],
+    [
+      "anarchy",
+      "эмх замбараагүй байдал"
+    ],
+    [
+      "anachronism",
+      "цаг хугацааны алдаа"
+    ],
+    [
+      "anomaly",
+      "гажиг"
+    ],
+    [
+      "antagonism",
+      "дайсагнал"
+    ],
+    [
+      "antinomy",
+      "зөрчил"
+    ],
+    [
+      "antipathy",
+      "дургүйцэл"
+    ],
+    [
+      "antithesis",
+      "эсрэг үзэл"
+    ],
+    [
+      "apathy",
+      "хайхрамжгүй байдал"
+    ],
+    [
+      "appeal",
+      "давж заалдах"
+    ],
+    [
+      "apogee",
+      "оргил"
+    ],
+    [
+      "apology",
+      "уучлал"
+    ],
+    [
+      "arbitration",
+      "арбитраж"
+    ],
+    [
+      "argumentation",
+      "маргаан"
+    ],
+    [
+      "aristocracy",
+      "язгууртны дэглэм"
+    ],
+    [
+      "artifact",
+      "урлагийн бүтээл"
+    ],
+    [
+      "articulation",
+      "тодорхой илэрхийлэл"
+    ],
+    [
+      "asceticism",
+      "даяанчлал"
+    ],
+    [
+      "assimilation",
+      "шингээлт"
+    ],
+    [
+      "attribute",
+      "шинж чанар"
+    ],
+    [
+      "authenticity",
+      "жинхэнэ байдал"
+    ],
+    [
+      "disaster",
+      "гамшиг"
+    ],
+    [
+      "boundlessness",
+      "хязгааргүй байдал"
+    ],
+    [
+      "inaction",
+      "идэвхгүй байдал"
+    ],
+    [
+      "ruthlessness",
+      "харгислал"
+    ],
+    [
+      "lawlessness",
+      "хуульгүй байдал"
+    ],
+    [
+      "security",
+      "аюулгүй байдал"
+    ],
+    [
+      "impeccability",
+      "төгс байдал"
+    ],
+    [
+      "unconditionality",
+      "болзолгүй байдал"
+    ],
+    [
+      "hopelessness",
+      "цөхрөл"
+    ],
+    [
+      "selflessness",
+      "өөрийгөө золиослох"
+    ],
+    [
+      "infinity",
+      "хязгааргүй"
+    ],
+    [
+      "helplessness",
+      "аргагүй байдал"
+    ],
+    [
+      "disorder",
+      "эмх замбараагүй"
+    ],
+    [
+      "impartiality",
+      "шударга байдал"
+    ],
+    [
+      "the unconscious",
+      "ухамсаргүй"
+    ],
+    [
+      "immortality",
+      "үхэшгүй мөнх"
+    ],
+    [
+      "gratitude",
+      "талархал"
+    ],
+    [
+      "prosperity",
+      "цэцэглэлт"
+    ],
+    [
+      "benevolence",
+      "сайн санаа"
+    ],
+    [
+      "well-being",
+      "сайн сайхан байдал"
+    ],
+    [
+      "prudence",
+      "ухаалаг байдал"
+    ],
+    [
+      "nobility",
+      "язгуурт ёс"
+    ],
+    [
+      "favor",
+      "нигүүлсэл"
+    ],
+    [
+      "improvement",
+      "сайжруулалт"
+    ],
+    [
+      "brilliance",
+      "гялалзах байдал"
+    ],
+    [
+      "short-sightedness",
+      "богино хараа"
+    ],
+    [
+      "wealth",
+      "баялаг"
+    ],
+    [
+      "theology",
+      "теологи"
+    ],
+    [
+      "morbidity",
+      "өвчтэй байдал"
+    ],
+    [
+      "chatter",
+      "овоо яриа"
+    ],
+    [
+      "struggle",
+      "тэмцэл"
+    ],
+    [
+      "transience",
+      "мөнх бус байдал"
+    ],
+    [
+      "burden",
+      "ачаа"
+    ],
+    [
+      "fleetingness",
+      "агшин зуурын"
+    ],
+    [
+      "courtesy",
+      "эелдэг байдал"
+    ],
+    [
+      "greatness",
+      "агуу байдал"
+    ],
+    [
+      "magnanimity",
+      "өргөн сэтгэл"
+    ],
+    [
+      "fidelity",
+      "үнэнч байдал"
+    ],
+    [
+      "probability",
+      "магадлал"
+    ],
+    [
+      "supremacy",
+      "дээд байдал"
+    ],
+    [
+      "weightiness",
+      "хүнд байдал"
+    ],
+    [
+      "dilapidation",
+      "хуучин эдлэл"
+    ],
+    [
+      "reciprocity",
+      "харилцан ашиг"
+    ],
+    [
+      "interaction",
+      "харилцан үйлчлэл"
+    ],
+    [
+      "interdependence",
+      "харилцан хамаарал"
+    ],
+    [
+      "mutual understanding",
+      "харилцан ойлголцол"
+    ],
+    [
+      "interconnection",
+      "харилцан холбоо"
+    ],
+    [
+      "deliberateness",
+      "бодолтой байдал"
+    ],
+    [
+      "exactingness",
+      "хатуу шаардлага"
+    ],
+    [
+      "view",
+      "үзэл бодол"
+    ],
+    [
+      "influence",
+      "нөлөө"
+    ],
+    [
+      "intervention",
+      "оролцоо"
+    ],
+    [
+      "attention",
+      "анхаарал"
+    ],
+    [
+      "suggestion",
+      "сүнслээх"
+    ],
+    [
+      "sublimity",
+      "өндөрлөг"
+    ],
+    [
+      "recompense",
+      "шагнал"
+    ],
+    [
+      "abstinence",
+      "цээрлэл"
+    ],
+    [
+      "retribution",
+      "өшөө авалт"
+    ],
+    [
+      "possibility",
+      "боломж"
+    ],
+    [
+      "indignation",
+      "уур хилэн"
+    ],
+    [
+      "revival",
+      "сэргэн мандалт"
+    ],
+    [
+      "excitement",
+      "догдлол"
+    ],
+    [
+      "will",
+      "хүсэл зориг"
+    ],
+    [
+      "imagination",
+      "төсөөлөл"
+    ],
+    [
+      "embodiment",
+      "биелэл"
+    ],
+    [
+      "upbringing",
+      "хүмүүжил"
+    ],
+    [
+      "receptivity",
+      "хүлээн авах чадвар"
+    ],
+    [
+      "perception",
+      "ойлголт"
+    ],
+    [
+      "reproduction",
+      "дахин үйлдвэрлэл"
+    ],
+    [
+      "restoration",
+      "сэргээн засварлалт"
+    ],
+    [
+      "admiration",
+      "бишрэл"
+    ],
+    [
+      "admonition",
+      "сануулга"
+    ],
+    [
+      "temporality",
+      "цаг хугацааны шинж"
+    ],
+    [
+      "permissiveness",
+      "зөвшөөрөл"
+    ],
+    [
+      "universality",
+      "бүх нийтийн байдал"
+    ],
+    [
+      "comprehensiveness",
+      "бүрэн хамрах"
+    ],
+    [
+      "choice",
+      "сонголт"
+    ],
+    [
+      "restraint",
+      "тэвчээр"
+    ],
+    [
+      "fiction",
+      "зохиомол"
+    ],
+    [
+      "expressiveness",
+      "илэрхийлэл"
+    ],
+    [
+      "arrogance",
+      "ихэмсэг байдал"
+    ],
+    [
+      "repression",
+      "дарангуйлал"
+    ],
+    [
+      "guarantee",
+      "баталгаа"
+    ],
+    [
+      "harmony",
+      "эв нэгдэл"
+    ],
+    [
+      "hegemony",
+      "давамгайлал"
+    ],
+    [
+      "genealogy",
+      "угийн бичиг"
+    ],
+    [
+      "genesis",
+      "гарал үүсэл"
+    ],
+    [
+      "generalization",
+      "ерөнхийлөл"
+    ],
+    [
+      "heroism",
+      "баатарлаг байдал"
+    ],
+    [
+      "flexibility",
+      "уян хатан байдал"
+    ],
+    [
+      "hygiene",
+      "эрүүл ахуй"
+    ],
+    [
+      "hypothesis",
+      "таамаглал"
+    ],
+    [
+      "depth",
+      "гүнзгий байдал"
+    ],
+    [
+      "mockery",
+      "шоглоом"
+    ],
+    [
+      "epistemology",
+      "танин мэдэхүйн онол"
+    ],
+    [
+      "domination",
+      "ноёрхол"
+    ],
+    [
+      "gradation",
+      "зэрэглэл"
+    ],
+    [
+      "civic mindedness",
+      "иргэншил"
+    ],
+    [
+      "boundary",
+      "хязгаар"
+    ],
+    [
+      "grandeur",
+      "сүр жавхлан"
+    ],
+    [
+      "sin",
+      "нүгэл"
+    ],
+    [
+      "rudeness",
+      "бүдүүлэг байдал"
+    ],
+    [
+      "talent",
+      "авьяас"
+    ],
+    [
+      "movement",
+      "хөдөлгөөн"
+    ],
+    [
+      "degradation",
+      "доройтол"
+    ],
+    [
+      "deduction",
+      "дедукц"
+    ],
+    [
+      "disintegration",
+      "задран уналт"
+    ],
+    [
+      "effectiveness",
+      "үр дүнтэй байдал"
+    ],
+    [
+      "declaration",
+      "тунхаглал"
+    ],
+    [
+      "delegitimization",
+      "хууль ёсны алдагдал"
+    ],
+    [
+      "delicacy",
+      "нарийн байдал"
+    ],
+    [
+      "democracy",
+      "ардчилал"
+    ],
+    [
+      "demonstration",
+      "жагсаал"
+    ],
+    [
+      "denotation",
+      "утга"
+    ],
+    [
+      "deontology",
+      "ёс зүйн онол"
+    ],
+    [
+      "depression",
+      "сэтгэл гутрал"
+    ],
+    [
+      "audacity",
+      "зориг"
+    ],
+    [
+      "determinism",
+      "тодорхойлогдол"
+    ],
+    [
+      "definition",
+      "тодорхойлолт"
+    ],
+    [
+      "activity",
+      "үйл ажиллагаа"
+    ],
+    [
+      "dialectics",
+      "диалектик"
+    ],
+    [
+      "diversification",
+      "төрөлжүүлэлт"
+    ],
+    [
+      "dilemma",
+      "хоёр эвэрт асуудал"
+    ],
+    [
+      "dynamics",
+      "динамик"
+    ],
+    [
+      "discrediting",
+      "нэр хүндэд халдах"
+    ],
+    [
+      "discretization",
+      "дискретчлэл"
+    ],
+    [
+      "discrimination",
+      "ялгаварлан гадуурхал"
+    ],
+    [
+      "discourse",
+      "хэлэлцүүлэг"
+    ],
+    [
+      "dispersion",
+      "тархалт"
+    ],
+    [
+      "disposition",
+      "байршил"
+    ],
+    [
+      "distance",
+      "зай"
+    ],
+    [
+      "distinction",
+      "ялгаа"
+    ],
+    [
+      "discipline",
+      "сахилга бат"
+    ],
+    [
+      "valor",
+      "эрэлхэг байдал"
+    ],
+    [
+      "virtue",
+      "буян"
+    ],
+    [
+      "conscientiousness",
+      "ухамсартай байдал"
+    ],
+    [
+      "trust",
+      "итгэл"
+    ],
+    [
+      "argument",
+      "аргумент"
+    ],
+    [
+      "dogmatism",
+      "догматизм"
+    ],
+    [
+      "evidentiality",
+      "нотолгоо"
+    ],
+    [
+      "duty",
+      "үүрэг"
+    ],
+    [
+      "durability",
+      "бат бөх байдал"
+    ],
+    [
+      "dominant",
+      "давамгайлагч"
+    ],
+    [
+      "reliability",
+      "найдвартай байдал"
+    ],
+    [
+      "achievement",
+      "амжилт"
+    ],
+    [
+      "dignity",
+      "нэр төр"
+    ],
+    [
+      "accessibility",
+      "хүртээмж"
+    ],
+    [
+      "leisure",
+      "чөлөөт цаг"
+    ],
+    [
+      "dramatization",
+      "драматжуулалт"
+    ],
+    [
+      "dualism",
+      "хоёрдмол үзэл"
+    ],
+    [
+      "spirituality",
+      "сүнслэг байдал"
+    ],
+    [
+      "soul",
+      "сүнс"
+    ],
+    [
+      "unity",
+      "нэгдэл"
+    ],
+    [
+      "naturalness",
+      "байгалийн байдал"
+    ],
+    [
+      "greed",
+      "шунал"
+    ],
+    [
+      "pity",
+      "өрөвдөл"
+    ],
+    [
+      "survivability",
+      "амьдрах чадвар"
+    ],
+    [
+      "viability",
+      "эрч хүч"
+    ],
+    [
+      "affirmation of life",
+      "амьдралын баталгаа"
+    ],
+    [
+      "delusion",
+      "хуурамч ойлголт"
+    ],
+    [
+      "care",
+      "халамж"
+    ],
+    [
+      "completeness",
+      "бүрэн байдал"
+    ],
+    [
+      "dependence",
+      "хамаарал"
+    ],
+    [
+      "conquest",
+      "байлдан дагуулалт"
+    ],
+    [
+      "enigma",
+      "оньсого"
+    ],
+    [
+      "inclination",
+      "хандлага"
+    ],
+    [
+      "indebtedness",
+      "өртэй байдал"
+    ],
+    [
+      "borrowing",
+      "зээл"
+    ],
+    [
+      "regularity",
+      "тогтмол байдал"
+    ],
+    [
+      "legality",
+      "хууль ёс"
+    ],
+    [
+      "consolidation",
+      "бэхжүүлэлт"
+    ],
+    [
+      "deceleration",
+      "удаашрал"
+    ],
+    [
+      "substitution",
+      "орлуулалт"
+    ],
+    [
+      "intention",
+      "зорилго"
+    ],
+    [
+      "employment",
+      "ажил эрхлэлт"
+    ],
+    [
+      "sharpness",
+      "хурц байдал"
+    ],
+    [
+      "reserve",
+      "нөөц"
+    ],
+    [
+      "commandment",
+      "тушаал"
+    ],
+    [
+      "prohibition",
+      "хориг"
+    ],
+    [
+      "intricacy",
+      "төвөгтэй байдал"
+    ],
+    [
+      "merit",
+      "гавьяа"
+    ],
+    [
+      "difficulty",
+      "бэрхшээл"
+    ],
+    [
+      "capture",
+      "олз"
+    ],
+    [
+      "protection",
+      "хамгаалалт"
+    ],
+    [
+      "abuse",
+      "хэтрүүлэл"
+    ],
+    [
+      "significance",
+      "ач холбогдол"
+    ],
+    [
+      "knowledge",
+      "мэдлэг"
+    ],
+    [
+      "maturity",
+      "төлөвшил"
+    ],
+    [
+      "idealization",
+      "идеалчлал"
+    ],
+    [
+      "identification",
+      "таних"
+    ],
+    [
+      "identity",
+      "өвөрмөц байдал"
+    ],
+    [
+      "ideology",
+      "үзэл суртал"
+    ],
+    [
+      "redundancy",
+      "илүүдэл"
+    ],
+    [
+      "fame",
+      "алдар нэр"
+    ],
+    [
+      "perversion",
+      "гажиглал"
+    ],
+    [
+      "manufacture",
+      "үйлдвэрлэл"
+    ],
+    [
+      "publication",
+      "хэвлэл"
+    ],
+    [
+      "changeability",
+      "өөрчлөгдөмтгий байдал"
+    ],
+    [
+      "measurement",
+      "хэмжилт"
+    ],
+    [
+      "exhaustion",
+      "ядаргаа"
+    ],
+    [
+      "abundance",
+      "элбэг дэлбэг байдал"
+    ],
+    [
+      "ingenuity",
+      "ухаан"
+    ],
+    [
+      "isolation",
+      "тусгаарлалт"
+    ],
+    [
+      "illusion",
+      "хуурамч мэдрэмж"
+    ],
+    [
+      "imperative",
+      "зарлиг"
+    ],
+    [
+      "implication",
+      "далд утга"
+    ],
+    [
+      "improvisation",
+      "импровиз"
+    ],
+    [
+      "impulse",
+      "түлхэц"
+    ],
+    [
+      "property",
+      "өмч"
+    ],
+    [
+      "invariance",
+      "өөрчлөгдөшгүй байдал"
+    ],
+    [
+      "induction",
+      "индукц"
+    ],
+    [
+      "industrialization",
+      "аж үйлдвэржилт"
+    ],
+    [
+      "innovation",
+      "шинэчлэл"
+    ],
+    [
+      "institutionalization",
+      "институтчлал"
+    ],
+    [
+      "instrumentalization",
+      "хэрэгсэлчлэл"
+    ],
+    [
+      "integration",
+      "нэгтгэл"
+    ],
+    [
+      "intellect",
+      "оюун ухаан"
+    ],
+    [
+      "intensity",
+      "эрчим"
+    ],
+    [
+      "interpretation",
+      "тайлбар"
+    ],
+    [
+      "introspection",
+      "дотоод ажиглалт"
+    ],
+    [
+      "intuition",
+      "зөн совин"
+    ],
+    [
+      "infrastructure",
+      "дэд бүтэц"
+    ],
+    [
+      "irony",
+      "инэгээл"
+    ],
+    [
+      "exclusivity",
+      "онцгой байдал"
+    ],
+    [
+      "sincerity",
+      "чин сэтгэл"
+    ],
+    [
+      "temptation",
+      "уруу таталт"
+    ],
+    [
+      "execution",
+      "гүйцэтгэл"
+    ],
+    [
+      "trial",
+      "со рьдлага"
+    ],
+    [
+      "truth",
+      "үнэн"
+    ],
+    [
+      "source",
+      "эх сурвалж"
+    ],
+    [
+      "historiography",
+      "түүх бичлэг"
+    ],
+    [
+      "exhaustion",
+      "шавхрал"
+    ],
+    [
+      "calculus",
+      "тооцоо"
+    ],
+    [
+      "casuistry",
+      "софизм"
+    ],
+    [
+      "canon",
+      "канон"
+    ],
+    [
+      "capitalization",
+      "капиталжуулалт"
+    ],
+    [
+      "quality",
+      "чанар"
+    ],
+    [
+      "qualification",
+      "мэргэшил"
+    ],
+    [
+      "quintessence",
+      "гол мөн чанар"
+    ],
+    [
+      "codification",
+      "кодификаци"
+    ],
+    [
+      "quantity",
+      "тоо хэмжээ"
+    ],
+    [
+      "collision",
+      "мөргөлдөөн"
+    ],
+    [
+      "commercialization",
+      "арилжаажилт"
+    ],
+    [
+      "compactness",
+      "нягтрал"
+    ],
+    [
+      "compensation",
+      "нөхөн төлбөр"
+    ],
+    [
+      "competence",
+      "чадвар"
+    ],
+    [
+      "complexity",
+      "нарийн төвөгтэй байдал"
+    ],
+    [
+      "complementarity",
+      "нэмэн гүйцээлт"
+    ],
+    [
+      "compromise",
+      "буулт"
+    ],
+    [
+      "computerization",
+      "компьютерчлэл"
+    ],
+    [
+      "convention",
+      "уламжлал"
+    ],
+    [
+      "convergence",
+      "нийлэлт"
+    ],
+    [
+      "conversion",
+      "хувиргалт"
+    ],
+    [
+      "conglomerate",
+      "конгломерат"
+    ],
+    [
+      "congruence",
+      "тохиролцоо"
+    ],
+    [
+      "condition",
+      "нөхцөл"
+    ],
+    [
+      "finitude",
+      "төгсгөлт байдал"
+    ],
+    [
+      "concretization",
+      "бетончлол"
+    ],
+    [
+      "concreteness",
+      "бетон байдал"
+    ],
+    [
+      "competitiveness",
+      "өрсөлдөх чадвар"
+    ],
+    [
+      "consensus",
+      "зөвшилцөл"
+    ],
+    [
+      "conservatism",
+      "консерватизм"
+    ],
+    [
+      "consistency",
+      "тогтвортой байдал"
+    ],
+    [
+      "conspiracy",
+      "хуйвалдаан"
+    ],
+    [
+      "constant",
+      "тогтмол"
+    ],
+    [
+      "ascertainment",
+      "тогтоолт"
+    ],
+    [
+      "constitution",
+      "үндсэн хууль"
+    ],
+    [
+      "construction",
+      "бүтээн байгуулалт"
+    ],
+    [
+      "constructiveness",
+      "бүтээлч байдал"
+    ],
+    [
+      "consultation",
+      "зөвлөгөө"
+    ],
+    [
+      "contamination",
+      "бохирдол"
+    ],
+    [
+      "contemplation",
+      "бясалгал"
+    ],
+    [
+      "context",
+      "контекст"
+    ],
+    [
+      "contingency",
+      "санамсаргүй байдал"
+    ],
+    [
+      "continuum",
+      "тасралтгүй"
+    ],
+    [
+      "contrast",
+      "ялгарал"
+    ],
+    [
+      "control",
+      "хяналт"
+    ],
+    [
+      "conceptualization",
+      "үзэл баримтлал"
+    ],
+    [
+      "juncture",
+      "нөхцөл байдал"
+    ],
+    [
+      "coordination",
+      "зохицуулалт"
+    ],
+    [
+      "correctness",
+      "зөв байдал"
+    ],
+    [
+      "correlation",
+      "корреляци"
+    ],
+    [
+      "cosmopolitanism",
+      "космополитизм"
+    ],
+    [
+      "eloquence",
+      "уран илтгэл"
+    ],
+    [
+      "creditworthiness",
+      "зээлийн чадвар"
+    ],
+    [
+      "criterion",
+      "шалгуур"
+    ],
+    [
+      "criticalness",
+      "шүүмжлэлт байдал"
+    ],
+    [
+      "collapse",
+      "нуралт"
+    ],
+    [
+      "cultivation",
+      "тариалан"
+    ],
+    [
+      "culture",
+      "соёл"
+    ],
+    [
+      "laconicism",
+      "товч байдал"
+    ],
+    [
+      "lexicon",
+      "үг хэллэг"
+    ],
+    [
+      "liberalization",
+      "либералчлал"
+    ],
+    [
+      "liberalism",
+      "либерализм"
+    ],
+    [
+      "leadership",
+      "удирдлага"
+    ],
+    [
+      "liquidation",
+      "татан буулгалт"
+    ],
+    [
+      "limitation",
+      "хязгаарлалт"
+    ],
+    [
+      "logicality",
+      "логик байдал"
+    ],
+    [
+      "locality",
+      "орон нутгийн байдал"
+    ],
+    [
+      "curiosity",
+      "сониуч байдал"
+    ],
+    [
+      "maximalism",
+      "максимализм"
+    ],
+    [
+      "manipulation",
+      "заль"
+    ],
+    [
+      "margin",
+      "зах"
+    ],
+    [
+      "marginalization",
+      "зах зээлчлэл"
+    ],
+    [
+      "scale",
+      "хэмжээ"
+    ],
+    [
+      "materialization",
+      "материалчлал"
+    ],
+    [
+      "materiality",
+      "материаллаг байдал"
+    ],
+    [
+      "mediation",
+      "зуучлал"
+    ],
+    [
+      "melancholy",
+      "гуниг"
+    ],
+    [
+      "memorialization",
+      "дурсгал"
+    ],
+    [
+      "measure",
+      "хэмжүүр"
+    ],
+    [
+      "meritocracy",
+      "гавьяат ёс"
+    ],
+    [
+      "metamorphosis",
+      "хувирал"
+    ],
+    [
+      "methodology",
+      "арга зүй"
+    ],
+    [
+      "mercy",
+      "өршөөл"
+    ],
+    [
+      "worldview",
+      "дэлхийг үзэх үзэл"
+    ],
+    [
+      "mystification",
+      "нууцлал"
+    ],
+    [
+      "mysticism",
+      "мистицизм"
+    ],
+    [
+      "mobilization",
+      "дайчилгаа"
+    ],
+    [
+      "mobility",
+      "хөдөлгөөнт байдал"
+    ],
+    [
+      "modeling",
+      "загварчлал"
+    ],
+    [
+      "modernization",
+      "модернчлал"
+    ],
+    [
+      "modification",
+      "өөрчлөлт"
+    ],
+    [
+      "modulation",
+      "модуляци"
+    ],
+    [
+      "silence",
+      "чимээгүй байдал"
+    ],
+    [
+      "morality",
+      "ёс суртахуун"
+    ],
+    [
+      "motivation",
+      "урам зориг"
+    ],
+    [
+      "obscurantism",
+      "хар мухар"
+    ],
+    [
+      "vindictiveness",
+      "хорсол"
+    ],
+    [
+      "wisdom",
+      "мэргэн ухаан"
+    ],
+    [
+      "thinking",
+      "сэтгэн бодолт"
+    ],
+    [
+      "observantness",
+      "ажиглалт"
+    ],
+    [
+      "navigation",
+      "навигаци"
+    ],
+    [
+      "edification",
+      "сургаал"
+    ],
+    [
+      "naivety",
+      "гэнэн байдал"
+    ],
+    [
+      "presence",
+      "оршихуй"
+    ],
+    [
+      "fullness",
+      "дүүрэн байдал"
+    ],
+    [
+      "tension",
+      "хурцадмал байдал"
+    ],
+    [
+      "heritage",
+      "өв уламжлал"
+    ],
+    [
+      "instruction",
+      "заавар"
+    ],
+    [
+      "mood",
+      "сэтгэл санаа"
+    ],
+    [
+      "naturalization",
+      "иргэншил авах"
+    ],
+    [
+      "science",
+      "шинжлэх ухаан"
+    ],
+    [
+      "scientificity",
+      "шинжлэх ухаант байдал"
+    ],
+    [
+      "beginning",
+      "эхлэл"
+    ],
+    [
+      "inadequacy",
+      "тохиромжгүй байдал"
+    ],
+    [
+      "ignorance",
+      "мунхаг"
+    ],
+    [
+      "equanimity",
+      "тайван байдал"
+    ],
+    [
+      "negativity",
+      "сөрөг байдал"
+    ],
+    [
+      "inflexibility",
+      "хатуужил"
+    ],
+    [
+      "distrust",
+      "итгэлгүй байдал"
+    ],
+    [
+      "underestimation",
+      "дутуу үнэлгээ"
+    ],
+    [
+      "understatement",
+      "багасгасан илэрхийлэл"
+    ],
+    [
+      "independence",
+      "тусгаар тогтнол"
+    ],
+    [
+      "irreplaceability",
+      "орлуулшгүй байдал"
+    ],
+    [
+      "inevitability",
+      "зайлшгүй байдал"
+    ],
+    [
+      "obscurity",
+      "тодорхойгүй байдал"
+    ],
+    [
+      "inscrutability",
+      "ойлгомжгүй байдал"
+    ],
+    [
+      "incorrectness",
+      "алдаа"
+    ],
+    [
+      "illogicality",
+      "логикгүй байдал"
+    ],
+    [
+      "awkwardness",
+      "эвгүй байдал"
+    ],
+    [
+      "necessity",
+      "зайлшгүй шаардлага"
+    ],
+    [
+      "steadfastness",
+      "тууштай байдал"
+    ],
+    [
+      "immaculateness",
+      "цэвэр ариун байдал"
+    ],
+    [
+      "inconsistency",
+      "тогтворгүй байдал"
+    ],
+    [
+      "immediacy",
+      "шууд байдал"
+    ],
+    [
+      "unpredictability",
+      "урьдчилан таамаглашгүй"
+    ],
+    [
+      "inflexibility",
+      "хатуу байдал"
+    ],
+    [
+      "continuity",
+      "тасралтгүй байдал"
+    ],
+    [
+      "inviolability",
+      "халдашгүй байдал"
+    ],
+    [
+      "rejection",
+      "татгалзал"
+    ],
+    [
+      "consistency",
+      "зөрчилгүй байдал"
+    ],
+    [
+      "inequality",
+      "тэгш бус байдал"
+    ],
+    [
+      "inseparability",
+      "салшгүй байдал"
+    ],
+    [
+      "indecisiveness",
+      "эргэлзээ"
+    ],
+    [
+      "discrepancy",
+      "зөрүү"
+    ],
+    [
+      "insolvency",
+      "дампуурал"
+    ],
+    [
+      "injustice",
+      "шударга бус байдал"
+    ],
+    [
+      "insignificance",
+      "ач холбогдолгүй"
+    ],
+    [
+      "intolerance",
+      "тэвчихгүй байдал"
+    ],
+    [
+      "elusiveness",
+      "барьж авахад бэрх"
+    ],
+    [
+      "fearlessness",
+      "айдсангүй"
+    ],
+    [
+      "indefatigability",
+      "ядаргаагүй"
+    ],
+    [
+      "implicitness",
+      "далд байдал"
+    ],
+    [
+      "leveling",
+      "тэнцвэржүүлэлт"
+    ],
+    [
+      "nihilism",
+      "нигилизм"
+    ],
+    [
+      "novelty",
+      "шинэлэг байдал"
+    ],
+    [
+      "normativity",
+      "норматив байдал"
+    ],
+    [
+      "nostalgia",
+      "гунигтай дурсамж"
+    ],
+    [
+      "vow",
+      "тангараг"
+    ],
+    [
+      "review",
+      "тойм"
+    ],
+    [
+      "abundance",
+      "элбэг байдал"
+    ],
+    [
+      "ennoblement",
+      "эрхэмжүүлэлт"
+    ],
+    [
+      "sphere",
+      "хүрээ"
+    ],
+    [
+      "denunciation",
+      "зэмлэл"
+    ],
+    [
+      "justification",
+      "үндэслэл"
+    ],
+    [
+      "reversibility",
+      "эргэх боломж"
+    ],
+    [
+      "ritual",
+      "зан үйл"
+    ],
+    [
+      "conditioning",
+      "болзолжилт"
+    ],
+    [
+      "training",
+      "сургалт"
+    ],
+    [
+      "objectification",
+      "объектчлал"
+    ],
+    [
+      "objectivity",
+      "объектив байдал"
+    ],
+    [
+      "voluminousness",
+      "багтаамж"
+    ],
+    [
+      "ordinariness",
+      "энгийн байдал"
+    ],
+    [
+      "obligatoriness",
+      "заавал байдал"
+    ],
+    [
+      "limitation",
+      "хязгаарлагдмал байдал"
+    ],
+    [
+      "unambiguity",
+      "хоёрдмол бус байдал"
+    ],
+    [
+      "expectation",
+      "хүлээлт"
+    ],
+    [
+      "illumination",
+      "гэгээрэл"
+    ],
+    [
+      "finality",
+      "эцсийн байдал"
+    ],
+    [
+      "ontology",
+      "онтологи"
+    ],
+    [
+      "operationalization",
+      "үйл ажиллагаажлал"
+    ],
+    [
+      "definiteness",
+      "тодорхой байдал"
+    ],
+    [
+      "optimization",
+      "оновчлол"
+    ],
+    [
+      "optimism",
+      "өөдрөг үзэл"
+    ],
+    [
+      "experience",
+      "туршлага"
+    ],
+    [
+      "oratory",
+      "илтгэл"
+    ],
+    [
+      "organization",
+      "байгууллага"
+    ],
+    [
+      "orientation",
+      "чиглэл"
+    ],
+    [
+      "awareness",
+      "ухамсар"
+    ],
+    [
+      "liberation",
+      "чөлөөлөлт"
+    ],
+    [
+      "foundation",
+      "суурь"
+    ],
+    [
+      "realization",
+      "ухамсарлалт"
+    ],
+    [
+      "caution",
+      "болгоомж"
+    ],
+    [
+      "implementation",
+      "хэрэгжилт"
+    ],
+    [
+      "responsibility",
+      "хариуцлага"
+    ],
+    [
+      "accountability",
+      "тайлагнах үүрэг"
+    ],
+    [
+      "abstractness",
+      "хийсвэр байдал"
+    ],
+    [
+      "return",
+      "өгөөж"
+    ],
+    [
+      "responsiveness",
+      "хариу үйлчлэл"
+    ],
+    [
+      "revelation",
+      "илчлэл"
+    ],
+    [
+      "openness",
+      "нээлттэй байдал"
+    ],
+    [
+      "relativity",
+      "харьцангуй байдал"
+    ],
+    [
+      "reflection",
+      "тусгал"
+    ],
+    [
+      "detachment",
+      "салангид байдал"
+    ],
+    [
+      "alienation",
+      "харьсал"
+    ],
+    [
+      "assessment",
+      "үнэлгээ"
+    ],
+    [
+      "obviousness",
+      "илэрхий байдал"
+    ],
+    [
+      "erroneousness",
+      "алдаатай байдал"
+    ],
+    [
+      "pathology",
+      "эмгэг судлал"
+    ],
+    [
+      "pathos",
+      "пафос"
+    ],
+    [
+      "pedantry",
+      "педантизм"
+    ],
+    [
+      "negotiation",
+      "хэлэлцээр"
+    ],
+    [
+      "transmission",
+      "дамжуулалт"
+    ],
+    [
+      "turning point",
+      "эргэлтийн цэг"
+    ],
+    [
+      "transfer",
+      "шилжүүлэг"
+    ],
+    [
+      "reinterpretation",
+      "дахин тайлбар"
+    ],
+    [
+      "revaluation",
+      "дахин үнэлгээ"
+    ],
+    [
+      "intertwining",
+      "холбоо"
+    ],
+    [
+      "perspective",
+      "хэтийн төлөв"
+    ],
+    [
+      "pessimism",
+      "гутранги үзэл"
+    ],
+    [
+      "planning",
+      "төлөвлөлт"
+    ],
+    [
+      "systematicness",
+      "системтэй байдал"
+    ],
+    [
+      "tribe",
+      "овог"
+    ],
+    [
+      "pluralism",
+      "олон урсгалт үзэл"
+    ],
+    [
+      "plurality",
+      "олон янз байдал"
+    ],
+    [
+      "imperativeness",
+      "захирах байдал"
+    ],
+    [
+      "narration",
+      "өгүүллэг"
+    ],
+    [
+      "superficiality",
+      "өнгөц байдал"
+    ],
+    [
+      "recurrence",
+      "давтагдал"
+    ],
+    [
+      "preparation",
+      "бэлтгэл"
+    ],
+    [
+      "support",
+      "дэмжлэг"
+    ],
+    [
+      "likeness",
+      "ижилсэл"
+    ],
+    [
+      "suspicion",
+      "сэжиг"
+    ],
+    [
+      "imitation",
+      "дууриал"
+    ],
+    [
+      "worship",
+      "мөргөл"
+    ],
+    [
+      "submissiveness",
+      "дагаархах байдал"
+    ],
+    [
+      "attempt",
+      "оролдлого"
+    ],
+    [
+      "usefulness",
+      "хэрэгтэй байдал"
+    ],
+    [
+      "polemic",
+      "полемик"
+    ],
+    [
+      "polyphony",
+      "олон хоолой"
+    ],
+    [
+      "polarization",
+      "туйлшрал"
+    ],
+    [
+      "obstacle",
+      "саад"
+    ],
+    [
+      "care",
+      "асрамж"
+    ],
+    [
+      "popularity",
+      "алдартай байдал"
+    ],
+    [
+      "vice",
+      "муу зуршил"
+    ],
+    [
+      "obedience",
+      "дагавар"
+    ],
+    [
+      "postulate",
+      "постулат"
+    ],
+    [
+      "praise",
+      "магтаал"
+    ],
+    [
+      "veneration",
+      "хүндэтгэл"
+    ],
+    [
+      "poetics",
+      "яруу найргийн онол"
+    ],
+    [
+      "righteousness",
+      "зөв шударга байдал"
+    ],
+    [
+      "plausibility",
+      "үнэмшилтэй байдал"
+    ],
+    [
+      "right",
+      "эрх"
+    ],
+    [
+      "pragmatism",
+      "прагматизм"
+    ],
+    [
+      "practicality",
+      "практик байдал"
+    ],
+    [
+      "foresight",
+      "алсын хараа"
+    ],
+    [
+      "bias",
+      "өөртөө таашаал"
+    ],
+    [
+      "anticipation",
+      "урьдчилан таамаглал"
+    ],
+    [
+      "predetermination",
+      "урьдчилан тогтоолт"
+    ],
+    [
+      "precaution",
+      "урьдчилан сэргийлэлт"
+    ],
+    [
+      "preference",
+      "давуу эрх"
+    ],
+    [
+      "enterprise",
+      "бизнес эрхлэлт"
+    ],
+    [
+      "predisposition",
+      "урьдчилан бэлэн байдал"
+    ],
+    [
+      "prejudice",
+      "хэвшсэн ойлголт"
+    ],
+    [
+      "predictability",
+      "урьдчилан таамаглах чадвар"
+    ],
+    [
+      "continuity",
+      "залгамжлал"
+    ],
+    [
+      "contempt",
+      "жигшил"
+    ],
+    [
+      "advantage",
+      "давуу тал"
+    ],
+    [
+      "adoration",
+      "шүтээн болголт"
+    ],
+    [
+      "refraction",
+      "хугарал"
+    ],
+    [
+      "overcoming",
+      "даван туулалт"
+    ],
+    [
+      "prestige",
+      "нэр хүнд"
+    ],
+    [
+      "satiety",
+      "цатгалан"
+    ],
+    [
+      "claim",
+      "шаардлага"
+    ],
+    [
+      "precedent",
+      "жишээ"
+    ],
+    [
+      "attractiveness",
+      "сэтгэл татам байдал"
+    ],
+    [
+      "attachment",
+      "хавсралт"
+    ],
+    [
+      "recognition",
+      "хүлээн зөвшөөрөл"
+    ],
+    [
+      "application",
+      "хэрэглээ"
+    ],
+    [
+      "reconciliation",
+      "эвлэрэл"
+    ],
+    [
+      "belonging",
+      "харьяалал"
+    ],
+    [
+      "principle",
+      "зарчмын байдал"
+    ],
+    [
+      "priority",
+      "тэргүүлэх чиглэл"
+    ],
+    [
+      "cause",
+      "шалтгаан"
+    ],
+    [
+      "providence",
+      "тэнгэрлэг заяа"
+    ],
+    [
+      "forecast",
+      "урьдчилсан таамаглал"
+    ],
+    [
+      "progress",
+      "дэвшил"
+    ],
+    [
+      "productivity",
+      "бүтээмж"
+    ],
+    [
+      "arbitrariness",
+      "дураараа байдал"
+    ],
+    [
+      "arbitrariness",
+      "дураараа"
+    ],
+    [
+      "proliferation",
+      "өсөлт"
+    ],
+    [
+      "delay",
+      "хоцролт"
+    ],
+    [
+      "glorification",
+      "алдаршуулалт"
+    ],
+    [
+      "spatiality",
+      "орон зайн байдал"
+    ],
+    [
+      "request",
+      "хүсэлт"
+    ],
+    [
+      "contradictoriness",
+      "зөрчилтэй байдал"
+    ],
+    [
+      "confrontation",
+      "сөргөлдөөн"
+    ],
+    [
+      "professionalism",
+      "мэргэжлийн байдал"
+    ],
+    [
+      "procedure",
+      "журам"
+    ],
+    [
+      "process",
+      "үйл явц"
+    ],
+    [
+      "manifestation",
+      "илрэл"
+    ],
+    [
+      "directness",
+      "шулуун байдал"
+    ],
+    [
+      "psyche",
+      "сэтгэл зүй"
+    ],
+    [
+      "psychology",
+      "сэтгэл судлал"
+    ],
+    [
+      "publicity",
+      "нийтийн байдал"
+    ],
+    [
+      "purism",
+      "цэвэрч байдал"
+    ],
+    [
+      "inquisitiveness",
+      "сониуч зан"
+    ],
+    [
+      "equality",
+      "тэгш байдал"
+    ],
+    [
+      "balance",
+      "тэнцвэр"
+    ],
+    [
+      "development",
+      "хөгжил"
+    ],
+    [
+      "irritability",
+      "цухалт"
+    ],
+    [
+      "distinction",
+      "ялгаварлал"
+    ],
+    [
+      "decomposition",
+      "задрал"
+    ],
+    [
+      "reflection",
+      "эргэцүүлэл"
+    ],
+    [
+      "ruin",
+      "сүйрэл"
+    ],
+    [
+      "destruction",
+      "сүйтгэл"
+    ],
+    [
+      "clarification",
+      "тодруулга"
+    ],
+    [
+      "disintegration",
+      "задаргаа"
+    ],
+    [
+      "disposition",
+      "зан ааш"
+    ],
+    [
+      "distribution",
+      "хуваарилалт"
+    ],
+    [
+      "consideration",
+      "хянан үзэлт"
+    ],
+    [
+      "reasoning",
+      "дүгнэлт"
+    ],
+    [
+      "expansion",
+      "тэлэлт"
+    ],
+    [
+      "rationalization",
+      "рационалчлал"
+    ],
+    [
+      "rationality",
+      "оновчтой байдал"
+    ],
+    [
+      "reaction",
+      "урвал"
+    ],
+    [
+      "realism",
+      "реализм"
+    ],
+    [
+      "reality",
+      "бодит байдал"
+    ],
+    [
+      "jealousy",
+      "атаархал"
+    ],
+    [
+      "regression",
+      "регресс"
+    ],
+    [
+      "reduction",
+      "бууралт"
+    ],
+    [
+      "resistance",
+      "эсэргүүцэл"
+    ],
+    [
+      "reconstruction",
+      "дахин бүтээн байгуулалт"
+    ],
+    [
+      "religion",
+      "шашин"
+    ],
+    [
+      "relativism",
+      "харьцангуй үзэл"
+    ],
+    [
+      "repair",
+      "засвар"
+    ],
+    [
+      "reorganization",
+      "дахин зохион байгуулалт"
+    ],
+    [
+      "representation",
+      "төлөөлөл"
+    ],
+    [
+      "reproduction",
+      "хуулбарлалт"
+    ],
+    [
+      "restoration",
+      "сэргээлт"
+    ],
+    [
+      "restructuring",
+      "дахин бүтцийн өөрчлөлт"
+    ],
+    [
+      "relapse",
+      "дахилт"
+    ],
+    [
+      "decisiveness",
+      "шийдэмгий байдал"
+    ],
+    [
+      "rigorism",
+      "хатуу чанга байдал"
+    ],
+    [
+      "risk",
+      "эрсдэл"
+    ],
+    [
+      "relatedness",
+      "холбоотой байдал"
+    ],
+    [
+      "lever",
+      "хөшүүрэг"
+    ],
+    [
+      "initiative",
+      "санаачлага"
+    ],
+    [
+      "self-sufficiency",
+      "өөртөө хангалттай байдал"
+    ],
+    [
+      "self-criticism",
+      "өөрийгөө шүүмжлэл"
+    ],
+    [
+      "self-love",
+      "өөрийгөө хайрлах"
+    ],
+    [
+      "self-esteem",
+      "өөрийгөө үнэлэх"
+    ],
+    [
+      "self-knowledge",
+      "өөрийгөө таних"
+    ],
+    [
+      "self-awareness",
+      "өөрийгөө ухамсарлах"
+    ],
+    [
+      "self-confidence",
+      "өөртөө итгэх"
+    ],
+    [
+      "self-assertion",
+      "өөрийгөө батлах"
+    ],
+    [
+      "sanction",
+      "хориг арга хэмжээ"
+    ],
+    [
+      "sarcasm",
+      "элэглэл"
+    ],
+    [
+      "supergoal",
+      "дээд зорилго"
+    ],
+    [
+      "secularism",
+      "шашнаас ангид байдал"
+    ],
+    [
+      "freedom",
+      "эрх чөлөө"
+    ],
+    [
+      "peculiarity",
+      "онцлог байдал"
+    ],
+    [
+      "holiness",
+      "ариун байдал"
+    ],
+    [
+      "sacredness",
+      "ариун нандин байдал"
+    ],
+    [
+      "secularization",
+      "шашны бусчлал"
+    ],
+    [
+      "semantics",
+      "семантик"
+    ],
+    [
+      "sentimentality",
+      "мэдрэмжлэл"
+    ],
+    [
+      "cordiality",
+      "халуун дотно байдал"
+    ],
+    [
+      "seriousness",
+      "ноцтой байдал"
+    ],
+    [
+      "signification",
+      "тэмдэглэл"
+    ],
+    [
+      "strength",
+      "хүч чадал"
+    ],
+    [
+      "symbolism",
+      "бэлгэдэл"
+    ],
+    [
+      "symmetry",
+      "тэгш хэм"
+    ],
+    [
+      "systematization",
+      "системчлэл"
+    ],
+    [
+      "situatedness",
+      "нөхцөл байдлаас хамаарал"
+    ],
+    [
+      "fabulousness",
+      "гайхалтай байдал"
+    ],
+    [
+      "skepticism",
+      "эргэлзээтэй байдал"
+    ],
+    [
+      "modesty",
+      "даруу байдал"
+    ],
+    [
+      "adherence",
+      "дагаж мөрдөлт"
+    ],
+    [
+      "service",
+      "үйлчлэл"
+    ],
+    [
+      "observance",
+      "мөрдөлт"
+    ],
+    [
+      "conciliarity",
+      "нийтлэг байдал"
+    ],
+    [
+      "compatibility",
+      "тохирох байдал"
+    ],
+    [
+      "totality",
+      "нийлмэл байдал"
+    ],
+    [
+      "coincidence",
+      "тохиолдол"
+    ],
+    [
+      "assistance",
+      "туслалцаа"
+    ],
+    [
+      "content",
+      "агуулга"
+    ],
+    [
+      "creation",
+      "бүтээл"
+    ],
+    [
+      "consciousness",
+      "ухамсарт байдал"
+    ],
+    [
+      "treasure",
+      "эрдэнэ"
+    ],
+    [
+      "solidarity",
+      "эв санал нэгдэл"
+    ],
+    [
+      "quickness",
+      "хурдан ухаан"
+    ],
+    [
+      "community",
+      "нийгэм"
+    ],
+    [
+      "conformity",
+      "нийцэл"
+    ],
+    [
+      "empathy",
+      "өрөвдөх сэтгэл"
+    ],
+    [
+      "rivalry",
+      "өрсөлдөөн"
+    ],
+    [
+      "comparability",
+      "харьцуулах чадвар"
+    ],
+    [
+      "concentration",
+      "төвлөрөл"
+    ],
+    [
+      "state",
+      "байдал"
+    ],
+    [
+      "co-creation",
+      "хамтран бүтээл"
+    ],
+    [
+      "cooperation",
+      "хамтын ажиллагаа"
+    ],
+    [
+      "complicity",
+      "санаа нийлэлт"
+    ],
+    [
+      "preservation",
+      "хадгалалт"
+    ],
+    [
+      "sociality",
+      "нийгмийн байдал"
+    ],
+    [
+      "salvation",
+      "аврал"
+    ],
+    [
+      "cohesion",
+      "нэгдмэл байдал"
+    ],
+    [
+      "justice",
+      "шударга ёс"
+    ],
+    [
+      "comparison",
+      "харьцуулалт"
+    ],
+    [
+      "means",
+      "хэрэгсэл"
+    ],
+    [
+      "term",
+      "хугацаа"
+    ],
+    [
+      "standardization",
+      "стандартчлал"
+    ],
+    [
+      "formation",
+      "бүрэлдэл"
+    ],
+    [
+      "diligence",
+      "хичээнгүй байдал"
+    ],
+    [
+      "degree",
+      "зэрэг"
+    ],
+    [
+      "stimulation",
+      "өдөөлт"
+    ],
+    [
+      "spontaneity",
+      "өөрөө илрэх байдал"
+    ],
+    [
+      "suffering",
+      "зовлон"
+    ],
+    [
+      "strategy",
+      "стратеги"
+    ],
+    [
+      "stratification",
+      "давхрагажилт"
+    ],
+    [
+      "aspiration",
+      "тэмүүлэл"
+    ],
+    [
+      "structure",
+      "бүтэц"
+    ],
+    [
+      "structuring",
+      "бүтэцжүүлэлт"
+    ],
+    [
+      "shame",
+      "ичих"
+    ],
+    [
+      "subculture",
+      "дэд соёл"
+    ],
+    [
+      "substance",
+      "мөн чанар"
+    ],
+    [
+      "subjectivation",
+      "субъектчлал"
+    ],
+    [
+      "subjectivity",
+      "субъектив байдал"
+    ],
+    [
+      "sovereignty",
+      "бүрэн эрхт байдал"
+    ],
+    [
+      "judgment",
+      "шийдвэр"
+    ],
+    [
+      "superstition",
+      "мухар сүсэг"
+    ],
+    [
+      "vanity",
+      "бардам байдал"
+    ],
+    [
+      "summation",
+      "нийлбэр"
+    ],
+    [
+      "severity",
+      "ширүүн байдал"
+    ],
+    [
+      "existence",
+      "оршин тогтнол"
+    ],
+    [
+      "schematization",
+      "схемчлэл"
+    ],
+    [
+      "happiness",
+      "аз жаргал"
+    ],
+    [
+      "coupling",
+      "холбоос"
+    ],
+    [
+      "count",
+      "тоо"
+    ],
+    [
+      "plot",
+      "үйл явдлын шугам"
+    ],
+    [
+      "tactic",
+      "тактик"
+    ],
+    [
+      "textuality",
+      "текст шинж"
+    ],
+    [
+      "tendentiousness",
+      "нэг талын байдал"
+    ],
+    [
+      "theorization",
+      "онолчлол"
+    ],
+    [
+      "theory",
+      "онол"
+    ],
+    [
+      "territoriality",
+      "нутаг дэвсгэрийн байдал"
+    ],
+    [
+      "typology",
+      "төрөл зүй"
+    ],
+    [
+      "identity",
+      "адилтгал"
+    ],
+    [
+      "subtlety",
+      "нарийн мэдрэмж"
+    ],
+    [
+      "totalitarianism",
+      "тоталитаризм"
+    ],
+    [
+      "tragedy",
+      "эмгэнэлт явдал"
+    ],
+    [
+      "transgression",
+      "хэтэрсэн явдал"
+    ],
+    [
+      "translation",
+      "орчуулга"
+    ],
+    [
+      "transcendence",
+      "даван гаралт"
+    ],
+    [
+      "transcendence",
+      "даван гарах байдал"
+    ],
+    [
+      "anxiety",
+      "сэтгэлийн түгшүүр"
+    ],
+    [
+      "triviality",
+      "жижиг сажиг байдал"
+    ],
+    [
+      "futility",
+      "ашиггүй байдал"
+    ],
+    [
+      "prison",
+      "шорон"
+    ],
+    [
+      "persuasiveness",
+      "итгүүлэх чадвар"
+    ],
+    [
+      "deepening",
+      "гүнзгийрэлт"
+    ],
+    [
+      "oppression",
+      "дарамт"
+    ],
+    [
+      "obsequiousness",
+      "сүвэгчлэл"
+    ],
+    [
+      "satisfaction",
+      "сэтгэл ханамж"
+    ],
+    [
+      "contentment",
+      "сэтгэл хангалуун байдал"
+    ],
+    [
+      "dejection",
+      "уур хүрэх"
+    ],
+    [
+      "tightening",
+      "чангалалт"
+    ],
+    [
+      "recognizability",
+      "танигдах чадвар"
+    ],
+    [
+      "evasion",
+      "зайлсхийлт"
+    ],
+    [
+      "universalization",
+      "бүх нийтийг хамарсан байдал"
+    ],
+    [
+      "humiliation",
+      "доромжлол"
+    ],
+    [
+      "dejection",
+      "уур хүрэл"
+    ],
+    [
+      "ordering",
+      "дэс дараалал"
+    ],
+    [
+      "abolition",
+      "хүчингүй болголт"
+    ],
+    [
+      "anticipation",
+      "урьдчилан хүлээлт"
+    ],
+    [
+      "simplification",
+      "хялбарчлал"
+    ],
+    [
+      "level",
+      "түвшин"
+    ],
+    [
+      "intensification",
+      "эрчимжүүлэлт"
+    ],
+    [
+      "conventionality",
+      "уламжлалт байдал"
+    ],
+    [
+      "complication",
+      "төвөгтэй болголт"
+    ],
+    [
+      "discretion",
+      "үзэмж"
+    ],
+    [
+      "elimination",
+      "арилгалт"
+    ],
+    [
+      "assertion",
+      "батлалт"
+    ],
+    [
+      "utopia",
+      "утопи"
+    ],
+    [
+      "refinement",
+      "цэвэршүүлэлт"
+    ],
+    [
+      "departure",
+      "явах"
+    ],
+    [
+      "vulnerability",
+      "эмзэг байдал"
+    ],
+    [
+      "falsification",
+      "хуурамчлал"
+    ],
+    [
+      "fanaticism",
+      "фанатизм"
+    ],
+    [
+      "fantasy",
+      "уран зөгнөл"
+    ],
+    [
+      "phenomenon",
+      "үзэгдэл"
+    ],
+    [
+      "figurativeness",
+      "дүрслэл"
+    ],
+    [
+      "philosophy",
+      "философи"
+    ],
+    [
+      "filtration",
+      "шүүлт"
+    ],
+    [
+      "fragmentation",
+      "хуваагдал"
+    ],
+    [
+      "fragmentariness",
+      "хэсэгчилсэн байдал"
+    ],
+    [
+      "functionality",
+      "функциональ байдал"
+    ],
+    [
+      "function",
+      "функц"
+    ],
+    [
+      "charisma",
+      "каризма"
+    ],
+    [
+      "chronicle",
+      "шастир"
+    ],
+    [
+      "artistry",
+      "уран сайхны байдал"
+    ],
+    [
+      "value",
+      "үнэ цэнэ"
+    ],
+    [
+      "chastity",
+      "ариун цэврийн байдал"
+    ],
+    [
+      "civilization",
+      "соёл иргэншил"
+    ],
+    [
+      "cyclicity",
+      "мөчлөгт байдал"
+    ],
+    [
+      "cynicism",
+      "цинизм"
+    ],
+    [
+      "humanity",
+      "хүн төрөлхтөн"
+    ],
+    [
+      "sensitivity",
+      "мэдрэмж"
+    ],
+    [
+      "generosity",
+      "өгөөмөр байдал"
+    ],
+    [
+      "existence",
+      "оршин байдал"
+    ],
+    [
+      "equivalence",
+      "эквивалент байдал"
+    ],
+    [
+      "eclecticism",
+      "эклектизм"
+    ],
+    [
+      "experiment",
+      "туршилт"
+    ],
+    [
+      "expertise",
+      "мэргэжлийн ур чадвар"
+    ],
+    [
+      "explication",
+      "тайлбарлалт"
+    ],
+    [
+      "exploitation",
+      "мөлжлөг"
+    ],
+    [
+      "exposition",
+      "үзэсгэлэн"
+    ],
+    [
+      "expressiveness",
+      "илэрхийлэлт байдал"
+    ],
+    [
+      "extrapolation",
+      "экстраполяци"
+    ],
+    [
+      "elegance",
+      "гоёмсог байдал"
+    ],
+    [
+      "elitism",
+      "элитизм"
+    ],
+    [
+      "emblem",
+      "бэлгэ тэмдэг"
+    ],
+    [
+      "empiricism",
+      "эмпиризм"
+    ],
+    [
+      "epoch",
+      "эрин"
+    ],
+    [
+      "erudition",
+      "эрдэмтэй байдал"
+    ],
+    [
+      "escalation",
+      "өсгөлт"
+    ],
+    [
+      "aesthetics",
+      "гоо зүй"
+    ],
+    [
+      "ethics",
+      "ёс зүй"
+    ],
+    [
+      "ethnicity",
+      "үндэстэн байдал"
+    ],
+    [
+      "etymology",
+      "үгийн гарал"
+    ],
+    [
+      "language",
+      "хэл"
+    ]
+  ]
+}

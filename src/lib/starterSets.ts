@@ -82,7 +82,6 @@ export const STARTER_LANGS = [
  * level through C2, while this list is the first no-paywall expansion stage.
  */
 export const A1_STARTER_LANGS = [
-  'en-US',
   'fa',
   'nl',
   'sv',
@@ -101,8 +100,15 @@ export const A1_STARTER_LANGS = [
   'fil',
 ] as const;
 
+/** Complete English course with Mongolian meanings, in addition to the
+ * original 13 full courses. It has no topic packs yet, so it remains separate
+ * from `STARTER_LANGS`, whose invariant includes full topic coverage. */
+export const ADDITIONAL_FULL_LANGS = ['en-US'] as const;
+
+export const FULL_LIBRARY_LANGS = [...STARTER_LANGS, ...ADDITIONAL_FULL_LANGS] as const;
+
 /** Every language that has at least one vocabulary bank in the Library. */
-export const LIBRARY_LANGS = [...STARTER_LANGS, ...A1_STARTER_LANGS] as const;
+export const LIBRARY_LANGS = [...FULL_LIBRARY_LANGS, ...A1_STARTER_LANGS] as const;
 
 /** BCP-47 tag → word-pack code (2-letter manifest key / JSON prefix). */
 export const PACK_LANG: Record<string, string> = {

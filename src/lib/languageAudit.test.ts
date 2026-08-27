@@ -5,7 +5,13 @@ import { flagFor } from '@/components/LanguageBadge';
 import { findLanguage } from '@/lib/languages';
 import { DEFAULT_ALLOWED_LANG, canUseLang, langLimitKey } from '@/lib/planGate';
 import { SEED_SETS } from '@/lib/seedSets';
-import { A1_STARTER_LANGS, PACK_LANG, STARTER_LANGS, starterLangLabel } from '@/lib/starterSets';
+import {
+  A1_STARTER_LANGS,
+  ADDITIONAL_FULL_LANGS,
+  PACK_LANG,
+  STARTER_LANGS,
+  starterLangLabel,
+} from '@/lib/starterSets';
 import {
   B1_OVERLAP_MAX,
   CROSS_LEVEL_PAIR_MAX,
@@ -184,6 +190,20 @@ describe('supported-language audit (data-driven over STARTER_LANGS)', () => {
       for (const lvl of CEFR_LEVELS) {
         expect(manifest[pack]?.[lvl], `${code}: ${lvl} count`).toBeGreaterThan(0);
       }
+    }
+  });
+
+  it('English ships the complete A1–C2 curriculum with Mongolian meanings', () => {
+    for (const code of ADDITIONAL_FULL_LANGS) {
+      const pack = PACK_LANG[code];
+      expect(new Set(Object.keys(manifest[pack] ?? {})), `${code}: exact level set`).toEqual(
+        new Set(CEFR_LEVELS),
+      );
+      for (const level of CEFR_LEVELS) {
+        expect(manifest[pack]?.[level], `${code}: ${level} count`).toBeGreaterThan(0);
+      }
+      const bank = loadBank(`${pack}-A1`);
+      expect(bank.words.some(([, meaning]) => /[А-Яа-яӨөҮү]/.test(meaning))).toBe(true);
     }
   });
 

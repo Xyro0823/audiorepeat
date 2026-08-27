@@ -106,7 +106,7 @@ describe('SUPPORTED_LANGUAGE_COUNT — canonical customer-facing count', () => {
     const bankLangs = Object.keys(vocabManifest);
     const completePacks = Object.values(vocabManifest).filter((levels) => Object.keys(levels).length === 6);
     expect(bankLangs.length).toBe(SUPPORTED_LANGUAGE_COUNT);
-    expect(completePacks.length).toBe(13);
+    expect(completePacks.length).toBe(14);
     // Every available foundation is a supported product language.
     for (const lang of bankLangs) {
       expect(
