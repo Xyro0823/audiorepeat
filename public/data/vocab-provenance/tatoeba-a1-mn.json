@@ -1,0 +1,90 @@
+{
+  "sourceId": "tatoeba",
+  "derivedFrom": "tatoeba-a1.json",
+  "translationProvider": "Microsoft Azure Translator",
+  "targetLanguage": "mn",
+  "sourceLanguage": "en (the canonical meaning paired with each Tatoeba sentence)",
+  "generatedAt": "2026-08-27T10:28:09.948Z",
+  "generatedBanks": [
+    {
+      "lang": "cs",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "da",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "el",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "fa",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "fi",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "fil",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "he",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "id",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "nb",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "nl",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "pl",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "sv",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "sw",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "th",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "uk",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "vi",
+      "level": "A1",
+      "pairs": 250
+    }
+  ]
+}

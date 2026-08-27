@@ -5,6 +5,7 @@ import LanguageLock from './LanguageLock';
 import { CEFR_META, LIBRARY_LANGS, PACK_LANG, starterLangLabel } from '@/lib/starterSets';
 import {
   getWordBankManifest,
+  loadMongolianWordBank,
   loadWordBank,
   type WordBankManifest,
   type WordBankWord,
@@ -79,6 +80,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
   const [lang, setLang] = useState<string | null>(null);
   const [level, setLevel] = useState<CefrLevel | null>(null);
   const [bank, setBank] = useState<WordBankWord[] | null>(null);
+  const [mongolianTranslations, setMongolianTranslations] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(false);
   /** Stored as a key so the message re-renders in the active locale. */
   const [error, setError] = useState<TKey | null>(null);
@@ -136,13 +138,23 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
       setLoading(true);
       setError(null);
       try {
-        const b = await loadWordBank(lang, level);
+        // The canonical English bank and its optional Mongolian explanations
+        // are independent static files, so fetch them together rather than
+        // making learners wait for a waterfall.
+        const [b, mn] = await Promise.all([
+          loadWordBank(lang, level),
+          loadMongolianWordBank(lang, level).catch(() => null),
+        ]);
         if (!alive) return;
         setBank(b?.words ?? []);
+        setMongolianTranslations(
+          b && mn && mn.translations.length === b.words.length ? mn.translations : null,
+        );
       } catch {
         if (!alive) return;
         setError('library.starter.errorLevel');
         setBank(null);
+        setMongolianTranslations(null);
       } finally {
         if (alive) setLoading(false);
       }
@@ -157,12 +169,17 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
   const filtered = useMemo(() => {
     if (!bank) return [];
     const q = normalize(query.trim());
-    if (!q) return bank;
-    return bank.filter(
-      ([target, translation]) =>
-        normalize(target).includes(q) || normalize(translation).includes(q),
-    );
-  }, [bank, query]);
+    return bank.flatMap(([target, translation], index) => {
+      const translationMn = mongolianTranslations?.[index];
+      if (
+        q &&
+        !normalize(target).includes(q) &&
+        !normalize(translation).includes(q) &&
+        !normalize(translationMn ?? '').includes(q)
+      ) return [];
+      return [{ target, translation, translationMn }];
+    });
+  }, [bank, mongolianTranslations, query]);
 
   // Totals for the header and per-language progress
   const langTotal = useMemo(
@@ -189,7 +206,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
       const n = Math.min(size, filtered.length);
       // Random sample without replacement for varied sessions
       const pool = [...filtered];
-      const picked: WordBankWord[] = [];
+      const picked: Array<{ target: string; translation: string; translationMn?: string }> = [];
       for (let i = 0; i < n && pool.length > 0; i += 1) {
         const idx = Math.floor(Math.random() * pool.length);
         picked.push(pool.splice(idx, 1)[0]);
@@ -214,10 +231,11 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
         }),
         lang,
         nativeLang: 'en-US',
-        words: picked.map(([target, translation], i) => ({
+        words: picked.map(({ target, translation, translationMn }, i) => ({
           id: `bk-${stamp}-${i}`,
           target,
           translation,
+          ...(translationMn ? { translationMn } : {}),
         })),
         cefr: level,
         createdAt: Date.now(),
@@ -260,11 +278,12 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
         id: 'bkf-' + stamp + '-' + i,
         target,
         translation,
+        ...(mongolianTranslations?.[i] ? { translationMn: mongolianTranslations[i] } : {}),
       })),
       cefr: level,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    });    }, [lang, level, bank, sets, onImport, canAddLang, t]);
+    });    }, [lang, level, bank, mongolianTranslations, sets, onImport, canAddLang, t]);
 
   return (
     <div
@@ -503,7 +522,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                       height={Math.min(filtered.length, 9) * ROW_HEIGHT}
                       rowHeight={ROW_HEIGHT}
                       className="rounded-2xl border border-white/10"
-                      renderRow={([target, translation]) => (
+                      renderRow={({ target, translation }) => (
                         <div className="flex items-center justify-between px-4 text-sm hover:bg-white/5">
                           <span className="font-medium text-white">{target}</span>
                           <span className="truncate pl-4 text-right text-slate-400">{translation}</span>

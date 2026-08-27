@@ -24,6 +24,18 @@ export interface WordBank {
 }
 
 /**
+ * Optional Mongolian explanations aligned by index with a canonical English
+ * word bank. Keeping them in a separate static file preserves the existing
+ * English-first pack format while letting learners switch explanations without
+ * sending the same phrases to a translation service again.
+ */
+export interface MongolianWordBank {
+  lang: string;
+  level: CefrLevel;
+  translations: string[];
+}
+
+/**
  * Topic packs (public/data/topics/<topic>.json): one file per topic holding
  * word lists for several languages — { "es": [["avión","airplane"], ...], ... }.
  * The manifest advertises labels/emojis and per-language counts.
@@ -48,6 +60,7 @@ const TOPIC_MANIFEST_URL = '/data/topics/manifest.json';
 let manifestPromise: Promise<WordBankManifest> | null = null;
 let topicManifestPromise: Promise<TopicManifest> | null = null;
 const bankCache = new Map<string, Promise<WordBank | null>>();
+const mongolianBankCache = new Map<string, Promise<MongolianWordBank | null>>();
 const topicCache = new Map<string, Promise<Record<string, WordBankWord[]> | null>>();
 
 /**
@@ -86,6 +99,10 @@ function bankUrl(lang: string, level: CefrLevel): string {
   return `/data/vocab/${lang}-${level}.json`;
 }
 
+function mongolianBankUrl(lang: string, level: CefrLevel): string {
+  return `/data/vocab-mn/${lang}-${level}.json`;
+}
+
 /** Load one language+level bank. Returns null when no file exists. */
 export function loadWordBank(lang: string, level: CefrLevel): Promise<WordBank | null> {
   const key = `${lang}:${level}`;
@@ -104,6 +121,31 @@ export function loadWordBank(lang: string, level: CefrLevel): Promise<WordBank |
         throw err;
       });
     bankCache.set(key, p);
+  }
+  return p;
+}
+
+/**
+ * Load pre-generated Mongolian explanations for one canonical word bank.
+ * They are optional so older packs retain their English-only behavior.
+ */
+export function loadMongolianWordBank(lang: string, level: CefrLevel): Promise<MongolianWordBank | null> {
+  const key = `${lang}:${level}`;
+  let p = mongolianBankCache.get(key);
+  if (!p) {
+    const url = mongolianBankUrl(lang, level);
+    p = fetch(url)
+      .then((res) => {
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error(`Mongolian bank ${res.status}`);
+        void precacheForOffline(url);
+        return res.json() as Promise<MongolianWordBank>;
+      })
+      .catch((err) => {
+        mongolianBankCache.delete(key);
+        throw err;
+      });
+    mongolianBankCache.set(key, p);
   }
   return p;
 }
@@ -144,4 +186,3 @@ export function loadTopic(topic: string): Promise<Record<string, WordBankWord[]>
   }
   return p;
 }
-
