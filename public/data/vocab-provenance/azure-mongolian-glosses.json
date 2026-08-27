@@ -1,0 +1,479 @@
+{
+  "source": "Bundled vocabulary banks",
+  "translationProvider": "Microsoft Azure Translator",
+  "sourceLanguage": "en",
+  "targetLanguage": "mn",
+  "generatedAt": "2026-08-27T11:08:31.471Z",
+  "generatedBanks": [
+    {
+      "lang": "ar",
+      "level": "A1",
+      "pairs": 258
+    },
+    {
+      "lang": "ar",
+      "level": "A2",
+      "pairs": 255
+    },
+    {
+      "lang": "ar",
+      "level": "B1",
+      "pairs": 301
+    },
+    {
+      "lang": "ar",
+      "level": "B2",
+      "pairs": 378
+    },
+    {
+      "lang": "ar",
+      "level": "C1",
+      "pairs": 311
+    },
+    {
+      "lang": "ar",
+      "level": "C2",
+      "pairs": 816
+    },
+    {
+      "lang": "cs",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "da",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "de",
+      "level": "A1",
+      "pairs": 261
+    },
+    {
+      "lang": "de",
+      "level": "A2",
+      "pairs": 251
+    },
+    {
+      "lang": "de",
+      "level": "B1",
+      "pairs": 280
+    },
+    {
+      "lang": "de",
+      "level": "B2",
+      "pairs": 390
+    },
+    {
+      "lang": "de",
+      "level": "C1",
+      "pairs": 341
+    },
+    {
+      "lang": "de",
+      "level": "C2",
+      "pairs": 849
+    },
+    {
+      "lang": "el",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "en",
+      "level": "A1",
+      "pairs": 254
+    },
+    {
+      "lang": "en",
+      "level": "A2",
+      "pairs": 253
+    },
+    {
+      "lang": "en",
+      "level": "B1",
+      "pairs": 301
+    },
+    {
+      "lang": "en",
+      "level": "B2",
+      "pairs": 356
+    },
+    {
+      "lang": "en",
+      "level": "C1",
+      "pairs": 301
+    },
+    {
+      "lang": "en",
+      "level": "C2",
+      "pairs": 793
+    },
+    {
+      "lang": "es",
+      "level": "A1",
+      "pairs": 200
+    },
+    {
+      "lang": "es",
+      "level": "A2",
+      "pairs": 300
+    },
+    {
+      "lang": "es",
+      "level": "B1",
+      "pairs": 553
+    },
+    {
+      "lang": "es",
+      "level": "B2",
+      "pairs": 511
+    },
+    {
+      "lang": "es",
+      "level": "C1",
+      "pairs": 1363
+    },
+    {
+      "lang": "es",
+      "level": "C2",
+      "pairs": 2483
+    },
+    {
+      "lang": "fa",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "fi",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "fil",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "fr",
+      "level": "A1",
+      "pairs": 262
+    },
+    {
+      "lang": "fr",
+      "level": "A2",
+      "pairs": 263
+    },
+    {
+      "lang": "fr",
+      "level": "B1",
+      "pairs": 283
+    },
+    {
+      "lang": "fr",
+      "level": "B2",
+      "pairs": 433
+    },
+    {
+      "lang": "fr",
+      "level": "C1",
+      "pairs": 520
+    },
+    {
+      "lang": "fr",
+      "level": "C2",
+      "pairs": 883
+    },
+    {
+      "lang": "he",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "hi",
+      "level": "A1",
+      "pairs": 252
+    },
+    {
+      "lang": "hi",
+      "level": "A2",
+      "pairs": 253
+    },
+    {
+      "lang": "hi",
+      "level": "B1",
+      "pairs": 301
+    },
+    {
+      "lang": "hi",
+      "level": "B2",
+      "pairs": 371
+    },
+    {
+      "lang": "hi",
+      "level": "C1",
+      "pairs": 309
+    },
+    {
+      "lang": "hi",
+      "level": "C2",
+      "pairs": 807
+    },
+    {
+      "lang": "id",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "it",
+      "level": "A1",
+      "pairs": 259
+    },
+    {
+      "lang": "it",
+      "level": "A2",
+      "pairs": 256
+    },
+    {
+      "lang": "it",
+      "level": "B1",
+      "pairs": 281
+    },
+    {
+      "lang": "it",
+      "level": "B2",
+      "pairs": 427
+    },
+    {
+      "lang": "it",
+      "level": "C1",
+      "pairs": 345
+    },
+    {
+      "lang": "it",
+      "level": "C2",
+      "pairs": 1069
+    },
+    {
+      "lang": "ja",
+      "level": "A1",
+      "pairs": 255
+    },
+    {
+      "lang": "ja",
+      "level": "A2",
+      "pairs": 255
+    },
+    {
+      "lang": "ja",
+      "level": "B1",
+      "pairs": 301
+    },
+    {
+      "lang": "ja",
+      "level": "B2",
+      "pairs": 427
+    },
+    {
+      "lang": "ja",
+      "level": "C1",
+      "pairs": 325
+    },
+    {
+      "lang": "ja",
+      "level": "C2",
+      "pairs": 897
+    },
+    {
+      "lang": "ko",
+      "level": "A1",
+      "pairs": 258
+    },
+    {
+      "lang": "ko",
+      "level": "A2",
+      "pairs": 255
+    },
+    {
+      "lang": "ko",
+      "level": "B1",
+      "pairs": 301
+    },
+    {
+      "lang": "ko",
+      "level": "B2",
+      "pairs": 411
+    },
+    {
+      "lang": "ko",
+      "level": "C1",
+      "pairs": 319
+    },
+    {
+      "lang": "ko",
+      "level": "C2",
+      "pairs": 895
+    },
+    {
+      "lang": "nb",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "nl",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "pl",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "pt",
+      "level": "A1",
+      "pairs": 261
+    },
+    {
+      "lang": "pt",
+      "level": "A2",
+      "pairs": 255
+    },
+    {
+      "lang": "pt",
+      "level": "B1",
+      "pairs": 281
+    },
+    {
+      "lang": "pt",
+      "level": "B2",
+      "pairs": 405
+    },
+    {
+      "lang": "pt",
+      "level": "C1",
+      "pairs": 328
+    },
+    {
+      "lang": "pt",
+      "level": "C2",
+      "pairs": 1165
+    },
+    {
+      "lang": "ru",
+      "level": "A1",
+      "pairs": 256
+    },
+    {
+      "lang": "ru",
+      "level": "A2",
+      "pairs": 256
+    },
+    {
+      "lang": "ru",
+      "level": "B1",
+      "pairs": 280
+    },
+    {
+      "lang": "ru",
+      "level": "B2",
+      "pairs": 438
+    },
+    {
+      "lang": "ru",
+      "level": "C1",
+      "pairs": 316
+    },
+    {
+      "lang": "ru",
+      "level": "C2",
+      "pairs": 1030
+    },
+    {
+      "lang": "sv",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "sw",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "th",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "tr",
+      "level": "A1",
+      "pairs": 253
+    },
+    {
+      "lang": "tr",
+      "level": "A2",
+      "pairs": 254
+    },
+    {
+      "lang": "tr",
+      "level": "B1",
+      "pairs": 280
+    },
+    {
+      "lang": "tr",
+      "level": "B2",
+      "pairs": 291
+    },
+    {
+      "lang": "tr",
+      "level": "C1",
+      "pairs": 309
+    },
+    {
+      "lang": "tr",
+      "level": "C2",
+      "pairs": 861
+    },
+    {
+      "lang": "uk",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "vi",
+      "level": "A1",
+      "pairs": 250
+    },
+    {
+      "lang": "zh",
+      "level": "A1",
+      "pairs": 255
+    },
+    {
+      "lang": "zh",
+      "level": "A2",
+      "pairs": 255
+    },
+    {
+      "lang": "zh",
+      "level": "B1",
+      "pairs": 301
+    },
+    {
+      "lang": "zh",
+      "level": "B2",
+      "pairs": 333
+    },
+    {
+      "lang": "zh",
+      "level": "C1",
+      "pairs": 315
+    },
+    {
+      "lang": "zh",
+      "level": "C2",
+      "pairs": 906
+    }
+  ]
+}
