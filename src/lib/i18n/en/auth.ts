@@ -55,6 +55,7 @@ export const authEn = {
   'auth.languageDiagnostics': 'Language Diagnostics',
   'auth.onboardingAnalytics': 'Onboarding Analytics',
   'auth.errorDiagnostics': 'Error Diagnostics',
+  'auth.translationReports': 'Translation Reports',
   'auth.signInOrCreate': 'Sign in / Create account',
   'auth.signOut': 'Sign out',
   'auth.deleteAccount': 'Delete account',

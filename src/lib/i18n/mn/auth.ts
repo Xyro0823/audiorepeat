@@ -57,6 +57,7 @@ export const authMn: Record<AuthKeys, string> = {
   'auth.languageDiagnostics': 'Хэлний оношилгоо',
   'auth.onboardingAnalytics': 'Онбордингийн анализ',
   'auth.errorDiagnostics': 'Алдааны оношилгоо',
+  'auth.translationReports': 'Орчуулгын санал',
   'auth.signInOrCreate': 'Нэвтрэх / Бүртгүүлэх',
   'auth.signOut': 'Гарах',
   'auth.deleteAccount': 'Бүртгэл устгах',

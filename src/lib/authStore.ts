@@ -10,6 +10,7 @@
  * only — and the auth screen shows setup instructions.
  */
 import { getAuthMode } from '@/lib/firebase/config';
+import { getFirebaseIdToken } from '@/lib/firebase/client';
 import { isNewlyCreatedAccount, markOnboardingPending } from '@/lib/onboarding';
 import { t } from '@/lib/i18n';
 import {
@@ -155,8 +156,19 @@ async function syncPlanFromServer(expectedUid: string): Promise<void> {
  * Firebase isn't configured). Used by server-authenticated calls.
  */
 export async function getAuthIdToken(): Promise<string | null> {
-  const { getFirebaseIdToken } = await loadClient();
-  return getFirebaseIdToken();
+  // Keep token retrieval on a stable module binding. Turbopack can invalidate
+  // a dynamic Firebase import during a hot update even though the signed-in
+  // session is still alive, which made authenticated actions look logged out.
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const token = await getFirebaseIdToken();
+      if (token) return token;
+    } catch {
+      // The retry below is specifically for a transient hot-update import.
+    }
+    if (attempt === 0) await new Promise<void>((resolve) => globalThis.setTimeout(resolve, 250));
+  }
+  return null;
 }
 
 /** Restore the Firebase session once (idempotent across all consumers). */

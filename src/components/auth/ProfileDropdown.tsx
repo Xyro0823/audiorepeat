@@ -349,6 +349,9 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
               <Link role="menuitem" href="/admin/errors" className={itemClass} onClick={close}>
                 <span aria-hidden>🛡️</span> {t('auth.errorDiagnostics')}
               </Link>
+              <Link role="menuitem" href="/admin/translations" className={itemClass} onClick={close}>
+                <span aria-hidden>📝</span> {t('auth.translationReports')}
+              </Link>
             </>
           )}
 
