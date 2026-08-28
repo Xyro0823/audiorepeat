@@ -228,6 +228,10 @@ export const playerEn = {
   'player.nav.listAria': 'Words',
   'player.nav.noMatches': 'No matching words found.',
   'player.nav.playing': 'Playing',
+  'player.translationReport.action': 'Suggest a translation fix',
+  'player.translationReport.prompt': 'Enter a better Mongolian translation:',
+  'player.translationReport.sent': 'Thanks — your suggestion was sent for review.',
+  'player.translationReport.error': 'Could not send — sign in and try again.',
 
   // ProgressBar
   'player.progress.jumpAria': 'Jump to a word',

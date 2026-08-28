@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { emojiForText } from '@/lib/emoji';
 import { useT } from '@/lib/i18n';
 import { haptic } from '@/lib/haptics';
+import TranslationReportButton from '@/components/player/TranslationReportButton';
 import type { MasteryStatus } from '@/types/app';
 import type { LoopWord } from '@/types/loop';
 
@@ -24,6 +25,7 @@ interface Props {
   cloudCacheState?: 'saving' | 'cached' | null;
   /** False hides the mastery (spaced-repetition) buttons behind a Pro link. */
   canMark?: boolean;
+  allowTranslationReport?: boolean;
   onMark: (status: MasteryStatus | undefined) => void;
 }
 
@@ -40,6 +42,7 @@ export default function WordCard({
   cloudVoice = false,
   cloudCacheState = null,
   canMark = true,
+  allowTranslationReport = false,
   onMark,
 }: Props) {
   const t = useT();
@@ -150,6 +153,10 @@ export default function WordCard({
             ? t('player.card.cloudCaching')
             : t('player.card.cloudCached')}
         </span>
+      )}
+
+      {isTranslation && allowTranslationReport && (
+        <TranslationReportButton language={word.lang} target={word.target} translation={word.translation} />
       )}
 
       {!isTranslation && showExamples && word.example && (

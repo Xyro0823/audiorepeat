@@ -236,6 +236,10 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.nav.listAria': 'Үгс',
   'player.nav.noMatches': 'Тохирох үг олдсонгүй.',
   'player.nav.playing': 'Тоглож байна',
+  'player.translationReport.action': 'Орчуулга засах санал илгээх',
+  'player.translationReport.prompt': 'Илүү зөв Монгол тайлбарыг оруулна уу:',
+  'player.translationReport.sent': 'Баярлалаа — таны санал хяналтын жагсаалтад орлоо.',
+  'player.translationReport.error': 'Илгээж чадсангүй — нэвтэрч дахин оролдоно уу.',
 
   // ProgressBar
   'player.progress.jumpAria': 'Үг рүү шилжих',

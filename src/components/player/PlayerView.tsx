@@ -1419,6 +1419,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
               cloudVoice={cloudVoiceForTarget}
               cloudCacheState={freeMongolianVoice ? mongolianCloudCacheState : null}
               canMark={canReview}
+              allowTranslationReport={settings.translationLanguage === 'mongolian'}
               onMark={markWord}
             />
             {/* TTS kept failing: playback is paused and the user must know. */}
