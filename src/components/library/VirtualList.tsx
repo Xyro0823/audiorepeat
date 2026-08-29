@@ -11,6 +11,8 @@ interface VirtualListProps<T> {
   overscan?: number;
   /** Keep preview lists usable inside short mobile dialogs. */
   responsiveHeight?: boolean;
+  /** Fill the remaining height of a flex preview pane. */
+  fillAvailableHeight?: boolean;
 }
 
 /**
@@ -25,6 +27,7 @@ export default function VirtualList<T>({
   className = '',
   overscan = 8,
   responsiveHeight = false,
+  fillAvailableHeight = false,
 }: VirtualListProps<T>) {
   const [scrollTop, setScrollTop] = useState(0);
 
@@ -37,7 +40,10 @@ export default function VirtualList<T>({
   return (
     <div
       className={`touch-pan-y overflow-y-auto overscroll-contain ${className}`}
-      style={{ height: responsiveHeight ? `min(${height}px, 28dvh)` : height }}
+      style={{
+        height: fillAvailableHeight ? '100%' : responsiveHeight ? `min(${height}px, 28dvh)` : height,
+        ...(fillAvailableHeight ? { flex: '1 1 0%', minHeight: 0 } : {}),
+      }}
       onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
     >
       <div style={{ height: total, position: 'relative' }}>
