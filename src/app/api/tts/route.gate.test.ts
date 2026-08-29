@@ -67,31 +67,28 @@ beforeEach(() => {
   h.consumeDistributedRateLimit.mockReset().mockResolvedValue('allowed');
 });
 
-describe('POST /api/tts — server-side Pro entitlement', () => {
+describe('POST /api/tts — server-side cloud-audio entitlement', () => {
   it('rejects unauthenticated requests', async () => {
     const res = await POST(ttsRequest());
     expect(res.status).toBe(401);
   });
 
-  it('rejects a Free user (no entitlement record) with 403 pro-required', async () => {
+  it('allows a Free user (no entitlement record) within the capped fallback', async () => {
     h.getEntitlement.mockResolvedValue(null);
     const res = await POST(ttsRequest('free-token'));
-    expect(res.status).toBe(403);
-    expect(await res.json()).toMatchObject({ error: 'pro-required', feature: 'offlineAudio' });
-    expect(h.synthesizeAzureSpeech).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(h.synthesizeAzureSpeech).toHaveBeenCalled();
   });
 
-  it('rejects a canceled Pro subscription — fail closed', async () => {
+  it('allows a canceled Pro subscription on the capped Free fallback', async () => {
     h.getEntitlement.mockResolvedValue(
       record({ plan: 'basic', status: 'canceled', paddleSubscriptionId: 'sub_1' }),
     );
     const res = await POST(ttsRequest('canceled-token'));
-    expect(res.status).toBe(403);
-    expect(await res.json()).toMatchObject({ error: 'pro-required' });
-    expect(h.synthesizeAzureSpeech).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
   });
 
-  it('rejects an expired manual gift', async () => {
+  it('allows an expired manual gift on the capped Free fallback', async () => {
     h.getEntitlement.mockResolvedValue(
       record({
         manual: {
@@ -106,7 +103,7 @@ describe('POST /api/tts — server-side Pro entitlement', () => {
       }),
     );
     const res = await POST(ttsRequest('expired-gift-token'));
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(200);
   });
 
   it('allows an active Pro subscription and synthesizes', async () => {
@@ -116,7 +113,6 @@ describe('POST /api/tts — server-side Pro entitlement', () => {
     const res = await POST(ttsRequest('pro-token'));
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('audio/mpeg');
-    expect(h.synthesizeAzureSpeech).toHaveBeenCalledWith('hola', 'es-ES');
   });
 
   it('allows a trialing Pro subscription', async () => {

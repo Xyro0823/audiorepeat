@@ -7,7 +7,7 @@ import { planHasFeature, type PlanId } from '@/lib/plans';
  */
 export const FREE_MONGOLIAN_TTS_DAILY_LIMIT = 300;
 
-export type CloudTtsAccess = 'pro' | 'free-mongolian';
+export type CloudTtsAccess = 'pro' | 'free';
 
 export function isMongolianLocale(lang: string): boolean {
   return lang.trim().toLowerCase().split('-')[0] === 'mn';
@@ -19,5 +19,5 @@ export function isMongolianLocale(lang: string): boolean {
  */
 export function cloudTtsAccessFor(plan: PlanId, lang: string): CloudTtsAccess | null {
   if (planHasFeature(plan, 'offlineAudio')) return 'pro';
-  return isMongolianLocale(lang) ? 'free-mongolian' : null;
+  return lang.trim() ? 'free' : null;
 }

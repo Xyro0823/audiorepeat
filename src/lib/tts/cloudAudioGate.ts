@@ -26,8 +26,8 @@ export interface CloudAudioGateInput {
 /** True when cloud-generated audio may actually be fetched and cached. */
 export function cloudAudioActiveFor(input: CloudAudioGateInput): boolean {
   const paidAccess = planHasFeature(input.plan, 'offlineAudio');
-  const freeMongolianAccess = !paidAccess && input.freeMongolianTranslation === true;
-  if (!paidAccess && !freeMongolianAccess) return false;
+  const freeFallbackAccess = !paidAccess && input.deviceVoiceMissing;
+  if (!paidAccess && !freeFallbackAccess) return false;
   // The Free Mongolian fallback is on-demand only. It does not prewarm a set,
   // and server-side language checks plus a daily limit protect Azure spend.
   const enabled = paidAccess ? input.cloudTts : true;

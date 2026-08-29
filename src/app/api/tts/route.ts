@@ -117,7 +117,7 @@ export async function POST(request: Request) {
   if (
     await consumeDistributedRateLimit({
       key: `tts-day:${access}:${uid}`,
-      limit: access === 'free-mongolian' ? FREE_MONGOLIAN_TTS_DAILY_LIMIT : TTS_DAILY_LIMIT,
+      limit: access === 'free' ? FREE_MONGOLIAN_TTS_DAILY_LIMIT : TTS_DAILY_LIMIT,
       windowMs: TTS_DAILY_WINDOW_MS,
     }) ===
     'limited'

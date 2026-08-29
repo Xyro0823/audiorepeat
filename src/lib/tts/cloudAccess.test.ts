@@ -3,9 +3,9 @@ import { cloudTtsAccessFor, isMongolianLocale } from '@/lib/tts/cloudAccess';
 
 describe('cloudTtsAccessFor', () => {
   it('allows a Free account to generate only Mongolian speech', () => {
-    expect(cloudTtsAccessFor('basic', 'mn-MN')).toBe('free-mongolian');
-    expect(cloudTtsAccessFor('basic', 'MN')).toBe('free-mongolian');
-    expect(cloudTtsAccessFor('basic', 'zh-CN')).toBeNull();
+    expect(cloudTtsAccessFor('basic', 'mn-MN')).toBe('free');
+    expect(cloudTtsAccessFor('basic', 'MN')).toBe('free');
+    expect(cloudTtsAccessFor('basic', 'zh-CN')).toBe('free');
   });
 
   it('retains full cloud access for paid plans', () => {

@@ -129,17 +129,16 @@ describe('/api/tts', () => {
     expect(h.synthesize).toHaveBeenCalledTimes(2);
   });
 
-  it('lets a Free account synthesize Mongolian explanations only', async () => {
+  it('lets a Free account synthesize any supported language within the daily cap', async () => {
     h.entitlement = { uid: 'uid-1', plan: 'basic', billing: 'none', status: 'active' };
     const allowed = await POST(request({ text: 'сайн байна уу', lang: 'mn-MN' }, 'token'));
     expect(allowed.status).toBe(200);
     expect(h.consume).toHaveBeenCalledWith(
-      expect.objectContaining({ key: 'tts-day:free-mongolian:uid-1', limit: 300 }),
+      expect.objectContaining({ key: 'tts-day:free:uid-1', limit: 300 }),
     );
 
-    const blocked = await POST(request({ text: 'hello', lang: 'en-US' }, 'token'));
-    expect(blocked.status).toBe(403);
-    expect(await blocked.json()).toMatchObject({ error: 'pro-required' });
+    const english = await POST(request({ text: 'hello', lang: 'en-US' }, 'token'));
+    expect(english.status).toBe(200);
   });
 
   it('fails closed when Azure or server authentication is unconfigured', async () => {
