@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { LogOut } from 'lucide-react';
+import { ArrowDown, BadgeHelp, BarChart3, Bug, Clapperboard, Download, FilePenLine, FileText, Gift, Keyboard, LibraryBig, LogIn, LogOut, Megaphone, Palette, ShieldAlert, ShieldCheck, Sparkles, Stethoscope, Trophy, Trash2, UserRound, Settings as SettingsIcon } from 'lucide-react';
 import AuthScreen from './AuthScreen';
 import DowngradeModal from '@/components/checkout/DowngradeModal';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
@@ -266,7 +266,6 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
                         : 'border-white/10 text-slate-400'
                     }`}
                   >
-                    {pro ? '★ ' : ''}
                     {PLAN_BADGE[settings.plan].short}
                   </span>
                   <span className="truncate text-[10px] text-slate-500">
@@ -281,33 +280,33 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
           {sidebar && (
             <>
               <Link role="menuitem" href={pro ? '/checkout' : '/checkout?plan=pro'} className={itemClass} onClick={closeAndRememberDashboard}>
-                <span aria-hidden>✧</span> {pro ? t('auth.managePlan') : t('auth.upgradeToPro')}
+                <Sparkles className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {pro ? t('auth.managePlan') : t('auth.upgradeToPro')}
               </Link>
               <Link role="menuitem" href="/account/personalization" className={itemClass} onClick={closeAndRememberDashboard}>
-                <span aria-hidden>◌</span> Personalization
+                <Palette className="h-4 w-4" strokeWidth={1.9} aria-hidden /> Personalization
               </Link>
               <Link role="menuitem" href="/account" className={itemClass} onClick={closeAndRememberDashboard}>
-                <span aria-hidden>◎</span> Профайл
+                <UserRound className="h-4 w-4" strokeWidth={1.9} aria-hidden /> Профайл
               </Link>
               <Link role="menuitem" href="/settings" className={itemClass} onClick={closeAndRememberDashboard}>
-                <span aria-hidden>⚙</span> {t('dashboard.mobileNav.settings')}
+                <SettingsIcon className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('dashboard.mobileNav.settings')}
               </Link>
               <div className="my-1 h-px bg-white/10" />
               <div className="group relative">
                 <Link role="menuitem" href="/help" className={`${itemClass} group-hover:bg-white/8 group-focus-within:bg-white/8`} onClick={closeAndRememberDashboard}>
-                  <span aria-hidden>◉</span> Help
+                  <BadgeHelp className="h-4 w-4" strokeWidth={1.9} aria-hidden /> Help
                   <span className="ml-auto text-base leading-none text-slate-400" aria-hidden>›</span>
                 </Link>
                 <div className="invisible pointer-events-none absolute bottom-0 left-full z-[110] w-64 rounded-2xl border border-white/10 bg-[#11141d]/95 p-2 opacity-0 shadow-[0_20px_55px_rgba(0,0,0,0.45)] backdrop-blur-xl transition duration-150 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto group-focus-within:opacity-100">
                   <p className="px-3 pb-1 pt-1 text-[10px] font-bold uppercase tracking-[0.17em] text-slate-500">Help &amp; support</p>
-                  <Link role="menuitem" href="/help" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>?</span> Help center</Link>
-                  <Link role="menuitem" href="/help/release-notes" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>≋</span> Release notes</Link>
-                  <Link role="menuitem" href="/help/download-apps" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>⇩</span> Download apps</Link>
-                  <Link role="menuitem" href="/help/shortcuts" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>⌨</span> Keyboard shortcuts</Link>
+                  <Link role="menuitem" href="/help" className={itemClass} onClick={closeAndRememberDashboard}><BadgeHelp className="h-4 w-4" strokeWidth={1.9} aria-hidden /> Help center</Link>
+                  <Link role="menuitem" href="/help/release-notes" className={itemClass} onClick={closeAndRememberDashboard}><Megaphone className="h-4 w-4" strokeWidth={1.9} aria-hidden /> Release notes</Link>
+                  <Link role="menuitem" href="/help/download-apps" className={itemClass} onClick={closeAndRememberDashboard}><Download className="h-4 w-4" strokeWidth={1.9} aria-hidden /> Download apps</Link>
+                  <Link role="menuitem" href="/help/shortcuts" className={itemClass} onClick={closeAndRememberDashboard}><Keyboard className="h-4 w-4" strokeWidth={1.9} aria-hidden /> Keyboard shortcuts</Link>
                   <div className="my-1 h-px bg-white/10" />
-                  <Link role="menuitem" href="/terms" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>▤</span> Terms of Service</Link>
-                  <Link role="menuitem" href="/privacy" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>ⓘ</span> Privacy Policy</Link>
-                  <Link role="menuitem" href="/help/report-bug" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>⚑</span> Report a bug</Link>
+                  <Link role="menuitem" href="/terms" className={itemClass} onClick={closeAndRememberDashboard}><FileText className="h-4 w-4" strokeWidth={1.9} aria-hidden /> Terms of Service</Link>
+                  <Link role="menuitem" href="/privacy" className={itemClass} onClick={closeAndRememberDashboard}><ShieldCheck className="h-4 w-4" strokeWidth={1.9} aria-hidden /> Privacy Policy</Link>
+                  <Link role="menuitem" href="/help/report-bug" className={itemClass} onClick={closeAndRememberDashboard}><Bug className="h-4 w-4" strokeWidth={1.9} aria-hidden /> Report a bug</Link>
                 </div>
               </div>
             </>
@@ -316,7 +315,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
           {!sidebar && (pro ? (
             <>
               <Link role="menuitem" href="/checkout" className={itemClass} onClick={close}>
-                <span aria-hidden>⭐</span> {t('auth.managePlan')}
+                <Sparkles className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.managePlan')}
                 <span className="ml-auto rounded-full border border-neon-amber/40 bg-neon-amber/15 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
                   {PLAN_BADGE[settings.plan].short}
                 </span>
@@ -329,12 +328,12 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
                   setShowDowngrade(true);
                 }}
               >
-                <span aria-hidden>⬇️</span> {t('auth.switchToFreePlan')}
+                <ArrowDown className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.switchToFreePlan')}
               </button>
             </>
           ) : (
             <Link role="menuitem" href="/checkout?plan=pro" className={itemClass} onClick={close}>
-              <span aria-hidden>⭐</span> {t('auth.upgradeToPro')}
+              <Sparkles className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.upgradeToPro')}
             </Link>
           ))}
 
@@ -349,10 +348,10 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
               onLeaderboard();
             }}
           >
-            <span aria-hidden>🏆</span> {t('auth.leaderboard')}
+            <Trophy className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.leaderboard')}
           </button>
           <Link role="menuitem" href="/stats" className={itemClass} onClick={close}>
-            <span aria-hidden>📊</span> {t('auth.stats')}
+            <BarChart3 className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.stats')}
             {!pro && (
               <span className="ml-auto rounded-full bg-neon-amber/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-neon-amber">
                 Pro
@@ -367,7 +366,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
               onSubtitles();
             }}
           >
-            <span aria-hidden>🎬</span> {t('auth.subtitlesToSet')}
+            <Clapperboard className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.subtitlesToSet')}
           </button>
           <button
             role="menuitem"
@@ -377,7 +376,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
               onBrowse();
             }}
           >
-            <span aria-hidden>📚</span> {t('auth.browseLibrary')}
+            <LibraryBig className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.browseLibrary')}
           </button></>}
 
           {!sidebar && admin === 'admin' && (
@@ -387,19 +386,19 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
                 {t('auth.adminSection')}
               </div>
               <Link role="menuitem" href="/admin/entitlements" className={itemClass} onClick={close}>
-                <span aria-hidden>🎁</span> {t('auth.giftPro')}
+                <Gift className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.giftPro')}
               </Link>
               <Link role="menuitem" href="/admin/diagnostics" className={itemClass} onClick={close}>
-                <span aria-hidden>🩺</span> {t('auth.languageDiagnostics')}
+                <Stethoscope className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.languageDiagnostics')}
               </Link>
               <Link role="menuitem" href="/admin/analytics" className={itemClass} onClick={close}>
-                <span aria-hidden>📈</span> {t('auth.onboardingAnalytics')}
+                <BarChart3 className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.onboardingAnalytics')}
               </Link>
               <Link role="menuitem" href="/admin/errors" className={itemClass} onClick={close}>
-                <span aria-hidden>🛡️</span> {t('auth.errorDiagnostics')}
+                <ShieldAlert className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.errorDiagnostics')}
               </Link>
               <Link role="menuitem" href="/admin/translations" className={itemClass} onClick={close}>
-                <span aria-hidden>📝</span> {t('auth.translationReports')}
+                <FilePenLine className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.translationReports')}
               </Link>
             </>
           )}
@@ -415,7 +414,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
                 setShowAuth(true);
               }}
             >
-              <span aria-hidden>🔐</span> {t('auth.signInOrCreate')}
+              <LogIn className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.signInOrCreate')}
             </button>
           ) : (
             <>
@@ -466,7 +465,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
                   }}
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-neon-magenta transition hover:bg-neon-magenta/10"
                 >
-                  <span aria-hidden>🗑</span> {t('auth.deleteAccount')}
+                  <Trash2 className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.deleteAccount')}
                 </button>
               )}
             </>
