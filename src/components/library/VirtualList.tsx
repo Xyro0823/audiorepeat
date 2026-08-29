@@ -33,7 +33,7 @@ export default function VirtualList<T>({
 
   return (
     <div
-      className={`overflow-y-auto ${className}`}
+      className={`touch-pan-y overflow-y-auto overscroll-contain ${className}`}
       style={{ height }}
       onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
     >
