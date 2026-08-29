@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayKey, daysSinceLastPractice, type DayMap } from './practiceStats';
+import { dayKey, daysSinceLastPractice, weekKey, type DayMap } from './practiceStats';
 
 function daysAgo(n: number): string {
   const d = new Date();
@@ -33,5 +33,12 @@ describe('daysSinceLastPractice', () => {
   it('counts ms-only days as practice too', () => {
     const days: DayMap = { [daysAgo(4)]: { w: 0, ms: 500 } };
     expect(daysSinceLastPractice(days)).toBe(4);
+  });
+});
+
+describe('weekKey', () => {
+  it('uses Monday as the stable weekly leaderboard boundary', () => {
+    expect(weekKey(new Date(2026, 7, 30))).toBe('2026-08-24'); // Sunday
+    expect(weekKey(new Date(2026, 7, 31))).toBe('2026-08-31'); // Monday
   });
 });

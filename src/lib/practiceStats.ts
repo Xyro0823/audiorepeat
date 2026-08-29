@@ -46,6 +46,14 @@ export function dayKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** Monday key for the calendar week that contains `d`, using local time. */
+export function weekKey(d: Date): string {
+  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const weekday = start.getDay();
+  start.setDate(start.getDate() - (weekday === 0 ? 6 : weekday - 1));
+  return dayKey(start);
+}
+
 /** Consecutive practiced days ending today (or yesterday, so the flame doesn't flicker off mid-day). */
 export function computeStreak(days: DayMap): number {
   const cursor = new Date();

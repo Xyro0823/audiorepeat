@@ -40,6 +40,14 @@ export default function PrivacyPage() {
             libraries remain device-only.
           </li>
           <li>
+            <strong className="text-white">Global leaderboard.</strong>{" "}
+            Signed-in learners who record practice may appear on the weekly
+            leaderboard using only their public account name, aggregate words
+            listened, and aggregate listening time for that day. Vocabulary,
+            translations, email addresses, and account IDs are never published
+            in the leaderboard.
+          </li>
+          <li>
             <strong className="text-white">Newsletter email.</strong> If you
             subscribe to the newsletter from the landing page, we store the
             email address you provide so we can send it to you.
@@ -95,6 +103,7 @@ export default function PrivacyPage() {
         <ul className="list-disc space-y-2 pl-5">
           <li>To operate your account and provide the service you signed up for.</li>
           <li>To sync a signed-in library and learning progress across devices.</li>
+          <li>To show aggregate weekly practice rankings for signed-in learners.</li>
           <li>To process payments through Paddle and grant the correct plan.</li>
           <li>To send the newsletter only to people who subscribed to it.</li>
           <li>

@@ -1,10 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { computeStreak, dayKey, lastNDays, type DayMap } from '@/lib/practiceStats';
+import { computeStreak, dayKey, lastNDays, weekKey, type DayMap } from '@/lib/practiceStats';
 import { useAuth } from '@/hooks/useAuth';
 import { statsStorageKey } from '@/lib/auth/scopes';
 import { scheduleLibrarySync } from '@/lib/sync/client';
+import { scheduleLeaderboardPublish } from '@/lib/leaderboard/client';
 
 function loadDays(key: string): DayMap {
   if (typeof window === 'undefined') return {};
@@ -134,6 +135,21 @@ export function usePracticeStats() {
     const t = days[dayKey(new Date())] ?? { w: 0, ms: 0 };
     return { wordsToday: t.w, msToday: t.ms, streak: computeStreak(days) };
   }, [days]);
+
+  // Global leaderboard is opt-in through signing in: publish only the
+  // aggregate score and public account name, never vocabulary or translations.
+  // The client batches writes, so normal listening does not send one request
+  // per word.
+  useEffect(() => {
+    if (!loaded || !user || (stats.wordsToday <= 0 && stats.msToday <= 0)) return;
+    const weekly = lastNDays(days, 7).reduce((total, day) => ({ words: total.words + day.words, ms: total.ms + day.ms }), { words: 0, ms: 0 });
+    scheduleLeaderboardPublish({
+      week: weekKey(new Date()),
+      displayName: user.username,
+      words: weekly.words,
+      ms: weekly.ms,
+    });
+  }, [loaded, user, days, stats.wordsToday, stats.msToday]);
 
   // Rolling 7-day view (oldest → today) for the weekly activity heatmap.
   const week = useMemo(() => lastNDays(days, 7), [days]);
