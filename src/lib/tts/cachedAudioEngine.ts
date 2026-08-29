@@ -18,6 +18,10 @@ import type { SpeakOptions, TTSEngine, TTSEngineVoice } from './engine';
 export class CachedAudioEngine implements TTSEngine {
   readonly id = 'cached-audio';
   private fallback: TTSEngine;
+  // Keep one media element for the lifetime of this engine. In iOS Safari a
+  // newly created Audio() after the first word can lose the original user
+  // activation, even though a listening loop is still in progress. Reusing
+  // the element keeps the loop in the same media session.
   private audio: HTMLAudioElement | null = null;
   private objectUrl: string | null = null;
   private generation = 0;
@@ -51,11 +55,15 @@ export class CachedAudioEngine implements TTSEngine {
   }
 
   private playBlob(blob: Blob, opts: SpeakOptions, gen: number): void {
+    // Reuse the first audio element rather than creating one per word. See
+    // the field comment: that is essential for continuous iOS playback.
+    const audio = this.audio ?? new Audio();
+    this.audio = audio;
     // stop any previously playing audio before starting the new one
-    if (this.audio) this.audio.pause();
+    audio.pause();
     if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
     this.objectUrl = URL.createObjectURL(blob);
-    const audio = new Audio(this.objectUrl);
+    audio.src = this.objectUrl;
     audio.playbackRate = opts.rate;
     audio.volume = opts.volume ?? 1;
     this.audio = audio;
@@ -69,12 +77,10 @@ export class CachedAudioEngine implements TTSEngine {
     };
     audio.onended = () => {
       if (gen !== this.generation) return;
-      this.audio = null;
       opts.onEnd();
     };
     audio.onerror = () => {
       if (gen !== this.generation) return;
-      this.audio = null;
       // A stale/corrupt Cache API blob must not stop an entire listening loop.
       // Match the rejected-play fallback below: discard the bad cached attempt
       // and let the device/cloud engine speak this one item instead.
@@ -87,7 +93,6 @@ export class CachedAudioEngine implements TTSEngine {
     audio.play().catch(() => {
       // autoplay policy or decode failure -> fall back to speech synthesis
       if (gen !== this.generation) return;
-      this.audio = null;
       if (this.objectUrl) {
         URL.revokeObjectURL(this.objectUrl);
         this.objectUrl = null;
@@ -100,7 +105,6 @@ export class CachedAudioEngine implements TTSEngine {
     this.generation += 1; // drop any in-flight cache lookup
     if (this.audio) {
       this.audio.pause();
-      this.audio = null;
     }
     if (this.objectUrl) {
       URL.revokeObjectURL(this.objectUrl);

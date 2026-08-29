@@ -5,6 +5,9 @@ import { fetchCloudAudioBlob } from './cloudTts';
 export class CloudTtsEngine implements TTSEngine {
   readonly id = 'cloud-tts';
   private fallback: TTSEngine;
+  // A single reused media element preserves iOS's user-initiated playback
+  // session across the timer-driven word queue. Creating a fresh Audio() for
+  // each word is allowed for the first word but can be rejected thereafter.
   private audio: HTMLAudioElement | null = null;
   private objectUrl: string | null = null;
   private controller: AbortController | null = null;
@@ -65,10 +68,12 @@ export class CloudTtsEngine implements TTSEngine {
   }
 
   private playBlob(blob: Blob, opts: SpeakOptions, gen: number): void {
-    if (this.audio) this.audio.pause();
+    const audio = this.audio ?? new Audio();
+    this.audio = audio;
+    audio.pause();
     if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
     this.objectUrl = URL.createObjectURL(blob);
-    const audio = new Audio(this.objectUrl);
+    audio.src = this.objectUrl;
     audio.playbackRate = opts.rate;
     audio.volume = opts.volume ?? 1;
     this.audio = audio;
@@ -77,12 +82,10 @@ export class CloudTtsEngine implements TTSEngine {
     };
     audio.onended = () => {
       if (gen !== this.generation) return;
-      this.audio = null;
       opts.onEnd();
     };
     audio.onerror = (error) => {
       if (gen !== this.generation) return;
-      this.audio = null;
       opts.onError(error);
     };
     void audio.play().catch(() => {
@@ -95,7 +98,6 @@ export class CloudTtsEngine implements TTSEngine {
     this.controller?.abort();
     this.controller = null;
     if (this.audio) this.audio.pause();
-    this.audio = null;
     if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
     this.objectUrl = null;
     this.fallback.stop();
