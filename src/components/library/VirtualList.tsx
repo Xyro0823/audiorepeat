@@ -9,6 +9,8 @@ interface VirtualListProps<T> {
   renderRow: (item: T, index: number) => ReactNode;
   className?: string;
   overscan?: number;
+  /** Keep preview lists usable inside short mobile dialogs. */
+  responsiveHeight?: boolean;
 }
 
 /**
@@ -22,6 +24,7 @@ export default function VirtualList<T>({
   renderRow,
   className = '',
   overscan = 8,
+  responsiveHeight = false,
 }: VirtualListProps<T>) {
   const [scrollTop, setScrollTop] = useState(0);
 
@@ -34,7 +37,7 @@ export default function VirtualList<T>({
   return (
     <div
       className={`touch-pan-y overflow-y-auto overscroll-contain ${className}`}
-      style={{ height }}
+      style={{ height: responsiveHeight ? `min(${height}px, 28dvh)` : height }}
       onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
     >
       <div style={{ height: total, position: 'relative' }}>

@@ -518,7 +518,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                 </div>
 
                 {/* Virtualized preview */}
-                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4">
+                <div className="min-h-0 flex-1 overflow-hidden px-6 py-4">
                   <div className="mb-2 text-[11px] uppercase tracking-wider text-slate-500">
                     {t('library.starter.previewHeader', { count: filtered.length.toLocaleString() })}
                   </div>
@@ -531,6 +531,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                       items={filtered}
                       height={Math.min(filtered.length, 9) * ROW_HEIGHT}
                       rowHeight={ROW_HEIGHT}
+                      responsiveHeight
                       className="rounded-2xl border border-white/10"
                       renderRow={({ target, translation }) => (
                         <div className="flex items-center justify-between px-4 text-sm hover:bg-white/5">

@@ -9,9 +9,11 @@ const virtualList = readFileSync(join(process.cwd(), 'src/components/library/Vir
 describe('StarterLibraryModal', () => {
   it('prevents library scrolling from propagating to the dashboard', () => {
     expect(source).toContain("document.body.style.overflow = 'hidden'");
-    expect(source).toContain('overscroll-contain');
+    expect(source).toContain('overflow-hidden px-6 py-4');
     expect(source).toContain('max-h-[90dvh] min-h-0');
     expect(topics).toContain('overflow-y-auto overscroll-contain');
     expect(virtualList).toContain('touch-pan-y overflow-y-auto overscroll-contain');
+    expect(virtualList).toContain('min(${height}px, 28dvh)');
+    expect(source).toContain('responsiveHeight');
   });
 });

@@ -235,6 +235,7 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
                     items={bank}
                     height={Math.min(bank.length, 9) * ROW_HEIGHT}
                     rowHeight={ROW_HEIGHT}
+                    responsiveHeight
                     className="mt-2 rounded-2xl border border-white/10"
                     renderRow={([target, translation]) => (
                       <div className="flex items-center justify-between px-4 text-sm hover:bg-white/5">
