@@ -19,11 +19,11 @@ export default function LegalShell({
   children: ReactNode;
 }) {
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-night-950">
+    <div className="flex min-h-dvh w-full flex-1 flex-col bg-night-950">
       {/* Header */}
-      <header className="border-b border-white/5">
+      <header className="border-b border-white/5 bg-night-950">
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 px-5 py-5">
-          <Link href="/dashboard" className="flex items-center gap-2">
+          <Link href="/dashboard" scroll={false} className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-400/30 bg-gradient-to-br from-cyan-500/20 to-blue-600/10">
               <svg
                 viewBox="0 0 24 24"
@@ -40,6 +40,7 @@ export default function LegalShell({
           </Link>
           <Link
             href="/dashboard"
+            scroll={false}
             className="text-[13px] font-medium text-slate-400 transition hover:text-white"
           >
             ← Dashboard руу буцах
@@ -61,7 +62,7 @@ export default function LegalShell({
       </main>
 
       {/* Footer — legal cross-links + home */}
-      <footer className="border-t border-white/5">
+      <footer className="border-t border-white/5 bg-night-950">
         <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between gap-4 px-5 py-7 sm:flex-row">
           <p className="text-xs text-slate-500">
             © 2026 AudioRepeat · Loop, repeat, retain.

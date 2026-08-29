@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { LogOut } from 'lucide-react';
 import AuthScreen from './AuthScreen';
 import DowngradeModal from '@/components/checkout/DowngradeModal';
 import { useAdminStatus } from '@/hooks/useAdminStatus';
@@ -14,6 +15,7 @@ import { clearOnboardingState } from '@/lib/onboarding';
 import { isProPlan, PLAN_BADGE, planDetail } from '@/lib/plans';
 import { useT } from '@/lib/i18n';
 import { getSettingsSnapshot, subscribeSettings } from '@/lib/settingsStore';
+import { saveDashboardScrollPosition } from '@/lib/libraryScrollPosition';
 
 function initialsOf(name: string): string {
   const parts = name.trim().split(/[\s_-]+/).filter(Boolean);
@@ -37,7 +39,7 @@ interface Props {
 }
 
 const itemClass =
-  'flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-slate-300 transition hover:bg-white/8 hover:text-white';
+  'flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm text-slate-300 transition hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan';
 
 /**
  * Unified profile dropdown — the single header entry point. For guests it
@@ -121,6 +123,16 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
   if (status === 'loading') return null;
 
   const close = () => setOpen(false);
+  // Account/help pages live outside the dashboard route, so Next's normal
+  // navigation starts their return visit at the top. Keep one return position
+  // only when this menu is opened from the dashboard; SetLibrary consumes it
+  // after its content is ready, just like the player return flow.
+  const closeAndRememberDashboard = () => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/dashboard') {
+      saveDashboardScrollPosition(window.scrollY);
+    }
+    close();
+  };
   const signedIn = status === 'signed-in' && !!user;
   const hue = signedIn ? avatarHue(user!.username) : 0;
 
@@ -234,7 +246,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
           ref={menuRef}
           role="menu"
           aria-label={t('auth.accountAndTools')}
-          className={`dropdown-panel animate-fade-up absolute right-0 z-[100] w-60 ${sidebar ? 'overflow-visible' : 'overflow-y-auto overscroll-contain'} rounded-2xl p-2 ${
+          className={`dropdown-panel animate-fade-up absolute right-0 z-[100] w-64 ${sidebar ? 'overflow-visible' : 'overflow-y-auto overscroll-contain'} rounded-2xl border border-white/10 bg-[#11141d]/95 p-2 shadow-[0_20px_55px_rgba(0,0,0,0.45)] backdrop-blur-xl ${
             pos?.up ? 'bottom-full mb-2' : 'top-full mt-2'
           }`}
           style={pos ? { maxHeight: pos.maxH, left: pos.left, right: 'auto' } : undefined}
@@ -268,33 +280,34 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
 
           {sidebar && (
             <>
-              <Link role="menuitem" href={pro ? '/checkout' : '/checkout?plan=pro'} className={itemClass} onClick={close}>
+              <Link role="menuitem" href={pro ? '/checkout' : '/checkout?plan=pro'} className={itemClass} onClick={closeAndRememberDashboard}>
                 <span aria-hidden>✧</span> {pro ? t('auth.managePlan') : t('auth.upgradeToPro')}
               </Link>
-              <Link role="menuitem" href="/account/personalization" className={itemClass} onClick={close}>
+              <Link role="menuitem" href="/account/personalization" className={itemClass} onClick={closeAndRememberDashboard}>
                 <span aria-hidden>◌</span> Personalization
               </Link>
-              <Link role="menuitem" href="/account" className={itemClass} onClick={close}>
+              <Link role="menuitem" href="/account" className={itemClass} onClick={closeAndRememberDashboard}>
                 <span aria-hidden>◎</span> Профайл
               </Link>
-              <Link role="menuitem" href="/settings" className={itemClass} onClick={close}>
+              <Link role="menuitem" href="/settings" className={itemClass} onClick={closeAndRememberDashboard}>
                 <span aria-hidden>⚙</span> {t('dashboard.mobileNav.settings')}
               </Link>
               <div className="my-1 h-px bg-white/10" />
               <div className="group relative">
-                <Link role="menuitem" href="/help" className={`${itemClass} group-hover:bg-white/8 group-focus-within:bg-white/8`} onClick={close}>
+                <Link role="menuitem" href="/help" className={`${itemClass} group-hover:bg-white/8 group-focus-within:bg-white/8`} onClick={closeAndRememberDashboard}>
                   <span aria-hidden>◉</span> Help
                   <span className="ml-auto text-base leading-none text-slate-400" aria-hidden>›</span>
                 </Link>
-                <div className="invisible pointer-events-none absolute bottom-0 left-full z-[110] w-60 rounded-2xl border border-white/10 bg-[#141720] p-2 opacity-0 shadow-2xl transition duration-150 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto group-focus-within:opacity-100">
-                  <Link role="menuitem" href="/help" className={itemClass} onClick={close}><span aria-hidden>?</span> Help center</Link>
-                  <Link role="menuitem" href="/help/release-notes" className={itemClass} onClick={close}><span aria-hidden>≋</span> Release notes</Link>
-                  <Link role="menuitem" href="/help/download-apps" className={itemClass} onClick={close}><span aria-hidden>⇩</span> Download apps</Link>
-                  <Link role="menuitem" href="/help/shortcuts" className={itemClass} onClick={close}><span aria-hidden>⌨</span> Keyboard shortcuts</Link>
+                <div className="invisible pointer-events-none absolute bottom-0 left-full z-[110] w-64 rounded-2xl border border-white/10 bg-[#11141d]/95 p-2 opacity-0 shadow-[0_20px_55px_rgba(0,0,0,0.45)] backdrop-blur-xl transition duration-150 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+                  <p className="px-3 pb-1 pt-1 text-[10px] font-bold uppercase tracking-[0.17em] text-slate-500">Help &amp; support</p>
+                  <Link role="menuitem" href="/help" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>?</span> Help center</Link>
+                  <Link role="menuitem" href="/help/release-notes" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>≋</span> Release notes</Link>
+                  <Link role="menuitem" href="/help/download-apps" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>⇩</span> Download apps</Link>
+                  <Link role="menuitem" href="/help/shortcuts" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>⌨</span> Keyboard shortcuts</Link>
                   <div className="my-1 h-px bg-white/10" />
-                  <Link role="menuitem" href="/terms" className={itemClass} onClick={close}><span aria-hidden>▤</span> Terms of Service</Link>
-                  <Link role="menuitem" href="/privacy" className={itemClass} onClick={close}><span aria-hidden>ⓘ</span> Privacy Policy</Link>
-                  <Link role="menuitem" href="/help/report-bug" className={itemClass} onClick={close}><span aria-hidden>⚑</span> Report a bug</Link>
+                  <Link role="menuitem" href="/terms" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>▤</span> Terms of Service</Link>
+                  <Link role="menuitem" href="/privacy" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>ⓘ</span> Privacy Policy</Link>
+                  <Link role="menuitem" href="/help/report-bug" className={itemClass} onClick={closeAndRememberDashboard}><span aria-hidden>⚑</span> Report a bug</Link>
                 </div>
               </div>
             </>
@@ -414,7 +427,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
                   logout();
                 }}
               >
-                <span aria-hidden>🚪</span> {t('auth.signOut')}
+                <LogOut className="h-4 w-4" strokeWidth={1.9} aria-hidden /> {t('auth.signOut')}
               </button>
               {confirmDelete ? (
                 <div className="mt-1 rounded-xl border border-neon-magenta/30 bg-neon-magenta/10 p-2">

@@ -16,6 +16,7 @@ import SwRegister from "@/components/pwa/SwRegister";
 import UpdatePrompt from "@/components/pwa/UpdatePrompt";
 import ThemeManager from "@/components/settings/ThemeManager";
 import UiLangGate from "@/components/settings/UiLangGate";
+import RouteScrollRestoration from "@/components/navigation/RouteScrollRestoration";
 import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
@@ -127,6 +128,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     >
       <body className="min-h-full flex flex-col">
         <AuthGate>{children}</AuthGate>
+        <RouteScrollRestoration />
         {/* First-time onboarding — self-gates per account; covers every route
             including the public landing page (a fresh account signs up there). */}
         <OnboardingFlow />

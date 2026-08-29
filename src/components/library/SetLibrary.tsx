@@ -4,7 +4,7 @@ registerRoute("dashboard");
 
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ArrowDown, BarChart3, BookOpen, Clapperboard, FilePenLine, Gift, Home, LibraryBig, RotateCcw, Search, Settings, ShieldAlert, Star, Stethoscope, Trophy } from 'lucide-react';
 import ActivityHeatmap from '@/components/ActivityHeatmap';
@@ -145,6 +145,7 @@ function DesktopSidebarMenu({
 }) {
   const t = useT();
   const admin = useAdminStatus();
+  const pathname = usePathname();
 
   return (
     <nav aria-label={t('dashboard.desktopNav.aria')} className="mb-4 border-b border-white/10 pb-4">
@@ -155,16 +156,16 @@ function DesktopSidebarMenu({
         <DesktopSidebarButton label="Шинэ багц" onClick={onNew}>＋</DesktopSidebarButton>
         <DesktopSidebarButton label="Импортлох (JSON)" onClick={onImport}>↥</DesktopSidebarButton>
         <div className="my-3 h-px bg-white/10" />
-        <DesktopSidebarItem href="/dashboard" label={t('dashboard.mobileNav.home')} active>
+        <DesktopSidebarItem href="/dashboard" label={t('dashboard.mobileNav.home')} active={pathname === '/dashboard'}>
           <Home className="h-4 w-4" strokeWidth={1.9} />
         </DesktopSidebarItem>
-        <DesktopSidebarItem href="/library" label={t('dashboard.mobileNav.library')}>
+        <DesktopSidebarItem href="/library" label={t('dashboard.mobileNav.library')} active={pathname === '/library'}>
           <BookOpen className="h-4 w-4" strokeWidth={1.9} />
         </DesktopSidebarItem>
-        <DesktopSidebarItem href="/review" label={t('dashboard.mobileNav.review')}>
+        <DesktopSidebarItem href="/review" label={t('dashboard.mobileNav.review')} active={pathname === '/review'}>
           <RotateCcw className="h-4 w-4" strokeWidth={1.9} />
         </DesktopSidebarItem>
-        <DesktopSidebarItem href="/stats" label={t('dashboard.desktopNav.stats')}>
+        <DesktopSidebarItem href="/stats" label={t('dashboard.desktopNav.stats')} active={pathname === '/stats'}>
           <BarChart3 className="h-4 w-4" strokeWidth={1.9} />
         </DesktopSidebarItem>
         <DesktopSidebarButton label="Субтитраас багц үүсгэх" onClick={onSubtitles}><Clapperboard className="h-4 w-4" strokeWidth={1.9} /></DesktopSidebarButton>
@@ -186,10 +187,10 @@ function DesktopSidebarMenu({
             <ArrowDown className="h-4 w-4" strokeWidth={1.9} />
           </DesktopSidebarButton>
         )}
-        <DesktopSidebarItem href="/leaderboard" label={t('dashboard.desktopNav.leaderboard')}>
+        <DesktopSidebarItem href="/leaderboard" label={t('dashboard.desktopNav.leaderboard')} active={pathname === '/leaderboard'}>
           <Trophy className="h-4 w-4" strokeWidth={1.9} />
         </DesktopSidebarItem>
-        <DesktopSidebarItem href="/settings" label={t('dashboard.mobileNav.settings')}>
+        <DesktopSidebarItem href="/settings" label={t('dashboard.mobileNav.settings')} active={pathname === '/settings'}>
           <Settings className="h-4 w-4" strokeWidth={1.9} />
         </DesktopSidebarItem>
       </div>

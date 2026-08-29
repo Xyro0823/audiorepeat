@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { BookOpen, BriefcaseBusiness, Clock3, Flower2, GraduationCap, HeartPulse, Home, Landmark, MessageCircle, Palette, PawPrint, Plane, ShoppingBag, Smile, Soup, Trophy, Trees, UserRound, type LucideIcon } from 'lucide-react';
 import LanguageLock from './LanguageLock';
 import { packLangLabel } from '@/lib/starterSets';
 import {
@@ -14,6 +15,28 @@ import { useT, type TKey } from '@/lib/i18n';
 import VirtualList from './VirtualList';
 
 const ROW_HEIGHT = 44;
+
+const TOPIC_ICONS: Record<string, LucideIcon> = {
+  animals: PawPrint,
+  body: UserRound,
+  business: BriefcaseBusiness,
+  city: Landmark,
+  colors: Palette,
+  education: GraduationCap,
+  emotions: Smile,
+  family: UserRound,
+  food: Soup,
+  health: HeartPulse,
+  home: Home,
+  money: Landmark,
+  nature: Trees,
+  shopping: ShoppingBag,
+  smalltalk: MessageCircle,
+  sports: Trophy,
+  tech: BookOpen,
+  time: Clock3,
+  travel: Plane,
+};
 
 interface Props {
   /** Existing sets, used to mark topics already imported. */
@@ -128,6 +151,7 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
             {Object.entries(manifest).map(([id, meta]) => {
               const totalWords = Object.values(meta.langs).reduce((a, n) => a + n, 0);
               const active = topic === id;
+              const TopicIcon = TOPIC_ICONS[id] ?? Flower2;
               return (
                 <button
                   key={id}
@@ -143,8 +167,10 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#141433] to-night-950 text-lg">
-                      {meta.emoji}
+                    <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border transition ${
+                      active ? 'border-neon-cyan/35 bg-neon-cyan/10 text-neon-cyan' : 'border-white/10 bg-white/[0.035] text-slate-400 group-hover:border-neon-cyan/25 group-hover:text-neon-cyan'
+                    }`}>
+                      <TopicIcon className="h-5 w-5" strokeWidth={1.8} aria-hidden />
                     </span>
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold text-white">

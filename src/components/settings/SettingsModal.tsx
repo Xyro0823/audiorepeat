@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { Bell, Database, Globe2, Headphones, Palette, Settings as SettingsIcon } from 'lucide-react';
 import { useLists } from '@/hooks/useLists';
 import { useAuth } from '@/hooks/useAuth';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
@@ -54,6 +55,12 @@ const THEMES: { id: ThemeName; swatches: string[] }[] = [
 ];
 
 type Tab = 'language' | 'playback' | 'appearance' | 'data' | 'reminders';
+
+/** Translation labels previously carried emoji. Icons are rendered separately
+ * so settings matches the app's single, line-icon navigation language. */
+function labelWithoutLeadingIcon(label: string): string {
+  return label.replace(/^[^\p{L}\p{N}]+/u, '');
+}
 
 function Toggle({
   checked,
@@ -334,6 +341,13 @@ export default function SettingsModal({ onClose }: Props) {
 
   const notificationSupported =
     typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator;
+  const tabItems = [
+    { id: 'language' as const, label: t('settings.tab.language'), icon: Globe2 },
+    { id: 'playback' as const, label: t('settings.tab.playback'), icon: Headphones },
+    { id: 'appearance' as const, label: t('settings.tab.appearance'), icon: Palette },
+    { id: 'data' as const, label: t('settings.tab.data'), icon: Database },
+    { id: 'reminders' as const, label: t('settings.tab.reminders'), icon: Bell },
+  ];
 
   // Rendered through a portal to document.body: several ancestors carry a
   // retained transform (e.g. the header's fade-up animation ends at
@@ -347,10 +361,10 @@ export default function SettingsModal({ onClose }: Props) {
       aria-modal="true"
       aria-label={t('settings.aria.label')}
     >
-      <div className="glass animate-fade-up max-h-[92dvh] w-full max-w-xl overflow-y-auto rounded-t-3xl px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 sm:max-h-[85vh] sm:rounded-3xl sm:p-6">
+      <div className="glass animate-fade-up max-h-[92dvh] w-full max-w-2xl overflow-y-auto rounded-t-3xl px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 sm:max-h-[85vh] sm:rounded-3xl sm:p-6">
         <div aria-hidden className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/15 sm:hidden" />
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xl font-bold text-white">{t('settings.title')}</h2>
+        <div className="mb-4 flex items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-white/[0.045] to-neon-violet/[0.08] px-3 py-3 sm:px-4">
+          <div className="flex items-center gap-3"><span aria-hidden className="flex h-9 w-9 items-center justify-center rounded-xl border border-neon-cyan/25 bg-neon-cyan/10 text-neon-cyan"><SettingsIcon className="h-[18px] w-[18px]" strokeWidth={1.9} /></span><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-neon-cyan">AudioRepeat</p><h2 className="text-xl font-bold text-white">{labelWithoutLeadingIcon(t('settings.title'))}</h2></div></div>
           <button
             onClick={onClose}
             aria-label={t('settings.close.aria')}
@@ -361,31 +375,26 @@ export default function SettingsModal({ onClose }: Props) {
         </div>
 
         {/* Tabs */}
-        {/* Horizontal scroll on phones (MN emoji tabs wrap badly when
-            squeezed into flex-1 cells); wrap + equal widths from sm up. */}
-        <div className="mb-5 flex gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-night-900/60 p-1.5 sm:flex-wrap">
-          {          (
-            [
-              { id: 'language', label: t('settings.tab.language') },
-              { id: 'playback', label: t('settings.tab.playback') },
-              { id: 'appearance', label: t('settings.tab.appearance') },
-              { id: 'data', label: t('settings.tab.data') },
-              { id: 'reminders', label: t('settings.tab.reminders') },
-            ] as const
-          ).map((tabItem) => (
+        {/* Horizontal scroll on phones; wrap + equal widths from sm up. */}
+        <div className="mb-5 flex gap-1.5 overflow-x-auto rounded-2xl border border-white/10 bg-night-950/45 p-1.5 sm:flex-wrap">
+          {tabItems.map((tabItem) => {
+            const TabIcon = tabItem.icon;
+            return (
             <button
               key={tabItem.id}
               onClick={() => setTab(tabItem.id)}
               aria-pressed={tab === tabItem.id}
-              className={`flex-none whitespace-nowrap rounded-xl px-3 py-2.5 text-xs font-semibold transition active:scale-95 sm:flex-1 ${
+              className={`flex flex-none items-center gap-1.5 whitespace-nowrap rounded-xl px-3 py-2.5 text-xs font-semibold transition active:scale-95 sm:flex-1 sm:justify-center ${
                 tab === tabItem.id
                   ? 'bg-gradient-to-r from-neon-cyan/20 to-neon-violet/20 text-white ring-1 ring-neon-cyan/40'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              {tabItem.label}
+              <TabIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.9} aria-hidden />
+              {labelWithoutLeadingIcon(tabItem.label)}
             </button>
-          ))}
+            );
+          })}
         </div>
 
         {/* ---------------- Language ---------------- */}
