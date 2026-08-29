@@ -23,7 +23,7 @@ export default function LegalShell({
       {/* Header */}
       <header className="border-b border-white/5">
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 px-5 py-5">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/dashboard" className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-cyan-400/30 bg-gradient-to-br from-cyan-500/20 to-blue-600/10">
               <svg
                 viewBox="0 0 24 24"
@@ -39,10 +39,10 @@ export default function LegalShell({
             </span>
           </Link>
           <Link
-            href="/"
+            href="/dashboard"
             className="text-[13px] font-medium text-slate-400 transition hover:text-white"
           >
-            ← Back to AudioRepeat
+            ← Dashboard руу буцах
           </Link>
         </div>
       </header>

@@ -22,6 +22,14 @@ export const dashboardEn = {
   'dashboard.mobileNav.resume': 'Continue',
   'dashboard.mobileNav.library': 'Library',
   'dashboard.mobileNav.settings': 'Settings',
+  'dashboard.desktopNav.aria': 'Workspace navigation',
+  'dashboard.desktopNav.workspace': 'Workspace',
+  'dashboard.desktopNav.stats': 'Stats',
+  'dashboard.desktopNav.account': 'Account',
+  'dashboard.desktopNav.managePlan': 'Manage plan',
+  'dashboard.desktopNav.upgradePlan': 'Upgrade plan',
+  'dashboard.desktopNav.switchToFree': 'Switch to Free',
+  'dashboard.desktopNav.leaderboard': 'Leaderboard',
 
   // Streak day counts (hero chip + metrics card)
   'dashboard.streakDays.one': '{count} day',

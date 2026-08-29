@@ -4,6 +4,7 @@ registerRoute("landing");
 
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { getSettingsSnapshot, subscribeSettings } from "@/lib/settingsStore";
 import {
@@ -323,6 +324,7 @@ function NeuralConnections({
 export default function LandingPage() {
   const [annual, setAnnual] = useState(true);
   const { status } = useAuth();
+  const router = useRouter();
   const t = useT();
   const uiLang = useSyncExternalStore(
     subscribeSettings,
@@ -330,6 +332,9 @@ export default function LandingPage() {
     () => 'en' as const,
   );
   const [showAuth, setShowAuth] = useState(false);
+  useEffect(() => {
+    if (status === 'signed-in') router.replace('/dashboard');
+  }, [router, status]);
   const landingAction = landingAuthAction(status);
   const langCount = SUPPORTED_LANGUAGE_COUNT;
   const heroRef = useRef<HTMLDivElement | null>(null);

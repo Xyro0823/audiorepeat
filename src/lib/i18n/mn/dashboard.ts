@@ -23,6 +23,14 @@ export const dashboardMn: Record<DashboardKeys, string> = {
   'dashboard.mobileNav.resume': 'Үргэлжлүүлэх',
   'dashboard.mobileNav.library': 'Сан',
   'dashboard.mobileNav.settings': 'Тохиргоо',
+  'dashboard.desktopNav.aria': 'Ажлын талбарын цэс',
+  'dashboard.desktopNav.workspace': 'АЖЛЫН ТАЛБАР',
+  'dashboard.desktopNav.stats': 'Статистик',
+  'dashboard.desktopNav.account': 'БҮРТГЭЛ',
+  'dashboard.desktopNav.managePlan': 'Төлөвлөгөө удирдах',
+  'dashboard.desktopNav.upgradePlan': 'Төлөвлөгөөг сайжруулах',
+  'dashboard.desktopNav.switchToFree': 'Үнэгүй төлөвлөгөө рүү шилжих',
+  'dashboard.desktopNav.leaderboard': 'Амжилтын самбар',
 
   // Streak day counts (hero chip + metrics card)
   'dashboard.streakDays.one': '{count} өдөр',

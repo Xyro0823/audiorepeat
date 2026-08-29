@@ -3,13 +3,15 @@ import { registerRoute } from "@/lib/i18n/register/route";
 registerRoute("dashboard");
 
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { Search } from 'lucide-react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { ArrowDown, BarChart3, BookOpen, Clapperboard, FilePenLine, Gift, Home, LibraryBig, RotateCcw, Search, Settings, ShieldAlert, Star, Stethoscope, Trophy } from 'lucide-react';
 import ActivityHeatmap from '@/components/ActivityHeatmap';
 import { flagFor } from '@/components/LanguageBadge';
 import StreakBadge from '@/components/StreakBadge';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { useLists } from '@/hooks/useLists';
 import { useLibraryMeta } from '@/hooks/useLibraryMeta';
 import { formatDuration } from '@/lib/format';
@@ -51,7 +53,7 @@ const SubtitleImportModal = dynamic(() => import('./SubtitleImportModal'), { ssr
 import CefrBadge from './CefrBadge';
 import NewSetButton from './NewSetButton';
 import ProfileDropdown from '@/components/auth/ProfileDropdown';
-import SettingsButton from '@/components/settings/SettingsButton';
+import DowngradeModal from '@/components/checkout/DowngradeModal';
 import InstallAppButton from '@/components/pwa/InstallAppButton';
 import AiAssistantButton from '@/components/dashboard/AiAssistantButton';
 import AiInsightsCard from '@/components/dashboard/AiInsightsCard';
@@ -84,6 +86,124 @@ function Logo() {
         <path d="M8 5.5v13a1 1 0 0 0 1.5.87l11-6.5a1 1 0 0 0 0-1.74l-11-6.5A1 1 0 0 0 8 5.5Z" />
       </svg>
     </div>
+  );
+}
+
+function DesktopSidebarItem({
+  href,
+  label,
+  active = false,
+  children,
+}: {
+  href: string;
+  label: string;
+  active?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? 'page' : undefined}
+      className={`flex h-10 items-center gap-2.5 rounded-xl px-3 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan ${
+        active ? 'bg-white/[0.09] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]' : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'
+      }`}
+    >
+      <span className={active ? 'text-cyan-300' : 'text-slate-500'} aria-hidden>{children}</span>
+      <span>{label}</span>
+    </Link>
+  );
+}
+
+function DesktopSidebarButton({ label, onClick, children }: { label: string; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-10 w-full items-center gap-2.5 rounded-xl px-3 text-left text-sm font-medium text-slate-400 transition hover:bg-white/5 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+    >
+      <span className="text-slate-500" aria-hidden>{children}</span>
+      <span>{label}</span>
+    </button>
+  );
+}
+
+/** Desktop dashboard navigation inspired by Vercel's quiet, utility-first sidebar. */
+function DesktopSidebarMenu({
+  pro,
+  onDowngrade,
+  onSubtitles,
+  onBrowse,
+  onNew,
+  onImport,
+}: {
+  pro: boolean;
+  onDowngrade: () => void;
+  onSubtitles: () => void;
+  onBrowse: () => void;
+  onNew: () => void;
+  onImport: () => void;
+}) {
+  const t = useT();
+  const admin = useAdminStatus();
+
+  return (
+    <nav aria-label={t('dashboard.desktopNav.aria')} className="mb-4 border-b border-white/10 pb-4">
+      <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+        {t('dashboard.desktopNav.workspace')}
+      </p>
+      <div className="space-y-1">
+        <DesktopSidebarButton label="Шинэ багц" onClick={onNew}>＋</DesktopSidebarButton>
+        <DesktopSidebarButton label="Импортлох (JSON)" onClick={onImport}>↥</DesktopSidebarButton>
+        <div className="my-3 h-px bg-white/10" />
+        <DesktopSidebarItem href="/dashboard" label={t('dashboard.mobileNav.home')} active>
+          <Home className="h-4 w-4" strokeWidth={1.9} />
+        </DesktopSidebarItem>
+        <DesktopSidebarItem href="/library" label={t('dashboard.mobileNav.library')}>
+          <BookOpen className="h-4 w-4" strokeWidth={1.9} />
+        </DesktopSidebarItem>
+        <DesktopSidebarItem href="/review" label={t('dashboard.mobileNav.review')}>
+          <RotateCcw className="h-4 w-4" strokeWidth={1.9} />
+        </DesktopSidebarItem>
+        <DesktopSidebarItem href="/stats" label={t('dashboard.desktopNav.stats')}>
+          <BarChart3 className="h-4 w-4" strokeWidth={1.9} />
+        </DesktopSidebarItem>
+        <DesktopSidebarButton label="Субтитраас багц үүсгэх" onClick={onSubtitles}><Clapperboard className="h-4 w-4" strokeWidth={1.9} /></DesktopSidebarButton>
+        <DesktopSidebarButton label="Сан үзэх" onClick={onBrowse}><LibraryBig className="h-4 w-4" strokeWidth={1.9} /></DesktopSidebarButton>
+      </div>
+      <div className="mt-3 border-t border-white/10 pt-3">
+        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+          {t('dashboard.desktopNav.account')}
+        </p>
+        <Link
+          href={pro ? '/checkout' : '/checkout?plan=pro'}
+          className="flex h-10 items-center gap-2.5 rounded-xl px-3 text-sm font-medium text-slate-400 transition hover:bg-white/5 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+        >
+          <Star className="h-4 w-4 text-slate-500" strokeWidth={1.9} aria-hidden />
+          <span>{pro ? t('dashboard.desktopNav.managePlan') : t('dashboard.desktopNav.upgradePlan')}</span>
+        </Link>
+        {pro && (
+          <DesktopSidebarButton label={t('dashboard.desktopNav.switchToFree')} onClick={onDowngrade}>
+            <ArrowDown className="h-4 w-4" strokeWidth={1.9} />
+          </DesktopSidebarButton>
+        )}
+        <DesktopSidebarItem href="/leaderboard" label={t('dashboard.desktopNav.leaderboard')}>
+          <Trophy className="h-4 w-4" strokeWidth={1.9} />
+        </DesktopSidebarItem>
+        <DesktopSidebarItem href="/settings" label={t('dashboard.mobileNav.settings')}>
+          <Settings className="h-4 w-4" strokeWidth={1.9} />
+        </DesktopSidebarItem>
+      </div>
+      {admin === 'admin' && <div className="mt-3 border-t border-white/10 pt-3">
+        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">Админ</p>
+        <div className="space-y-1">
+          <DesktopSidebarItem href="/admin/entitlements" label="Pro бэлэглэх"><Gift className="h-4 w-4" strokeWidth={1.9} /></DesktopSidebarItem>
+          <DesktopSidebarItem href="/admin/diagnostics" label="Хэлний оношилгоо"><Stethoscope className="h-4 w-4" strokeWidth={1.9} /></DesktopSidebarItem>
+          <DesktopSidebarItem href="/admin/analytics" label="Онбордингийн анализ"><BarChart3 className="h-4 w-4" strokeWidth={1.9} /></DesktopSidebarItem>
+          <DesktopSidebarItem href="/admin/errors" label="Алдааны оношилгоо"><ShieldAlert className="h-4 w-4" strokeWidth={1.9} /></DesktopSidebarItem>
+          <DesktopSidebarItem href="/admin/translations" label="Орчуулгын санал"><FilePenLine className="h-4 w-4" strokeWidth={1.9} /></DesktopSidebarItem>
+        </div>
+      </div>}
+    </nav>
   );
 }
 
@@ -535,7 +655,7 @@ function PortraitCard({
 
 type ImportMsg = { kind: 'ok' | 'err'; text: string } | null;
 
-export default function SetLibrary() {
+export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: boolean }) {
   const { sets, allSets, loading, settings, saveSet, removeSet, saveSettings, freeLangKey } = useLists();
   const { wordsToday, msToday, streak, week, days, recordWords } = usePracticeStats();
   const { recents, favorites, toggleFavorite } = useLibraryMeta();
@@ -546,6 +666,7 @@ export default function SetLibrary() {
   const [editing, setEditing] = useState<VocabSet | 'new' | null>(null);
   const [browse, setBrowse] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+  const [sidebarDowngradeOpen, setSidebarDowngradeOpen] = useState(false);
   const [subtitleImport, setSubtitleImport] = useState<{ fileName: string; text: string } | null>(
     null,
   );
@@ -866,7 +987,38 @@ export default function SetLibrary() {
   };
 
   return (
-    <main id="dashboard-top" className="relative mx-auto w-full max-w-7xl flex-1 px-5 pb-28 pt-3 md:pb-20">
+    <main id="dashboard-top" className="relative mx-auto w-full max-w-7xl flex-1 px-5 pb-28 pt-3 xl:pl-[340px] md:pb-20">
+      <aside className="fixed bottom-0 left-0 top-0 z-40 hidden w-[300px] border-r border-white/10 bg-[#12141d] xl:flex xl:flex-col">
+        <div className="flex h-20 shrink-0 items-center gap-3 border-b border-white/10 px-5">
+          <Logo />
+          <span className="mr-auto text-base font-semibold tracking-tight text-white">AudioRepeat</span>
+          <StreakBadge streak={streak} />
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
+          <DesktopSidebarMenu
+            pro={canUseAllLangs}
+            onDowngrade={() => setSidebarDowngradeOpen(true)}
+            onSubtitles={() => subtitleInputRef.current?.click()}
+            onBrowse={() => setBrowse(true)}
+            onNew={() => setEditing('new')}
+            onImport={() => fileInputRef.current?.click()}
+          />
+        </div>
+        <div className="shrink-0 border-t border-white/10 p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+          <ProfileDropdown
+            sidebar
+            className="w-full"
+            onLeaderboard={() => setLeaderboardOpen(true)}
+            onSubtitles={() => subtitleInputRef.current?.click()}
+            onBrowse={() => setBrowse(true)}
+          />
+            </div>
+            <InstallAppButton variant="sidebar" />
+          </div>
+        </div>
+      </aside>
       <MobileDashboardNav
         resumeAvailable={Boolean(featured)}
         activeTab={mobileTab}
@@ -897,23 +1049,18 @@ export default function SetLibrary() {
           the dashboard grid; the controls stay quiet so + New owns the
           visual weight. Width matches the dashboard container so the dock's
           edges align with the content grid below. */}
-      <header className="animate-fade-up nav-dock relative z-50 mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[20px] px-3 py-2 sm:mb-6 sm:gap-x-4 sm:px-4 sm:py-2.5">
-        <Logo />
-        <div className="mr-auto min-w-0">
+      <header className="animate-fade-up nav-dock relative z-50 mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[20px] px-3 py-2 sm:mb-6 sm:gap-x-4 sm:px-4 sm:py-2.5 xl:hidden">
+        <div className="contents xl:hidden">
+          <Logo />
+          <div className="mr-auto min-w-0">
           <h1 className="text-[15px] font-semibold leading-tight tracking-tight text-white">AudioRepeat</h1>
           <p className="hidden text-[11px] leading-snug text-slate-500 sm:block">
             {t('library.tagline', { count: FREE_LANG_OPTIONS.length })}
           </p>
+          </div>
         </div>
         <div className="nav-actions ml-auto flex w-full items-center justify-between gap-0.5 rounded-2xl p-1 sm:w-auto sm:justify-start">
-          <div className="hidden md:block"><SettingsButton /></div>
-          <div className="hidden md:block"><StreakBadge streak={streak} /></div>
-          <div className="hidden md:block"><InstallAppButton /></div>
-          <ProfileDropdown
-            onLeaderboard={() => setLeaderboardOpen(true)}
-            onSubtitles={() => subtitleInputRef.current?.click()}
-            onBrowse={() => setBrowse(true)}
-          />
+          <div className="xl:hidden"><ProfileDropdown onLeaderboard={() => setLeaderboardOpen(true)} onSubtitles={() => subtitleInputRef.current?.click()} onBrowse={() => setBrowse(true)} /></div>
           <NewSetButton
             onNew={() => setEditing('new')}
             onImport={() => fileInputRef.current?.click()}
@@ -942,7 +1089,7 @@ export default function SetLibrary() {
         }}
       />
 
-      <div className={mobileTab === 'home' ? '' : 'max-md:hidden'}>
+      <div className={`${libraryOnly ? 'hidden' : ''} ${mobileTab === 'home' ? '' : 'max-md:hidden'}`}>
         <WelcomeHero
           wordsToday={wordsToday}
           msToday={msToday}
@@ -951,7 +1098,7 @@ export default function SetLibrary() {
         />
       </div>
 
-      <div className="hidden md:block">
+      <div className={`hidden md:block ${libraryOnly ? '!hidden' : ''}`}>
         <GettingStartedChecklist
           languageReady={Boolean(freeLangKey || settings.defaultNewSetLang || sets.length > 0)}
           setReady={sets.length > 0}
@@ -965,17 +1112,17 @@ export default function SetLibrary() {
         />
       </div>
 
-      <div className="hidden md:block">
+      <div className={`hidden md:block ${libraryOnly ? '!hidden' : ''}`}>
         <FreeLanguageBar langKey={freeLangKey} pro={canUseAllLangs} onChange={() => setChangingLang(true)} />
       </div>
 
-      <div className="hidden md:block"><FreePlanNotice pro={canUseAllLangs} /></div>
+      <div className={`hidden md:block ${libraryOnly ? '!hidden' : ''}`}><FreePlanNotice pro={canUseAllLangs} /></div>
 
-      <div className="mt-6 flex flex-col gap-6 lg:grid lg:grid-cols-[300px_minmax(0,1fr)]">
+      <div className="mt-6">
         {/* ------------------------------------------------------------ */}
         {/* Left sidebar — featured languages + continue practice        */}
         {/* ------------------------------------------------------------ */}
-        <aside className="glass animate-fade-up hidden rounded-3xl p-4 md:block lg:sticky lg:top-6 lg:max-h-[calc(100vh-3rem)] lg:self-start lg:overflow-y-auto">
+        <aside className="hidden">
           <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
             {t('library.sidebar.featuredLanguages')}
           </h2>
@@ -1108,7 +1255,7 @@ export default function SetLibrary() {
         {/* Main column — spotlight + library grid                       */}
         {/* ------------------------------------------------------------ */}
         <div className="min-w-0 space-y-6">
-          <div className="hidden md:block">
+          <div className={`hidden md:block ${libraryOnly ? '!hidden' : ''}`}>
             <MetricCards
               accuracyPct={accuracyPct}
               masteredCount={masteryStats.mastered}
@@ -1116,7 +1263,7 @@ export default function SetLibrary() {
             />
           </div>
 
-          <div className={mobileTab === 'review' ? '' : 'max-md:hidden'}>
+          <div className={`${libraryOnly ? 'hidden' : ''} ${mobileTab === 'review' ? '' : 'max-md:hidden'}`}>
             <ReviewTodayCard
               dueCount={reviewDueCount}
               nextDueAtMs={reviewNextDueAtMs}
@@ -1133,7 +1280,7 @@ export default function SetLibrary() {
           </div>
 
           {featured && (
-            <div className={mobileTab === 'home' ? '' : 'max-md:hidden'}>
+            <div className={`${libraryOnly ? 'hidden' : ''} ${mobileTab === 'home' ? '' : 'max-md:hidden'}`}>
               <FeaturedCard
                 set={featured}
                 bookmarked={favorites.includes(featured.id)}
@@ -1144,7 +1291,7 @@ export default function SetLibrary() {
           )}
 
           {importMsg && (
-            <div className={mobileTab === 'library' ? '' : 'max-md:hidden'}>
+            <div className={`${libraryOnly ? '' : mobileTab === 'library' ? '' : 'max-md:hidden'} `}>
             <div
               className={`animate-fade-up rounded-xl border px-4 py-3 text-sm ${
                 importMsg.kind === 'ok'
@@ -1158,7 +1305,7 @@ export default function SetLibrary() {
           )}
 
           {/* Library grid — floating glass panel */}
-          <section id="vocab-grid" className={`glass animate-fade-up scroll-mt-28 rounded-3xl p-5 md:scroll-mt-6 ${mobileTab === 'library' ? '' : 'max-md:hidden'}`}>
+          <section id="vocab-grid" className={`glass animate-fade-up scroll-mt-28 rounded-3xl p-5 md:scroll-mt-6 ${libraryOnly || mobileTab === 'library' ? '' : 'hidden'}`}>
             <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 className="text-lg font-semibold tracking-tight text-white">
@@ -1370,6 +1517,7 @@ export default function SetLibrary() {
       )}
 
       {leaderboardOpen && <LeaderboardModal onClose={() => setLeaderboardOpen(false)} />}
+      {sidebarDowngradeOpen && <DowngradeModal onClose={() => setSidebarDowngradeOpen(false)} />}
 
       {subtitleImport && (
         <SubtitleImportModal

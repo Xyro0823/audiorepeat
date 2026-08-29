@@ -1,0 +1,2 @@
+import AccountPageShell from '@/components/account/AccountPageShell';
+export default function ReleaseNotesPage() { return <AccountPageShell title="Release notes" intro="Recent improvements to AudioRepeat."><div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"><h2 className="font-semibold text-white">Current release</h2><p className="mt-2 text-sm text-slate-400">Improved desktop navigation, dedicated Library and Account pages, and clearer mobile browsing behavior.</p></div></AccountPageShell>; }

@@ -1,0 +1,2 @@
+import AccountPageShell from '@/components/account/AccountPageShell';
+export default function DownloadAppsPage() { return <AccountPageShell title="Download apps" intro="Install AudioRepeat from your browser for a focused, app-like experience."><div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-sm leading-6 text-slate-400">On iPhone or iPad, use Safari’s Share button and choose <span className="text-white">Add to Home Screen</span>. On Android or desktop Chrome, use the browser install option in the address bar or menu.</div></AccountPageShell>; }

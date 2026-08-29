@@ -17,8 +17,9 @@ describe('MobileDashboardNav', () => {
   });
 
   it('keeps bottom navigation clear of dashboard content and desktop utility controls', () => {
-    expect(library).toContain('pb-28 pt-3 md:pb-20');
-    expect(library).toContain('hidden md:block"><SettingsButton /></div>');
+    expect(library).toContain('pb-28 pt-3 xl:pl-[340px] md:pb-20');
+    expect(library).toContain('href="/settings"');
+    expect(library).toContain('xl:hidden');
     expect(library).toContain('resumeAvailable={Boolean(featured)}');
     expect(library).toContain('activeTab={mobileTab}');
     expect(library).toContain('else setBrowse(true)');

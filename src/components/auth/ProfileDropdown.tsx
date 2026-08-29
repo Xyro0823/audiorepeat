@@ -32,6 +32,8 @@ interface Props {
   onLeaderboard: () => void;
   onSubtitles: () => void;
   onBrowse: () => void;
+  className?: string;
+  sidebar?: boolean;
 }
 
 const itemClass =
@@ -44,7 +46,7 @@ const itemClass =
  * stats, subtitles, browse library) so the top bar stays minimal: one button
  * for everything that isn't a primary action.
  */
-export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }: Props) {
+export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, className, sidebar = false }: Props) {
   const { status, user, logout, deleteAccount } = useAuth();
   const t = useT();
   // Server-verified admin gate — admin links render only for allowlisted
@@ -165,7 +167,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
   };
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className={`relative ${className ?? ''}`}>
       <button
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
@@ -173,7 +175,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
         title={
           signedIn ? t('auth.signedInAs', { name: user!.username }) : t('auth.accountAndTools')
         }
-        className="btn-toolbar-ghost flex h-11 items-center gap-2 rounded-xl px-2 pr-2.5 text-[13px] font-medium text-slate-300"
+        className={`btn-toolbar-ghost flex h-11 items-center gap-2 rounded-xl px-2 pr-2.5 text-[13px] font-medium text-slate-300 ${sidebar ? 'w-full justify-between px-3' : ''}`}
       >
         {signedIn ? (
           <span className="shrink-0 rounded-full bg-gradient-to-br from-neon-violet to-neon-cyan p-px">
@@ -213,7 +215,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
             </svg>
           </span>
         )}
-        {signedIn && <span className="hidden max-w-[110px] truncate sm:block">{user!.username}</span>}
+        {signedIn && <span className={`${sidebar ? 'block max-w-[190px]' : 'hidden max-w-[110px] sm:block'} truncate`}>{user!.username}</span>}
         <svg
           viewBox="0 0 24 24"
           className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}
@@ -232,7 +234,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
           ref={menuRef}
           role="menu"
           aria-label={t('auth.accountAndTools')}
-          className={`dropdown-panel animate-fade-up absolute right-0 z-[100] w-60 overflow-y-auto overscroll-contain rounded-2xl p-2 ${
+          className={`dropdown-panel animate-fade-up absolute right-0 z-[100] w-60 ${sidebar ? 'overflow-visible' : 'overflow-y-auto overscroll-contain'} rounded-2xl p-2 ${
             pos?.up ? 'bottom-full mb-2' : 'top-full mt-2'
           }`}
           style={pos ? { maxHeight: pos.maxH, left: pos.left, right: 'auto' } : undefined}
@@ -264,7 +266,41 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
             </>
           )}
 
-          {pro ? (
+          {sidebar && (
+            <>
+              <Link role="menuitem" href={pro ? '/checkout' : '/checkout?plan=pro'} className={itemClass} onClick={close}>
+                <span aria-hidden>✧</span> {pro ? t('auth.managePlan') : t('auth.upgradeToPro')}
+              </Link>
+              <Link role="menuitem" href="/account/personalization" className={itemClass} onClick={close}>
+                <span aria-hidden>◌</span> Personalization
+              </Link>
+              <Link role="menuitem" href="/account" className={itemClass} onClick={close}>
+                <span aria-hidden>◎</span> Профайл
+              </Link>
+              <Link role="menuitem" href="/settings" className={itemClass} onClick={close}>
+                <span aria-hidden>⚙</span> {t('dashboard.mobileNav.settings')}
+              </Link>
+              <div className="my-1 h-px bg-white/10" />
+              <div className="group relative">
+                <Link role="menuitem" href="/help" className={`${itemClass} group-hover:bg-white/8 group-focus-within:bg-white/8`} onClick={close}>
+                  <span aria-hidden>◉</span> Help
+                  <span className="ml-auto text-base leading-none text-slate-400" aria-hidden>›</span>
+                </Link>
+                <div className="invisible pointer-events-none absolute bottom-0 left-full z-[110] w-60 rounded-2xl border border-white/10 bg-[#141720] p-2 opacity-0 shadow-2xl transition duration-150 group-hover:visible group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:visible group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+                  <Link role="menuitem" href="/help" className={itemClass} onClick={close}><span aria-hidden>?</span> Help center</Link>
+                  <Link role="menuitem" href="/help/release-notes" className={itemClass} onClick={close}><span aria-hidden>≋</span> Release notes</Link>
+                  <Link role="menuitem" href="/help/download-apps" className={itemClass} onClick={close}><span aria-hidden>⇩</span> Download apps</Link>
+                  <Link role="menuitem" href="/help/shortcuts" className={itemClass} onClick={close}><span aria-hidden>⌨</span> Keyboard shortcuts</Link>
+                  <div className="my-1 h-px bg-white/10" />
+                  <Link role="menuitem" href="/terms" className={itemClass} onClick={close}><span aria-hidden>▤</span> Terms of Service</Link>
+                  <Link role="menuitem" href="/privacy" className={itemClass} onClick={close}><span aria-hidden>ⓘ</span> Privacy Policy</Link>
+                  <Link role="menuitem" href="/help/report-bug" className={itemClass} onClick={close}><span aria-hidden>⚑</span> Report a bug</Link>
+                </div>
+              </div>
+            </>
+          )}
+
+          {!sidebar && (pro ? (
             <>
               <Link role="menuitem" href="/checkout" className={itemClass} onClick={close}>
                 <span aria-hidden>⭐</span> {t('auth.managePlan')}
@@ -287,12 +323,12 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
             <Link role="menuitem" href="/checkout?plan=pro" className={itemClass} onClick={close}>
               <span aria-hidden>⭐</span> {t('auth.upgradeToPro')}
             </Link>
-          )}
+          ))}
 
-          <div className="my-1 h-px bg-white/10" />
+          {!sidebar && <div className="my-1 h-px bg-white/10" />}
 
           {/* Tools — grouped under the profile entry point */}
-          <button
+          {!sidebar && <><button
             role="menuitem"
             className={itemClass}
             onClick={() => {
@@ -329,9 +365,9 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse }
             }}
           >
             <span aria-hidden>📚</span> {t('auth.browseLibrary')}
-          </button>
+          </button></>}
 
-          {admin === 'admin' && (
+          {!sidebar && admin === 'admin' && (
             <>
               <div className="my-1 h-px bg-white/10" />
               <div className="px-3 pb-1 pt-1.5 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">
