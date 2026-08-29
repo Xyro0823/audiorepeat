@@ -109,8 +109,14 @@ export default function UpdatePrompt() {
   if (pathname?.startsWith("/player")) return null;
   if (!waitingUrl) return null;
 
+  // The dashboard has a fixed mobile navigation bar. Keep the update action
+  // immediately above it on phones so it remains readable and tappable.
+  const positionClass = pathname === "/dashboard"
+    ? "bottom-[calc(env(safe-area-inset-bottom)+6.25rem)] md:bottom-4"
+    : "bottom-4";
+
   return (
-    <div className="pointer-events-none fixed bottom-4 left-4 z-50 flex max-w-[calc(100vw-2rem)] justify-start">
+    <div className={`pointer-events-none fixed left-4 z-[70] flex max-w-[calc(100vw-2rem)] justify-start ${positionClass}`}>
       <div
         role="status"
         aria-live="polite"
