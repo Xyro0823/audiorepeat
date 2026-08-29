@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useSyncExternalStore, type ReactNode } from 'react';
 import SettingsButton from '@/components/settings/SettingsButton';
 import { useT } from '@/lib/i18n';
 
@@ -10,6 +10,17 @@ interface Props {
   resumeAvailable: boolean;
   activeTab: 'home' | 'review' | 'library';
   onTabChange: (tab: 'home' | 'review' | 'library') => void;
+}
+
+function getStandaloneSnapshot() {
+  const ios = navigator as Navigator & { standalone?: boolean };
+  return window.matchMedia('(display-mode: standalone)').matches || ios.standalone === true;
+}
+
+function subscribeToStandaloneMode(onChange: () => void) {
+  const media = window.matchMedia('(display-mode: standalone)');
+  media.addEventListener('change', onChange);
+  return () => media.removeEventListener('change', onChange);
 }
 
 function NavItem({
@@ -39,10 +50,60 @@ function NavItem({
   );
 }
 
-/** Thumb-reachable navigation for the dashboard below tablet width. */
+function BrowserNavItem({
+  label,
+  onClick,
+  active = false,
+}: {
+  label: string;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-current={active ? 'page' : undefined}
+      className={`flex h-9 min-w-0 items-center justify-center rounded-xl px-2 text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan active:scale-95 ${
+        active ? 'bg-cyan-400/15 text-cyan-100' : 'text-slate-300 hover:bg-white/5 hover:text-white'
+      }`}
+    >
+      <span className="truncate">{label}</span>
+    </button>
+  );
+}
+
+/** Uses a browser header on mobile web and thumb navigation in the installed app. */
 export default function MobileDashboardNav({ onResume, resumeAvailable, activeTab, onTabChange }: Props) {
   const t = useT();
+  const standalone = useSyncExternalStore(subscribeToStandaloneMode, getStandaloneSnapshot, () => false);
   const resumeLabel = resumeAvailable ? t('dashboard.mobileNav.resume') : t('dashboard.checklist.sets.action');
+
+  // Browser visits use a visible website-style header; installed PWA keeps its app shell.
+  if (!standalone) {
+    return (
+      <div className="h-14 md:hidden">
+        <header className="fixed inset-x-0 top-0 z-[60] border-b border-white/10 bg-[#10131c]/95 shadow-[0_8px_28px_rgba(0,0,0,0.3)] backdrop-blur-xl">
+          <nav aria-label={t('dashboard.mobileNav.aria')} className="mx-auto flex h-14 max-w-7xl items-center gap-1 px-3">
+            <button
+              type="button"
+              onClick={() => onTabChange('home')}
+              aria-label="AudioRepeat"
+              className="mr-1 flex h-9 shrink-0 items-center rounded-xl px-2 text-sm font-bold tracking-tight text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+            >
+              <span className="text-cyan-300">A</span><span className="hidden min-[360px]:inline">udioRepeat</span>
+            </button>
+            <div className="grid min-w-0 flex-1 grid-cols-3 gap-1">
+              <BrowserNavItem label={t('dashboard.mobileNav.home')} active={activeTab === 'home'} onClick={() => onTabChange('home')} />
+              <BrowserNavItem label={t('dashboard.mobileNav.review')} active={activeTab === 'review'} onClick={() => onTabChange('review')} />
+              <BrowserNavItem label={t('dashboard.mobileNav.library')} active={activeTab === 'library'} onClick={() => onTabChange('library')} />
+            </div>
+            <SettingsButton className="ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-300 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan" />
+          </nav>
+        </header>
+      </div>
+    );
+  }
 
   return (
     <nav

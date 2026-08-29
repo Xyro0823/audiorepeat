@@ -867,6 +867,18 @@ export default function SetLibrary() {
 
   return (
     <main id="dashboard-top" className="relative mx-auto w-full max-w-7xl flex-1 px-5 pb-28 pt-3 md:pb-20">
+      <MobileDashboardNav
+        resumeAvailable={Boolean(featured)}
+        activeTab={mobileTab}
+        onTabChange={(tab) => {
+          setMobileTab(tab);
+          window.scrollTo({ top: 0, behavior: 'auto' });
+        }}
+        onResume={() => {
+          if (featured) playSet(featured);
+          else setBrowse(true);
+        }}
+      />
       {/* Ambient violet/blue glow — carries the hero palette into the dashboard
           background behind the dock and welcome card. The radial's peak sits a
           short way BELOW the top edge (at 50% 24%) so it fades in gradually —
@@ -1413,18 +1425,6 @@ export default function SetLibrary() {
       )}
 
       <AiAssistantButton onOpen={openAiInsights} />
-      <MobileDashboardNav
-        resumeAvailable={Boolean(featured)}
-        activeTab={mobileTab}
-        onTabChange={(tab) => {
-          setMobileTab(tab);
-          window.scrollTo({ top: 0, behavior: 'auto' });
-        }}
-        onResume={() => {
-          if (featured) playSet(featured);
-          else setBrowse(true);
-        }}
-      />
     </main>
   );
 }
