@@ -667,6 +667,7 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
   const [browse, setBrowse] = useState(false);
   const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [sidebarDowngradeOpen, setSidebarDowngradeOpen] = useState(false);
+  const [aiInsightsOpen, setAiInsightsOpen] = useState(false);
   const [subtitleImport, setSubtitleImport] = useState<{ fileName: string; text: string } | null>(
     null,
   );
@@ -918,13 +919,11 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
   const DAILY_GOAL_MS = 15 * 60 * 1000; // 15 minutes of listening per day
   const goalPct = Math.min(100, Math.round((msToday / DAILY_GOAL_MS) * 100));
 
-  // The floating AI button reveals the insights card and briefly highlights it.
+  // The floating AI button opens a usable insights panel. The old desktop
+  // sidebar card was deliberately removed during the navigation redesign, so
+  // scrolling to that hidden element made the button appear unresponsive.
   const openAiInsights = useCallback(() => {
-    const el = document.getElementById('ai-insights');
-    if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    el.classList.add('ring-2', 'ring-blue-400/50');
-    window.setTimeout(() => el.classList.remove('ring-2', 'ring-blue-400/50'), 1600);
+    setAiInsightsOpen(true);
   }, []);
 
   // Start warm-up as soon as a set is tapped, BEFORE the player screen mounts
@@ -1245,8 +1244,6 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
           )}
 
           <div className="my-4 h-px bg-white/10" />
-
-          <AiInsightsCard reviewCount={masteryStats.hard} goalPct={goalPct} streak={streak} />
 
           {hasWeekActivity && <ActivityHeatmap week={week} />}
         </aside>
@@ -1570,6 +1567,32 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
             }
           }}
         />
+      )}
+
+      {aiInsightsOpen && (
+        <div
+          className="fixed inset-0 z-[60] flex items-end justify-end bg-night-950/45 p-4 backdrop-blur-sm sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('dashboard.insights.title')}
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setAiInsightsOpen(false);
+          }}
+        >
+          <div className="w-full max-w-sm animate-fade-up rounded-3xl border border-white/10 bg-[#141720] p-3 shadow-2xl">
+            <div className="mb-1 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setAiInsightsOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-white/8 hover:text-white"
+                aria-label={t('common.close')}
+              >
+                ×
+              </button>
+            </div>
+            <AiInsightsCard reviewCount={masteryStats.hard} goalPct={goalPct} streak={streak} />
+          </div>
+        </div>
       )}
 
       <AiAssistantButton onOpen={openAiInsights} />
