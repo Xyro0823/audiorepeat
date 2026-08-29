@@ -113,7 +113,7 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
   }, [topic, lang, bank, sets, onImport, selectedMeta, canAddLang]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-6 py-4">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-6 py-4">
       {error && !manifest ? (
         <div className="p-10 text-center text-sm text-neon-amber">{t(error)}</div>
       ) : !manifest ? (

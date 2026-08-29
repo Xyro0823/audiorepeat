@@ -109,6 +109,16 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
   // Escape to close
   const dialogRef = useDialogA11y<HTMLDivElement>(true, onClose);
 
+  // A modal must own the gesture on touch devices. Without this lock, reaching
+  // the end of the library list propagates the swipe to the dashboard behind it.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
   // Load the manifest once; default to the first language that has a pack.
   useEffect(() => {
     let alive = true;
@@ -294,7 +304,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
       aria-label={t('library.starter.title')}
     >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="glass animate-fade-up relative flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-3xl">
+      <div className="glass animate-fade-up relative flex max-h-[90dvh] min-h-0 w-full max-w-3xl flex-col overflow-hidden rounded-3xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <div>
@@ -508,7 +518,7 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
                 </div>
 
                 {/* Virtualized preview */}
-                <div className="flex-1 overflow-y-auto px-6 py-4">
+                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-6 py-4">
                   <div className="mb-2 text-[11px] uppercase tracking-wider text-slate-500">
                     {t('library.starter.previewHeader', { count: filtered.length.toLocaleString() })}
                   </div>
