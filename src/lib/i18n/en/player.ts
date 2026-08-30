@@ -132,6 +132,7 @@ export const playerEn = {
   'player.mastery.review': 'Review',
   'player.mastery.proTitle': 'Marking words as known / review is a Pro feature',
   'player.mastery.proCta': 'Track mastery — Pro',
+  'player.quiz.levelSuggestion': 'Your early quiz answers suggest trying {level} next. This will not change your level automatically.',
 
   // Shared badges & hints
   'player.hint.emoji': 'Emoji hint',

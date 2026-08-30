@@ -26,6 +26,8 @@ export const dashboardMn: Record<DashboardKeys, string> = {
   'dashboard.nextAction.kicker': 'Өнөөдөр хийх ганц зүйл',
   'dashboard.nextAction.continue': 'Үргэлжлүүлэх',
   'dashboard.nextAction.noSet': 'Эхлэх багцаа сонгоно уу',
+  'dashboard.nextAction.noSetBody': 'Бэлэн багцаас сонгоод, анхны сонсох давталтаа шууд эхлүүлээрэй.',
+  'dashboard.nextAction.browseSets': 'Бэлэн багц үзэх',
   'dashboard.nextAction.wordsToday': 'Өнөөдрийн үг',
   'dashboard.nextAction.streak': 'Цуврал',
   'dashboard.nextAction.studyTime': 'Суралцсан хугацаа',
@@ -77,6 +79,10 @@ export const dashboardMn: Record<DashboardKeys, string> = {
   'dashboard.metric.mastered.hint': 'Бүх багцаар мэдсэн үг',
   'dashboard.metric.streak.label': 'Тасралтгүй өдөр',
   'dashboard.metric.streak.hint': '{days} өдрийн дадлагын зорилт',
+  'dashboard.weekly.label': 'Энэ 7 хоног',
+  'dashboard.weekly.activeDays.one': '{count} идэвхтэй өдөр',
+  'dashboard.weekly.activeDays.other': '{count} идэвхтэй өдөр',
+  'dashboard.weekly.words': '{count} үг сонссон',
 
   // CloudSyncBadge
   'dashboard.sync.title': 'Энэ санг нэвтэрсэн төхөөрөмжүүдийн хооронд синк хийх',

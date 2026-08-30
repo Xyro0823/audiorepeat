@@ -22,6 +22,8 @@ interface Options {
   /** 0..1 output level, applied per utterance (sleep-timer fade). Default 1. */
   volume?: number;
   targetVoiceURI?: string;
+  /** Receives each answered real quiz question for optional progress tracking. */
+  onAnswerResult?: (correct: boolean) => void;
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -38,7 +40,7 @@ function shuffle<T>(arr: T[]): T[] {
  * options, get instant feedback, then advance. Independent of useAudioLoop —
  * it only shares the TTS engine. Score counts only answered questions.
  */
-export function useQuizMode({ words, engine, rate, volume = 1, targetVoiceURI }: Options) {
+export function useQuizMode({ words, engine, rate, volume = 1, targetVoiceURI, onAnswerResult }: Options) {
   const [active, setActive] = useState(false);
   const [question, setQuestion] = useState<QuizQuestion | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
@@ -221,6 +223,7 @@ export function useQuizMode({ words, engine, rate, volume = 1, targetVoiceURI }:
       selectedRef.current = optionIndex;
       setSelected(optionIndex);
       const isCorrect = optionIndex === q.correctIndex;
+      onAnswerResult?.(isCorrect);
       setCorrectCount((c) => c + (isCorrect ? 1 : 0));
       setTotal((t) => t + 1);
       clearAdvanceTimer();
@@ -231,7 +234,7 @@ export function useQuizMode({ words, engine, rate, volume = 1, targetVoiceURI }:
         advance(tokenRef.current);
       }, FEEDBACK_MS);
     },
-    [advance, clearAdvanceTimer, getEngine],
+    [advance, clearAdvanceTimer, getEngine, onAnswerResult],
   );
 
   const skip = useCallback(() => {

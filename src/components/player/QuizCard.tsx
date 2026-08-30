@@ -2,6 +2,7 @@
 
 import { useT } from '@/lib/i18n';
 import type { QuizQuestion } from '@/hooks/useQuizMode';
+import type { CefrLevel } from '@/types/app';
 
 interface Props {
   question: QuizQuestion | null;
@@ -13,6 +14,7 @@ interface Props {
   onAnswer: (optionIndex: number) => void;
   onReplay: () => void;
   onRestart: () => void;
+  suggestedLevel?: CefrLevel | null;
 }
 
 function OptionButton({
@@ -58,6 +60,7 @@ export default function QuizCard({
   onAnswer,
   onReplay,
   onRestart,
+  suggestedLevel,
 }: Props) {
   const t = useT();
   if (finished) {
@@ -95,6 +98,11 @@ export default function QuizCard({
           {correctCount} <span className="text-2xl text-slate-400">/ {total}</span>
         </p>
         <p className="text-sm text-slate-400">{t('player.quiz.pctCorrect', { pct })}</p>
+        {suggestedLevel && (
+          <p className="max-w-sm rounded-xl border border-neon-cyan/20 bg-neon-cyan/[0.07] px-3 py-2.5 text-xs leading-5 text-cyan-100">
+            {t('player.quiz.levelSuggestion', { level: suggestedLevel })}
+          </p>
+        )}
         <button
           onClick={onRestart}
           className="mt-2 rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-6 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"

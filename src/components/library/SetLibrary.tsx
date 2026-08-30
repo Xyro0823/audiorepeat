@@ -940,6 +940,15 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
       : 0;
   const DAILY_GOAL_MS = 15 * 60 * 1000; // 15 minutes of listening per day
   const goalPct = Math.min(100, Math.round((msToday / DAILY_GOAL_MS) * 100));
+  const weeklyWords = useMemo(() => week.reduce((total, day) => total + day.words, 0), [week]);
+  const weeklyActiveDays = useMemo(
+    () => week.filter((day) => day.words > 0 || day.ms > 0).length,
+    [week],
+  );
+  const weeklyActivity = useMemo(
+    () => week.map((day) => day.words > 0 || day.ms > 0),
+    [week],
+  );
 
   // The floating AI button opens a usable insights panel. The old desktop
   // sidebar card was deliberately removed during the navigation redesign, so
@@ -1124,6 +1133,7 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
           setWords={featured?.words.length}
           progressPct={featured ? masteryPct(featured) : 0}
           onStart={featured ? () => playSet(featured) : undefined}
+          onBrowse={() => setBrowse(true)}
         />
         <div className="mt-4">
           <HomeProgressOverview
@@ -1131,6 +1141,9 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
             msToday={msToday}
             goalPct={goalPct}
             reviewDueCount={reviewDueCount}
+            weeklyWords={weeklyWords}
+            weeklyActiveDays={weeklyActiveDays}
+            weeklyActivity={weeklyActivity}
             onReview={() => {
               if (canReview) void router.push('/review');
               else void router.push('/checkout?plan=pro');

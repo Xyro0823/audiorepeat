@@ -8,6 +8,9 @@ interface Props {
   msToday: number;
   goalPct: number;
   reviewDueCount: number;
+  weeklyWords: number;
+  weeklyActiveDays: number;
+  weeklyActivity: boolean[];
   onReview: () => void;
 }
 
@@ -20,6 +23,9 @@ export default function HomeProgressOverview({
   msToday,
   goalPct,
   reviewDueCount,
+  weeklyWords,
+  weeklyActiveDays,
+  weeklyActivity,
   onReview,
 }: Props) {
   const t = useT();
@@ -31,7 +37,7 @@ export default function HomeProgressOverview({
     : t('dashboard.review.caughtUp');
 
   return (
-    <section className="grid gap-3 sm:grid-cols-2" aria-label="Өнөөдрийн ахиц">
+    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Өнөөдрийн ахиц">
       <article className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -48,6 +54,17 @@ export default function HomeProgressOverview({
         <p className="mt-3 text-sm text-slate-400">
           <span className="font-semibold text-slate-200">{wordsToday}</span> {t('dashboard.nextAction.wordsToday').toLowerCase()}
         </p>
+      </article>
+
+      <article className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{t('dashboard.weekly.label')}</p>
+        <p className="mt-1 text-xl font-bold tracking-tight text-white">{weeklyWords.toLocaleString()}</p>
+        <div className="mt-4 flex h-2 items-center gap-1" aria-label={t(weeklyActiveDays === 1 ? 'dashboard.weekly.activeDays.one' : 'dashboard.weekly.activeDays.other', { count: weeklyActiveDays })}>
+          {Array.from({ length: 7 }, (_, index) => (
+            <span key={index} className={`h-full flex-1 rounded-full ${weeklyActivity[index] ? 'bg-neon-violet' : 'bg-white/10'}`} aria-hidden />
+          ))}
+        </div>
+        <p className="mt-3 text-sm text-slate-400">{t('dashboard.weekly.words', { count: weeklyWords })} · {t(weeklyActiveDays === 1 ? 'dashboard.weekly.activeDays.one' : 'dashboard.weekly.activeDays.other', { count: weeklyActiveDays })}</p>
       </article>
 
       <article className="rounded-2xl border border-white/10 bg-white/[0.035] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">

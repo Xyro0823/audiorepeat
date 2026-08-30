@@ -47,8 +47,9 @@ import {
   savePlaybackPosition,
 } from '@/lib/playbackPosition';
 import { hasDashboardScrollPosition } from '@/lib/libraryScrollPosition';
+import { recordQuizCalibration } from '@/lib/onboarding';
 import type { TTSEngine } from '@/lib/tts/engine';
-import type { AppSettings, MasteryStatus } from '@/types/app';
+import type { AppSettings, CefrLevel, MasteryStatus } from '@/types/app';
 import type { LoopWord } from '@/types/loop';
 import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
 import DictationCard from './DictationCard';
@@ -595,12 +596,19 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   // ---------- interactive quiz mode ----------
   // Independent of the audio loop — same TTS engine, own question/answer state.
   const [quizOn, setQuizOn] = useState(false);
+  const [quizLevelSuggestion, setQuizLevelSuggestion] = useState<CefrLevel | null>(null);
+  const onQuizAnswerResult = useCallback((correct: boolean) => {
+    if (!user || !set) return;
+    const suggested = recordQuizCalibration(user.id, set.lang, correct);
+    if (suggested) setQuizLevelSuggestion(suggested);
+  }, [set, user]);
   const quiz = useQuizMode({
     words,
     engine,
     rate: effective.speed,
     volume: fadeVolume,
     targetVoiceURI: effective.targetVoiceURI,
+    onAnswerResult: onQuizAnswerResult,
   });
 
   // Stale-free handles for the sleep-timer interval (quiz object identity
@@ -1228,6 +1236,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             total={quiz.total}
             finished={quiz.finished}
             wordCount={words.length}
+            suggestedLevel={quizLevelSuggestion}
             onAnswer={quiz.answer}
             onReplay={quiz.replay}
             onRestart={startQuiz}

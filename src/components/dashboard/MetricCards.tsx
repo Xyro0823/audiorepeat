@@ -63,7 +63,7 @@ export default function MetricCards({ accuracyPct, masteredCount, streak }: Prop
           </p>
           <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-white/10">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-all duration-500"
+              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-400 transition-[width] duration-500"
               style={{ width: `${Math.min(100, Math.max(0, c.pct))}%` }}
             />
           </div>

@@ -1,6 +1,7 @@
 import { CEFR_LEVELS } from '@/types/app';
 import type { CefrLevel } from '@/types/app';
 import { fireOnboardingEventOnce } from '@/lib/analytics/client';
+import { langLimitKey } from '@/lib/planGate';
 
 /**
  * First-time onboarding (language → level → goal → ready).
@@ -75,6 +76,55 @@ export interface OnboardingRecord {
   completed?: boolean;
   /** Which onboarding version completed the flow. */
   version?: number;
+  /** Early quiz evidence collected after onboarding; never changes a level without consent. */
+  calibration?: {
+    answered: number;
+    correct: number;
+    suggestedLevel?: CefrLevel;
+  };
+}
+
+const CALIBRATION_MIN_ANSWERS = 12;
+const CALIBRATION_HIGH_ACCURACY = 0.85;
+const CALIBRATION_LOW_ACCURACY = 0.45;
+
+/**
+ * Suggest an adjacent level only after enough real quiz answers. A suggestion
+ * is deliberately non-destructive: the learner must choose whether to use it.
+ */
+export function suggestedLevelFromQuiz(
+  current: CefrLevel,
+  answered: number,
+  correct: number,
+): CefrLevel | null {
+  if (answered < CALIBRATION_MIN_ANSWERS || answered <= 0) return null;
+  const index = CEFR_LEVELS.indexOf(current);
+  if (index < 0) return null;
+  const accuracy = correct / answered;
+  if (accuracy >= CALIBRATION_HIGH_ACCURACY) return CEFR_LEVELS[index + 1] ?? null;
+  if (accuracy <= CALIBRATION_LOW_ACCURACY) return CEFR_LEVELS[index - 1] ?? null;
+  return null;
+}
+
+/**
+ * Add one real quiz outcome to a new learner's private calibration record.
+ * Only their onboarding language contributes, and once a suggestion exists it
+ * remains stable until the learner acts on it — no oscillating recommendations.
+ */
+export function recordQuizCalibration(uid: string, lang: string, correct: boolean): CefrLevel | null {
+  const record = readOnboardingRecord(uid);
+  if (!record?.completed || !record.lang || !record.level || langLimitKey(record.lang) !== langLimitKey(lang)) {
+    return null;
+  }
+  const previous = record.calibration ?? { answered: 0, correct: 0 };
+  if (previous.suggestedLevel) return previous.suggestedLevel;
+  const next = {
+    answered: previous.answered + 1,
+    correct: previous.correct + Number(correct),
+  };
+  const suggestedLevel = suggestedLevelFromQuiz(record.level, next.answered, next.correct);
+  saveOnboardingRecord(uid, { calibration: { ...next, ...(suggestedLevel ? { suggestedLevel } : {}) } });
+  return suggestedLevel;
 }
 
 /** True when the uid has a pending-onboarding marker. */

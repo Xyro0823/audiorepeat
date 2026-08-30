@@ -5,6 +5,7 @@ import { flagFor } from '@/components/LanguageBadge';
 import { FREE_LANG_OPTIONS } from '@/lib/freeLang';
 import { FREE_LANG_LIMIT } from '@/lib/plans';
 import { useT } from '@/lib/i18n';
+import { useSpeechVoices } from '@/hooks/useSpeechVoices';
 
 interface Props {
   /** Pro/Lifetime — every language is selectable without locks. */
@@ -34,6 +35,7 @@ export default function FreeLanguagePicker({
 }: Props) {
   const t = useT();
   const [selected, setSelected] = useState<string | null>(initialKey ?? null);
+  const { loading: voicesLoading, hasVoice } = useSpeechVoices();
 
   const options = useMemo(() => FREE_LANG_OPTIONS, []);
 
@@ -58,6 +60,7 @@ export default function FreeLanguagePicker({
           const active = selected === opt.key;
           const included = active && !pro;
           const locked = !active && !pro;
+          const voiceReady = hasVoice(opt.code);
           return (
             <button
               key={opt.key}
@@ -100,11 +103,26 @@ export default function FreeLanguagePicker({
                     ? t('onboarding.freeLang.fullPack')
                     : t('onboarding.freeLang.starterPack')}
                 </span>
+                {active && (
+                  <span className={`mt-1 block text-[10px] leading-4 ${voicesLoading ? 'text-slate-500' : voiceReady ? 'text-emerald-300' : 'text-amber-200'}`}>
+                    {voicesLoading
+                      ? t('onboarding.freeLang.voiceChecking')
+                      : voiceReady
+                        ? t('onboarding.freeLang.voiceReady')
+                        : t('onboarding.freeLang.voiceUnavailable')}
+                  </span>
+                )}
               </span>
             </button>
           );
         })}
       </div>
+
+      {selected && !voicesLoading && !hasVoice(options.find((option) => option.key === selected)?.code ?? selected) && (
+        <p className="mt-3 rounded-xl border border-amber-300/15 bg-amber-300/[0.06] px-3 py-2.5 text-xs leading-5 text-amber-100/80">
+          {t('onboarding.freeLang.voiceUnavailableHint')}
+        </p>
+      )}
 
       <button
         type="button"

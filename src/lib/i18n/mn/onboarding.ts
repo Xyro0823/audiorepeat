@@ -63,6 +63,10 @@ export const onboardingMn: Record<OnboardingKeys, string> = {
   'onboarding.freeLang.preferred': '✓ Сонголт',
   'onboarding.freeLang.fullPack': 'Бүрэн A1–C2 багц',
   'onboarding.freeLang.starterPack': 'Эхлэх багц',
+  'onboarding.freeLang.voiceChecking': 'Төхөөрөмжийн хоолойг шалгаж байна…',
+  'onboarding.freeLang.voiceReady': 'Төхөөрөмжийн хоолой бэлэн',
+  'onboarding.freeLang.voiceUnavailable': 'Тохирох төхөөрөмжийн хоолой олдсонгүй',
+  'onboarding.freeLang.voiceUnavailableHint': 'Үргэлжлүүлж болно. AudioRepeat таны хөтчийн хамгийн тохирох хоолойг ашиглахыг оролдоно.',
 
   // ChangeFreeLanguageModal
   'onboarding.changeLang.aria': 'Сурах хэлээ солих',

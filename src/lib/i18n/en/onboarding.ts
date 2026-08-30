@@ -61,6 +61,10 @@ export const onboardingEn = {
   'onboarding.freeLang.preferred': '✓ Preferred',
   'onboarding.freeLang.fullPack': 'Full A1–C2 pack',
   'onboarding.freeLang.starterPack': 'Starter pack',
+  'onboarding.freeLang.voiceChecking': 'Checking device voice…',
+  'onboarding.freeLang.voiceReady': 'Device voice ready',
+  'onboarding.freeLang.voiceUnavailable': 'No matching device voice found',
+  'onboarding.freeLang.voiceUnavailableHint': 'You can still continue. AudioRepeat will ask your browser to use its best available voice.',
 
   // ChangeFreeLanguageModal
   'onboarding.changeLang.aria': 'Change your free language',

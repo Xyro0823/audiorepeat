@@ -25,6 +25,8 @@ export const dashboardEn = {
   'dashboard.nextAction.kicker': "Today's one thing",
   'dashboard.nextAction.continue': 'Continue',
   'dashboard.nextAction.noSet': 'Choose a practice set to begin',
+  'dashboard.nextAction.noSetBody': 'Pick a ready-made set, then let the first listening loop guide you.',
+  'dashboard.nextAction.browseSets': 'Browse ready-made sets',
   'dashboard.nextAction.wordsToday': 'Today',
   'dashboard.nextAction.streak': 'Streak',
   'dashboard.nextAction.studyTime': 'Study time',
@@ -74,6 +76,10 @@ export const dashboardEn = {
   'dashboard.metric.mastered.hint': 'Known across all sets',
   'dashboard.metric.streak.label': 'Study Streak',
   'dashboard.metric.streak.hint': '{days}-day habit target',
+  'dashboard.weekly.label': 'This week',
+  'dashboard.weekly.activeDays.one': '{count} active day',
+  'dashboard.weekly.activeDays.other': '{count} active days',
+  'dashboard.weekly.words': '{count} words listened',
 
   // CloudSyncBadge
   'dashboard.sync.title': 'Sync this library across your signed-in devices',

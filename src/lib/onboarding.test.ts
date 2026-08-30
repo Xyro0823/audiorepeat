@@ -6,6 +6,7 @@ import {
   onboardingPendingKey,
   onboardingRecordKey,
   isNewlyCreatedAccount,
+  suggestedLevelFromQuiz,
   shouldShowOnboarding,
 } from '@/lib/onboarding';
 import { CEFR_LEVELS } from '@/types/app';
@@ -72,5 +73,19 @@ describe('onboarding data', () => {
     expect(onboardingRecordKey('uid-a')).not.toBe(onboardingRecordKey('uid-b'));
     expect(onboardingRecordKey('uid-a')).toContain('uid-a');
     expect(onboardingPendingKey('uid-a')).toContain('uid-a');
+  });
+});
+
+describe('early quiz calibration', () => {
+  it('waits for enough real answers before suggesting a nearby level', () => {
+    expect(suggestedLevelFromQuiz('A2', 11, 11)).toBeNull();
+    expect(suggestedLevelFromQuiz('A2', 12, 11)).toBe('B1');
+    expect(suggestedLevelFromQuiz('B1', 12, 4)).toBe('A2');
+    expect(suggestedLevelFromQuiz('B1', 12, 8)).toBeNull();
+  });
+
+  it('never suggests a level beyond the supported CEFR bounds', () => {
+    expect(suggestedLevelFromQuiz('A1', 12, 0)).toBeNull();
+    expect(suggestedLevelFromQuiz('C2', 12, 12)).toBeNull();
   });
 });

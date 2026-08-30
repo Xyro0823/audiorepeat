@@ -139,6 +139,7 @@ export const playerMn: Record<PlayerKeys, string> = {
   'player.mastery.review': 'Давтах',
   'player.mastery.proTitle': 'Үгийг Мэддэг/Давтах гэж тэмдэглэх нь Pro-ны давуу эрх',
   'player.mastery.proCta': 'Эзэмшлийг хянах — Pro',
+  'player.quiz.levelSuggestion': 'Таны эхний quiz хариултууд {level} түвшнийг дараа нь туршиж үзэхийг санал болгож байна. Түвшин автоматаар өөрчлөгдөхгүй.',
 
   // Shared badges & hints
   'player.hint.emoji': 'Эмодзи тусламж',
