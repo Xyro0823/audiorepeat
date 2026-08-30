@@ -11,6 +11,7 @@ import ActivityHeatmap, {
   heatmapLevel,
 } from '@/components/ActivityHeatmap';
 import ProFeatureLock from '@/components/common/ProFeatureLock';
+import StatePanel from '@/components/common/StatePanel';
 import { usePracticeStats } from '@/hooks/usePracticeStats';
 import { formatDuration } from '@/lib/format';
 import { useT } from '@/lib/i18n';
@@ -53,6 +54,9 @@ export default function StatsView() {
 
   const monthMax = Math.max(0, ...month.map((d) => d.words));
   const weekMax = Math.max(0, ...weeks.map((w) => w.words));
+  const monthWords = month.reduce((sum, day) => sum + day.words, 0);
+  const monthMs = month.reduce((sum, day) => sum + day.ms, 0);
+  const monthActiveDays = month.filter((day) => day.words > 0 || day.ms > 0).length;
 
   // Free plan: stats are a Pro feature — render the lock instead of the
   // numbers. Held back until local state has hydrated so a Pro user's
@@ -108,19 +112,36 @@ export default function StatsView() {
         <Tile label={t('stats.period.allTime')} value={formatDuration(all.ms)} sub={t('stats.metric.studyTime')} />
       </div>
 
+      <section className="glass mt-4 rounded-2xl p-4 sm:p-5">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-white">{t('stats.month.title')}</h2>
+            <p className="mt-0.5 text-xs text-slate-500">{t('stats.weekly.sub')}</p>
+          </div>
+          <span className="rounded-lg border border-neon-cyan/20 bg-neon-cyan/10 px-2.5 py-1 text-xs font-semibold text-neon-cyan">{t('stats.month.activeDays', { count: monthActiveDays })}</span>
+        </div>
+        <dl className="mt-4 grid grid-cols-2 divide-x divide-white/10 rounded-xl border border-white/10 bg-black/15 py-3 text-center">
+          <div><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t('stats.metric.wordsListened')}</dt><dd className="mt-1 text-xl font-bold tabular-nums text-white">{monthWords.toLocaleString()}</dd></div>
+          <div><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t('stats.metric.studyTime')}</dt><dd className="mt-1 text-xl font-bold tabular-nums text-white">{formatDuration(monthMs)}</dd></div>
+        </dl>
+      </section>
+
       {loaded && all.activeDays === 0 ? (
-        <section className="glass animate-fade-up mt-4 rounded-2xl p-10 text-center">
-          <p className="text-lg font-semibold text-white">{t('stats.empty.title')}</p>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-slate-400">
-            {t('stats.empty.body')}
-          </p>
-          <Link
-            href="/"
-            className="mt-5 inline-block rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95"
-          >
-            {t('stats.empty.backLibrary')}
-          </Link>
-        </section>
+        <div className="mt-4">
+          <StatePanel
+            kind="empty"
+            title={t('stats.empty.title')}
+            description={t('stats.empty.body')}
+            action={
+              <Link
+                href="/"
+                className="inline-flex min-h-11 items-center rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-5 py-2.5 text-sm font-semibold text-night-950 transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+              >
+                {t('stats.empty.backLibrary')}
+              </Link>
+            }
+          />
+        </div>
       ) : (
         <>
           <section className="glass animate-fade-up mt-4 rounded-2xl p-5">

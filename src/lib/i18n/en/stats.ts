@@ -28,6 +28,7 @@ export const statsEn = {
   // ---- Sections ----
   'stats.week.title': 'This week',
   'stats.month.title': 'Last 30 days',
+  'stats.month.activeDays': '{count} active days',
   'stats.legend.less': 'Less',
   'stats.legend.more': 'More',
   'stats.weekly.title': 'Last 8 weeks',

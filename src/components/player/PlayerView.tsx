@@ -1045,13 +1045,15 @@ export default function PlayerView({ setId }: { setId: string | null }) {
             ? t('player.header.wordsAll', { count: set.words.length })
             : t('player.header.wordsFiltered', { shown: words.length, total: set.words.length })}
         </span>
-        <StreakBadge streak={streak} />
-        <SettingsButton />
-        <ProfileDropdown
-          onLeaderboard={() => router.push('/')}
-          onSubtitles={() => router.push('/')}
-          onBrowse={() => router.push('/')}
-        />
+        <div className="hidden items-center gap-2 sm:flex">
+          <StreakBadge streak={streak} />
+          <SettingsButton />
+          <ProfileDropdown
+            onLeaderboard={() => router.push('/')}
+            onSubtitles={() => router.push('/')}
+            onBrowse={() => router.push('/')}
+          />
+        </div>
       </header>
 
       <div className={`animate-fade-up mt-4 flex flex-wrap items-center gap-1.5 ${focusMode ? 'max-md:hidden' : ''}`}>

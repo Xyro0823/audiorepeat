@@ -13,6 +13,7 @@ import {
 import { CEFR_LEVELS } from '@/types/app';
 import type { CefrLevel, VocabSet } from '@/types/app';
 import { useT, type TKey } from '@/lib/i18n';
+import StatePanel from '@/components/common/StatePanel';
 import useDialogA11y from '@/hooks/useDialogA11y';
 import CefrBadge from './CefrBadge';
 import TopicLibraryTab from './TopicLibraryTab';
@@ -352,12 +353,9 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
         {tab === 'topics' ? (
           <TopicLibraryTab sets={sets} onImport={onImport} canAddLang={canAddLang} />
         ) : error && !manifest ? (
-          <div className="p-10 text-center text-sm text-neon-amber">{t(error)}</div>
+          <StatePanel kind="error" description={t(error)} compact />
         ) : !manifest ? (
-          <div className="flex flex-col items-center gap-4 p-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
-            <p className="text-sm text-slate-500">{t('library.starter.loadingLibrary')}</p>
-          </div>
+          <StatePanel kind="loading" title={t('library.starter.loadingLibrary')} compact />
         ) : (
           <>
             {/* Language + level */}
@@ -446,27 +444,26 @@ export default function StarterLibraryModal({ sets, pro, freeLangKey, onClose, o
             </div>
 
             {!lang || !level ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-3 p-10 text-center text-sm text-slate-400">
-                <p>
-                  {!lang
-                    ? t('library.starter.pickLangBody')
-                    : t('library.starter.pickLevelBody')}
-                </p>
-                {lang && level === null && (
-                  <p className="text-xs text-slate-500">
-                    {t('library.starter.levelsHint')}
-                  </p>
-                )}
+              <div className="flex flex-1 items-center px-4 py-8">
+                <StatePanel
+                  kind="empty"
+                  description={
+                    <>
+                      {!lang ? t('library.starter.pickLangBody') : t('library.starter.pickLevelBody')}
+                      {lang && level === null && (
+                        <span className="mt-2 block text-xs text-slate-500">{t('library.starter.levelsHint')}</span>
+                      )}
+                    </>
+                  }
+                  compact
+                />
               </div>
             ) : loading ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-4 p-10">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
-                <p className="text-sm text-slate-500">
-                  {t('library.starter.loadingLevel', { count: currentLevelCount.toLocaleString() })}
-                </p>
+              <div className="flex flex-1 items-center px-4 py-8">
+                <StatePanel kind="loading" title={t('library.starter.loadingLevel', { count: currentLevelCount.toLocaleString() })} compact />
               </div>
             ) : error ? (
-              <div className="p-10 text-center text-sm text-neon-amber">{t(error)}</div>
+              <div className="p-4"><StatePanel kind="error" description={t(error)} compact /></div>
             ) : (
               <>
                 {/* Level info + actions */}

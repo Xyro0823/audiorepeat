@@ -31,6 +31,7 @@ export const statsMn: Record<StatsKeys, string> = {
   // ---- Хэсгүүд ----
   'stats.week.title': 'Энэ долоо хоног',
   'stats.month.title': 'Сүүлийн 30 хоног',
+  'stats.month.activeDays': '{count} идэвхтэй өдөр',
   'stats.legend.less': 'бага',
   'stats.legend.more': 'их',
   'stats.weekly.title': 'Сүүлийн 8 долоо хоног',

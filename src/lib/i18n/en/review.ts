@@ -22,6 +22,8 @@ export const reviewEn = {
   'review.dashboardCrumb': '← Dashboard',
   'review.header.title': 'Review Today',
   'review.timeLeft': 'about {minutes} min left',
+  'review.session.queue': 'Memory queue',
+  'review.session.remaining': 'Remaining',
 
   // ---- Word card actions ----
   'review.hearWord': 'Hear word',

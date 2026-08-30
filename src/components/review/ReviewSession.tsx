@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AuthScreen from '@/components/auth/AuthScreen';
 import ProFeatureLock from '@/components/common/ProFeatureLock';
+import StatePanel from '@/components/common/StatePanel';
 import { useAuth } from '@/hooks/useAuth';
 import { useCloudTtsStatus } from '@/hooks/useCloudTtsStatus';
 import { useLists } from '@/hooks/useLists';
@@ -164,11 +165,8 @@ export default function ReviewSession() {
 
   if (loading || queue === null) {
     return (
-      <main id="main-content" className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-5">
-        <div role="status" aria-live="polite" className="flex items-center gap-3 text-sm text-slate-400">
-          <span aria-hidden className="h-10 w-10 animate-spin rounded-full border-2 border-neon-violet/30 border-t-neon-violet" />
-          <span>{t('common.loading')}</span>
-        </div>
+      <main id="main-content" role="status" aria-live="polite" className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-5">
+        <StatePanel kind="loading" title={t('common.loading')} compact />
       </main>
     );
   }
@@ -176,29 +174,26 @@ export default function ReviewSession() {
   if (!current) {
     return (
       <main id="main-content" className="mx-auto flex min-h-[75vh] w-full max-w-xl flex-col items-center justify-center px-5 text-center">
-        <div className="flex h-20 w-20 items-center justify-center rounded-full border border-neon-green/25 bg-neon-green/10 text-4xl">✓</div>
-        <p className="mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-neon-green">
-          {completed > 0 ? t('review.done.eyebrow') : t('review.empty.eyebrow')}
-        </p>
-        <h1 className="mt-2 text-3xl font-bold tracking-tight text-white">
-          {completed > 0
-            ? t('review.done.title', { count: completed })
-            : t('review.empty.title')}
-        </h1>
-        <p className="mt-3 max-w-sm text-sm leading-relaxed text-slate-400">
-          {completed > 0
-            ? t('review.done.body')
-            : t('review.empty.body')}
-        </p>
-        {nextDueLine && (
-          <p className="mt-2 text-xs font-semibold text-neon-cyan">{nextDueLine}</p>
-        )}
-        <Link
-          href="/dashboard#review-today"
-          className="mt-7 inline-flex min-h-11 items-center justify-center rounded-xl bg-neon-violet px-5 text-sm font-bold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-violet"
-        >
-          {t('review.backToDashboard')}
-        </Link>
+        <StatePanel
+          kind={completed > 0 ? 'success' : 'empty'}
+          eyebrow={completed > 0 ? t('review.done.eyebrow') : t('review.empty.eyebrow')}
+          headingAs="h1"
+          title={completed > 0 ? t('review.done.title', { count: completed }) : t('review.empty.title')}
+          description={
+            <>
+              {completed > 0 ? t('review.done.body') : t('review.empty.body')}
+              {nextDueLine && <span className="mt-2 block text-xs font-semibold text-neon-cyan">{nextDueLine}</span>}
+            </>
+          }
+          action={
+            <Link
+              href="/dashboard#review-today"
+              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-neon-violet px-5 text-sm font-bold text-white transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-violet"
+            >
+              {t('review.backToDashboard')}
+            </Link>
+          }
+        />
       </main>
     );
   }
@@ -228,12 +223,16 @@ export default function ReviewSession() {
         />
       </div>
 
-      <section className="flex flex-1 flex-col items-center justify-center py-10 text-center">
-        <div className="mb-7 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-          <span className="rounded-full border border-white/10 px-2.5 py-1 text-slate-400">
-            {current.setName}
-          </span>
-          <span>{t('review.timeLeft', { minutes: estimatedReviewMinutes(queue.length) })}</span>
+      <section className="flex flex-1 flex-col items-center justify-center py-8 text-center sm:py-10">
+        <div className="mb-8 grid w-full max-w-xl grid-cols-2 divide-x divide-white/10 rounded-2xl border border-white/10 bg-white/[0.03] py-3 text-left">
+          <div className="min-w-0 px-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{t('review.session.queue')}</p>
+            <p className="mt-1 truncate text-sm font-semibold text-slate-200">{current.setName}</p>
+          </div>
+          <div className="px-4">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">{t('review.session.remaining')}</p>
+            <p className="mt-1 text-sm font-semibold text-slate-200">{t('review.timeLeft', { minutes: estimatedReviewMinutes(queue.length) })}</p>
+          </div>
         </div>
 
         <p className="text-5xl font-bold tracking-tight text-neon-cyan sm:text-6xl">

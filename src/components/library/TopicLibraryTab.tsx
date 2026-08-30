@@ -12,6 +12,7 @@ import {
 } from '@/lib/vocab/wordBanks';
 import type { VocabSet } from '@/types/app';
 import { useT, type TKey } from '@/lib/i18n';
+import StatePanel from '@/components/common/StatePanel';
 import VirtualList from './VirtualList';
 
 const ROW_HEIGHT = 44;
@@ -138,12 +139,9 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-6 py-4">
       {error && !manifest ? (
-        <div className="p-10 text-center text-sm text-neon-amber">{t(error)}</div>
+        <StatePanel kind="error" description={t(error)} compact />
       ) : !manifest ? (
-        <div className="flex flex-col items-center gap-4 p-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
-          <p className="text-sm text-slate-500">{t('library.topics.loadingTopics')}</p>
-        </div>
+        <StatePanel kind="loading" title={t('library.topics.loadingTopics')} compact />
       ) : (
         <>
           {/* Topic cards */}
@@ -229,12 +227,9 @@ export default function TopicLibraryTab({ sets, canAddLang, onImport }: Props) {
           {/* Preview + import */}
           {lang &&
             (loading ? (
-              <div className="flex flex-col items-center gap-3 p-10">
-                <div className="h-8 w-8 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
-                <p className="text-sm text-slate-500">{t('library.topics.loadingWords')}</p>
-              </div>
+              <StatePanel kind="loading" title={t('library.topics.loadingWords')} compact />
             ) : error ? (
-              <div className="p-10 text-center text-sm text-neon-amber">{t(error)}</div>
+              <StatePanel kind="error" description={t(error)} compact />
             ) : (
               <div className="mt-5">
                 {upgradePrompt && <LanguageLock className="animate-fade-up mb-3" />}

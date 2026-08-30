@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, CircleHelp, FileText, LogOut, Palette, Settings, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, BarChart3, BookOpen, CircleHelp, FileText, LogOut, Palette, Settings, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 function AccountLink({ href, icon, title, detail }: { href: string; icon: React.ReactNode; title: string; detail: string }) {
@@ -38,6 +38,13 @@ export default function AccountCenter() {
         <AccountLink href="/help" icon={<CircleHelp className="h-5 w-5" />} title="Help" detail="Guides, shortcuts, and support" />
         <AccountLink href="/terms" icon={<FileText className="h-5 w-5" />} title="Terms of Service" detail="Read the service terms" />
         <AccountLink href="/privacy" icon={<ShieldCheck className="h-5 w-5" />} title="Privacy" detail="How your data is handled" />
+      </section>
+      <section className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4 sm:p-5">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Quick access</p>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          <Link href="/dashboard" className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-night-900/55 px-3 text-sm font-semibold text-slate-200 transition hover:border-neon-cyan/30 hover:bg-white/[0.055] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"><BookOpen className="h-5 w-5 text-slate-400" /> Continue practice <ArrowRight className="ml-auto h-4 w-4 text-slate-600" /></Link>
+          <Link href="/stats" className="flex min-h-12 items-center gap-3 rounded-xl border border-white/10 bg-night-900/55 px-3 text-sm font-semibold text-slate-200 transition hover:border-neon-cyan/30 hover:bg-white/[0.055] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"><BarChart3 className="h-5 w-5 text-slate-400" /> View progress <ArrowRight className="ml-auto h-4 w-4 text-slate-600" /></Link>
+        </div>
       </section>
       {status === 'signed-in' && <button type="button" onClick={() => { logout(); router.push('/'); }} className="mt-5 flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.025] px-3.5 py-2.5 text-sm font-medium text-slate-400 transition hover:border-white/20 hover:bg-white/5 hover:text-white"><LogOut className="h-4 w-4" /> Sign out</button>}
     </main>

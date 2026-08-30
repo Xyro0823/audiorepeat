@@ -60,6 +60,7 @@ import AiInsightsCard from '@/components/dashboard/AiInsightsCard';
 import FreePlanNotice from '@/components/dashboard/FreePlanNotice';
 import MetricCards from '@/components/dashboard/MetricCards';
 import WelcomeHero from '@/components/dashboard/WelcomeHero';
+import HomeProgressOverview from '@/components/dashboard/HomeProgressOverview';
 import MobileDashboardNav from '@/components/dashboard/MobileDashboardNav';
 import GettingStartedChecklist from '@/components/dashboard/GettingStartedChecklist';
 import ReviewTodayCard from '@/components/dashboard/ReviewTodayCard';
@@ -1074,7 +1075,7 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
           the dashboard grid; the controls stay quiet so + New owns the
           visual weight. Width matches the dashboard container so the dock's
           edges align with the content grid below. */}
-      <header className="animate-fade-up nav-dock relative z-50 mb-5 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-[20px] px-3 py-2 sm:mb-6 sm:gap-x-4 sm:px-4 sm:py-2.5 xl:hidden">
+      <header className="animate-fade-up nav-dock relative z-50 mb-5 hidden flex-wrap items-center gap-x-3 gap-y-2 rounded-[20px] px-3 py-2 md:flex sm:mb-6 sm:gap-x-4 sm:px-4 sm:py-2.5 xl:hidden">
         <div className="contents xl:hidden">
           <Logo />
           <div className="mr-auto min-w-0">
@@ -1119,8 +1120,23 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
           wordsToday={wordsToday}
           msToday={msToday}
           streak={streak}
+          setName={featured?.name}
+          setWords={featured?.words.length}
+          progressPct={featured ? masteryPct(featured) : 0}
           onStart={featured ? () => playSet(featured) : undefined}
         />
+        <div className="mt-4">
+          <HomeProgressOverview
+            wordsToday={wordsToday}
+            msToday={msToday}
+            goalPct={goalPct}
+            reviewDueCount={reviewDueCount}
+            onReview={() => {
+              if (canReview) void router.push('/review');
+              else void router.push('/checkout?plan=pro');
+            }}
+          />
+        </div>
       </div>
 
       <div className={`hidden md:block ${libraryOnly ? '!hidden' : ''}`}>
@@ -1142,6 +1158,33 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
       </div>
 
       <div className={`hidden md:block ${libraryOnly ? '!hidden' : ''}`}><FreePlanNotice pro={canUseAllLangs} /></div>
+
+      {libraryOnly && (
+        <section className="animate-fade-up rounded-3xl border border-white/10 bg-gradient-to-br from-[#141d2e] via-[#11141d] to-[#10131a] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-neon-cyan">AudioRepeat</p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-white sm:text-3xl">{t('library.grid.title')}</h1>
+              <p className="mt-1 text-sm text-slate-400">
+                {t('library.grid.summary', { sets: sets.length, words: totalWords.toLocaleString(), langs: langCount })}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setBrowse(true)} className="btn-clean min-h-11 rounded-xl px-4 text-sm font-semibold text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan">
+                {t('library.starter.title')}
+              </button>
+              <button type="button" onClick={() => setEditing('new')} aria-label={t('library.newSet.newSet')} className="btn-primary min-h-11 rounded-xl px-4 text-sm font-bold text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan">
+                +
+              </button>
+            </div>
+          </div>
+          <dl className="mt-5 grid grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-black/15 py-3 text-center">
+            <div><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t('library.grid.title')}</dt><dd className="mt-1 text-lg font-bold text-white">{sets.length}</dd></div>
+            <div><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t('common.words')}</dt><dd className="mt-1 text-lg font-bold text-white">{totalWords.toLocaleString()}</dd></div>
+            <div><dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500">{t('library.grid.allLanguages')}</dt><dd className="mt-1 text-lg font-bold text-white">{langCount}</dd></div>
+          </dl>
+        </section>
+      )}
 
       <div className="mt-6">
         {/* ------------------------------------------------------------ */}
@@ -1362,8 +1405,23 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
               </div>
             </div>
 
+            {hasCefrSets && (
+              <section className="mb-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4 md:hidden" aria-label="Түвшний замнал">
+                <div className="flex items-center justify-between"><p className="text-sm font-bold text-white">Түвшний замнал</p><span className="text-[11px] text-slate-400">A1 → C2</span></div>
+                <div className="mt-3 grid grid-cols-6 gap-1.5">
+                  {CEFR_LEVELS.map((level) => {
+                    const levelSets = sets.filter((item) => item.cefr === level);
+                    const total = levelSets.reduce((sum, item) => sum + item.words.length, 0);
+                    const mastered = levelSets.reduce((sum, item) => sum + item.words.filter((word) => word.mastery === 'mastered').length, 0);
+                    const progress = total ? Math.round((mastered / total) * 100) : 0;
+                    return <button key={level} type="button" onClick={() => setCefrFilter(level)} className="min-w-0 rounded-xl border border-white/10 bg-black/15 px-1.5 py-2 text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"><span className="block text-xs font-bold text-slate-200">{level}</span><span className="mt-1 block h-1 overflow-hidden rounded-full bg-white/10"><span className="block h-full bg-neon-cyan" style={{ width: `${progress}%` }} /></span></button>;
+                  })}
+                </div>
+              </section>
+            )}
+
             {/* Search + filters — only affect the grid below */}
-            <div className="mb-4 flex flex-wrap items-center gap-3">
+            <div className="sticky top-14 z-20 -mx-1 mb-4 flex flex-wrap items-center gap-2 border-y border-white/5 bg-[#10131c]/95 px-1 py-2 backdrop-blur-xl md:static md:mx-0 md:border-0 md:bg-transparent md:p-0">
               <div className="relative min-w-0 flex-1 sm:max-w-xs">
                 <Search
                   className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
@@ -1381,7 +1439,7 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
 
               {hasCefrSets && (
                 <div
-                  className="flex flex-wrap items-center gap-1.5"
+                  className="flex max-w-full flex-nowrap items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none]"
                   role="group"
                   aria-label={t('library.grid.filterCefrAria')}
                 >
@@ -1436,7 +1494,7 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
             </div>
 
             {loading ? (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+              <div className="grid grid-cols-1 gap-4 min-[430px]:grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
                 {[0, 1, 2, 3].map((i) => (
                   <div
                     key={i}
@@ -1473,7 +1531,7 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 min-[430px]:grid-cols-2 sm:grid-cols-3 xl:grid-cols-4">
                   {renderedSets.map((set, i) => (
                     <PortraitCard
                       key={set.id}

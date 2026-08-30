@@ -17,6 +17,19 @@ export const onboardingEn = {
   'onboarding.level.sub':
     "We'll seed your library with words that fit — you can change it anytime.",
   'onboarding.level.groupAria': 'Starting level',
+  'onboarding.level.testTitle': 'Find my level',
+  'onboarding.level.testBody': 'Answer 10 short vocabulary questions for a recommended starting level.',
+  'onboarding.level.startTest': 'Start level test',
+  'onboarding.level.manualTitle': 'Or choose it yourself',
+  'onboarding.level.selfAssessment': 'This language does not have enough level-specific words yet. Choose the level that feels closest — you can change it anytime.',
+  'onboarding.placement.loading': 'Preparing your questions…',
+  'onboarding.placement.questionCount': 'Question {current} of {total}',
+  'onboarding.placement.prompt': 'Choose the matching word',
+  'onboarding.placement.answersAria': 'Answer choices',
+  'onboarding.placement.resultKicker': 'Recommended starting level',
+  'onboarding.placement.resultBody': 'You answered {score} of {total} correctly. You can change this later.',
+  'onboarding.placement.useLevel': 'Start at {level}',
+  'onboarding.placement.chooseManually': 'Choose a different level',
 
   // Step 3 — learning goal
   'onboarding.goal.heading': 'What brings you here?',

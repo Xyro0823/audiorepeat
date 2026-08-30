@@ -25,6 +25,8 @@ export const reviewMn: Record<ReviewKeys, string> = {
   'review.dashboardCrumb': '← Дашборд',
   'review.header.title': 'Өнөөдөр давтах',
   'review.timeLeft': 'ойролцоогоор {minutes} минут үлдлээ',
+  'review.session.queue': 'Давтлагын дараалал',
+  'review.session.remaining': 'Үлдсэн хугацаа',
 
   // ---- Үгний картны үйлдлүүд ----
   'review.hearWord': 'Үгийг сонсох',

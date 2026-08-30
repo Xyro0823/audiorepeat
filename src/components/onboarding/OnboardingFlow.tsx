@@ -36,7 +36,9 @@ import { isProPlan } from '@/lib/plans';
 import { getAllSets, putSet } from '@/lib/db/indexedDb';
 import type { CefrLevel } from '@/types/app';
 import FreeLanguagePicker from './FreeLanguagePicker';
+import PlacementTest from './PlacementTest';
 import useDialogA11y from '@/hooks/useDialogA11y';
+import { hasPlacementBank } from '@/lib/placementTest';
 
 type Step = 1 | 2 | 3 | 4;
 
@@ -96,6 +98,8 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
   const [level, setLevel] = useState<CefrLevel | null>(record?.level ?? null);
   const [goal, setGoal] = useState<GoalId | null>(record?.goal ?? null);
   const [finishing, setFinishing] = useState(false);
+  const [placementOpen, setPlacementOpen] = useState(false);
+  const [placementAvailable, setPlacementAvailable] = useState<boolean | null>(null);
   // Personalized first-session recommendation, computed once the manifests are
   // available. Until then the seed-based fallback is shown, so the Ready step
   // is never blank and never dead-ends.
@@ -126,6 +130,19 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
       alive = false;
     };
   }, [lang, level, goal]);
+
+  useEffect(() => {
+    if (!lang) return;
+    let active = true;
+    void getWordBankManifest()
+      .then((manifest) => {
+        if (active) setPlacementAvailable(hasPlacementBank(manifest, lang));
+      })
+      .catch(() => {
+        if (active) setPlacementAvailable(false);
+      });
+    return () => { active = false; };
+  }, [lang]);
 
   // Fallback shown immediately (and used if the manifest fetch fails): with no
   // manifests the pure helper always lands on the curated seed. Null only when
@@ -167,6 +184,8 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
   const pickLang = useCallback(
     (key: string) => {
       setLang(key);
+      setPlacementOpen(false);
+      setPlacementAvailable(null);
       save({ lang: key });
       setStep(2);
       // User-action events — one per click, never inflated by rerenders.
@@ -340,6 +359,33 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
               <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
                 {t('onboarding.level.sub')}
               </p>
+              {placementOpen && lang ? (
+                <div className="mt-5">
+                  <PlacementTest
+                    lang={lang}
+                    onComplete={pickLevel}
+                    onBack={() => setPlacementOpen(false)}
+                  />
+                </div>
+              ) : (
+                <>
+                  {placementAvailable && (
+                    <button
+                      type="button"
+                      onClick={() => setPlacementOpen(true)}
+                      className="mt-5 w-full rounded-2xl border border-neon-cyan/25 bg-neon-cyan/[0.07] p-4 text-left transition hover:border-neon-cyan/45 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+                    >
+                      <span className="block text-sm font-bold text-white">{t('onboarding.level.testTitle')}</span>
+                      <span className="mt-1 block text-xs leading-5 text-slate-400">{t('onboarding.level.testBody')}</span>
+                      <span className="mt-3 inline-flex min-h-10 items-center rounded-xl bg-neon-cyan px-3 text-xs font-bold text-night-950">{t('onboarding.level.startTest')}</span>
+                    </button>
+                  )}
+                  {placementAvailable === false && (
+                    <p className="mt-4 rounded-xl border border-white/10 bg-white/[0.025] px-3 py-2.5 text-xs leading-5 text-slate-400">
+                      {t('onboarding.level.selfAssessment')}
+                    </p>
+                  )}
+                  <p className="mt-5 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-500">{t('onboarding.level.manualTitle')}</p>
               <div className="mt-5 space-y-2" role="radiogroup" aria-label={t('onboarding.level.groupAria')}>
                 {ONBOARDING_LEVELS.map((o) => {
                   const active = level === o.level;
@@ -408,6 +454,8 @@ function OnboardingFlowInner({ uid }: { uid: string }) {
                   {t('common.continue')}
                 </button>
               </div>
+                </>
+              )}
             </div>
           )}
 

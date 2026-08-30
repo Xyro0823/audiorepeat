@@ -1,8 +1,8 @@
 'use client';
 
-import { useSyncExternalStore, type ReactNode } from 'react';
-import SettingsButton from '@/components/settings/SettingsButton';
+import { useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useT } from '@/lib/i18n';
+import MobileMenuDrawer from './MobileMenuDrawer';
 
 interface Props {
   /** Starts the most recently used set (or the featured set for a new learner). */
@@ -76,6 +76,7 @@ function BrowserNavItem({
 /** Uses a browser header on mobile web and thumb navigation in the installed app. */
 export default function MobileDashboardNav({ onResume, resumeAvailable, activeTab, onTabChange }: Props) {
   const t = useT();
+  const [menuOpen, setMenuOpen] = useState(false);
   const standalone = useSyncExternalStore(subscribeToStandaloneMode, getStandaloneSnapshot, () => false);
   const resumeLabel = resumeAvailable ? t('dashboard.mobileNav.resume') : t('dashboard.checklist.sets.action');
 
@@ -85,11 +86,12 @@ export default function MobileDashboardNav({ onResume, resumeAvailable, activeTa
       <div className="h-14 md:hidden">
         <header className="fixed inset-x-0 top-0 z-[60] border-b border-white/10 bg-[#10131c]/95 shadow-[0_8px_28px_rgba(0,0,0,0.3)] backdrop-blur-xl">
           <nav aria-label={t('dashboard.mobileNav.aria')} className="mx-auto flex h-14 max-w-7xl items-center gap-1 px-3">
+            <button type="button" onClick={() => setMenuOpen(true)} aria-label="Цэс нээх" className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-300 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"><span className="text-lg" aria-hidden>☰</span></button>
             <button
               type="button"
               onClick={() => onTabChange('home')}
               aria-label="AudioRepeat"
-              className="mr-1 flex h-9 shrink-0 items-center rounded-xl px-2 text-sm font-bold tracking-tight text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+              className="mr-1 flex h-9 shrink-0 items-center rounded-xl px-1 text-sm font-bold tracking-tight text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
             >
               <span className="text-cyan-300">A</span><span className="hidden min-[360px]:inline">udioRepeat</span>
             </button>
@@ -98,9 +100,9 @@ export default function MobileDashboardNav({ onResume, resumeAvailable, activeTa
               <BrowserNavItem label={t('dashboard.mobileNav.review')} active={activeTab === 'review'} onClick={() => onTabChange('review')} />
               <BrowserNavItem label={t('dashboard.mobileNav.library')} active={activeTab === 'library'} onClick={() => onTabChange('library')} />
             </div>
-            <SettingsButton className="ml-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-slate-300 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan" />
           </nav>
         </header>
+        <MobileMenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
       </div>
     );
   }
@@ -142,11 +144,9 @@ export default function MobileDashboardNav({ onResume, resumeAvailable, activeTa
           </svg>
         </NavItem>
 
-        <div className="flex h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 text-[10px] font-semibold text-slate-400">
-          <SettingsButton className="flex h-8 w-8 items-center justify-center rounded-2xl text-slate-400 transition hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan" />
-          <span className="max-w-full truncate leading-none">{t('dashboard.mobileNav.settings')}</span>
-        </div>
+        <NavItem label="Цэс" onClick={() => setMenuOpen(true)}><svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.9" aria-hidden><path d="M4 7h16M4 12h16M4 17h16" /></svg></NavItem>
       </div>
+      <MobileMenuDrawer open={menuOpen} onClose={() => setMenuOpen(false)} />
     </nav>
   );
 }
