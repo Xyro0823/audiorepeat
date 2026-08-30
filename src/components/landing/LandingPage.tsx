@@ -246,7 +246,11 @@ function NeuralConnections({
   });
 
   useEffect(() => {
+    // The decorative connection graph is hidden below the lg breakpoint.
+    // Avoid forcing a hero layout measurement during the mobile LCP path.
+    const desktopMedia = window.matchMedia("(min-width: 1024px)");
     const measure = () => {
+      if (!desktopMedia.matches) return;
       const cont = containerRef.current;
       const node = nodeRef.current;
       if (!cont || !node) return;
@@ -275,11 +279,13 @@ function NeuralConnections({
     const ro = new ResizeObserver(measure);
     if (containerRef.current) ro.observe(containerRef.current);
     window.addEventListener("resize", measure);
+    desktopMedia.addEventListener("change", measure);
     // Re-measure once fonts/layout settle.
     const t = window.setTimeout(measure, 400);
     return () => {
       ro.disconnect();
       window.removeEventListener("resize", measure);
+      desktopMedia.removeEventListener("change", measure);
       window.clearTimeout(t);
     };
   }, [containerRef, nodeRef, cardRefs]);
