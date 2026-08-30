@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { createPortal } from 'react-dom';
 import { BarChart3, Bug, CircleHelp, Crown, Download, FileText, LogOut, Megaphone, Palette, Settings, ShieldCheck, UserRound, X } from 'lucide-react';
 import useDialogA11y from '@/hooks/useDialogA11y';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,11 +15,13 @@ export default function MobileMenuDrawer({ open, onClose }: { open: boolean; onC
   const { status, user, logout } = useAuth();
   const name = status === 'signed-in' && user ? user.username : 'AudioRepeat хэрэглэгч';
 
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-[100] md:hidden">
+  if (!open || typeof document === 'undefined') return null;
+  // Keep the drawer outside route layouts.  A wide child in a page must never
+  // move a fixed mobile menu sideways (Safari is especially sensitive to this).
+  return createPortal(
+    <div className="fixed inset-0 z-[100] overflow-x-clip md:hidden">
       <button type="button" aria-label="Цэс хаах" className="absolute inset-0 bg-black/65 backdrop-blur-[2px]" onClick={onClose} />
-      <aside ref={ref} role="dialog" aria-modal="true" aria-label="Цэс" tabIndex={-1} className="absolute inset-y-0 left-0 flex w-[min(19rem,calc(100vw-2rem))] flex-col overflow-y-auto border-r border-white/10 bg-[#11141d] p-3 shadow-[24px_0_64px_rgba(0,0,0,0.48)]">
+      <aside ref={ref} role="dialog" aria-modal="true" aria-label="Цэс" tabIndex={-1} className="absolute inset-y-0 left-0 flex w-[min(19rem,calc(100dvw-2rem))] max-w-[calc(100dvw-2rem)] flex-col overflow-x-hidden overflow-y-auto overscroll-contain border-r border-white/10 bg-[#11141d] p-3 shadow-[24px_0_64px_rgba(0,0,0,0.48)]">
         <div className="flex items-center justify-between">
           <span className="px-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Ажлын талбар</span>
           <button type="button" onClick={onClose} aria-label="Цэс хаах" className="flex h-11 w-11 items-center justify-center rounded-xl text-slate-300 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"><X className="h-5 w-5" /></button>
@@ -55,6 +58,7 @@ export default function MobileMenuDrawer({ open, onClose }: { open: boolean; onC
           <button type="button" onClick={() => { onClose(); void logout(); }} className={`${itemClass} w-full text-left text-rose-300`}><LogOut className="h-5 w-5" />Гарах</button>
         </div>
       </aside>
-    </div>
+    </div>,
+    document.body,
   );
 }

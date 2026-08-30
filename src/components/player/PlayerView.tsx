@@ -1027,13 +1027,13 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const currentRepeats = currentWord?.repeats ?? effective.repeats;
 
   return (
-    <main id="main-content" className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-28 pt-5 sm:px-5 sm:pb-52 sm:pt-6">
+    <main id="main-content" className="mx-auto flex min-w-0 w-full max-w-3xl flex-1 flex-col overflow-x-clip px-4 pb-28 pt-5 sm:px-5 sm:pb-52 sm:pt-6">
       {toast && (
         <div className="animate-fade-up mb-4 rounded-xl border border-neon-amber/40 bg-neon-amber/10 px-4 py-3 text-sm text-neon-amber">
           {toast}
         </div>
       )}
-      <header className={`animate-fade-up relative z-50 flex items-center gap-2 ${focusMode ? 'max-md:hidden' : ''}`}>
+      <header className={`animate-fade-up relative z-50 flex w-full min-w-0 items-center gap-2 ${focusMode ? 'max-md:hidden' : ''}`}>
         <Link
           href={LIBRARY_HREF}
           scroll={false}
@@ -1047,7 +1047,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         {/* Breadcrumb separator + count pill are desktop-only density — on
             phones they starve the set title of space. */}
         <span className="hidden text-slate-700 sm:inline">/</span>
-        <h1 className="min-w-0 truncate text-sm font-semibold text-slate-200">{set.name}</h1>
+        <h1 className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-200">{set.name}</h1>
         <span className="ml-auto hidden shrink-0 rounded-full border border-white/10 px-2.5 py-0.5 text-[11px] text-slate-400 sm:inline">
           {filter === 'all'
             ? t('player.header.wordsAll', { count: set.words.length })
@@ -1064,7 +1064,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
         </div>
       </header>
 
-      <div className={`animate-fade-up mt-4 flex flex-wrap items-center gap-1.5 ${focusMode ? 'max-md:hidden' : ''}`}>
+      <div className={`animate-fade-up mt-4 flex w-full min-w-0 flex-wrap items-center gap-1.5 ${focusMode ? 'max-md:hidden' : ''}`}>
         {(
           [
             { key: 'all', label: t('player.filter.all'), count: set.words.length },

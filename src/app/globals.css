@@ -33,6 +33,9 @@
 html,
 body {
   height: 100%;
+  /* Prevent a wide route child from shifting the entire mobile viewport.
+     Components that intentionally scroll sideways own that behavior locally. */
+  overflow-x: clip;
 }
 
 html {
