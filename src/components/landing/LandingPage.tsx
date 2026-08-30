@@ -4,6 +4,7 @@ registerRoute("landing");
 
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from "react";
 import { getSettingsSnapshot, subscribeSettings } from "@/lib/settingsStore";
@@ -18,7 +19,6 @@ import {
   Smartphone,
   WifiOff,
 } from "lucide-react";
-import AuthScreen from "@/components/auth/AuthScreen";
 import { useAuth } from "@/hooks/useAuth";
 import { setUiLang, useT, type TKey, UI_LANGUAGES } from "@/lib/i18n";
 import { PlanText } from "@/lib/i18n/PlanText";
@@ -27,9 +27,13 @@ import { landingAuthAction } from "@/lib/adminNav";
 import { PLAN_ORDER, PLANS } from "@/lib/plans";
 import { LEGAL_IDENTITY } from "@/lib/legalIdentity";
 import InstallAppButton from "@/components/pwa/InstallAppButton";
-import AudioDemo from "./AudioDemo";
 import { ANNUAL_SAVINGS_PERCENT, FAQ_ITEMS, HOW_IT_WORKS } from "./landingContent";
 import NewsletterForm from "./NewsletterForm";
+
+// These panels are never part of the first view. Keeping their audio and
+// authentication code out of the critical bundle lets the hero render sooner.
+const AuthScreen = dynamic(() => import("@/components/auth/AuthScreen"), { ssr: false });
+const AudioDemo = dynamic(() => import("./AudioDemo"), { ssr: false });
 
 /* ------------------------------------------------------------------ */
 /* Shared bits                                                        */
@@ -557,6 +561,10 @@ export default function LandingPage() {
         </div>
       </header>
 
+      {/* The sections below the hero stay in the HTML for links and search,
+          but the browser can skip their expensive layout until they approach
+          the viewport. This keeps the first paint focused on the LCP hero. */}
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "auto 5200px" }}>
       {/* ------------------------------------------------------------ */}
       {/* How it works                                                  */}
       {/* ------------------------------------------------------------ */}
@@ -829,11 +837,13 @@ export default function LandingPage() {
           </a>
         </p>
       </section>
+      </div>
       </main>
 
       {/* ------------------------------------------------------------ */}
       {/* Footer                                                       */}
       {/* ------------------------------------------------------------ */}
+      <div style={{ contentVisibility: "auto", containIntrinsicSize: "auto 620px" }}>
       <footer className="border-t border-white/5">
         <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-10 px-6 py-14 md:grid-cols-3 lg:px-12">
           {/* Brand */}
@@ -903,6 +913,7 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+      </div>
 
       {/* Reuses the existing Firebase sign-in flow (same overlay the in-app
           profile menu opens). Guests keep browsing; after sign-in the navbar
