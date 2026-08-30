@@ -26,6 +26,9 @@ export const landingEn = {
   'landing.hero.ctaPrimary': 'Start Learning Now',
   'landing.hero.ctaSecondary': 'Explore Library',
   'landing.hero.tagline': 'No pressure · No commitment · Just listening',
+  'landing.hero.loop.pick': 'Pick a 12-minute set',
+  'landing.hero.loop.listen': 'Hear target → meaning → target',
+  'landing.hero.loop.return': 'Review difficult words tomorrow',
   'landing.trust.title': 'Privacy-first',
   'landing.trust.body': 'Uses voices available on your device',
 
@@ -95,6 +98,7 @@ export const landingEn = {
   'landing.languages.sub':
     'From Arabic to Zulu — device-compatible speech voices, real word packs, zero setup.',
   'landing.languages.more': '+ {count} more',
+  'landing.languages.depth': 'Full A1–C2 vocabulary packs are currently available in {full} languages. Every supported language has starter content so you can begin immediately.',
 
   // Install section
   'landing.install.kicker': 'Installable web app',

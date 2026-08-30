@@ -28,6 +28,9 @@ export const landingMn: Record<LandingKeys, string> = {
   'landing.hero.ctaPrimary': 'Одоо сурч эхэлье',
   'landing.hero.ctaSecondary': 'Сангаас сонгох',
   'landing.hero.tagline': 'Яарахгүй · Дарамтгүй · Зүгээр л сонсоорой',
+  'landing.hero.loop.pick': '12 минутын багцаа сонго',
+  'landing.hero.loop.listen': 'Үг → утга → үгийг сонс',
+  'landing.hero.loop.return': 'Хэцүү үгээ маргааш давт',
   'landing.trust.title': 'Нууцлал тэргүүн',
   'landing.trust.body': 'Таны төхөөрөмжид буй дуу хоолойг ашиглана',
 
@@ -97,6 +100,7 @@ export const landingMn: Record<LandingKeys, string> = {
   'landing.languages.sub':
     'Арабаас Зулу хүртэл — тохирох хоолой, бэлэн үгийн багц, төвөггүй эхлэл.',
   'landing.languages.more': '+ {count} бусад',
+  'landing.languages.depth': 'Одоогоор {full} хэлд A1–C2 бүрэн үгийн сан бий. Дэмжигдсэн бүх хэлд эхлэх контент байгаа тул шууд эхэлж болно.',
 
   // Install section
   'landing.install.kicker': 'Суулгах боломжтой вэб апп',

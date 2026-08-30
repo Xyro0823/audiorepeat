@@ -71,6 +71,7 @@ export default function PlacementTest({ lang, onComplete, onBack }: { lang: stri
         <button type="button" onClick={onBack} className="min-h-11 rounded-xl border border-white/10 px-4 text-sm font-semibold text-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan">{t('onboarding.back')}</button>
         <button type="button" disabled={!selected} onClick={() => { if (selected) { setAnswers((current) => [...current, selected]); setSelected(null); setIndex((current) => current + 1); } }} className="btn-primary min-h-11 flex-1 rounded-xl px-4 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan">{t('common.continue')}</button>
       </div>
+      <p className="mt-4 text-center text-[11px] leading-5 text-slate-500">{t('onboarding.placement.note')}</p>
     </div>
   );
 }

@@ -22,7 +22,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { setUiLang, useT, type TKey, UI_LANGUAGES } from "@/lib/i18n";
 import { PlanText } from "@/lib/i18n/PlanText";
-import { SUPPORTED_LANGUAGE_COUNT } from "@/lib/freeLang";
+import { FREE_LANG_OPTIONS, SUPPORTED_LANGUAGE_COUNT } from "@/lib/freeLang";
 import { landingAuthAction } from "@/lib/adminNav";
 import { PLAN_ORDER, PLANS } from "@/lib/plans";
 import { LEGAL_IDENTITY } from "@/lib/legalIdentity";
@@ -347,6 +347,7 @@ export default function LandingPage() {
   }, [router, status]);
   const landingAction = landingAuthAction(status);
   const langCount = SUPPORTED_LANGUAGE_COUNT;
+  const fullPackCount = FREE_LANG_OPTIONS.filter((option) => option.hasFullPack).length;
   const heroRef = useRef<HTMLDivElement | null>(null);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -547,6 +548,14 @@ export default function LandingPage() {
               <p className="mt-5 text-[11px] uppercase tracking-[0.2em] text-slate-400">
                 {t('landing.hero.tagline')}
               </p>
+              <ol className="mx-auto mt-6 grid max-w-2xl gap-2 text-left sm:grid-cols-3" aria-label={t('landing.how.kicker')}>
+                {["pick", "listen", "return"].map((step, index) => (
+                  <li key={step} className="flex min-h-11 items-center gap-2 rounded-xl border border-white/[0.08] bg-black/15 px-3 text-xs text-slate-300">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-cyan-400/15 text-[10px] font-bold text-cyan-200">{index + 1}</span>
+                    {t(`landing.hero.loop.${step}` as TKey)}
+                  </li>
+                ))}
+              </ol>
             </div>
 
             {/* Product transparency pill under the node */}
@@ -639,6 +648,9 @@ export default function LandingPage() {
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
             {t('landing.languages.sub')}
+          </p>
+          <p className="mx-auto mt-3 max-w-xl text-xs leading-5 text-slate-500">
+            {t('landing.languages.depth', { full: fullPackCount })}
           </p>
           <div className="mx-auto mt-8 flex max-w-2xl flex-wrap items-center justify-center gap-2">
             {[

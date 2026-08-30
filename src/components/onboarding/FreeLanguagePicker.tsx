@@ -95,6 +95,11 @@ export default function FreeLanguagePicker({
                       ? t('onboarding.freeLang.locked')
                       : t('onboarding.freeLang.preferred')}
                 </span>
+                <span className="mt-1 block text-[10px] text-slate-500">
+                  {opt.hasFullPack
+                    ? t('onboarding.freeLang.fullPack')
+                    : t('onboarding.freeLang.starterPack')}
+                </span>
               </span>
             </button>
           );

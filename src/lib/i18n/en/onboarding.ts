@@ -17,9 +17,9 @@ export const onboardingEn = {
   'onboarding.level.sub':
     "We'll seed your library with words that fit — you can change it anytime.",
   'onboarding.level.groupAria': 'Starting level',
-  'onboarding.level.testTitle': 'Find my level',
-  'onboarding.level.testBody': 'Answer 10 short vocabulary questions for a recommended starting level.',
-  'onboarding.level.startTest': 'Start level test',
+  'onboarding.level.testTitle': 'Quick starting-point check',
+  'onboarding.level.testBody': 'Answer 10 short vocabulary questions for a helpful place to begin — not a formal CEFR exam.',
+  'onboarding.level.startTest': 'Check my starting point',
   'onboarding.level.manualTitle': 'Or choose it yourself',
   'onboarding.level.selfAssessment': 'This language does not have enough level-specific words yet. Choose the level that feels closest — you can change it anytime.',
   'onboarding.placement.loading': 'Preparing your questions…',
@@ -27,7 +27,8 @@ export const onboardingEn = {
   'onboarding.placement.prompt': 'Choose the matching word',
   'onboarding.placement.answersAria': 'Answer choices',
   'onboarding.placement.resultKicker': 'Recommended starting level',
-  'onboarding.placement.resultBody': 'You answered {score} of {total} correctly. You can change this later.',
+  'onboarding.placement.resultBody': 'You answered {score} of {total} correctly. This is a starting suggestion, and you can change it anytime.',
+  'onboarding.placement.note': 'This quick check uses vocabulary only. Your level will feel more accurate after a few real practice sessions.',
   'onboarding.placement.useLevel': 'Start at {level}',
   'onboarding.placement.chooseManually': 'Choose a different level',
 
@@ -58,6 +59,8 @@ export const onboardingEn = {
   'onboarding.freeLang.included': '✓ Included with Free',
   'onboarding.freeLang.locked': '🔒 Pro',
   'onboarding.freeLang.preferred': '✓ Preferred',
+  'onboarding.freeLang.fullPack': 'Full A1–C2 pack',
+  'onboarding.freeLang.starterPack': 'Starter pack',
 
   // ChangeFreeLanguageModal
   'onboarding.changeLang.aria': 'Change your free language',
