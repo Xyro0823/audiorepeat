@@ -19,6 +19,8 @@ import {
   getAuth,
   GoogleAuthProvider,
   onAuthStateChanged,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   updateProfile,
@@ -71,6 +73,7 @@ export function firebaseUserToAuthUser(fb: User): AuthUser {
     id: fb.uid,
     username: fb.displayName?.trim() || (email ? email.split('@')[0] : 'Firebase user') || 'Firebase user',
     email,
+    emailVerified: fb.emailVerified,
     photoURL: fb.photoURL ?? undefined,
     createdAt: fb.metadata.creationTime ? Date.parse(fb.metadata.creationTime) : Date.now(),
     lastLoginAt: Date.now(),
@@ -107,6 +110,16 @@ export async function createEmailAccount(
 export async function signInEmailPassword(a: Auth, email: string, password: string): Promise<User> {
   const cred = await signInWithEmailAndPassword(a, email, password);
   return cred.user;
+}
+
+/** Email a password-reset link without revealing whether an account exists. */
+export async function sendPasswordReset(a: Auth, email: string): Promise<void> {
+  await sendPasswordResetEmail(a, email);
+}
+
+/** Send (or resend) Firebase's verification email for the active account. */
+export async function sendVerificationEmail(user: User): Promise<void> {
+  await sendEmailVerification(user);
 }
 
 /** Friendly messages for common Firebase auth error codes. */

@@ -8,6 +8,9 @@ export interface AuthUser {
   /** displayName, falling back to the email prefix. */
   username: string;
   email?: string;
+  /** Firebase email/password accounts can verify their address; OAuth accounts
+   * are normally already verified by the provider. */
+  emailVerified?: boolean;
   /** Google profile photo, when available. */
   photoURL?: string;
   createdAt: number;

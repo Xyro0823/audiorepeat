@@ -29,6 +29,16 @@ describe('core accessibility baseline', () => {
     expect(auth).toContain("t('common.loading')");
   });
 
+  it('keeps keyboard focus, reduced motion and player switches accessible', () => {
+    const css = source('src/app/globals.css');
+    expect(css).toContain('a:focus-visible');
+    expect(css).toContain('@media (prefers-reduced-motion: reduce)');
+    const settings = source('src/components/player/SettingsPanel.tsx');
+    expect(settings).toContain('role="switch"');
+    expect(settings).toContain('aria-checked={checked}');
+    expect(settings).toContain('aria-controls="player-settings-panel"');
+  });
+
   it('announces player and review loading states', () => {
     for (const path of [
       'src/components/player/PlayerView.tsx',

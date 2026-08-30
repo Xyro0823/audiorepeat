@@ -64,7 +64,7 @@ function Logo({ size = 'md' }: { size?: 'md' | 'lg' }) {
 }
 
 export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props) {
-  const { signup, login, signInWithGoogle, continueAsGuest, mode: authMode } = useAuth();
+  const { signup, login, resetPassword, resendVerificationEmail, checkEmailVerification, signInWithGoogle, continueAsGuest, mode: authMode } = useAuth();
   const t = useT();
   const configured = authMode === 'firebase';
 
@@ -76,6 +76,9 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
   const [showPass, setShowPass] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [verificationStage, setVerificationStage] = useState<'waiting' | 'verified' | null>(null);
+  const [verificationEmail, setVerificationEmail] = useState('');
 
   const dialogRef = useDialogA11y<HTMLDivElement>(true, () => {
     if (mode === 'overlay') onClose?.();
@@ -96,6 +99,7 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
       }
       setBusy(true);
       setError(null);
+      setNotice(null);
       const res =
         tab === 'signup'
           ? await signup(identifier, password, displayName || undefined)
@@ -103,6 +107,9 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
       setBusy(false);
       if (!res.ok) {
         setError(res.error);
+      } else if (tab === 'signup') {
+        setVerificationEmail(identifier.trim());
+        setVerificationStage('waiting');
       } else {
         done();
       }
@@ -123,9 +130,41 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
     }
   }, [busy, configured, signInWithGoogle, done]);
 
+  const forgotPassword = useCallback(async () => {
+    if (busy || !configured) return;
+    setBusy(true);
+    setError(null);
+    const res = await resetPassword(identifier);
+    setBusy(false);
+    if (!res.ok) setError(res.error);
+    else setNotice(t('auth.password.resetSent'));
+  }, [busy, configured, identifier, resetPassword, t]);
+
+  const checkVerification = useCallback(async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    const res = await checkEmailVerification();
+    setBusy(false);
+    if (!res.ok) setError(res.error);
+    else if (res.verified) setVerificationStage('verified');
+    else setNotice(t('auth.verify.notYet'));
+  }, [busy, checkEmailVerification, t]);
+
+  const resendVerification = useCallback(async () => {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    const res = await resendVerificationEmail();
+    setBusy(false);
+    if (!res.ok) setError(res.error);
+    else setNotice(t('auth.verify.sent'));
+  }, [busy, resendVerificationEmail, t]);
+
   const switchTab = (next: 'signin' | 'signup') => {
     setTab(next);
     setError(null);
+    setNotice(null);
   };
 
   const screen = (
@@ -167,6 +206,38 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
               {t('auth.setup.rest')}
             </p>
           </div>
+        ) : verificationStage ? (
+          <section className="mt-6 text-center" aria-live="polite" aria-busy={busy}>
+            <div className="mx-auto h-1.5 w-10 rounded-full bg-white/15" aria-hidden />
+            {verificationStage === 'waiting' ? (
+              <>
+                <div className="mx-auto mt-8 flex h-20 w-20 items-center justify-center rounded-[1.35rem] border border-neon-cyan/45 bg-gradient-to-br from-neon-cyan/20 to-neon-violet/15 shadow-[0_0_30px_rgba(34,228,255,0.23)]">
+                  <svg viewBox="0 0 24 24" className="h-9 w-9 text-neon-cyan" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                    <rect x="3" y="5" width="18" height="14" rx="2" />
+                    <path d="m4 7 8 6 8-6" />
+                  </svg>
+                </div>
+                <h2 className="mt-6 text-xl font-bold tracking-tight text-white">{t('auth.verify.title')}</h2>
+                <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-400">{t('auth.verify.body', { email: verificationEmail })}</p>
+                <p className="mt-2 text-xs text-slate-500">{t('auth.verify.spam')}</p>
+                {error && <p role="alert" className="mt-4 rounded-xl border border-neon-magenta/40 bg-neon-magenta/10 px-3 py-2 text-sm text-neon-magenta">{error}</p>}
+                {notice && <p role="status" className="mt-4 rounded-xl border border-neon-green/35 bg-neon-green/10 px-3 py-2 text-sm text-neon-green">{notice}</p>}
+                <button type="button" onClick={() => void checkVerification()} disabled={busy} className="mt-6 min-h-12 w-full rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet px-4 py-3 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60">
+                  {busy ? t('auth.verify.checking') : t('auth.verify.check')}
+                </button>
+                <button type="button" onClick={() => void resendVerification()} disabled={busy} className="mt-3 min-h-11 text-sm font-semibold text-neon-cyan transition hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-50">{t('auth.verify.resend')}</button>
+              </>
+            ) : (
+              <>
+                <div className="mx-auto mt-10 flex h-20 w-20 items-center justify-center rounded-[1.35rem] border-2 border-neon-green bg-neon-green/15 text-neon-green shadow-[0_0_32px_rgba(52,211,153,0.35)]" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" className="h-10 w-10" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="m5 12 4.2 4.2L19 6.5" /></svg>
+                </div>
+                <h2 className="mt-6 text-xl font-bold tracking-tight text-neon-green">{t('auth.verify.verified')}</h2>
+                <p className="mt-2 text-sm text-slate-400">{t('auth.verify.ready')}</p>
+                <button type="button" onClick={done} className="mt-6 min-h-12 w-full rounded-xl bg-neon-green px-4 py-3 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(52,211,153,0.28)] transition hover:brightness-110">{t('auth.verify.continue')}</button>
+              </>
+            )}
+          </section>
         ) : (
           <>
             <button
@@ -243,6 +314,16 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
                   required
                 />
               </div>
+              {tab === 'signin' && (
+                <button
+                  type="button"
+                  onClick={() => void forgotPassword()}
+                  disabled={busy || !identifier.trim()}
+                  className="-mt-1 ml-auto block text-xs font-medium text-neon-cyan transition hover:text-cyan-200 disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  {t('auth.password.forgot')}
+                </button>
+              )}
               <div>
                 <label htmlFor="auth-password" className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
                   {t('auth.password.label')}
@@ -295,6 +376,11 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
               {error && (
                 <div role="alert" className="animate-fade-up rounded-xl border border-neon-magenta/40 bg-neon-magenta/10 px-4 py-2.5 text-sm text-neon-magenta">
                   {error}
+                </div>
+              )}
+              {notice && (
+                <div role="status" aria-live="polite" className="animate-fade-up rounded-xl border border-neon-green/35 bg-neon-green/10 px-4 py-2.5 text-sm text-neon-green">
+                  {notice}
                 </div>
               )}
 

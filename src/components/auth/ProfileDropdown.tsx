@@ -49,7 +49,7 @@ const itemClass =
  * for everything that isn't a primary action.
  */
 export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, className, sidebar = false }: Props) {
-  const { status, user, logout, deleteAccount } = useAuth();
+  const { status, user, logout, deleteAccount, resendVerificationEmail } = useAuth();
   const t = useT();
   // Server-verified admin gate — admin links render only for allowlisted
   // admins and never flash before verification (fail-closed). This is a UX
@@ -66,6 +66,7 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
   const [showDowngrade, setShowDowngrade] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [menuError, setMenuError] = useState<string | null>(null);
+  const [verificationNotice, setVerificationNotice] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   // Flip/clamp state — keeps the open menu inside the viewport: opens upward
@@ -178,6 +179,13 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
     setConfirmDelete(false);
   };
 
+  const resendVerification = async () => {
+    setMenuError(null);
+    const res = await resendVerificationEmail();
+    if (!res.ok) setMenuError(res.error);
+    else setVerificationNotice(t('auth.verify.sent'));
+  };
+
   return (
     <div ref={rootRef} className={`relative ${className ?? ''}`}>
       <button
@@ -272,6 +280,16 @@ export default function ProfileDropdown({ onLeaderboard, onSubtitles, onBrowse, 
                     {planDetail(settings.plan, settings.planBilling, settings.planSource)}
                   </span>
                 </p>
+                {user!.email && user!.emailVerified === false && (
+                  <button
+                    type="button"
+                    onClick={() => void resendVerification()}
+                    className="mt-2 text-left text-[11px] font-semibold text-neon-amber transition hover:text-amber-200"
+                  >
+                    {t('auth.verify.resend')}
+                  </button>
+                )}
+                {verificationNotice && <p role="status" className="mt-1 text-[11px] text-neon-green">{verificationNotice}</p>}
               </div>
               <div className="my-1 h-px bg-white/10" />
             </>

@@ -38,6 +38,20 @@ export const authEn = {
   'auth.privacyNote':
     '🔒 Firebase accounts sync your identity online — your vocabulary sets, streaks and stats stay on this device. Sign-in needs an internet connection; listening works offline.',
   'auth.error.passwordMismatch': 'Passwords do not match.',
+  'auth.password.forgot': 'Forgot password?',
+  'auth.password.resetSent': 'If an account uses that email, a reset link is on its way.',
+  'auth.verify.sent': 'Verification email sent. Check your inbox.',
+  'auth.verify.pending': 'Email not verified',
+  'auth.verify.resend': 'Resend verification email',
+  'auth.verify.title': 'Check your inbox',
+  'auth.verify.body': 'We sent a verification link to {email}. Open it, then come back here.',
+  'auth.verify.spam': 'Also check your spam or Promotions folder.',
+  'auth.verify.check': "I've verified my email",
+  'auth.verify.checking': 'Checking…',
+  'auth.verify.notYet': 'The link has not been opened yet. Check your inbox, then try again.',
+  'auth.verify.verified': 'Email verified',
+  'auth.verify.ready': 'Your account is ready to go.',
+  'auth.verify.continue': 'Continue',
 
   // ProfileDropdown
   'auth.signedInAs': 'Signed in as {name}',
@@ -72,6 +86,7 @@ export const authEn = {
   'auth.error.missingCredentials': 'Enter your email and password.',
   'auth.error.reSignInToDelete': 'Please sign in again before deleting your account.',
   'auth.error.deleteFailed': 'Could not delete your account.',
+  'auth.error.reSignInToVerify': 'Please sign in again before verifying your email.',
 } as const;
 
 export type AuthKeys = keyof typeof authEn;

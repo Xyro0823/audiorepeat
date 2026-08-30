@@ -262,6 +262,11 @@ export async function signup(
     const auth = getFirebaseAuth();
     if (!auth) return { ok: false, error: t('auth.error.unconfigured') };
     const user = await createEmailAccount(auth, clean, password, displayName);
+    // Verification is a trust improvement, not an onboarding blocker. Firebase
+    // rate-limits sends itself, so a transient mail failure must never strand a
+    // new learner after creating a valid account.
+    const { sendVerificationEmail } = await loadClient();
+    await sendVerificationEmail(user).catch(() => {});
     const mapped = firebaseUserToAuthUser(user);
     // Write the pending marker BEFORE flipping the auth state, so the first
     // mount of the app (triggered by this state change) always sees it.
@@ -270,6 +275,62 @@ export async function signup(
     markOnboardingPending(user.uid);
     enterSignedInState(mapped);
     return { ok: true };
+  } catch (err) {
+    const { describeFirebaseError } = await loadClient();
+    return { ok: false, error: describeFirebaseError(err) };
+  }
+}
+
+/** Request a password-reset email. Always return a neutral success message so
+ * this endpoint cannot be used to enumerate accounts. */
+export async function resetPassword(email: string): Promise<AuthResult> {
+  const clean = email.trim();
+  if (!EMAIL_RE.test(clean)) return { ok: false, error: t('auth.error.invalidEmail') };
+  if (MODE === 'unconfigured') return { ok: false, error: t('auth.error.unconfigured') };
+  try {
+    const { getFirebaseAuth, sendPasswordReset } = await loadClient();
+    const auth = getFirebaseAuth();
+    if (!auth) return { ok: false, error: t('auth.error.unconfigured') };
+    await sendPasswordReset(auth, clean);
+    return { ok: true };
+  } catch {
+    // Deliberately neutral for both unknown and existing addresses.
+    return { ok: true };
+  }
+}
+
+/** Re-send the verification email for the signed-in Firebase account. */
+export async function resendVerificationEmail(): Promise<AuthResult> {
+  if (MODE === 'unconfigured') return { ok: false, error: t('auth.error.unconfigured') };
+  try {
+    const { getFirebaseAuth, sendVerificationEmail } = await loadClient();
+    const current = getFirebaseAuth()?.currentUser;
+    if (!current) return { ok: false, error: t('auth.error.reSignInToVerify') };
+    await sendVerificationEmail(current);
+    return { ok: true };
+  } catch (err) {
+    const { describeFirebaseError } = await loadClient();
+    return { ok: false, error: describeFirebaseError(err) };
+  }
+}
+
+/** Refresh Firebase's active user and mirror the email-verification status
+ * into the reactive auth snapshot. This is deliberately explicit: completing
+ * a verification link in another tab does not reliably trigger an auth-state
+ * callback in the original tab. */
+export async function checkEmailVerification(): Promise<AuthResult & { verified?: boolean }> {
+  if (MODE === 'unconfigured') return { ok: false, error: t('auth.error.unconfigured') };
+  try {
+    const { getFirebaseAuth, firebaseUserToAuthUser } = await loadClient();
+    const current = getFirebaseAuth()?.currentUser;
+    if (!current) return { ok: false, error: t('auth.error.reSignInToVerify') };
+    await current.reload();
+    const refreshed = getFirebaseAuth()?.currentUser;
+    if (!refreshed) return { ok: false, error: t('auth.error.reSignInToVerify') };
+    if (state.status === 'signed-in' && state.user?.id === refreshed.uid) {
+      setState({ status: 'signed-in', user: firebaseUserToAuthUser(refreshed) });
+    }
+    return { ok: true, verified: refreshed.emailVerified };
   } catch (err) {
     const { describeFirebaseError } = await loadClient();
     return { ok: false, error: describeFirebaseError(err) };

@@ -45,7 +45,13 @@ function Toggle({
   hint?: string;
 }) {
   return (
-    <button onClick={() => onChange(!checked)} className="flex items-center gap-3 text-left">
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className="flex items-center gap-3 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neon-cyan"
+    >
       <span
         className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
           checked ? 'bg-neon-cyan' : 'bg-night-600'
@@ -91,7 +97,10 @@ export default function SettingsPanel({
     <section className="animate-fade-up mb-6">
       <div className="flex flex-wrap items-center justify-center gap-2">
         <button
+          type="button"
           onClick={() => setOpen((o) => !o)}
+          aria-expanded={open}
+          aria-controls="player-settings-panel"
           className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-slate-300 transition hover:border-neon-cyan/40 hover:text-white"
         >
           <svg
@@ -115,7 +124,7 @@ export default function SettingsPanel({
       </div>
 
       {open && (
-        <div className="glass animate-fade-up mt-4 grid gap-6 rounded-2xl p-5 sm:grid-cols-2">
+        <div id="player-settings-panel" className="glass animate-fade-up mt-4 grid gap-6 rounded-2xl p-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <Toggle
               checked={customMode}

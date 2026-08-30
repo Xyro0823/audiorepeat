@@ -649,7 +649,7 @@ export default function LandingPage() {
           <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-slate-400">
             {t('landing.languages.sub')}
           </p>
-          <p className="mx-auto mt-3 max-w-xl text-xs leading-5 text-slate-500">
+          <p className="mx-auto mt-3 max-w-xl text-xs leading-5 text-slate-400">
             {t('landing.languages.depth', { full: fullPackCount })}
           </p>
           <div className="mx-auto mt-8 flex max-w-2xl flex-wrap items-center justify-center gap-2">

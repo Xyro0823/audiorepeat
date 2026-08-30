@@ -40,6 +40,20 @@ export const authMn: Record<AuthKeys, string> = {
   'auth.privacyNote':
     '🔒 Нэвтэрсэн үед таны үгийн багц болон ахиц төхөөрөмжүүдийн хооронд синк хийгдэнэ. Зочин горимын мэдээлэл зөвхөн энэ төхөөрөмжид хадгалагдана.',
   'auth.error.passwordMismatch': 'Нууц үгс таарахгүй байна — дахин шалгана уу.',
+  'auth.password.forgot': 'Нууц үгээ мартсан уу?',
+  'auth.password.resetSent': 'Энэ имэйлээр бүртгэл байгаа бол нууц үг сэргээх холбоос илгээгдлээ.',
+  'auth.verify.sent': 'Баталгаажуулах имэйл илгээгдлээ. Inbox-оо шалгана уу.',
+  'auth.verify.pending': 'Имэйл баталгаажаагүй',
+  'auth.verify.resend': 'Баталгаажуулах имэйлийг дахин илгээх',
+  'auth.verify.title': 'Имэйлээ шалгана уу',
+  'auth.verify.body': '{email} хаяг руу баталгаажуулах холбоос илгээлээ. Холбоосыг нээгээд энд буцаж ирнэ үү.',
+  'auth.verify.spam': 'Spam болон Promotions хавтсаа мөн шалгана уу.',
+  'auth.verify.check': 'Имэйлээ баталгаажуулсан',
+  'auth.verify.checking': 'Шалгаж байна…',
+  'auth.verify.notYet': 'Холбоосыг нээгээгүй байна. Inbox-оо шалгаад дахин оролдоно уу.',
+  'auth.verify.verified': 'Имэйл баталгаажлаа',
+  'auth.verify.ready': 'Таны бүртгэл ашиглахад бэлэн боллоо.',
+  'auth.verify.continue': 'Үргэлжлүүлэх',
 
   // ProfileDropdown
   'auth.signedInAs': '{name} нэрээр нэвтэрсэн',
@@ -73,4 +87,5 @@ export const authMn: Record<AuthKeys, string> = {
   'auth.error.missingCredentials': 'Имэйл хаягаа нууц үгээ оруулна уу.',
   'auth.error.reSignInToDelete': 'Бүртгэлээ устгахаасаа өмнө дахин нэвтэрнэ үү.',
   'auth.error.deleteFailed': 'Бүртгэлийг устгаж чадсангүй.',
+  'auth.error.reSignInToVerify': 'Имэйлээ баталгаажуулахын тулд дахин нэвтэрнэ үү.',
 };
