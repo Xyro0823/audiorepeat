@@ -164,15 +164,18 @@ export default function ReviewSession() {
 
   if (loading || queue === null) {
     return (
-      <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-5">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-neon-violet/30 border-t-neon-violet" />
+      <main id="main-content" className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-5">
+        <div role="status" aria-live="polite" className="flex items-center gap-3 text-sm text-slate-400">
+          <span aria-hidden className="h-10 w-10 animate-spin rounded-full border-2 border-neon-violet/30 border-t-neon-violet" />
+          <span>{t('common.loading')}</span>
+        </div>
       </main>
     );
   }
 
   if (!current) {
     return (
-      <main className="mx-auto flex min-h-[75vh] w-full max-w-xl flex-col items-center justify-center px-5 text-center">
+      <main id="main-content" className="mx-auto flex min-h-[75vh] w-full max-w-xl flex-col items-center justify-center px-5 text-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-full border border-neon-green/25 bg-neon-green/10 text-4xl">✓</div>
         <p className="mt-6 text-xs font-semibold uppercase tracking-[0.24em] text-neon-green">
           {completed > 0 ? t('review.done.eyebrow') : t('review.empty.eyebrow')}
@@ -203,7 +206,7 @@ export default function ReviewSession() {
   const progress = initialTotal > 0 ? Math.round((completed / initialTotal) * 100) : 0;
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-5 pb-12 pt-6">
+    <main id="main-content" className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-5 pb-12 pt-6">
       <header className="flex items-center gap-3">
         <Link
           href="/dashboard#review-today"

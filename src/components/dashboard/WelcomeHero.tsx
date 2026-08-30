@@ -31,9 +31,9 @@ export default function WelcomeHero({ wordsToday, msToday, streak, onStart }: Pr
             <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.9)]" />
             {t('dashboard.welcome.back')}
           </span>
-          <h2 className="mt-3 text-2xl font-bold tracking-tight text-white md:text-3xl">
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-white md:text-3xl">
             {t('dashboard.welcome.title')}
-          </h2>
+          </h1>
           <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
             {t('dashboard.welcome.subtitle')}
           </p>

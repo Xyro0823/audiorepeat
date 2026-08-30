@@ -534,7 +534,7 @@ export default function LandingPage() {
                 </Link>
               </div>
 
-              <p className="mt-5 text-[11px] uppercase tracking-[0.2em] text-slate-500">
+              <p className="mt-5 text-[11px] uppercase tracking-[0.2em] text-slate-400">
                 {t('landing.hero.tagline')}
               </p>
             </div>
@@ -648,7 +648,7 @@ export default function LandingPage() {
                 <span aria-hidden>{flag}</span> {name}
               </span>
             ))}
-            <span className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium text-slate-500">
+            <span className="inline-flex items-center rounded-full px-3 py-1.5 text-[13px] font-medium text-slate-400">
               {t('landing.languages.more', { count: Math.max(0, langCount - 12) })}
             </span>
           </div>
@@ -739,7 +739,7 @@ export default function LandingPage() {
                 <span className="text-5xl font-extrabold tracking-tight text-white">
                   ${p.price}
                 </span>
-                <span className="pb-1.5 text-xs text-slate-500"><PlanText text={p.monthlyNote} /></span>
+                <span className="pb-1.5 text-xs text-slate-400"><PlanText text={p.monthlyNote} /></span>
               </div>
               <ul className="mt-7 space-y-3">
                 {p.features.map((f) => (
@@ -851,7 +851,7 @@ export default function LandingPage() {
 
           {/* Product links — only pages/sections that actually exist */}
           <div>
-            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">{t('landing.footer.product')}</h4>
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">{t('landing.footer.product')}</h3>
             <ul className="mt-4 space-y-2.5">
               <li>
                 <a href="#how-it-works" className="text-[13px] text-slate-400 transition hover:text-white">{t('landing.footer.howItWorks')}</a>
@@ -873,7 +873,7 @@ export default function LandingPage() {
 
           {/* Newsletter */}
           <div>
-            <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">{t('landing.footer.newsletter')}</h4>
+            <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-400">{t('landing.footer.newsletter')}</h3>
             <p className="mt-4 text-[13px] leading-relaxed text-slate-400">
               {t('landing.footer.newsletterBlurb')}
             </p>
@@ -883,8 +883,8 @@ export default function LandingPage() {
 
         <div className="border-t border-white/5">
           <div className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-4 px-6 py-7 sm:flex-row lg:px-12">
-            <p className="text-xs text-slate-500">{t('landing.footer.copyright')}</p>
-            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-500">
+            <p className="text-xs text-slate-400">{t('landing.footer.copyright')}</p>
+            <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-slate-400">
               <a href="#demo" className="transition hover:text-cyan-300">{t('landing.footer.audioDemo')}</a>
               <a href="#install" className="transition hover:text-cyan-300">{t('landing.footer.install')}</a>
               <Link href="/dashboard" className="transition hover:text-cyan-300">{t('landing.footer.practice')}</Link>
@@ -892,13 +892,13 @@ export default function LandingPage() {
           </div>
           <div className="border-t border-white/5">
             <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-6 py-4 lg:px-12">
-              <Link href="/privacy" className="text-xs text-slate-500 transition hover:text-cyan-300">{t('landing.footer.privacy')}</Link>
+              <Link href="/privacy" className="text-xs text-slate-400 transition hover:text-cyan-300">{t('landing.footer.privacy')}</Link>
               <span aria-hidden className="text-slate-700">·</span>
-              <Link href="/terms" className="text-xs text-slate-500 transition hover:text-cyan-300">{t('landing.footer.terms')}</Link>
+              <Link href="/terms" className="text-xs text-slate-400 transition hover:text-cyan-300">{t('landing.footer.terms')}</Link>
               <span aria-hidden className="text-slate-700">·</span>
-              <Link href="/refunds" className="text-xs text-slate-500 transition hover:text-cyan-300">{t('landing.footer.refunds')}</Link>
+              <Link href="/refunds" className="text-xs text-slate-400 transition hover:text-cyan-300">{t('landing.footer.refunds')}</Link>
               <span aria-hidden className="text-slate-700">·</span>
-              <a href={`mailto:${LEGAL_IDENTITY.supportEmail}`} className="text-xs text-slate-500 transition hover:text-cyan-300">{t('landing.footer.support')}</a>
+              <a href={`mailto:${LEGAL_IDENTITY.supportEmail}`} className="text-xs text-slate-400 transition hover:text-cyan-300">{t('landing.footer.support')}</a>
             </div>
           </div>
         </div>

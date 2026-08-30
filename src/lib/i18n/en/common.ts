@@ -55,6 +55,7 @@ export const commonEn = {
   'common.name': 'Name',
   'common.email': 'Email',
   'common.password': 'Password',
+  'common.skipToMainContent': 'Skip to main content',
 } as const;
 export type CommonKeys = keyof typeof commonEn;
 

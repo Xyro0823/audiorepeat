@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "audit:axe": "axe http://127.0.0.1:3000 --tags wcag2a,wcag2aa",
+    "audit:lighthouse": "lighthouse http://127.0.0.1:3000 --only-categories=accessibility --output=json --output-path=stdout",
     "icons": "node scripts/generate-icons.mjs",
     "vocab:health": "node scripts/vocab-health.mjs",
     "health:production": "node scripts/production-health.mjs"
@@ -26,6 +28,7 @@
     "ts-fsrs": "^5.4.1"
   },
   "devDependencies": {
+    "@axe-core/cli": "^4.13.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
@@ -34,6 +37,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "fake-indexeddb": "^6.2.5",
+    "lighthouse": "^13.4.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.10"

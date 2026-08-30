@@ -52,6 +52,7 @@ export const commonMn: Record<CommonKeys, string> = {
   'common.name': 'Нэр',
   'common.email': 'Имэйл',
   'common.password': 'Нууц үг',
+  'common.skipToMainContent': 'Үндсэн агуулга руу алгасах',
 };
 
 export const pwaMn: Record<PwaKeys, string> = {

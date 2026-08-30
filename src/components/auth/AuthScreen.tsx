@@ -208,14 +208,16 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
               ))}
             </div>
 
-            <form onSubmit={submit} className="mt-5 space-y-3">
+            <form onSubmit={submit} aria-busy={busy} className="mt-5 space-y-3">
               {tab === 'signup' && (
                 <div>
-                  <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                  <label htmlFor="auth-display-name" className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
                     {t('auth.displayName.label')}{' '}
                     <span className="normal-case text-slate-600">{t('auth.displayName.optional')}</span>
                   </label>
                   <input
+                    id="auth-display-name"
+                    name="name"
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     autoComplete="name"
@@ -225,26 +227,31 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
                 </div>
               )}
               <div>
-                <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                <label htmlFor="auth-email" className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
                   {t('auth.email.label')}
                 </label>
                 <input
                   type="email"
+                  id="auth-email"
+                  name="email"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   autoComplete="email"
+                  spellCheck={false}
                   placeholder={t('auth.email.placeholder')}
                   className={inputClass}
                   required
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                <label htmlFor="auth-password" className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
                   {t('auth.password.label')}
                 </label>
                 <div className="relative">
                   <input
                     type={showPass ? 'text' : 'password'}
+                    id="auth-password"
+                    name="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete={tab === 'signup' ? 'new-password' : 'current-password'}
@@ -268,11 +275,13 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
               </div>
               {tab === 'signup' && (
                 <div>
-                  <label className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
+                  <label htmlFor="auth-confirm-password" className="mb-1 block text-xs font-medium uppercase tracking-wider text-slate-500">
                     {t('auth.confirmPassword.label')}
                   </label>
                   <input
                     type={showPass ? 'text' : 'password'}
+                    id="auth-confirm-password"
+                    name="confirm-password"
                     value={confirm}
                     onChange={(e) => setConfirm(e.target.value)}
                     autoComplete="new-password"
@@ -295,7 +304,10 @@ export default function AuthScreen({ mode = 'gate', onClose, onSuccess }: Props)
                 className="w-full rounded-xl bg-gradient-to-r from-neon-cyan to-neon-violet py-3 text-sm font-bold text-night-950 shadow-[0_0_20px_rgba(34,228,255,0.35)] transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {busy ? (
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-night-950/30 border-t-night-950 align-middle" />
+                  <>
+                    <span aria-hidden className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-night-950/30 border-t-night-950 align-middle" />
+                    <span className="sr-only">{t('common.loading')}</span>
+                  </>
                 ) : tab === 'signup' ? (
                   t('auth.tab.createAccount')
                 ) : (

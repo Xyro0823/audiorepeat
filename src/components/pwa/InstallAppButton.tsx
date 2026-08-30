@@ -69,7 +69,7 @@ export default function InstallAppButton({
         type="button"
         onClick={onClick}
         title={t('pwa.install.title')}
-        aria-label={t('pwa.install.button')}
+        aria-label={landing ? t('pwa.install.title') : t('pwa.install.button')}
         className={sidebar
           ? 'btn-toolbar-ghost flex h-11 w-11 items-center justify-center rounded-xl text-slate-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300'
           : landing

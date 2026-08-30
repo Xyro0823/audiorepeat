@@ -990,16 +990,18 @@ export default function PlayerView({ setId }: { setId: string | null }) {
 
   if (loading) {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-4 px-5">
-        <div className="h-10 w-10 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
-        <p className="text-sm text-slate-500">{t('player.state.loading')}</p>
+      <main id="main-content" className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-4 px-5">
+        <div role="status" aria-live="polite" className="flex items-center gap-3 text-sm text-slate-500">
+          <span aria-hidden className="h-10 w-10 animate-spin rounded-full border-2 border-neon-cyan/30 border-t-neon-cyan" />
+          <span>{t('player.state.loading')}</span>
+        </div>
       </main>
     );
   }
 
   if (!set) {
     return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-4 px-5 text-center">
+      <main id="main-content" className="mx-auto flex w-full max-w-3xl flex-1 flex-col items-center justify-center gap-4 px-5 text-center">
         <p className="text-2xl font-semibold text-white">{t('player.state.setNotFound')}</p>
         <p className="text-sm text-slate-400">{t('player.state.setNotFoundBody')}</p>
         <Link
@@ -1017,7 +1019,7 @@ export default function PlayerView({ setId }: { setId: string | null }) {
   const currentRepeats = currentWord?.repeats ?? effective.repeats;
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-28 pt-5 sm:px-5 sm:pb-52 sm:pt-6">
+    <main id="main-content" className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-28 pt-5 sm:px-5 sm:pb-52 sm:pt-6">
       {toast && (
         <div className="animate-fade-up mb-4 rounded-xl border border-neon-amber/40 bg-neon-amber/10 px-4 py-3 text-sm text-neon-amber">
           {toast}

@@ -987,7 +987,7 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
   };
 
   return (
-    <main id="dashboard-top" className="relative mx-auto w-full max-w-7xl flex-1 px-5 pb-28 pt-3 xl:pl-[340px] md:pb-20">
+    <main id="main-content" className="relative mx-auto w-full max-w-7xl flex-1 px-5 pb-28 pt-3 xl:pl-[340px] md:pb-20">
       <aside className="fixed bottom-0 left-0 top-0 z-40 hidden w-[300px] border-r border-white/10 bg-[#12141d] xl:flex xl:flex-col">
         <div className="flex h-20 shrink-0 items-center gap-3 border-b border-white/10 px-5">
           <Logo />
@@ -1053,7 +1053,7 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
         <div className="contents xl:hidden">
           <Logo />
           <div className="mr-auto min-w-0">
-          <h1 className="text-[15px] font-semibold leading-tight tracking-tight text-white">AudioRepeat</h1>
+          <p className="text-[15px] font-semibold leading-tight tracking-tight text-white">AudioRepeat</p>
           <p className="hidden text-[11px] leading-snug text-slate-500 sm:block">
             {t('library.tagline', { count: FREE_LANG_OPTIONS.length })}
           </p>

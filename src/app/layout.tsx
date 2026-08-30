@@ -17,6 +17,7 @@ import UpdatePrompt from "@/components/pwa/UpdatePrompt";
 import ThemeManager from "@/components/settings/ThemeManager";
 import UiLangGate from "@/components/settings/UiLangGate";
 import RouteScrollRestoration from "@/components/navigation/RouteScrollRestoration";
+import SkipToContent from "@/components/accessibility/SkipToContent";
 import { SITE_URL } from "@/lib/site";
 
 const geistSans = Geist({
@@ -127,6 +128,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       className={`${geistSans.variable} ${geistMono.variable} ${barlow.variable} ${instrumentSerif.variable} ${plusJakarta.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <SkipToContent />
         <AuthGate>{children}</AuthGate>
         <RouteScrollRestoration />
         {/* First-time onboarding — self-gates per account; covers every route

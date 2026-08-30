@@ -128,7 +128,7 @@ export default function AudioDemo() {
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-slate-400">
               {t("landing.demo.body")}
             </p>
-            <p className="mt-4 text-xs leading-relaxed text-slate-500">
+            <p className="mt-4 text-xs leading-relaxed text-slate-400">
               {t("landing.demo.note")}
             </p>
           </div>
@@ -157,6 +157,7 @@ export default function AudioDemo() {
 
             <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-5 text-center">
               <div
+                role="img"
                 className="mb-4 flex items-center justify-center gap-1.5"
                 aria-label={t("landing.demo.phraseAria", { current: phraseIndex + 1, total: selected.phrases.length })}
               >
@@ -164,7 +165,7 @@ export default function AudioDemo() {
                   <span key={item.target} aria-hidden className={`h-1.5 rounded-full transition-[width,background-color] ${index === phraseIndex ? "w-7 bg-cyan-300" : "w-3 bg-white/15"}`} />
                 ))}
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
                 {t("landing.demo.phraseLabel", { current: phraseIndex + 1, total: selected.phrases.length })}
               </p>
               <p lang={selected.lang} className="mt-2 break-words text-2xl font-bold text-white sm:text-3xl">{phrase.target}</p>
@@ -210,7 +211,7 @@ export default function AudioDemo() {
               )}
             </div>
 
-            <p aria-live="polite" className={`mt-4 min-h-5 text-xs ${status === "error" ? "text-rose-300" : "text-slate-500"}`}>
+            <p aria-live="polite" className={`mt-4 min-h-5 text-xs ${status === "error" ? "text-rose-300" : "text-slate-400"}`}>
               {t(message.key, message.vars)}
             </p>
           </div>

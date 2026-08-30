@@ -65,7 +65,7 @@ export default function CheckoutFlow({
   const { price, note } = plan.priceFor(annual);
 
   return (
-    <main className="relative min-h-screen overflow-x-clip bg-night-950 text-[#e8eaef]">
+    <main id="main-content" className="relative min-h-screen overflow-x-clip bg-night-950 text-[#e8eaef]">
       {/* Ambient background: dot grid + cyan radials (matches the landing page) */}
       <div className="pointer-events-none fixed inset-0" aria-hidden>
         <div className="bg-dots absolute inset-0 opacity-60" />
