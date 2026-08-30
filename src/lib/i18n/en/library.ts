@@ -96,6 +96,8 @@ export const libraryEn = {
   'library.grid.browseStarter': 'Browse starter library',
   'library.grid.noMatchTitle': 'No sets match your filters',
   'library.grid.noMatchBody': 'Try a different search, level, or language.',
+  'library.grid.loadMore': 'Show more sets',
+  'library.grid.loadMoreCount': 'Show {count} more sets',
 
   // ---- Browse-library modal (starter packs) ----
   'library.starter.title': 'Browse library',

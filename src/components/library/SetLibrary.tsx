@@ -5,7 +5,7 @@ registerRoute("dashboard");
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ArrowDown, BarChart3, BookOpen, Clapperboard, FilePenLine, Gift, Home, LibraryBig, RotateCcw, Search, Settings, ShieldAlert, Star, Stethoscope, Trophy } from 'lucide-react';
 import ActivityHeatmap from '@/components/ActivityHeatmap';
 import { flagFor } from '@/components/LanguageBadge';
@@ -78,6 +78,12 @@ import {
   saveDashboardScrollPosition,
   takeDashboardScrollPosition,
 } from '@/lib/libraryScrollPosition';
+
+// Rendering hundreds of card trees at once makes the dashboard slow even when
+// filtering itself is cheap. Keep the first paint bounded and let learners
+// reveal more without hiding any set from search or filters.
+const INITIAL_GRID_CARD_COUNT = 60;
+const GRID_CARD_PAGE_SIZE = 60;
 
 function Logo() {
   return (
@@ -416,15 +422,15 @@ interface PortraitCardProps {
   set: VocabSet;
   index: number;
   canChallenge: boolean;
-  onPlay: () => void;
-  onChallenge: () => void;
-  onEdit: () => void;
-  onExport: () => void;
-  onShare: () => void;
-  onDelete: () => void;
+  onPlay: (set: VocabSet) => void;
+  onChallenge: (set: VocabSet) => void;
+  onEdit: (set: VocabSet) => void;
+  onExport: (set: VocabSet) => void;
+  onShare: (set: VocabSet) => void;
+  onDelete: (set: VocabSet) => void;
 }
 
-function PortraitCard({
+const PortraitCard = memo(function PortraitCard({
   set,
   index,
   canChallenge,
@@ -530,7 +536,7 @@ function PortraitCard({
           <button
             role="menuitem"
             className={`${menuItem} text-neon-amber hover:bg-neon-amber/10`}
-            onClick={run(onChallenge)}
+            onClick={run(() => onChallenge(set))}
           >
             <span aria-hidden>⚡</span> {t('library.card.challenge')}
             {!canChallenge && (
@@ -542,14 +548,14 @@ function PortraitCard({
           <button
             role="menuitem"
             className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
-            onClick={run(onEdit)}
+            onClick={run(() => onEdit(set))}
           >
             <span aria-hidden>✏️</span> {t('common.edit')}
           </button>
           <button
             role="menuitem"
             className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
-            onClick={run(onExport)}
+            onClick={run(() => onExport(set))}
           >
             <span aria-hidden>⬇</span> {t('library.card.downloadJson')}
           </button>
@@ -557,7 +563,7 @@ function PortraitCard({
             <button
               role="menuitem"
               className={`${menuItem} text-slate-300 hover:bg-white/5 hover:text-white`}
-              onClick={run(onShare)}
+              onClick={run(() => onShare(set))}
             >
               <span aria-hidden>🔗</span> {t('library.card.copyShareLink')}
             </button>
@@ -568,7 +574,7 @@ function PortraitCard({
               <button
                 role="menuitem"
                 className={`${menuItem} text-neon-magenta hover:bg-neon-magenta/10`}
-                onClick={run(onDelete)}
+                onClick={run(() => onDelete(set))}
               >
                 <span aria-hidden>🗑</span> {t('library.confirmDelete')}
               </button>
@@ -615,7 +621,7 @@ function PortraitCard({
             the bright Play action remains the clear primary choice. */}
         <div className="mt-3 grid grid-cols-1 gap-2">
           <button
-            onClick={onPlay}
+            onClick={() => onPlay(set)}
             className="btn-primary flex h-9 items-center justify-center gap-1.5 rounded-lg text-[13px] font-semibold text-white"
           >
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
@@ -624,7 +630,7 @@ function PortraitCard({
             {t('common.play')}
           </button>
           <button
-            onClick={onChallenge}
+            onClick={() => onChallenge(set)}
             title={canChallenge ? t('library.card.quickTestTitle') : t('library.card.proTestTitle')}
             className="btn-clean flex h-9 min-w-0 items-center justify-center gap-1.5 rounded-lg px-1.5 text-xs font-medium text-slate-300"
           >
@@ -652,7 +658,7 @@ function PortraitCard({
       </div>
     </article>
   );
-}
+});
 
 type ImportMsg = { kind: 'ok' | 'err'; text: string } | null;
 
@@ -682,6 +688,7 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
   const debouncedSearch = useDebouncedSearchQuery(searchQuery);
   const [cefrFilter, setCefrFilter] = useState<CefrLevel | 'all'>('all');
   const [langFilter, setLangFilter] = useState<string>('all');
+  const [cardReveal, setCardReveal] = useState({ filterKey: '', count: INITIAL_GRID_CARD_COUNT });
   const [changingLang, setChangingLang] = useState(false);
   const [mobileTab, setMobileTab] = useState<'home' | 'review' | 'library'>('home');
 
@@ -869,6 +876,19 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
     [searchDocs, debouncedSearch, cefrFilter, langFilter],
   );
 
+  // A new filter begins at its matching results without an extra state update
+  // after render. The explicit "show more" action records its own filter key.
+  const filterKey = `${debouncedSearch}\u0000${cefrFilter}\u0000${langFilter}`;
+  const visibleCardCount = cardReveal.filterKey === filterKey
+    ? cardReveal.count
+    : INITIAL_GRID_CARD_COUNT;
+
+  const renderedSets = useMemo(
+    () => filteredSets.slice(0, visibleCardCount),
+    [filteredSets, visibleCardCount],
+  );
+  const hiddenSetCount = Math.max(0, filteredSets.length - renderedSets.length);
+
   const filtersActive = debouncedSearch.trim() !== '' || cefrFilter !== 'all' || langFilter !== 'all';
   const filteredWords = useMemo(
     () => filteredSets.reduce((n, s) => n + s.words.length, 0),
@@ -955,11 +975,11 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
     [settings, canCloudAudio],
   );
 
-  const playSet = (set: VocabSet) => {
+  const playSet = useCallback((set: VocabSet) => {
     warmIfNeeded(set);
     saveDashboardScrollPosition(window.scrollY);
     router.push(`/player?id=${set.id}`);
-  };
+  }, [router, warmIfNeeded]);
 
   // The Free plan's included language (normalized key, account-scoped) — null
   // until chosen (onboarding) or inferred (legacy migration). Pro/Lifetime
@@ -975,7 +995,7 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
     [canUseAllLangs, sets, freeLangKey],
   );
 
-  const openChallenge = (set: VocabSet) => {
+  const openChallenge = useCallback((set: VocabSet) => {
     if (!canSpeed) {
       void router.push('/checkout?plan=pro');
       return;
@@ -984,7 +1004,12 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
     // cached before its 60s timer runs.
     warmIfNeeded(set);
     setChallengeSet(set);
-  };
+  }, [canSpeed, router, warmIfNeeded]);
+
+  const editSet = useCallback((set: VocabSet) => setEditing(set), []);
+  const exportSet = useCallback((set: VocabSet) => downloadSet(set), []);
+  const openShareSet = useCallback((set: VocabSet) => setShareSet(set), []);
+  const deleteSet = useCallback((set: VocabSet) => void removeSet(set.id), [removeSet]);
 
   return (
     <main id="main-content" className="relative mx-auto w-full max-w-7xl flex-1 px-5 pb-28 pt-3 xl:pl-[340px] md:pb-20">
@@ -1447,22 +1472,43 @@ export default function SetLibrary({ libraryOnly = false }: { libraryOnly?: bool
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
-                {filteredSets.map((set, i) => (
-                  <PortraitCard
-                    key={set.id}
-                    set={set}
-                    index={i}
-                    canChallenge={canSpeed}
-                    onPlay={() => playSet(set)}
-                    onChallenge={() => openChallenge(set)}
-                    onEdit={() => setEditing(set)}
-                    onExport={() => downloadSet(set)}
-                    onShare={() => setShareSet(set)}
-                    onDelete={() => void removeSet(set.id)}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+                  {renderedSets.map((set, i) => (
+                    <PortraitCard
+                      key={set.id}
+                      set={set}
+                      index={i}
+                      canChallenge={canSpeed}
+                      onPlay={playSet}
+                      onChallenge={openChallenge}
+                      onEdit={editSet}
+                      onExport={exportSet}
+                      onShare={openShareSet}
+                      onDelete={deleteSet}
+                    />
+                  ))}
+                </div>
+                {hiddenSetCount > 0 && (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setCardReveal((current) => ({
+                        filterKey,
+                        count: (current.filterKey === filterKey ? current.count : INITIAL_GRID_CARD_COUNT) + GRID_CARD_PAGE_SIZE,
+                      }))}
+                      className="btn-clean min-h-10 rounded-xl px-4 text-sm font-semibold text-slate-200"
+                    >
+                      {t(
+                        hiddenSetCount > GRID_CARD_PAGE_SIZE
+                          ? 'library.grid.loadMoreCount'
+                          : 'library.grid.loadMore',
+                        { count: Math.min(hiddenSetCount, GRID_CARD_PAGE_SIZE) },
+                      )}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </section>
         </div>

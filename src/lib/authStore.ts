@@ -10,7 +10,6 @@
  * only — and the auth screen shows setup instructions.
  */
 import { getAuthMode } from '@/lib/firebase/config';
-import { getFirebaseIdToken } from '@/lib/firebase/client';
 import { isNewlyCreatedAccount, markOnboardingPending } from '@/lib/onboarding';
 import { t } from '@/lib/i18n';
 import {
@@ -161,6 +160,7 @@ export async function getAuthIdToken(): Promise<string | null> {
   // session is still alive, which made authenticated actions look logged out.
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
+      const { getFirebaseIdToken } = await loadClient();
       const token = await getFirebaseIdToken();
       if (token) return token;
     } catch {

@@ -95,6 +95,8 @@ export const libraryMn: Record<LibraryKeys, string> = {
   'library.grid.browseStarter': 'Бэлэн сан үзэх',
   'library.grid.noMatchTitle': 'Шүүлтүүрт таарах багц алга',
   'library.grid.noMatchBody': 'Өөр хайлт, түвшин, эсвэл хэлээр оролдоно уу.',
+  'library.grid.loadMore': 'Илүү олон багц үзэх',
+  'library.grid.loadMoreCount': 'Дахин {count} багц үзэх',
 
   // ---- Сан үзэх цонх (эхний багцууд) ----
   'library.starter.title': 'Бэлэн сан',

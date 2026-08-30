@@ -37,6 +37,9 @@ const barlow = Barlow({
   variable: "--font-barlow",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600"],
+  // These decorative families are not needed to paint the app shell. Keep
+  // their CSS available, but do not make them compete with the initial route.
+  preload: false,
 });
 
 const instrumentSerif = Instrument_Serif({
@@ -44,6 +47,7 @@ const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   style: ["normal", "italic"],
+  preload: false,
 });
 
 // Landing-page fonts — Plus Jakarta Sans for headlines, Inter for the UI
@@ -53,12 +57,14 @@ const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
+  preload: false,
 });
 
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
+  preload: false,
 });
 
 export const metadata: Metadata = {
